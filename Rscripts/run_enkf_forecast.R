@@ -27,13 +27,12 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   ### LOAD R FUNCTIONS
   #################################################
   
-  source(paste0(folder,"/","Rscripts/mcmc_enkf_shared_functions.R"))
+  source(paste0(folder,"/","Rscripts/edit_nml_functions.R"))
   source(paste0(folder,"/","Rscripts/create_obs_met_input.R"))
   source(paste0(folder,"/","Rscripts/extract_temp_chain.R"))
   source(paste0(folder,"/","Rscripts/process_GEFS2GLM.R"))
   source(paste0(folder,"/","Rscripts/extract_temp_CTD.R"))
   source(paste0(folder,"/","Rscripts/create_inflow_outflow_file.R"))
-  source(paste0(folder,"/","Rscripts/plot_forecast_netcdf.R"))
   source(paste0(folder,"/","Rscripts/archive_forecast.R"))
   source(paste0(folder,"/","Rscripts/write_forecast_netcdf.R")) 
   source(paste0(folder,"/","Rscripts/GLM_EnKF.R")) 
@@ -46,19 +45,14 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   npars <- 3
   pre_scc <- FALSE
   
-  #Parameters
+  #Estimated parameters
   lake_depth_init <- 9.4  #not a modeled state
   zone2_temp <- 17
   zone1_temp <- 11
   zone1temp_init_qt <- 0.01 #THIS IS THE VARIANCE, NOT THE SD
   zone2temp_init_qt <- 0.01 #THIS IS THE VARIANCE, NOT THE SD
-  if(include_wq){
-    kw_init <- 0.1
-    kw_init_qt <- 0.00000000001
-  }else{
-    kw_init <- 1.0
-    kw_init_qt <- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
-  }
+  swf_lwf_init <- 1.0
+  swf_lwf_init_qt <- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
   
   obs_error <- 0.0001 #NEED TO DOUBLE CHECK
 
@@ -198,6 +192,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   ####################################################
   #### STEP 2: DETECT PLATFORM  
   ####################################################
+  
   switch(Sys.info() [["sysname"]],
          Linux = { machine <- "unix" },
          Darwin = { machine <- "mac" })
@@ -213,6 +208,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   ####################################################
   #### STEP 3: CREATE TIME VECTORS
   ####################################################
+  
   # The simulations are run from 00:00:00 GMT time 
   # so that they directly interface with the NOAA forecast
   # The output is converted back to local time before being saved
@@ -276,7 +272,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                "gep_all_00z")
   temp_obs_fname_wdir <-  paste0(working_glm, "/", temp_obs_fname)
   met_obs_fname_wdir <-paste0(met_station_location, "/", met_obs_fname)
-  met_forecaset_base_file_name <- paste0("met_hourly_",
+  met_forecast_base_file_name <- paste0("met_hourly_",
                                          forecast_base_name,
                                          "_ens")
   if(is.na(sim_name)){
@@ -305,14 +301,12 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     out_directory <- working_glm
     file_name <- forecast_base_name
     #NEED TO DOUBLE CHECK THE INPUT_TZ AND WHY IT IS EST
-    process_GEFS2GLM(in_directory,
-                     out_directory,
-                     file_name, 
-                     input_tz = "EST5EDT", 
-                     output_tz = reference_tzone)
-    for(i in 1:n_met_members){
-      met_file_names[1+i] <- paste0(met_forecaset_base_file_name, i, ".csv")
-    }
+    met_file_names[2:(1+n_met_members)] <- process_GEFS2GLM(in_directory,
+                                                            out_directory,
+                                                            file_name, 
+                                                            #NEED TO CHANGE TO GMT IF FORECASTING AFTER DEC 8 00:00:00 GMT
+                                                            input_tz = "EST5EDT", 
+                                                            output_tz = reference_tzone)
   }
 
   ###MOVE DATA FILES AROUND
@@ -685,7 +679,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   }
   
   ####################################################
-  #### STEP 8: CREATE THE Z ARRAY
+  #### STEP 8: CREATE THE Z ARRAY (OBSERVATIONS x TIME)
   ####################################################
   
   #Observations for each observed state at each time step
@@ -741,7 +735,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   #Covariance matrix for parameters
   qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
-  diag(qt_pars) <- c(zone1temp_init_qt, zone2temp_init_qt, kw_init_qt)
+  diag(qt_pars) <- c(zone1temp_init_qt, zone2temp_init_qt, swf_lwf_init_qt)
   
   #######################################################
   #### STEP 10: CREATE THE PSI VECTOR (DATA UNCERTAINITY)  
@@ -750,7 +744,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   psi <- rep(obs_error, length(obs_index))
   
   ################################################################
-  #### STEP 11: CREATE THE X ARRAY (STATES); INCLUDES INITIALATION
+  #### STEP 11: CREATE THE X ARRAY (STATES X TIME);INCLUDES INITIALATION
   ################################################################
   nmembers <- n_enkf_members*n_met_members
   
@@ -775,7 +769,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
         x[1, ,(nstates+1):(nstates+npars)] <- rmvnorm(n=nmembers, 
                                                      mean=c(zone1_temp,
                                                             zone2_temp,
-                                                            kw_init),
+                                                            swf_lwf_init),
                                                      sigma = as.matrix(qt_pars))
         if(initial_condition_uncertainity == FALSE){
           for(m in 1:nmembers){
@@ -783,7 +777,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                          wq_init_vals,
                          zone1_temp,
                          zone2_temp,
-                         kw_init)
+                         swf_lwf_init)
           }
         }
       }else{
@@ -804,11 +798,11 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
         x[1, ,(nstates+1):(nstates+npars)] <- rmvnorm(n=nmembers, 
                                                      mean=c(zone1_temp,
                                                             zone2_temp,
-                                                            kw_init),
+                                                            swf_lwf_init),
                                                      sigma = as.matrix(qt_pars))
         if(initial_condition_uncertainity == FALSE){
           for(m in 1:nmembers){
-            x[1, m, ] <- c(the_temps_init, zone1_temp, zone2_temp, kw_init)
+            x[1, m, ] <- c(the_temps_init, zone1_temp, zone2_temp, swf_lwf_init)
           }
         }
       }else{

@@ -6,14 +6,17 @@ if (!"glmtools" %in% installed.packages()) install.packages("glmtools",
                                                                     "http://owi.usgs.gov/R"))
 if (!"RCurl" %in% installed.packages()) install.packages("RCurl")
 if (!"testit" %in% installed.packages()) install.packages("testit")
+if (!"imputeTS" %in% installed.packages()) install.packages("imputeTS")
+
 library(mvtnorm)
 library(glmtools)
 library(ncdf4)
 library(lubridate)
 library(RCurl)
 library(testit)
+library(imputeTS)
 
-folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/SSC_forecasting/"
+folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
 forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/" 
 data_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/" 
 start_day <- "2018-10-02 00:00:00"
@@ -26,10 +29,10 @@ reference_tzone <- "GMT"
 n_enkf_members <- 50
 include_wq <- FALSE
 use_ctd <- FALSE
+
 source(paste0(folder,"/","Rscripts/run_enkf_forecast.R"))
 source(paste0(folder,"/","Rscripts/evaluate_forecast.R"))
-source(paste0(folder,"/","Rscripts/plot_forecast_management.R"))
-source(paste0(folder,"/","Rscripts/plot_forecast_netcdf.R"))
+source(paste0(folder,"/","Rscripts/plot_forecast.R"))
 
 sim_name <- "test" 
 start_day <- "2018-07-12 00:00:00"
@@ -41,12 +44,12 @@ out <- run_enkf_forecast(
   start_day= start_day,
   sim_name = sim_name, 
   hist_days = hist_days,
-  forecast_days = 0,
+  forecast_days = 16,
   spin_up_days = 0,
   restart_file = NA,
   folder = folder,
   forecast_location = forecast_location,
-  push_to_git=push_to_git,
+  push_to_git = push_to_git,
   data_location = data_location,
   n_enkf_members = 1,
   include_wq = include_wq,
@@ -63,4 +66,7 @@ plot_forecast_netcdf(pdf_file_name = paste0(unlist(out)[2], ".pdf"),
                      save_location = forecast_location,
                      data_location = data_location,
                      plot_summaries = FALSE,
-                     use_ctd = use_ctd)
+                     pre_scc = FALSE,
+                     push_to_git = push_to_git, 
+                     use_ctd = use_ctd,
+                     plot_type = 1)
