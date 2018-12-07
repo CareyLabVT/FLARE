@@ -19,20 +19,17 @@ library(imputeTS)
 folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
 forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/" 
 data_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/" 
-start_day <- "2018-10-02 00:00:00"
-forecast_start_day <- "2018-10-08 00:00:00"
 restart_file <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/FCR_betaV2_hist_2018_10_1_forecast_2018_10_2_2018102_5_53.nc"
 spin_up_days <- 0
-num_forecast_days <- 0  #Set to NA if running into future
 push_to_git <- FALSE
 reference_tzone <- "GMT"
-n_enkf_members <- 50
+n_enkf_members <- 1
 include_wq <- FALSE
 use_ctd <- FALSE
 
-source(paste0(folder,"/","Rscripts/run_enkf_forecast.R"))
-source(paste0(folder,"/","Rscripts/evaluate_forecast.R"))
-source(paste0(folder,"/","Rscripts/plot_forecast.R"))
+source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
+source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
+source(paste0(folder, "/", "Rscripts/plot_forecast.R"))
 
 sim_name <- "test" 
 start_day <- "2018-07-12 00:00:00"
@@ -40,34 +37,32 @@ forecast_start_day <-"2018-07-16 00:00:00"
 hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_tzone),
                                  as.POSIXct(start_day, tz = reference_tzone)))
 
-out <- run_enkf_forecast(
-  start_day= start_day,
-  sim_name = sim_name, 
-  hist_days = hist_days,
-  forecast_days = 16,
-  spin_up_days = 0,
-  restart_file = NA,
-  folder = folder,
-  forecast_location = forecast_location,
-  push_to_git = push_to_git,
-  data_location = data_location,
-  n_enkf_members = 1,
-  include_wq = include_wq,
-  use_ctd = use_ctd,
-  uncert_mode = 1,
-  cov_matrix = "Qt_cov_matrix_11June_14Aug2_18.csv",
-  alpha = c(0.5, 0.5, 0.9))
+out <- run_enkf_forecast(start_day= start_day,
+                         sim_name = sim_name,
+                         hist_days = hist_days,
+                         forecast_days = 16,
+                         spin_up_days = 0,
+                         restart_file = NA,
+                         folder = folder,
+                         forecast_location = forecast_location,
+                         push_to_git = push_to_git,
+                         data_location = data_location,
+                         n_enkf_members = n_enkf_members,
+                         include_wq = include_wq,
+                         use_ctd = use_ctd,
+                         uncert_mode = 1,
+                         cov_matrix = "Qt_cov_matrix_11June_14Aug2_18.csv",
+                         alpha = c(0.5, 0.5, 0.9))
 
 
 plot_forecast(pdf_file_name = unlist(out)[2],
-                     output_file = unlist(out)[1],
-                     include_wq = include_wq,
-                     forecast_days = 16,
-                     code_location = paste0(folder, "/Rscripts/"),
-                     save_location = forecast_location,
-                     data_location = data_location,
-                     plot_summaries = FALSE,
-                     pre_scc = FALSE,
-                     push_to_git = push_to_git, 
-                     use_ctd = use_ctd,
-                     plot_type = 2)
+              output_file = unlist(out)[1],
+              include_wq = include_wq,
+              forecast_days = 16,
+              code_location = paste0(folder, "/Rscripts/"),
+              save_location = forecast_location,
+              data_location = data_location,
+              plot_summaries = FALSE,
+              pre_scc = FALSE,
+              push_to_git = push_to_git,
+              use_ctd = use_ctd)

@@ -1,4 +1,4 @@
-plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,forecast_days,code_location,save_location,data_location,plot_summaries,pre_scc,push_to_git,use_ctd,plot_type){
+plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,forecast_days,code_location,save_location,data_location,plot_summaries,pre_scc,push_to_git,use_ctd){
     library(ncdf4)
     library(lubridate)
 
