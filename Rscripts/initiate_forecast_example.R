@@ -59,9 +59,10 @@ out <- run_enkf_forecast(
   alpha = c(0.5, 0.5, 0.9))
 
 
-plot_forecast_netcdf(pdf_file_name = paste0(unlist(out)[2], ".pdf"),
+plot_forecast(pdf_file_name = unlist(out)[2],
                      output_file = unlist(out)[1],
                      include_wq = include_wq,
+                     forecast_days = 16,
                      code_location = paste0(folder, "/Rscripts/"),
                      save_location = forecast_location,
                      data_location = data_location,
@@ -69,4 +70,4 @@ plot_forecast_netcdf(pdf_file_name = paste0(unlist(out)[2], ".pdf"),
                      pre_scc = FALSE,
                      push_to_git = push_to_git, 
                      use_ctd = use_ctd,
-                     plot_type = 1)
+                     plot_type = 2)

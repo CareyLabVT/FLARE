@@ -1,5 +1,4 @@
-plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,code_location,save_location,data_location,plot_summaries,pre_scc,push_to_git, use_ctd,plot_type){
-  if(plot_type == 1){
+plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,forecast_days,code_location,save_location,data_location,plot_summaries,pre_scc,push_to_git,use_ctd,plot_type){
     library(ncdf4)
     library(lubridate)
 
@@ -170,7 +169,8 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,cod
     #print(full_time_day)
     #print(z[1,])
     nMETmembers =21
-    pdf(paste0(save_location,'/',pdf_file_name),width = 12, height = 12)
+    
+    pdf(paste0(save_location,'/',pdf_file_name, ".pdf"),width = 12, height = 12)
     par(mfrow=c(4,3))
     
     for(i in 1:nlayers){
@@ -310,12 +310,10 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,cod
         abline(v= z[forecast_index+14,10],col='red')
       }
     }
+    dev.off()
     
-  }else if(plot_type == 2){
-    library(ncdf4)
-    library(lubridate)
-    
-    
+  if(forecast_days > 0){
+
     #code_location <- '/Users/quinn/Dropbox (VTFRS)/Research/SSC_forecasting/SSC_forecasting/Rscripts'
     #output_file <-'/Users/quinn/Dropbox (VTFRS)/Research/SSC_forecasting/test_forecast/FCR_betaV2_hist_2018_9_15_forecast_2018_9_16_2018916_9_47.nc'
     #include_wq <- FALSE
@@ -480,7 +478,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,cod
     }
     
     focal_depths <- c(4,16,25)
-    png(paste0(save_location,'/',pdf_file_name),width = 12, height = 6,units = 'in',res=300)
+    png( paste0(save_location,'/',pdf_file_name, "_management.png"),width = 12, height = 6,units = 'in',res=300)
     par(mfrow=c(1,2))
     
     #PLOT OF TURNOVER PROBABILITY
@@ -568,8 +566,8 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,cod
     
     mtext(paste0('Falling Creek Reservoir\n',month(tmp_day),'/',day(tmp_day),'/',year(tmp_day)), side = 3, line = -2, outer = TRUE, font = 2)
     dev.off()
-    
-    jpeg(paste0(save_location,'/TO_',pdf_file_name),width = 6, height = 6,units = 'in',res=300)
+
+    jpeg(paste0(save_location,'/TO_',pdf_file_name, ".png"),width = 6, height = 6,units = 'in',res=300)
     plot(full_time_plotting,rep(-99,length(full_time_plotting)),ylim=c(0,100),xlab = 'date',ylab = '% chance')
     title('Turnover forecast',cex.main=0.9)
     points(full_time[3:18],prob_zero,type='o',ylim=c(0,100),xlab = 'date',ylab = 'Probablity of turnover')
@@ -589,6 +587,5 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,cod
       system('git push')
     }
   }
-  dev.off()
 }
 
