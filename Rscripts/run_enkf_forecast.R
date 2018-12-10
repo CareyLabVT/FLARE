@@ -7,21 +7,22 @@
 # ---------------------------------------------------------#
 
 run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00", 
-                       sim_name = NA, 
-                       hist_days = 1,
-                       forecast_days = 16,  
-                       spin_up_days = 0,
-                       restart_file = NA,
-                       folder, 
-                       forecast_location = NA,
-                       push_to_git=FALSE,
-                       data_location = NA, 
-                       n_enkf_members = NA,
-                       include_wq = FALSE,
-                       use_ctd = use_ctd,
-                       uncert_mode = 1,
-                       cov_matrix = NA,
-                       alpha = c(0.5,0.5,0.5)){
+                            sim_name = NA, 
+                            hist_days = 1,
+                            forecast_days = 16,  
+                            spin_up_days = 0,
+                            restart_file = NA,
+                            folder, 
+                            forecast_location = NA,
+                            push_to_git = FALSE,
+                            pull_from_git = TRUE, 
+                            data_location = NA, 
+                            n_enkf_members = NA,
+                            include_wq = FALSE,
+                            use_ctd = use_ctd,
+                            uncert_mode = 1,
+                            cov_matrix = NA,
+                            alpha = c(0.5,0.5,0.5)){
   
   #################################################
   ### LOAD R FUNCTIONS
@@ -55,18 +56,18 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   swf_lwf_init_qt <- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
   
   obs_error <- 0.0001 #NEED TO DOUBLE CHECK
-
+  
   #Define modeled depths and depths with observations
   modeled_depths <- c(0.1, 0.33, 0.66, 
-                       1.00, 1.33, 1.66,
-                       2.00, 2.33, 2.66,
-                       3.0, 3.33, 3.66,
-                       4.0, 4.33, 4.66,
-                       5.0, 5.33, 5.66,
-                       6.0, 6.33, 6.66,
-                       7.00, 7.33, 7.66,
-                       8.0, 8.33, 8.66,
-                       9.00, 9.33)
+                      1.00, 1.33, 1.66,
+                      2.00, 2.33, 2.66,
+                      3.0, 3.33, 3.66,
+                      4.0, 4.33, 4.66,
+                      5.0, 5.33, 5.66,
+                      6.0, 6.33, 6.66,
+                      7.00, 7.33, 7.66,
+                      8.0, 8.33, 8.66,
+                      9.00, 9.33)
   
   observed_depths_temp <- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9)
   observed_depths_do <- c(1, 5, 9)
@@ -109,13 +110,19 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   temperature_location <- paste0(data_location, "/", "mia-data")
   setwd(temperature_location)
-  system(paste0("git pull"))
+  if(pull_from_git){
+    system(paste0("git pull"))
+  }
   met_station_location <- paste0(data_location, "/", "carina-data")
   setwd(met_station_location)
-  system(paste0("git pull"))
+  if(pull_from_git){
+    system(paste0("git pull"))
+  }
   noaa_location <- paste0(data_location, "/", "noaa-data")
   setwd(noaa_location)
-  system(paste0("git pull"))
+  if(pull_from_git){
+    system(paste0("git pull"))
+  }
   
   #################################################
   ### OPTIONS TO ISOLATE COMPONENTS OF UNCERTAINITY
@@ -273,8 +280,8 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   temp_obs_fname_wdir <-  paste0(working_glm, "/", temp_obs_fname)
   met_obs_fname_wdir <-paste0(met_station_location, "/", met_obs_fname)
   met_forecast_base_file_name <- paste0("met_hourly_",
-                                         forecast_base_name,
-                                         "_ens")
+                                        forecast_base_name,
+                                        "_ens")
   if(is.na(sim_name)){
     sim_name <- paste0(year(full_time_local[1]), "_",
                        month(full_time_local[1]), "_",
@@ -308,7 +315,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                                             input_tz = "EST5EDT", 
                                                             output_tz = reference_tzone)
   }
-
+  
   ###MOVE DATA FILES AROUND
   sim_files_folder <- paste0(folder, "/", "sim_files")
   GLM_folder <- paste0(folder, "/", "glm", "/", machine) 
@@ -344,7 +351,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                input_tz = "EST5EDT",
                                output_tz = reference_tzone )
   }
-
+  
   #Extract observations
   temp_obs_fname_wdir <- paste0(temperature_location, "/", temp_obs_fname)
   #PROCESS TEMPERATURE OBSERVATIONS
@@ -583,48 +590,62 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   ZOO_DAPHNIABIG2_init_depth <- rep(ZOO_DAPHNIABIG2_init, ndepths_modeled)
   ZOO_DAPHNIASMALL3_init_depth <- rep(ZOO_DAPHNIASMALL3_init, ndepths_modeled)
   
-  #if(full_time_day_local[1] == as.data.frame.POSIXct("201")
-  #curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9,10)
+  
+  if(full_time_day_local[1] == 
+     strftime("2018-07-09",format="%Y-%m-%d",tz = "EST5EDT") &
+     include_wq){
+  curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9,10)
   #mg/L
-  #curr_values <- c(3.764, 3.781, 3.578, 5.156, 5.2735, 5.5165, 5.222, 5.368)
-  #inter <- approxfun(curr_depths,curr_values,rule=2)
-  #CAR_dic_init_depth <- inter(modeled_depths)
+  curr_values <- c(3.764, 3.781, 3.578, 5.156, 5.2735, 5.5165, 5.222, 5.368)
+  curr_values <- (curr_values*1000)/(10*12)
+  inter <- approxfun(curr_depths,curr_values,rule=2)
+  CAR_dic_init_depth <- inter(modeled_depths)
   
-  #curr_depths <- c(0.1,1.6,3.8,5,6.2,8,9,9.5)
+  curr_depths <- c(0.1,1.6,3.8,5,6.2,8,9,9.5)
   #umol CH4/L
-  #curr_values <- c(3.91E-04,0.370572728,0.107597836,0.126096596,
-                    #0.088502664,0.086276629,0.07256043,0.07249431)
-  #inter <- approxfun(curr_depths,curr_values,rule=2)
-  #CAR_ch4_init_depth <- inter(modeled_depths)
+  curr_values <- c(3.91E-04,0.370572728,0.107597836,0.126096596,
+                   0.088502664,0.086276629,0.07256043,0.07249431)
+  curr_values <- curr_values*1000
+  inter <- approxfun(curr_depths,curr_values,rule=2)
+  CAR_ch4_init_depth <- inter(modeled_depths)
   
-  #curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
-  #curr_values <- c(12.65291714,4.213596723,10.5935375,13.43611258,
-                    #11.34765394,11.95676704,11.98577285,12.82695814)
+  curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
   #ug/L
-  #inter <- approxfun(curr_depths,curr_values,rule=2)
-  #NIT_amm_init_depth <- inter(modeled_depths)
+  curr_values <- c(12.65291714,4.213596723,10.5935375,13.43611258,
+                   11.34765394,11.95676704,11.98577285,12.82695814)
+  curr_values <- (curr_values*1000)/14
+  inter <- approxfun(curr_depths,curr_values,rule=2)
+  NIT_amm_init_depth <- inter(modeled_depths)
   
-  #curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
-  #curr_values <-c(5.68,3.82,4.46,3.71,4.18,5.08,3.01,7.72)
+  curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
+  curr_values <-c(5.68,3.82,4.46,3.71,4.18,5.08,3.01,7.72)
+  curr_values <- (curr_values*1000)/14
   #ug/L
-  #inter <- approxfun(curr_depths,curr_values,rule=2)
-  #NIT_nit_init_depth <- inter(modeled_depths)
+  inter <- approxfun(curr_depths,curr_values,rule=2)
+  NIT_nit_init_depth <- inter(modeled_depths)
   
-  #curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
+  curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
   #ug/L
-  #curr_values <- c(8.96,7.66,6.26,6.22,7.72,9.69,7.95,10.5)
-  #inter <- approxfun(curr_depths,curr_values,rule=2)
-  #PHS_frp_init_depth <- inter(modeled_depths)
+  curr_values <- c(8.96,7.66,6.26,6.22,7.72,9.69,7.95,10.5)
+  curr_values <- (curr_values*1000)/18
+  inter <- approxfun(curr_depths,curr_values,rule=2)
+  PHS_frp_init_depth <- inter(modeled_depths)
   
-  #curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
+  curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
   ##mg/L
-  #curr_values <- c(4.2315,4.374, 3.2655,2.9705,2.938,2.922,2.773,2.9525)
-  #inter <- approxfun(curr_depths,curr_values,rule=2)
-  #OGM_poc_init_depth <- inter(modeled_depths)
+  curr_values <- c(4.2315,4.374, 3.2655,2.9705,2.938,2.922,2.773,2.9525)
+  curr_values <- (curr_values*1000)/(10*12)
+  inter <- approxfun(curr_depths,curr_values,rule=2)
+  OGM_doc_init_depth <- inter(modeled_depths)
   
-  #}else{
-  
-  #}
+  curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
+  ##mg/L
+  curr_values <- c(0.2855,0.261,0.218,0.2135,0.2185,0.223,0.2025,0.2065)
+  curr_values <- (curr_values*1000)/(10*14)
+  inter <- approxfun(curr_depths,curr_values,rule=2)
+  DN_init_depth <- inter(modeled_depths)
+  OGM_don_init_depth <- DN_init_depth - NIT_amm_init_depth - NIT_nit_init_depth
+}
   
   wq_init_vals <- c(OXY_oxy_init_depth,
                     CAR_pH_init_depth,
@@ -685,7 +706,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   #Observations for each observed state at each time step
   #an observation with at least 1 observation but without an 
   #observation in a time-step gets assigned an NA
-
+  
   if(include_wq){
     z <- cbind(obs_temp$obs, obs_do$obs)
   }else{
@@ -756,34 +777,34 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   }
   
   x <- array(NA, dim=c(nsteps, nmembers, nstates + npars))
-
+  
   
   #Initial conditions
   if(!restart_present){
     if(include_wq){
       if(npars > 0){
         x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
-                                   mean=c(the_temps_init, 
-                                          wq_init_vals), 
-                                   sigma=as.matrix(qt))
+                                    mean=c(the_temps_init, 
+                                           wq_init_vals), 
+                                    sigma=as.matrix(qt))
         x[1, ,(nstates+1):(nstates+npars)] <- rmvnorm(n=nmembers, 
-                                                     mean=c(zone1_temp,
-                                                            zone2_temp,
-                                                            swf_lwf_init),
-                                                     sigma = as.matrix(qt_pars))
+                                                      mean=c(zone1_temp,
+                                                             zone2_temp,
+                                                             swf_lwf_init),
+                                                      sigma = as.matrix(qt_pars))
         if(initial_condition_uncertainity == FALSE){
           for(m in 1:nmembers){
             x[1,m, ] <- c(the_temps_init,
-                         wq_init_vals,
-                         zone1_temp,
-                         zone2_temp,
-                         swf_lwf_init)
+                          wq_init_vals,
+                          zone1_temp,
+                          zone2_temp,
+                          swf_lwf_init)
           }
         }
       }else{
         x[1, , ] <- rmvnorm(n=nmembers, 
-                          mean=c(the_temps_init,wq_init_vals),
-                          sigma=as.matrix(qt))
+                            mean=c(the_temps_init,wq_init_vals),
+                            sigma=as.matrix(qt))
         if(initial_condition_uncertainity == FALSE){
           for(m in 1:nmembers){
             x[1, m, ] <- c(the_temps_init, do_init, wq_init_vals)
@@ -793,13 +814,13 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     }else{
       if(npars > 0){
         x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
-                                   mean=the_temps_init,
-                                   sigma=as.matrix(qt))
+                                    mean=the_temps_init,
+                                    sigma=as.matrix(qt))
         x[1, ,(nstates+1):(nstates+npars)] <- rmvnorm(n=nmembers, 
-                                                     mean=c(zone1_temp,
-                                                            zone2_temp,
-                                                            swf_lwf_init),
-                                                     sigma = as.matrix(qt_pars))
+                                                      mean=c(zone1_temp,
+                                                             zone2_temp,
+                                                             swf_lwf_init),
+                                                      sigma = as.matrix(qt_pars))
         if(initial_condition_uncertainity == FALSE){
           for(m in 1:nmembers){
             x[1, m, ] <- c(the_temps_init, zone1_temp, zone2_temp, swf_lwf_init)
@@ -807,8 +828,8 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
         }
       }else{
         x[1, , ] <- rmvnorm(n=nmembers, 
-                          mean=the_temps_init,
-                          sigma=as.matrix(qt))
+                            mean=the_temps_init,
+                            sigma=as.matrix(qt))
         
         if(initial_condition_uncertainity == FALSE){
           for(m in 1:nmembers){
@@ -829,9 +850,9 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
       }
     }
     write.csv(x[1, , ],paste0(working_glm, "/", "restart_",
-                            year(full_time[1]), "_",
-                            month(full_time[1]), "_",
-                            day(full_time[1]), "_cold.csv"),
+                              year(full_time[1]), "_",
+                              month(full_time[1]), "_",
+                              day(full_time[1]), "_cold.csv"),
               row.names = FALSE)
   }
   

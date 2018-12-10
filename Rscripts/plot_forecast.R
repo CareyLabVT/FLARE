@@ -1,4 +1,4 @@
-plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,forecast_days,code_location,save_location,data_location,plot_summaries,pre_scc,push_to_git,use_ctd){
+plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,forecast_days,code_location,save_location,data_location,plot_summaries,pre_scc,push_to_git,pull_from_git,use_ctd){
 
     source(paste0(code_location,'/extract_temp_chain.R'))
     source(paste0(code_location,'/extract_temp_CTD.R'))
@@ -22,7 +22,9 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     
     mia_location <- paste0(data_location,'/','mia-data')
     setwd(mia_location)
-    system(paste0('git pull'))
+    if(pull_from_git){
+      system(paste0("git pull"))
+    }
     catwalk_fname <- paste0(mia_location,'/','Catwalk.csv')
     
     
@@ -40,30 +42,15 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     zone1temp <- ncvar_get(nc,'zone1temp')
     zone2temp <- ncvar_get(nc,'zone2temp')
     forecasted <- ncvar_get(nc,'forecasted')
-    l <- list(ncvar_get(nc,wq_names[1]))
+
     if(include_wq){
-      OXY_oxy <- ncvar_get(nc,'OXY_oxy')
-      PHY_CYANOPCH1 <- ncvar_get(nc,'PHY_CYANOPCH1')
-      CAR_pH <- ncvar_get(nc, 'CAR_pH')
-      CAR_dic <- ncvar_get(nc, 'CAR_dic')
-      CAR_ch4 <- ncvar_get(nc, 'CAR_ch4')
-      SIL_rsi <- ncvar_get(nc, 'SIL_rsi')
-      NIT_amm <- ncvar_get(nc, 'NIT_amm')
-      NIT_nit <- ncvar_get(nc, 'NIT_nit')
-      PHS_frp <- ncvar_get(nc, 'PHS_frp')
-      OGM_doc <- ncvar_get(nc, 'OGM_doc')
-      OGM_poc <- ncvar_get(nc, 'OGM_poc')
-      OGM_don <- ncvar_get(nc, 'OGM_don')
-      OGM_pon <- ncvar_get(nc, 'OGM_pon')
-      OGM_dop <- ncvar_get(nc, 'OGM_dop')
-      OGM_pop <- ncvar_get(nc, 'OGM_pop')
-      PHY_CYANOPCH1 <- ncvar_get(nc, 'PHY_CYANOPCH1')
-      PHY_CYANONPCH2 <- ncvar_get(nc, 'PHY_CYANONPCH2')
-      PHY_CHLOROPCH3 <- ncvar_get(nc, 'PHY_CHLOROPCH3')
-      PHY_DIATOMPCH4 <- ncvar_get(nc, 'PHY_DIATOMPCH4')
-      ZOO_COPEPODS1 <- ncvar_get(nc, 'ZOO_COPEPODS1')
-      ZOO_DAPHNIABIG2 <- ncvar_get(nc, 'ZOO_DAPHNIABIG2')
-      ZOO_DAPHNIASMALL3 <- ncvar_get(nc, 'ZOO_DAPHNIASMALL3')
+      wq_output <- array(NA,dim = c(length(wq_names),dim(temp)[1],dim(temp)[2],dim(temp)[3]))
+      for(i in 1:length(wq_names)){
+      wq_output[i,,,] <- ncvar_get(nc,wq_names[i])
+      }
+      
+      OXY_oxy <- wq_output[which(wq_names == 'OXY_oxy'),,,]
+      PHY_CYANOPCH1 <- wq_output[which(wq_names == 'PHY_CYANOPCH1'),,,]
     }
     
     nc_close(nc)
@@ -220,6 +207,12 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
       }
     }
     
+    ###PLOT OF PARAMETERS IF FIT
+    plot.new()
+    plot(rowMeans(Kw[,]),xlab ='Day',ylab = 'SW & LW Factor',type='l')
+    plot(rowMeans(zone1temp[,]),xlab ='Day',ylab = 'Zone 1 sediment temp',type='l')
+    plot(rowMeans(zone2temp[,]),xlab ='Day',ylab = 'Zone 2 sediment temp',type='l')
+    
     if(include_wq){
       par(mfrow=c(4,3))
       
@@ -282,16 +275,25 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
           abline(v = full_time[forecast_index-1])
         }
       }
+      
+      par(mfrow=c(4,3))
+      for(wq in 1:length(wq_names)){
+        
+        for(i in c(4,16,25)){
+        ylim = range(c(wq_output[wq,,,]),na.rm = TRUE) 
+        plot(full_time,wq_output[wq,,1,i],type='l',ylab=wq_names[wq],xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+          for(m in 2:length(temp[1,,model])){
+            points(full_time,wq_output[wq,,m,i],type='l')
+          }
+        }
+      }
+      
     }
     
     
     
     
-    ###PLOT OF PARAMETERS IF FIT
-    plot.new()
-    plot(rowMeans(Kw[,]),xlab ='Day',ylab = 'SW & LW Factor',type='l')
-    plot(rowMeans(zone1temp[,]),xlab ='Day',ylab = 'Zone 1 sediment temp',type='l')
-    plot(rowMeans(zone2temp[,]),xlab ='Day',ylab = 'Zone 2 sediment temp',type='l')
+
     
     
     ###PLOT HISTOGRAMS OF FORECAST
@@ -389,8 +391,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     for(i in 1:length(depths)){
       if(length(which(depths[i]  == TempObservedDepths)) >= 1 ){
         depth_colors_index <- i
-        print(i)
-        points(full_time_past, obs_temp_past$obs[1:length(full_time_past),i],type='l',col=depth_colors[depth_colors_index],lwd=1.5)
+        points(full_time_past, obs_temp$obs[1:length(full_time_past),i],type='l',col=depth_colors[depth_colors_index],lwd=1.5)
         index <- which(obs_index[i]  == focal_depths)
         if(length(index) == 1){
           points(full_time[-1], temp_mean[-1,obs_index[i]],type='l',lty='dashed',col=depth_colors[depth_colors_index],lwd=1.5) 

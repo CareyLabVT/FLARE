@@ -22,8 +22,10 @@ data_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
 restart_file <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/FCR_betaV2_hist_2018_10_1_forecast_2018_10_2_2018102_5_53.nc"
 spin_up_days <- 0
 push_to_git <- FALSE
+pull_from_git <- FALSE
 reference_tzone <- "GMT"
 n_enkf_members <- 1
+forecast_days <- 16
 include_wq <- TRUE
 use_ctd <- TRUE
 
@@ -32,20 +34,21 @@ source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
 source(paste0(folder, "/", "Rscripts/plot_forecast.R"))
 
 sim_name <- "test" 
-start_day <- "2018-07-10 00:00:00"
-forecast_start_day <-"2018-07-26 00:00:00" 
+start_day <- "2018-07-10 00:00:00" #GMT
+forecast_start_day <-"2018-07-14 00:00:00" #GMT 
 hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_tzone),
                                  as.POSIXct(start_day, tz = reference_tzone)))
 
 out <- run_enkf_forecast(start_day= start_day,
                          sim_name = sim_name,
                          hist_days = hist_days,
-                         forecast_days = 0,
+                         forecast_days = forecast_days,
                          spin_up_days = 0,
                          restart_file = NA,
                          folder = folder,
                          forecast_location = forecast_location,
                          push_to_git = push_to_git,
+                         pull_from_git = pull_from_git,
                          data_location = data_location,
                          n_enkf_members = n_enkf_members,
                          include_wq = include_wq,
@@ -58,11 +61,12 @@ out <- run_enkf_forecast(start_day= start_day,
 plot_forecast(pdf_file_name = unlist(out)[2],
               output_file = unlist(out)[1],
               include_wq = include_wq,
-              forecast_days = 16,
+              forecast_days = forecast_days,
               code_location = paste0(folder, "/Rscripts/"),
               save_location = forecast_location,
               data_location = data_location,
               plot_summaries = FALSE,
               pre_scc = FALSE,
               push_to_git = push_to_git,
+              pull_from_git = pull_from_git,
               use_ctd = use_ctd)
