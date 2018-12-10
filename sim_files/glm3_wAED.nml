@@ -12,7 +12,7 @@
    light_extc = 1.0, 0.5, 2.0, 4.0
    energy_frac = 0.51, 0.45, 0.035, 0.005
    Benthic_Imin = 10
-   Kw = 0.5
+   Kw = 0.87
 /
 &mixing
    coef_mix_conv = 0.2
@@ -71,8 +71,8 @@
    meteo_fl = 'FCR_GLM_met_NLDAS2_010113_010118_GMTadjusted.csv'
    subdaily = .true.
    wind_factor = 1.0
-   sw_factor = 0.8 !Tweaking this affects evaporation quite a bit, 1.0, Paul has set to 0.91
-   lw_factor = 0.8 !Tweaking this affects evaporation quite a bit, Paul has set to 0.91
+   sw_factor = 1.0 !Tweaking this affects evaporation quite a bit, 1.0, Paul has set to 0.91
+   lw_factor = 1.0 !Tweaking this affects evaporation quite a bit, Paul has set to 0.91
    at_factor = 1
    rh_factor = 1
    rain_factor = 1
@@ -89,7 +89,7 @@
    subm_flag = .false.
    strm_hf_angle = 55
    strmbd_slope = 0.05
-   strmbd_drag = 0.03
+   strmbd_drag = 0.016
    inflow_factor = 1
    inflow_fl = 'FCR_inflow_20180419gep_all_00z.csv'
     inflow_varnum = 8
@@ -112,12 +112,12 @@
 &sediment
   benthic_mode = 2
   n_zones = 2
-  zone_heights = 5,9.5 !!!!5,9.5
-  sed_heat_Ksoil = 1.8,1.8 !!!!0.25,0.9 !more organic, closer to 0.25, up to 2.9, default=1.2
-  sed_temp_depth = 0.2,0.2
-  sed_temp_mean = 11,17 !8,14!!!!14.6,8 !14.6,10.6
-  sed_temp_amplitude = 6,6 !4,10
-  sed_temp_peak_doy = 275,275
-!  sed_reflectivity = 0.1,0.01
+  zone_heights =  6, 9.5 !!!!4,9.5
+  sed_heat_Ksoil = 1.2, 1.2, !1.8, 1.8
+  sed_temp_depth = 0.2, 0.2
+  sed_temp_mean = 11, 17!!!!14.6,8 !14.6,10.6
+  sed_temp_amplitude = 0, 0, 
+  sed_temp_peak_doy = 275, 275
+!  sed_reflectivity = 0.1,0.01, 0.01
 !  sed_roughness = 0.1,0.01
 /

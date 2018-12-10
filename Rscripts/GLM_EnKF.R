@@ -15,6 +15,7 @@ GLM_EnKF <- function(x,
                      spin_up_days,
                      z_states,
                      alpha,
+                     glm_output_vars,
                      weather_uncertainity,
                      process_uncertainity,
                      initial_condition_uncertainity,
@@ -24,6 +25,8 @@ GLM_EnKF <- function(x,
   nmembers <- dim(x)[2]
   n_met_members <- length(met_file_names) - 1
   nstates <- dim(x)[3] - npars
+  num_wq_vars <- length(wq_start)
+  
   
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
   
@@ -107,7 +110,7 @@ GLM_EnKF <- function(x,
               GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "output.nc",
                                                        z_out = modeled_depths,
                                                        vars = glm_output_vars)
-              x_star[m, 1:(nstates-npars)] <- c(GLM_temp_wq_out$output)
+              x_star[m, 1:nstates] <- c(GLM_temp_wq_out$output)
             }else{
               GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "output.nc",
                                                        z_out = modeled_depths,

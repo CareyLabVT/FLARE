@@ -24,23 +24,23 @@ spin_up_days <- 0
 push_to_git <- FALSE
 reference_tzone <- "GMT"
 n_enkf_members <- 1
-include_wq <- FALSE
-use_ctd <- FALSE
+include_wq <- TRUE
+use_ctd <- TRUE
 
 source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
 source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
 source(paste0(folder, "/", "Rscripts/plot_forecast.R"))
 
 sim_name <- "test" 
-start_day <- "2018-07-12 00:00:00"
-forecast_start_day <-"2018-07-16 00:00:00" 
+start_day <- "2018-07-10 00:00:00"
+forecast_start_day <-"2018-07-26 00:00:00" 
 hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_tzone),
                                  as.POSIXct(start_day, tz = reference_tzone)))
 
 out <- run_enkf_forecast(start_day= start_day,
                          sim_name = sim_name,
                          hist_days = hist_days,
-                         forecast_days = 16,
+                         forecast_days = 0,
                          spin_up_days = 0,
                          restart_file = NA,
                          folder = folder,

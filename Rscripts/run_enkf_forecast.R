@@ -584,7 +584,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   ZOO_DAPHNIASMALL3_init_depth <- rep(ZOO_DAPHNIASMALL3_init, ndepths_modeled)
   
   #if(full_time_day_local[1] == as.data.frame.POSIXct("201")
-  #curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
+  #curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9,10)
   #mg/L
   #curr_values <- c(3.764, 3.781, 3.578, 5.156, 5.2735, 5.5165, 5.222, 5.368)
   #inter <- approxfun(curr_depths,curr_values,rule=2)
@@ -910,6 +910,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                           spin_up_days,
                           z_states,
                           alpha,
+                          glm_output_vars,
                           weather_uncertainity,
                           process_uncertainity,
                           initial_condition_uncertainity,
