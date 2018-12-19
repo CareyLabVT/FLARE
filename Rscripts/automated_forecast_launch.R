@@ -1,73 +1,85 @@
 if (!"mvtnorm" %in% installed.packages()) install.packages("mvtnorm")
 if (!"ncdf4" %in% installed.packages()) install.packages("ncdf4")
 if (!"lubridate" %in% installed.packages()) install.packages("lubridate")
-if (!"glmtools" %in% installed.packages()) install.packages('glmtools', repos=c('http://cran.rstudio.com', 'http://owi.usgs.gov/R'))
-if (!"RCurl" %in% installed.packages()) install.packages('RCurl')
-if (!"testit" %in% installed.packages()) install.packages('testit')
+if (!"glmtools" %in% installed.packages()) install.packages("glmtools",
+                                                            repos=c("http://cran.rstudio.com",
+                                                                    "http://owi.usgs.gov/R"))
+if (!"RCurl" %in% installed.packages()) install.packages("RCurl")
+if (!"testit" %in% installed.packages()) install.packages("testit")
+if (!"imputeTS" %in% installed.packages()) install.packages("imputeTS")
+
 library(mvtnorm)
 library(glmtools)
 library(ncdf4)
 library(lubridate)
 library(RCurl)
 library(testit)
+library(imputeTS)
 
-sim_name <- 'AGU_GLEON_INIT_UNCERT' #FCR_betaV2'
-Folder <- '/Users/quinn/Dropbox/Research/SSC_forecasting/SSC_forecasting/'
-forecast_location <- '/Users/quinn/Dropbox/Research/SSC_forecasting/test_forecast/' 
-data_location <- '/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/' 
-start_day <- '2018-10-07 00:00:00'
-forecast_start_day <- '2018-10-08 00:00:00'
+folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
+forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/" 
+data_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/" 
+restart_file <- NA #"/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/test_hist_2018_7_10_20181219_13_11.nc"
 spin_up_days <- 0
-num_forecast_days <- 1  #Set to NA if running into future
-init_restart_file <- '/Users/quinn/Dropbox/Research/SSC_forecasting/test_forecast/FCR_betaV2_hist_2018_10_6_forecast_2018_10_7_2018107_5_50.nc'
-wait_time <- 60*10
 push_to_git <- FALSE
-reference_tzone <- 'GMT'
-nEnKFmembers <- 50
+pull_from_git <- FALSE
+reference_tzone <- "GMT"
+n_enkf_members <- 50
+forecast_days <- 16
 include_wq <- FALSE
-USE_CTD <- FALSE
+use_ctd <- FALSE
+num_forecast_periods <- NA
+wait_time <- 60*10
 
-source(paste0(Folder,'/','Rscripts/EnKF_GLM_wNOAAens_V2.R'))
-source(paste0(Folder,'/','Rscripts/evaluate_forecast.R'))
-source(paste0(Folder,'/','Rscripts/plot_forecast_management.R'))
-source(paste0(Folder,'/','Rscripts/plot_forecast_netcdf.R'))
 
-if(is.na(init_restart_file)){
+sim_name <- "test" 
+start_day <- "2018-07-10 00:00:00" #GMT
+forecast_start_day <-"2018-12-19 00:00:00" #GMT 
+
+source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
+source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
+source(paste0(folder, "/", "Rscripts/plot_forecast.R"))
+
+if(is.na(restart_file)){
   hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_tzone), as.POSIXct(start_day,tz = reference_tzone)))
   
-  #FIRST DAY
-  out <- run_forecast(
-    start_day = start_day,
-    sim_name = sim_name, 
-    hist_days = hist_days-1,
-    forecast_days = 0,
-    spin_up_days = spin_up_days,
-    restart_file = NA,
-    Folder = Folder,
-    forecast_location = forecast_location,
-    push_to_git=push_to_git,
-    data_location = data_location,
-    nEnKFmembers = nEnKFmembers,
-    include_wq = include_wq,
-    USE_CTD = USE_CTD,
-    uncert_mode = 1
-  )
+  out <- run_enkf_forecast(start_day= start_day,
+                           sim_name = sim_name,
+                           hist_days = hist_days,
+                           forecast_days = 0,
+                           spin_up_days = spin_up_days,
+                           restart_file = NA,
+                           folder = folder,
+                           forecast_location = forecast_location,
+                           push_to_git = push_to_git,
+                           pull_from_git = pull_from_git,
+                           data_location = data_location,
+                           n_enkf_members = n_enkf_members,
+                           include_wq = include_wq,
+                           use_ctd = use_ctd,
+                           uncert_mode = 1,
+                           cov_matrix = "Qt_cov_matrix_11June_14Aug2_18.csv",
+                           alpha = c(0.5, 0.5, 0.9))
   
-  plot_forecast_netcdf(pdf_file_name = paste0(unlist(out)[2],'.pdf'),
-                       output_file = unlist(out)[1],
-                       include_wq = include_wq,
-                       code_location = paste0(Folder,'/Rscripts/'),
-                       save_location = forecast_location,
-                       data_location = data_location,
-                       plot_summaries = FALSE,
-                       USE_CTD = USE_CTD)
+  plot_forecast(pdf_file_name = unlist(out)[2],
+                output_file = unlist(out)[1],
+                include_wq = include_wq,
+                forecast_days = 0,
+                code_location = paste0(folder, "/Rscripts/"),
+                save_location = forecast_location,
+                data_location = data_location,
+                plot_summaries = FALSE,
+                pre_scc = FALSE,
+                push_to_git = push_to_git,
+                pull_from_git = pull_from_git,
+                use_ctd = use_ctd)
   
   #ADVANCE TO NEXT DAY
-  start_day <- as.POSIXct(start_day, format = "%Y-%m-%d %H:%M:%S") + days(hist_days) - days(1)
+  start_day <- as.POSIXct(start_day, format = "%Y-%m-%d %H:%M:%S") + days(hist_days)
   restart_file <- unlist(out)[1]
 }else{
   start_day <- as.POSIXct(start_day, format = "%Y-%m-%d %H:%M:%S")
-  restart_file <- init_restart_file
+  restart_file <- restart_file
 }
 
 forecast_day_count <- 1
@@ -107,41 +119,47 @@ repeat{
   
   start_day <- paste0(strftime(start_day,format = "%Y-%m-%d",usetz = FALSE)," 00:00:00")
   
-  out <- run_forecast(
-    start_day= start_day,
-    sim_name = sim_name, 
-    hist_days = 1,
-    forecast_days = 15,
-    spin_up_days = 0,
-    restart_file = restart_file,
-    Folder = Folder,
-    forecast_location = forecast_location,
-    push_to_git=push_to_git,
-    data_location = data_location,
-    nEnKFmembers = nEnKFmembers,
-    include_wq = include_wq,
-    USE_CTD = USE_CTD
-  )
+  hist_days <- 1
+  spin_up_days <- 0
+  out <- run_enkf_forecast(start_day= start_day,
+                           sim_name = sim_name,
+                           hist_days = hist_days,
+                           forecast_days = forecast_days,
+                           spin_up_days = spin_up_days,
+                           restart_file = restart_file,
+                           folder = folder,
+                           forecast_location = forecast_location,
+                           push_to_git = push_to_git,
+                           pull_from_git = pull_from_git,
+                           data_location = data_location,
+                           n_enkf_members = n_enkf_members,
+                           include_wq = include_wq,
+                           use_ctd = use_ctd,
+                           uncert_mode = 1,
+                           cov_matrix = "Qt_cov_matrix_11June_14Aug2_18.csv",
+                           alpha = c(0.5, 0.5, 0.9))
+  
   forecast_day_count <- forecast_day_count + 1
   
   restart_file <- unlist(out)[1]
   
-  plot_forecast_management(pdf_file_name = paste0(unlist(out)[2],'_management.png'),
-                           output_file = unlist(out)[1],
-                           include_wq = FALSE,
-                           code_location = paste0(Folder,'/Rscripts/'),
-                           save_location = forecast_location,
-                           data_location = data_location,
-                           plot_summaries = TRUE,
-                           PRE_SCC = FALSE,
-                           push_to_git=push_to_git,
-                           USE_CTD = USE_CTD,
-                           uncert_mode = 1)
+  plot_forecast(pdf_file_name = unlist(out)[2],
+                output_file = unlist(out)[1],
+                include_wq = include_wq,
+                forecast_days = forecast_days,
+                code_location = paste0(folder, "/Rscripts/"),
+                save_location = forecast_location,
+                data_location = data_location,
+                plot_summaries = FALSE,
+                pre_scc = FALSE,
+                push_to_git = push_to_git,
+                pull_from_git = pull_from_git,
+                use_ctd = use_ctd)
   
   #ADVANCE TO NEXT DAY
   start_day <- as.POSIXct(start_day, format = "%Y-%m-%d %H:%M:%S") + days(1)
-  if(!is.na(num_forecast_days)){
-    if(forecast_day_count > num_forecast_days){
+  if(!is.na(num_forecast_periods)){
+    if(forecast_day_count > num_forecast_periods){
       break
     }
   }

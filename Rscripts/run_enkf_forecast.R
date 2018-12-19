@@ -349,7 +349,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     create_inflow_outflow_file(full_time = full_time_day,
                                working_glm = working_glm, 
                                input_tz = "EST5EDT",
-                               output_tz = reference_tzone )
+                               output_tz = reference_tzone)
   }
   
   #Extract observations

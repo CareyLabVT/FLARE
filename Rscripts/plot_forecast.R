@@ -66,7 +66,8 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
         } 
       }
     }
-    init_temps <- obs_temp$obs[1,]
+    
+
     
     #PROCESS DO OBSERVATIONS
 
@@ -330,6 +331,16 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     full_time_combined <- seq(full_time_past[1], full_time[length(full_time)], by = "1 day")
     full_time_plotting <- seq(full_time_past[1]-days(3), full_time[length(full_time)]+days(5), by = "1 day")
     
+    
+    obs_temp <- extract_temp_chain(fname = catwalk_fname,full_time_past,depths = the_depths_init,observed_depths_temp = TempObservedDepths,input_tz = 'EST5EDT', output_tz = reference_tzone)
+    for(i in 1:length(obs_temp$obs[,1])){
+      for(j in 1:length(obs_temp$obs[1,])){
+        if(obs_temp$obs[i,j] == 0 | is.na(obs_temp$obs[i,j]) | is.nan(obs_temp$obs[i,j])){
+          obs_temp$obs[i,j] = NA
+        } 
+      }
+    }
+    init_temps <- obs_temp$obs[1,]
 
     forecast_index <- which(forecasted == 1)[1]
     nlayers <- length(depths)
@@ -383,7 +394,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
                       "blue4",
                       NA)
     
-    plot(full_time_plotting,rep(-99,length(full_time_plotting)),ylim=c(5,35),xlab = 'date',ylab = expression(~degree~C))
+    plot(full_time_plotting,rep(-99,length(full_time_plotting)),ylim=c(-5,35),xlab = 'date',ylab = expression(~degree~C))
     title(paste0('Water temperature forecast'),cex.main=0.9)
     tmp_day <- full_time[-1][1]
     axis(1, at=full_time_plotting + hours(4),las=2, cex.axis=0.7, tck=-0.01,labels=FALSE)

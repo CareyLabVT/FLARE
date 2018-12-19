@@ -91,6 +91,8 @@ GLM_EnKF <- function(x,
         update_var(paste0("FCR_spillway_outflow.csv"), "outflow_fl", working_glm)
       }
       
+      
+      
       update_time(start_value  = curr_start, stop_value = curr_stop, working_glm)
       #Use GLM NML files to run GLM for a day
       # Only allow simulations without NaN values in the output to proceed. 
