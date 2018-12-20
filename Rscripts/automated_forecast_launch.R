@@ -19,7 +19,7 @@ library(imputeTS)
 folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
 forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/" 
 data_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/" 
-restart_file <- NA #"/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/test_hist_2018_7_10_20181219_13_11.nc"
+restart_file <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/test_hist_2018_7_10_20181219_23_46.nc"
 spin_up_days <- 0
 push_to_git <- FALSE
 pull_from_git <- FALSE
@@ -33,8 +33,8 @@ wait_time <- 60*10
 
 
 sim_name <- "test" 
-start_day <- "2018-07-10 00:00:00" #GMT
-forecast_start_day <-"2018-12-19 00:00:00" #GMT 
+start_day <- "2018-12-19 00:00:00" #GMT
+forecast_start_day <-"2018-12-20 00:00:00" #GMT 
 
 source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
 source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
