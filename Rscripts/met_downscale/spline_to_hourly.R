@@ -1,4 +1,4 @@
-spline_to_hourly <- function(redistributed){
+spline_to_hourly <- function(redistributed,VarNamesStates){
   # --------------------------------------
   # purpose: interpolates debiased forecasts from 6-hourly to hourly
   # Creator: Laura Puckett, December 16 2018

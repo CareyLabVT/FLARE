@@ -30,19 +30,19 @@ downscale_met <- function(forecasts, debiased.coefficients, VarNames, VarNamesSt
   # -----------------------------------
   
   #load(file = paste(path.working,"debiased.coefficients.RData", sep = ""))
-  debiased <- daily_debias_from_coeff(daily.forecast, debiased.coefficients)
+  debiased <- daily_debias_from_coeff(daily.forecast, debiased.coefficients,VarNames)
   
   # -----------------------------------
   # 3.a. temporal downscaling step (a): redistribute to 6-hourly resolution
   # -----------------------------------
-  redistributed = daily_to_6hr(forecasts, daily.forecast, debiased)
+  redistributed = daily_to_6hr(forecasts, daily.forecast, debiased,VarNames)
   
   # -----------------------------------
   # 3.b. temporal downscaling step (b): temporally downscale from 6-hourly to hourly
   # -----------------------------------
   
   ## downscale states to hourly resolution (air temperature, relative humidity, average wind speed) 
-  states.ds.hrly = spline_to_hourly(redistributed)
+  states.ds.hrly = spline_to_hourly(redistributed,VarNamesStates)
   # if filtering out incomplete days, that would need to happen here
   
   ## convert longwave to hourly (just copy 6 hourly values over past 6-hour time period)

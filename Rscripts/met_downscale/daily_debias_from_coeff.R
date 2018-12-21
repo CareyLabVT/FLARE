@@ -1,4 +1,4 @@
-daily_debias_from_coeff <- function(daily.forecast, coeff.df){
+daily_debias_from_coeff <- function(daily.forecast, coeff.df,VarNames){
   # --------------------------------------
   # purpose: does linear debiasing from previously calculated coefficients
   # Creator: Laura Puckett, December 14 2018

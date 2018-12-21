@@ -100,7 +100,7 @@ process_downscale_GEFS <- function(folder,
   # -----------------------------------
   # 2. Process GEFS
   # -----------------------------------
-  files = process_GEFS(file_name, n_ds_members, sim_files_folder, in_directory, output_tz, VarNames, VarNamesStates, DOWNSCALE_MET, FIT_PARAMETERS, ADD_NOISE, WRITE_FILES = TRUE)[[1]]
+  files = process_GEFS(file_name, n_ds_members, sim_files_folder, in_directory, out_directory, output_tz, VarNames, VarNamesStates, DOWNSCALE_MET, FIT_PARAMETERS, ADD_NOISE, WRITE_FILES = TRUE)[[1]]
   return(files)
 }
 

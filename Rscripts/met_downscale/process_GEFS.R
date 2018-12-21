@@ -11,7 +11,7 @@
 # The function returns: (1) a list of the names of the .csv files and (2) a datframe of the processed output for all ensembles 
 # --------------------------------------
 
-process_GEFS <- function(file_name, n_ds_members, sim_files_folder, in_directory, output_tz, VarNames, VarNamesStates, DOWNSCALE_MET, FIT_PARAMETERS, ADD_NOISE, WRITE_FILES){
+process_GEFS <- function(file_name, n_ds_members, sim_files_folder, in_directory, out_directory, output_tz, VarNames, VarNamesStates, DOWNSCALE_MET, FIT_PARAMETERS, ADD_NOISE, WRITE_FILES){
   # -----------------------------------
   # 1. read in and reformat forecast data
   # -----------------------------------
