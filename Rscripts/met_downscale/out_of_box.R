@@ -1,4 +1,4 @@
-out_of_box <- function(forecasts){
+out_of_box <- function(forecasts,out_of_box,VarNames){
   forecasts.hrly <- forecasts %>%
     dplyr::mutate(Snow = 0) %>%
     select(NOAA.member, timestamp, Rain, Snow, ShortWave, LongWave) %>% 

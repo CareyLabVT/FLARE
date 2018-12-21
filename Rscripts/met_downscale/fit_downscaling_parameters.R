@@ -59,8 +59,9 @@ fit_downscaling_parameters <- function(obs.file.path, for.file.path, VarNames, V
   # -----------------------------------
   # 4. save linearly debias coefficients and do linear debiasing at daily resolution
   # -----------------------------------
-  
-  debiased.coefficients <- get_daily_debias_coeff(joined.data.daily)
+  out <- get_daily_debias_coeff(joined.data.daily)
+  debiased.coefficients <-  out$df
+  debiased.covar <-  out$df2 
   
   debiased <- daily_debias_from_coeff(daily.forecast, debiased.coefficients)
   
@@ -104,8 +105,8 @@ fit_downscaling_parameters <- function(obs.file.path, for.file.path, VarNames, V
   # -----------------------------------
   
   joined.hrly.obs.and.ds <- inner_join(hrly.obs,joined.ds, by = "timestamp", suffix = c(".obs",".ds"))
-    
-    # -----------------------------------
+  
+  # -----------------------------------
   # 9. Calculate and save coefficients from hourly downscaling (R2 and standard deviation of residuals)
   # -----------------------------------
   
@@ -128,7 +129,8 @@ fit_downscaling_parameters <- function(obs.file.path, for.file.path, VarNames, V
   model = lm(joined.hrly.obs.and.ds$LongWave.obs ~ joined.hrly.obs.and.ds$LongWave.ds)
   debiased.coefficients[5,5] = sd(residuals(model))
   debiased.coefficients[6,5] = summary(model)$r.squared
-  save(debiased.coefficients, file = paste(path.working,"debiased.coefficients.RData", sep = ""))
+  save(debiased.coefficients, debiased.covar, file = paste(path.working,"debiased.coefficients.RData", sep = ""))
+  
   print(debiased.coefficients)
   # -----------------------------------
   # 10. Visual check (comparing observations and downscaled forecast ensemble mean)

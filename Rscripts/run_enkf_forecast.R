@@ -104,7 +104,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   # SET UP NUMBER OF ENSEMBLE MEMBERS
   n_met_members <- 21
-  n_ds_members <- 2
+  n_ds_members <- 5
   
   #################################################
   ### STEP 1: GRAB DATA FROM REPO OR SERVER
@@ -318,18 +318,19 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     #                                                        output_tz = reference_tzone)
     FIT_PARAMETERS = FALSE
     DOWNSCALE_MET = TRUE
-    ADD_NOISE = TRUE
+    ADD_NOISE = FALSE
     met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder,
                                        noaa_location,
                                        met_station_location,
                                        working_glm,
                                        sim_files_folder = paste0(folder, "/", "sim_files"),
                                        n_ds_members,
+                                       n_met_members,
                                        file_name,
                                        output_tz,
-                                       FIT_PARAMETERS = FALSE,
-                                       DOWNSCALE_MET = TRUE,
-                                       ADD_NOISE = TRUE)
+                                       FIT_PARAMETERS,
+                                       DOWNSCALE_MET,
+                                       ADD_NOISE)
   }
   
   ###MOVE DATA FILES AROUND
