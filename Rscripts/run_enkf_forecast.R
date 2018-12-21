@@ -37,6 +37,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   source(paste0(folder,"/","Rscripts/archive_forecast.R"))
   source(paste0(folder,"/","Rscripts/write_forecast_netcdf.R")) 
   source(paste0(folder,"/","Rscripts/GLM_EnKF.R")) 
+  source(paste0(folder,"/","Rscripts/met_downscale/process_downscale_GEFS.R")) 
   
   #################################################
   ### CONFIGURATIONS THAT NEED TO BE GENERALIZED
@@ -103,6 +104,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   # SET UP NUMBER OF ENSEMBLE MEMBERS
   n_met_members <- 21
+  n_ds_members <- 2
   
   #################################################
   ### STEP 1: GRAB DATA FROM REPO OR SERVER
@@ -293,7 +295,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   ####################################################
   
   ###CREATE HISTORICAL MET FILE
-  met_file_names <- rep(NA, 1+n_met_members)
+  met_file_names <- rep(NA, 1+(n_met_members*n_ds_members))
   obs_met_outfile <- paste0(working_glm, "/", "GLM_met.csv")
   create_obs_met_input(fname = met_obs_fname_wdir,
                        outfile=obs_met_outfile,
@@ -308,12 +310,26 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     out_directory <- working_glm
     file_name <- forecast_base_name
     #NEED TO DOUBLE CHECK THE INPUT_TZ AND WHY IT IS EST
-    met_file_names[2:(1+n_met_members)] <- process_GEFS2GLM(in_directory,
-                                                            out_directory,
-                                                            file_name, 
-                                                            #NEED TO CHANGE TO GMT IF FORECASTING AFTER DEC 8 00:00:00 GMT
-                                                            input_tz = "EST5EDT", 
-                                                            output_tz = reference_tzone)
+    #met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_GEFS2GLM(in_directory,
+    #                                                        out_directory,
+    #                                                        file_name, 
+    ##                                                        #NEED TO CHANGE TO GMT IF FORECASTING AFTER DEC 8 00:00:00 GMT
+    #                                                        input_tz = "EST5EDT", 
+    #                                                        output_tz = reference_tzone)
+    FIT_PARAMETERS = FALSE
+    DOWNSCALE_MET = TRUE
+    ADD_NOISE = TRUE
+    met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder,
+                                       noaa_location,
+                                       met_station_location,
+                                       working_glm,
+                                       sim_files_folder = paste0(folder, "/", "sim_files"),
+                                       n_ds_members,
+                                       file_name,
+                                       output_tz,
+                                       FIT_PARAMETERS = FALSE,
+                                       DOWNSCALE_MET = TRUE,
+                                       ADD_NOISE = TRUE)
   }
   
   ###MOVE DATA FILES AROUND
@@ -767,7 +783,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   ################################################################
   #### STEP 11: CREATE THE X ARRAY (STATES X TIME);INCLUDES INITIALATION
   ################################################################
-  nmembers <- n_enkf_members*n_met_members
+  nmembers <- n_enkf_members*n_met_members*n_ds_members
   
   restart_present <- FALSE
   if(!is.na(restart_file)){
