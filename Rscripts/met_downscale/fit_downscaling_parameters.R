@@ -6,7 +6,7 @@
 
 ## setup
 
-fit_downscaling_parameters <- function(obs.file.path, for.file.path, VarNames, VarNamesStates, USE_ENSEMBLE_MEAN, PLOT){
+fit_downscaling_parameters <- function(obs.file.path, for.file.path, VarNames, VarNamesStates, USE_ENSEMBLE_MEAN, PLOT, output_tz){
   
   # read in obs data
   obs.data <- read.csv(obs.file.path, header = TRUE)
@@ -21,7 +21,7 @@ fit_downscaling_parameters <- function(obs.file.path, for.file.path, VarNames, V
                   LongWave = ifelse(LongWave < 0, NA, LongWave))
   
   # process and read in saved forecast data
-  process_saved_forecasts(for.file.path) # geneartes flux.forecasts and state.forecasts dataframes
+  process_saved_forecasts(for.file.path, output_tz) # geneartes flux.forecasts and state.forecasts dataframes
   NOAA.flux <- readRDS(paste(path.working,"NOAA.flux.forecasts", sep = ""))
   NOAA.state <- readRDS(paste(path.working,"NOAA.state.forecasts", sep = ""))
   NOAA.data = inner_join(NOAA.flux, NOAA.state, by = c("forecast.date","ensembles"))

@@ -20,33 +20,16 @@ process_downscale_GEFS <- function(folder,
   # -----------------------------------
   # 0. Source necessary files
   # -----------------------------------
-  path.working <- paste0(folder,"/","Rscripts/met_downscale/")
-  setwd(path.working)
-  # used for all scenarios
-  source('process_GEFS.R')
-  source('repeat_6hr_to_hrly.R')
-  source("prep_for.R")
-  # only used if FIT_PARAMETERS is TRUE
-  source('process_saved_forecasts.R') 
-  source('get_daily_debias_coeff.R')
-  source('fit_downscaling_parameters.R')
-  source('prep_obs.R')
-  # only used if DOWNSCALE_MET is TRUE
-  source('downscale_met.R') 
-  source('daily_debias_from_coeff.R')
-  source('spline_to_hourly.R')
-  source('solar_geom.R')
-  source('ShortWave_to_hrly.R')
-  source('aggregate_to_daily.R')
-  source('daily_to_6hr.R')
-  # only used if DOWNSCALE_MET is TRUE and ADD_NOISE is TRUE
-  source('add_noise.R')
-  # only used if DOWNSCALE_MET is FALSE
-  source('out_of_box.R')
   
-  source('compare_output_to_obs.R')
-  source('check_CI.R')
-  source('aggregate_obs_to_hrly.R')
+  # folder = "/Users/laurapuckett/Desktop/FLARE-master/"
+  path.met.ds.folder <- paste0(folder,"/","Rscripts/met_downscale/")
+  
+  for(f in list.files(path = path.met.ds.folder, pattern="*.R")){
+    print(f)
+    if(f != "main_downscaling.R"){
+    source(paste0(path.met.ds.folder, f))
+    }
+  }
   
   # library(imputeTS) # for out-of-box
   # library(stringr) # for out-of-box
@@ -60,11 +43,9 @@ process_downscale_GEFS <- function(folder,
   # 1. Setup
   # -----------------------------------
   
-  in_directory = noaa_location
-  out_directory = working_glm
   obs.file.path = paste(met_station_location, "/FCRmet.csv", sep = "")
   for.file.path = noaa_location
-  start_date = "2018-11-18"
+  
   VarNames = c("AirTemp",
                "WindSpeed",
                "RelHum",
@@ -82,26 +63,36 @@ process_downscale_GEFS <- function(folder,
                         "IR01UpCo_Avg" = "LongWave")
   }
   
-  output_tz = "US/Eastern" 
-  nmembers = n_ds_members # members for downscaled ensembles
-  
   # -----------------------------------
   # 1. Fit Parameters
   # -----------------------------------
   
   if(FIT_PARAMETERS){
     fit_downscaling_parameters(obs.file.path = obs.file.path,
-                               for.file.path = for.file.path,
+                               for.file.path = noaa_location,
                                VarNames,
                                VarNamesStates,
                                USE_ENSEMBLE_MEAN = FALSE,
-                               PLOT = TRUE)
+                               PLOT = TRUE,
+                               output_tz = output_tz)
   }
   
   # -----------------------------------
   # 2. Process GEFS
   # -----------------------------------
-  files = process_GEFS(file_name, n_ds_members, n_met_members, sim_files_folder, in_directory, out_directory, output_tz, VarNames, VarNamesStates, DOWNSCALE_MET, FIT_PARAMETERS, ADD_NOISE, WRITE_FILES = TRUE)[[1]]
+  files = process_GEFS(file_name = file_name,
+                       n_ds_members = n_ds_members,
+                       n_met_members = n_met_members,
+                       sim_files_folder = sim_files_folder,
+                       in_directory = noaa_location,
+                       out_directory = working_glm,
+                       output_tz = output_tz,
+                       VarNames = VarNames,
+                       VarNamesStates = VarNamesStates,
+                       DOWNSCALE_MET = DOWNSCALE_MET,
+                       FIT_PARAMETERS = FIT_PARAMETERS,
+                       ADD_NOISE = ADD_NOISE,
+                       WRITE_FILES = TRUE)[[1]]
   return(files)
 }
 

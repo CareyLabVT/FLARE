@@ -13,7 +13,7 @@
 # -----------------------------------
 # @param data.path: path to SCCData-noaa-data folder, which contains 16-day NOAA forecasts (.csv) saved on many days
 # -----------------------------------
-process_saved_forecasts <- function(data.path){
+process_saved_forecasts <- function(data.path, output_tz){
   
   # -----------------------------------
   # 0. Load data, initialize variables
@@ -30,7 +30,7 @@ process_saved_forecasts <- function(data.path){
   # -----------------------------------
   
   date.list <- seq(st, en, by = "1 day")
-  date.list <- force_tz(as_datetime(date.list), "EST")
+  date.list <- force_tz(as_datetime(date.list), output_tz)
   
   # -----------------------------------
   # 2. Get forecast data for first day of each saved file (if data is missing for a day, print notice of missing data)
@@ -56,16 +56,16 @@ process_saved_forecasts <- function(data.path){
     if(paste(date.path,"gep_all_00z.csv", sep = "")%in% forecast.files.list){
       full.path = paste(data.path, date.path,"gep_all_00z.csv", sep = "")
       tmp.data = read.csv(full.path) %>% 
-        mutate(forecast.date = force_tz(as.POSIXct(strptime(forecast.date, "%Y-%m-%d %H:%M:%S")), "US/Eastern"),
+        mutate(forecast.date = force_tz(as.POSIXct(strptime(forecast.date, "%Y-%m-%d %H:%M:%S")), output_tz),
                NOAA.file.group = i) # group number for which file the data is from
       # for states, select data up until 15th hour of day to obtain first 4 measurements (1 measurement is from previous date)
       tmp.state <- tmp.data %>%
-        filter(as_datetime(forecast.date) <= as_datetime(date.list[i] + 15*60*60, tz = "US/Eastern")) %>%
+        filter(as_datetime(forecast.date) <= as_datetime(date.list[i] + 15*60*60, tz = output_tz)) %>%
         select(ensembles, tmp2m, rh2m, vgrd10m, ugrd10m, forecast.date, NOAA.file.group)
       # for fluxes, select data between 1st hour and 20th hour of day to obtain first 4 measurements with data (measurement from previous day is NA because flux is average over past 6 hr period and has no values until 2nd 6-hour period)   
       tmp.flux <- tmp.data %>%
-        filter(as_datetime(forecast.date) >= as_datetime(date.list[i] + 1*60*60, tz = "US/Eastern") &
-                 as_datetime(forecast.date) <= as_datetime(date.list[i] + 20*60*60, tz = "US/Eastern")) %>%
+        filter(as_datetime(forecast.date) >= as_datetime(date.list[i] + 1*60*60, tz = output_tz) &
+                 as_datetime(forecast.date) <= as_datetime(date.list[i] + 20*60*60, tz = output_tz)) %>%
         select(ensembles, pratesfc, dlwrfsfc, dswrfsfc, forecast.date, NOAA.file.group)
       
       flux.forecasts = rbind(flux.forecasts, tmp.flux)

@@ -11,7 +11,19 @@
 # The function returns: (1) a list of the names of the .csv files and (2) a datframe of the processed output for all ensembles 
 # --------------------------------------
 
-process_GEFS <- function(file_name, n_ds_members,n_met_members, sim_files_folder, in_directory, out_directory, output_tz, VarNames, VarNamesStates, DOWNSCALE_MET, FIT_PARAMETERS, ADD_NOISE, WRITE_FILES){
+process_GEFS <- function(file_name,
+                         n_ds_members,
+                         n_met_members,
+                         sim_files_folder,
+                         in_directory,
+                         out_directory,
+                         output_tz,
+                         VarNames,
+                         VarNamesStates,
+                         DOWNSCALE_MET,
+                         FIT_PARAMETERS,
+                         ADD_NOISE,
+                         WRITE_FILES){
   # -----------------------------------
   # 1. read in and reformat forecast data
   # -----------------------------------
@@ -55,7 +67,10 @@ process_GEFS <- function(file_name, n_ds_members,n_met_members, sim_files_folder
     if(ADD_NOISE == TRUE){
       ## Downscaling + noise addition option
       print("with noise")
-      ds.noise = add_noise(debiased = ds, cov = debiased.covar, n_ds_members, n_met_members) %>%
+      ds.noise = add_noise(debiased = ds,
+                           cov = debiased.covar,
+                           n_ds_members,
+                           n_met_members) %>%
           mutate(ShortWave = ifelse(ShortWaveOld == 0, 0, ShortWave),
                  ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
                  RelHum = ifelse(RelHum <0, 0, RelHum),
@@ -74,7 +89,7 @@ process_GEFS <- function(file_name, n_ds_members,n_met_members, sim_files_folder
   }else{
     ## "out of box" option
     print("out of box option")
-    out.of.box = out_of_box(forecast,VarNames) %>%
+    out.of.box = out_of_box(forecast, VarNames) %>%
       dplyr::mutate(AirTemp = AirTemp - 273.15,
                     RelHum = ifelse(RelHum <0, 0, RelHum),
                     RelHum = ifelse(RelHum > 100, 100, RelHum))
