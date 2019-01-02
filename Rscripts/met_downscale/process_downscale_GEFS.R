@@ -25,7 +25,6 @@ process_downscale_GEFS <- function(folder,
   path.met.ds.folder <- paste0(folder,"/","Rscripts/met_downscale/")
   
   for(f in list.files(path = path.met.ds.folder, pattern="*.R")){
-    print(f)
     if(f != "main_downscaling.R"){
     source(paste0(path.met.ds.folder, f))
     }
@@ -70,6 +69,7 @@ process_downscale_GEFS <- function(folder,
   if(FIT_PARAMETERS){
     fit_downscaling_parameters(obs.file.path = obs.file.path,
                                for.file.path = noaa_location,
+                               working_glm,
                                VarNames,
                                VarNamesStates,
                                USE_ENSEMBLE_MEAN = FALSE,

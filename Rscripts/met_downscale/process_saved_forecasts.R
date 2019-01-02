@@ -13,7 +13,7 @@
 # -----------------------------------
 # @param data.path: path to SCCData-noaa-data folder, which contains 16-day NOAA forecasts (.csv) saved on many days
 # -----------------------------------
-process_saved_forecasts <- function(data.path, output_tz){
+process_saved_forecasts <- function(data.path,working_glm, output_tz){
   
   # -----------------------------------
   # 0. Load data, initialize variables
@@ -54,7 +54,7 @@ process_saved_forecasts <- function(data.path, output_tz){
     date.path = paste(temp.year,temp.month,temp.day, sep = "")
     
     if(paste(date.path,"gep_all_00z.csv", sep = "")%in% forecast.files.list){
-      full.path = paste(data.path, date.path,"gep_all_00z.csv", sep = "")
+      full.path = paste(data.path,'/',date.path,"gep_all_00z.csv", sep = "")
       tmp.data = read.csv(full.path) %>% 
         mutate(forecast.date = force_tz(as.POSIXct(strptime(forecast.date, "%Y-%m-%d %H:%M:%S")), output_tz),
                NOAA.file.group = i) # group number for which file the data is from
@@ -80,7 +80,7 @@ process_saved_forecasts <- function(data.path, output_tz){
   # 3. Save flux and state dataframes as Rdata
   # -----------------------------------
   
-  saveRDS(flux.forecasts, file = paste(path.working,"NOAA.flux.forecasts", sep = ""))
-  saveRDS(state.forecasts, file = paste(path.working,"NOAA.state.forecasts", sep = ""))
+  saveRDS(flux.forecasts, file = paste(working_glm,"/NOAA.flux.forecasts", sep = ""))
+  saveRDS(state.forecasts, file = paste(working_glm,"/NOAA.state.forecasts", sep = ""))
 }
 

@@ -21,6 +21,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                             include_wq = FALSE,
                             use_ctd = use_ctd,
                             uncert_mode = 1,
+                            reference_tzone,
                             cov_matrix = NA,
                             alpha = c(0.5,0.5,0.5)){
   
@@ -316,7 +317,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     ##                                                        #NEED TO CHANGE TO GMT IF FORECASTING AFTER DEC 8 00:00:00 GMT
     #                                                        input_tz = "EST5EDT", 
     #                                                        output_tz = reference_tzone)
-    FIT_PARAMETERS = FALSE
+    FIT_PARAMETERS = TRUE
     DOWNSCALE_MET = TRUE
     ADD_NOISE = FALSE
     met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder,
@@ -327,7 +328,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                        n_ds_members,
                                        n_met_members,
                                        file_name,
-                                       output_tz,
+                                       output_tz = reference_tzone,
                                        FIT_PARAMETERS,
                                        DOWNSCALE_MET,
                                        ADD_NOISE)

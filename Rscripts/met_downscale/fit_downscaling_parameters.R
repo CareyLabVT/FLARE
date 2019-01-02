@@ -6,10 +6,16 @@
 
 ## setup
 
-fit_downscaling_parameters <- function(obs.file.path, for.file.path, VarNames, VarNamesStates, USE_ENSEMBLE_MEAN, PLOT, output_tz){
+fit_downscaling_parameters <- function(obs.file.path, for.file.path, working_glm, VarNames, VarNamesStates, USE_ENSEMBLE_MEAN, PLOT, output_tz){
   
   # read in obs data
-  obs.data <- read.csv(obs.file.path, header = TRUE)
+  obs.data <- read.csv(obs.file.path, skip = 3)
+  d_names <- read.csv(obs.file.path, skip = 1)
+  names(obs.data) <- names(d_names)
+  #obs.data$timestamp <- as.POSIXct(obs.data$TIMESTAMP, 
+  #                            format= "%Y-%m-%d %H:%M",
+  #                            tz = 'EST5EDT')
+  #obs.data <- read.csv(obs.file.path, header = TRUE)
   observations = prep_obs(obs.data) %>%
     # max air temp record in Vinton, VA is 40.6 C 
     # coldest air temp on record in Vinton, Va is -23.9 C
@@ -21,9 +27,9 @@ fit_downscaling_parameters <- function(obs.file.path, for.file.path, VarNames, V
                   LongWave = ifelse(LongWave < 0, NA, LongWave))
   
   # process and read in saved forecast data
-  process_saved_forecasts(for.file.path, output_tz) # geneartes flux.forecasts and state.forecasts dataframes
-  NOAA.flux <- readRDS(paste(path.working,"NOAA.flux.forecasts", sep = ""))
-  NOAA.state <- readRDS(paste(path.working,"NOAA.state.forecasts", sep = ""))
+  process_saved_forecasts(for.file.path,working_glm, output_tz) # geneartes flux.forecasts and state.forecasts dataframes
+  NOAA.flux <- readRDS(paste(working_glm,"/NOAA.flux.forecasts", sep = ""))
+  NOAA.state <- readRDS(paste(working_glm,"/NOAA.state.forecasts", sep = ""))
   NOAA.data = inner_join(NOAA.flux, NOAA.state, by = c("forecast.date","ensembles"))
   
   forecasts = prep_for(NOAA.data) %>%
@@ -50,7 +56,7 @@ fit_downscaling_parameters <- function(obs.file.path, for.file.path, VarNames, V
   
   daily.forecast = aggregate_to_daily(forecasts)
   
-  daily.obs = aggregate_to_daily(observations)
+  daily.obs = aggregate_to_daily(data = observations)
   # might eventually alter this so days with at least a certain percentage of data remain in dataset (instead of becoming NA if a single minute of data is missing)
   
   joined.data.daily <- inner_join(daily.forecast, daily.obs, by = "date", suffix = c(".for",".obs")) %>%
@@ -59,7 +65,7 @@ fit_downscaling_parameters <- function(obs.file.path, for.file.path, VarNames, V
   # -----------------------------------
   # 4. save linearly debias coefficients and do linear debiasing at daily resolution
   # -----------------------------------
-  out <- get_daily_debias_coeff(joined.data.daily)
+  out <- get_daily_debias_coeff(joined.data = joined.data.daily)
   debiased.coefficients <-  out$df
   debiased.covar <-  out$df2 
   
@@ -129,7 +135,7 @@ fit_downscaling_parameters <- function(obs.file.path, for.file.path, VarNames, V
   model = lm(joined.hrly.obs.and.ds$LongWave.obs ~ joined.hrly.obs.and.ds$LongWave.ds)
   debiased.coefficients[5,5] = sd(residuals(model))
   debiased.coefficients[6,5] = summary(model)$r.squared
-  save(debiased.coefficients, debiased.covar, file = paste(path.working,"debiased.coefficients.RData", sep = ""))
+  save(debiased.coefficients, debiased.covar, file = paste(working_glm,"debiased.coefficients.RData", sep = ""))
   
   print(debiased.coefficients)
   # -----------------------------------
