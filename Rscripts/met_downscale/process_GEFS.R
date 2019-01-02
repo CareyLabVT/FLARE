@@ -40,7 +40,30 @@ process_GEFS <- function(file_name,
     end_step <- as_datetime(tail(d$forecast.date,1), tz = output_tz)
     full_time <- seq(begin_step, end_step, by = "1 hour", tz = output_tz) # grid
     forecasts <- prep_for(d)
-    
+    REPLACE_START_WITH_OBS = FALSE
+    if(REPLACE_START_WITH_OBS == TRUE){
+      # change this to read obs_met_outfile 
+      last_obs_time = begin_step + 8*60*60
+      recent.obs <- read.csv(met_obs_fname_wdir) %>% 
+        prep_obs() %>%
+        dplyr::mutate(ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
+               RelHum = ifelse(RelHum <0, 0, RelHum),
+               RelHum = ifelse(RelHum > 100, 100, RelHum),
+               # AirTemp = AirTemp - 273.15,
+               WindSpeed = ifelse(WindSpeed <0, 0, WindSpeed)) %>%
+        aggregate_obs_to_hrly() %>%
+        filter(timestamp <= last_obs_time & timestamp >= begin_step - 1)
+      for(i in 1:length(recent.obs)){
+        time_i = recent.obs$timestamp[i]
+        if(time_i %in% forecasts$timestamp){
+          forecasts[which(forecasts$timestamp == time_i),"AirTemp"] = recent.obs[which(recent.obs$timestamp == time_i),"AirTemp"]
+          forecasts[which(forecasts$timestamp == time_i),"LongWave"] = recent.obs[which(recent.obs$timestamp == time_i),"LongWave"]
+          forecasts[which(forecasts$timestamp == time_i),"ShortWave"] = recent.obs[which(recent.obs$timestamp == time_i),"ShortWave"]
+          forecasts[which(forecasts$timestamp == time_i),"RelHum"] = recent.obs[which(recent.obs$timestamp == time_i),"RelHum"]
+          forecasts[which(forecasts$timestamp == time_i),"WindSpeed"] = recent.obs[which(recent.obs$timestamp == time_i),"WindSpeed"]
+        }
+      }
+    }
     forecasts[which(forecasts$timestamp == min(forecasts$timestamp)),]$ShortWave = forecasts[which(forecasts$timestamp == min(forecasts$timestamp) + 24*60*60),]$ShortWave
     # hack to give sw values for 1st measurement (that are in fact the values for the second day). This is to avoid having NAs for the first few hours of forecast
     forecasts[which(forecasts$timestamp == min(forecasts$timestamp)),]$LongWave = forecasts[which(forecasts$timestamp == min(forecasts$timestamp) + 6*60*60),]$LongWave
