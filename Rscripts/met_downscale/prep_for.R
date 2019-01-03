@@ -5,7 +5,7 @@ prep_for <- function(NOAA.data){
   # --------------------------------------
   NOAA.na.value = 999900000000000000000
   forecast.data <- NOAA.data %>%
-    dplyr::mutate(timestamp = as_datetime(forecast.date, tz = "US/Eastern")) %>%
+    dplyr::mutate(timestamp = forecast.date) %>%
     plyr::rename(c("ensembles" = "NOAA.member")) %>%
     dplyr::mutate(AirTemp = tmp2m,
                   WindSpeed = sqrt(vgrd10m^2 + ugrd10m^2),

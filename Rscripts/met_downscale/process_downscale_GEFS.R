@@ -21,7 +21,6 @@ process_downscale_GEFS <- function(folder,
   # 0. Source necessary files
   # -----------------------------------
   
-  # folder = "/Users/laurapuckett/Desktop/FLARE-master/"
   path.met.ds.folder <- paste0(folder,"/","Rscripts/met_downscale/")
   
   for(f in list.files(path = path.met.ds.folder, pattern="*.R")){

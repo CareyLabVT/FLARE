@@ -6,17 +6,24 @@
 
 ## setup
 
-fit_downscaling_parameters <- function(obs.file.path, for.file.path, working_glm, VarNames, VarNamesStates, USE_ENSEMBLE_MEAN, PLOT, output_tz){
+fit_downscaling_parameters <- function(obs.file.path,
+                                       for.file.path,
+                                       working_glm,
+                                       VarNames,
+                                       VarNamesStates,
+                                       USE_ENSEMBLE_MEAN,
+                                       PLOT,
+                                       output_tz){
   
   # read in obs data
-  obs.data <- read.csv(obs.file.path, skip = 3)
-  d_names <- read.csv(obs.file.path, skip = 1)
+  obs.data <- read.csv(obs.file.path, skip = 4, header = F)
+  d_names <- read.csv(obs.file.path, skip = 1, header = T, nrows = 1)
   names(obs.data) <- names(d_names)
   #obs.data$timestamp <- as.POSIXct(obs.data$TIMESTAMP, 
   #                            format= "%Y-%m-%d %H:%M",
   #                            tz = 'EST5EDT')
   #obs.data <- read.csv(obs.file.path, header = TRUE)
-  observations = prep_obs(obs.data) %>%
+  observations = prep_obs(obs.data, output_tz) %>%
     # max air temp record in Vinton, VA is 40.6 C 
     # coldest air temp on record in Vinton, Va is -23.9 C
     # http://www.climatespy.com/climate/summary/united-states/virginia/roanoke-regional 
@@ -24,10 +31,13 @@ fit_downscaling_parameters <- function(obs.file.path, for.file.path, working_glm
     dplyr::mutate(AirTemp = ifelse(AirTemp> 273.15 + 41, NA, AirTemp),
                   AirTemp = ifelse(AirTemp < 273.15 -23.9, NA, AirTemp),
                   ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
-                  LongWave = ifelse(LongWave < 0, NA, LongWave))
+                  LongWave = ifelse(LongWave < 0, NA, LongWave)) %>%
+    filter(is.na(timestamp) == FALSE)
   
   # process and read in saved forecast data
-  process_saved_forecasts(for.file.path,working_glm, output_tz) # geneartes flux.forecasts and state.forecasts dataframes
+  process_saved_forecasts(for.file.path,
+                          working_glm,
+                          output_tz) # geneartes flux.forecasts and state.forecasts dataframes
   NOAA.flux <- readRDS(paste(working_glm,"/NOAA.flux.forecasts", sep = ""))
   NOAA.state <- readRDS(paste(working_glm,"/NOAA.state.forecasts", sep = ""))
   NOAA.data = inner_join(NOAA.flux, NOAA.state, by = c("forecast.date","ensembles"))
@@ -39,16 +49,17 @@ fit_downscaling_parameters <- function(obs.file.path, for.file.path, working_glm
     dplyr::mutate_at(vars(VarNames),funs(ifelse(n == 4, ., NA))) %>%
     ungroup() %>%
     dplyr::select(-"date(timestamp)", -n)
+
   
   
-  if(USE_ENSEMBLE_MEAN){
-    forecasts <- forecasts %>%
-      dplyr::group_by(timestamp) %>%
-      dplyr::select(-NOAA.member) %>%
-      # take mean across ensembles at each timestamp
-      dplyr::summarize_all("mean", na.rm = FALSE) %>%
-      dplyr::mutate(NOAA.member = "mean")
-  }
+  # if(USE_ENSEMBLE_MEAN){
+  #   forecasts <- forecasts %>%
+  #     dplyr::group_by(timestamp) %>%
+  #     dplyr::select(-NOAA.member) %>%
+  #     # take mean across ensembles at each timestamp
+  #     dplyr::summarize_all("mean", na.rm = FALSE) %>%
+  #     dplyr::mutate(NOAA.member = "mean")
+  # }
   
   # -----------------------------------
   # 3. aggregate forecasts and observations to daily resolution and join datasets
@@ -60,7 +71,8 @@ fit_downscaling_parameters <- function(obs.file.path, for.file.path, working_glm
   # might eventually alter this so days with at least a certain percentage of data remain in dataset (instead of becoming NA if a single minute of data is missing)
   
   joined.data.daily <- inner_join(daily.forecast, daily.obs, by = "date", suffix = c(".for",".obs")) %>%
-    ungroup
+    ungroup() %>%
+    filter_all(all_vars(is.na(.)==FALSE))
   
   # -----------------------------------
   # 4. save linearly debias coefficients and do linear debiasing at daily resolution
@@ -69,18 +81,18 @@ fit_downscaling_parameters <- function(obs.file.path, for.file.path, working_glm
   debiased.coefficients <-  out$df
   debiased.covar <-  out$df2 
   
-  debiased <- daily_debias_from_coeff(daily.forecast, debiased.coefficients)
+  debiased <- daily_debias_from_coeff(daily.forecast, debiased.coefficients, VarNames)
   
   # -----------------------------------
   # 5.a. temporal downscaling step (a): redistribute to 6-hourly resolution
   # -----------------------------------
-  redistributed = daily_to_6hr(forecasts, daily.forecast, debiased)
+  redistributed = daily_to_6hr(forecasts, daily.forecast, debiased, VarNames)
   # -----------------------------------
   # 5.b. temporal downscaling step (b): temporally downscale from 6-hourly to hourly
   # -----------------------------------
   
   ## downscale states to hourly resolution (air temperature, relative humidity, average wind speed) 
-  states.ds.hrly = spline_to_hourly(redistributed)
+  states.ds.hrly = spline_to_hourly(redistributed, VarNamesStates)
   # if filtering out incomplete days, that would need to happen here
   
   ## convert longwave to hourly (just copy 6 hourly values over past 6-hour time period)
