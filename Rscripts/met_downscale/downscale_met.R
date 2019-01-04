@@ -51,7 +51,7 @@ downscale_met <- function(forecasts, debiased.coefficients, VarNames, VarNamesSt
     repeat_6hr_to_hrly()
   
   ## downscale shortwave to hourly
-  ShortWave.ds = ShortWave_to_hrly(debiased, lat = 37.307, lon = 360 - 79.837)
+  ShortWave.ds = ShortWave_to_hrly(debiased, lat = 37.307, lon = 360 - 79.837, output_tz)
   
   # -----------------------------------
   # 4. join debiased forecasts of different variables into one dataframe

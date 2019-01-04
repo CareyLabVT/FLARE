@@ -19,10 +19,6 @@ fit_downscaling_parameters <- function(obs.file.path,
   obs.data <- read.csv(obs.file.path, skip = 4, header = F)
   d_names <- read.csv(obs.file.path, skip = 1, header = T, nrows = 1)
   names(obs.data) <- names(d_names)
-  #obs.data$timestamp <- as.POSIXct(obs.data$TIMESTAMP, 
-  #                            format= "%Y-%m-%d %H:%M",
-  #                            tz = 'EST5EDT')
-  #obs.data <- read.csv(obs.file.path, header = TRUE)
   observations = prep_obs(obs.data, output_tz) %>%
     # max air temp record in Vinton, VA is 40.6 C 
     # coldest air temp on record in Vinton, Va is -23.9 C
@@ -101,7 +97,7 @@ fit_downscaling_parameters <- function(obs.file.path,
     repeat_6hr_to_hrly()
   
   ## downscale shortwave to hourly
-  ShortWave.ds = ShortWave_to_hrly(debiased, lat = 37.307, lon = 360 - 79.837)
+  ShortWave.ds = ShortWave_to_hrly(debiased, lat = 37.307, lon = 360 - 79.837, output_tz)
   
   # -----------------------------------
   # 6. join debiased forecasts of different variables into one dataframe
@@ -159,12 +155,12 @@ fit_downscaling_parameters <- function(obs.file.path,
       geom_line(aes(y = AirTemp.ds, color = "downscaled forecast average", group = NOAA.member))
     
     ggplot(data = joined.hrly.obs.and.ds[1:5000,], aes(x = timestamp)) +
-      geom_line(aes(y = RelHum.obs, color = "observations"))+
-      geom_line(aes(y = RelHum.ds, color = "downscaled forecast average", group = NOAA.member))
-    
-    ggplot(data = joined.hrly.obs.and.ds[1:5000,], aes(x = timestamp)) +
       geom_line(aes(y = WindSpeed.obs, color = "observations"))+
       geom_line(aes(y = WindSpeed.ds, color = "downscaled forecast average", group = NOAA.member))
+    
+    ggplot(data = joined.hrly.obs.and.ds[1:5000,], aes(x = timestamp)) +
+      geom_line(aes(y = RelHum.obs, color = "observations"))+
+      geom_line(aes(y = RelHum.ds, color = "downscaled forecast average", group = NOAA.member))
     
     ggplot(data = joined.hrly.obs.and.ds[1:5000,], aes(x = timestamp)) +
       geom_line(aes(y = ShortWave.obs, color = "observations"))+

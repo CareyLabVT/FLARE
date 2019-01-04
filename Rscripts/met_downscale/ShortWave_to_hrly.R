@@ -1,4 +1,4 @@
-ShortWave_to_hrly <- function(debiased, lat, lon){
+ShortWave_to_hrly <- function(debiased, lat, lon, output_tz){
   ## downscale shortwave to hourly
   
   ShortWave.hours <- debiased %>%
@@ -10,13 +10,9 @@ ShortWave_to_hrly <- function(debiased, lat, lon){
     dplyr::group_by(NOAA.member, date) %>%
     full_join(ShortWave.hours, by = c("NOAA.member","date")) %>%
     ungroup() %>%
-    dplyr::mutate(timestamp = as_datetime(paste(date, " ", hour, ":","00:00", sep = ""), tz = "US/Eastern")) %>%
+    dplyr::mutate(timestamp = as_datetime(paste(date, " ", hour, ":","00:00", sep = ""), tz = output_tz)) %>%
     dplyr::mutate(doy = yday(date) + hour/24) %>%
-    # convert to UTC for use in solar_geom function (accounting for daylight savings in conversion)
-    dplyr::mutate(doy.UTC = ifelse(doy >= 69 + 2/24 & doy < 307 + 2/24, 
-                                   doy + 3/24, # adjust this later (should be 5 hrs difference?)
-                                   doy + 2/24)) %>% # could account for leap years later
-    dplyr::mutate(rpot = solar_geom(doy.UTC, lon, lat)) %>% # hourly sw flux calculated using solar geometry
+    dplyr::mutate(rpot = solar_geom(doy, lon, lat)) %>% # hourly sw flux calculated using solar geometry
     dplyr::group_by(date) %>%
     dplyr::mutate(avg.rpot = mean(rpot)) %>% # daily sw mean from solar geometry
     ungroup() %>%

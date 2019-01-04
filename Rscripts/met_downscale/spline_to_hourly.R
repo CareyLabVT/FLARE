@@ -10,7 +10,7 @@ spline_to_hourly <- function(redistributed,VarNamesStates){
     return(result(seq(min(as.numeric(jday)), max(as.numeric(jday)), 1/24)))
   }
   
-  time0 = as_datetime(min(redistributed$timestamp), tz = "US/Eastern")
+  time0 = min(redistributed$timestamp)
   redistributed <- redistributed %>%
     mutate(days_since_t0 = difftime(.$timestamp, time0, units = "days"))
   
@@ -28,8 +28,7 @@ spline_to_hourly <- function(redistributed,VarNamesStates){
   # converting from time difference back to timestamp
   interp.df  = interp.df %>%
     unnest %>%
-    dplyr::mutate(timestamp = as_datetime(time0 + days, tz = "US/Eastern"))
-  
+    dplyr::mutate(timestamp = as_datetime(time0 + days, tz = attributes(time0)$tzone))
   return(interp.df)
 }
 
