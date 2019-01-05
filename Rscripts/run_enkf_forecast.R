@@ -6,8 +6,7 @@
 #          observations                                    #
 # ---------------------------------------------------------#
 
-run_enkf_forecast<-function(start_date = "2018-12-15 00:00:00",
-                            #start_day= "2018-07-06 00:00:00",
+run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                             sim_name = NA, 
                             hist_days = 1,
                             forecast_days = 16,  
@@ -332,7 +331,8 @@ run_enkf_forecast<-function(start_date = "2018-12-15 00:00:00",
                                        output_tz = reference_tzone,
                                        FIT_PARAMETERS,
                                        DOWNSCALE_MET,
-                                       ADD_NOISE)
+                                       ADD_NOISE,
+                                       ANALYZE_OUTPUT = TRUE)
   }
   
   ###MOVE DATA FILES AROUND

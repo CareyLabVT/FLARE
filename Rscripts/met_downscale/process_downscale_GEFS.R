@@ -16,7 +16,8 @@ process_downscale_GEFS <- function(folder,
                                    output_tz,
                                    FIT_PARAMETERS,
                                    DOWNSCALE_MET,
-                                   ADD_NOISE){
+                                   ADD_NOISE,
+                                   ANALYZE_OUTPUT){
   # -----------------------------------
   # 0. Source necessary files
   # -----------------------------------
@@ -107,8 +108,10 @@ process_downscale_GEFS <- function(folder,
                        WRITE_FILES = TRUE)
   files = met_forecast_output[[1]]
   output = met_forecast_output[[2]]
-  "comparing forecast output to obs"
-  compare_output_to_obs(output, hrly.observations, PLOT = TRUE)
+  if(ANALYZE_OUTPUT == TRUE){
+    "comparing forecast output to obs"
+    compare_output_to_obs(output, hrly.observations, PLOT = TRUE)
+  }
   return(files)
 }
 
