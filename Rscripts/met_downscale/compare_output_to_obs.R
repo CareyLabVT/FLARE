@@ -1,7 +1,9 @@
-compare_output_to_obs <- function(output, obs.file.path, PLOT){
+compare_output_to_obs <- function(output, obs.file.path, PLOT, output_tz){
   # read in obs data
-  obs.data <- read.csv(file = obs.file.path, header = TRUE)
-  observations = prep_obs(obs.data) %>%
+  obs.data <- read.csv(obs.file.path, skip = 4, header = F)
+  d_names <- read.csv(obs.file.path, skip = 1, header = T, nrows = 1)
+  names(obs.data) <- names(d_names)
+  observations = prep_obs(obs.data, output_tz) %>%
     # max air temp record in Vinton, VA is 40.6 C 
     # coldest air temp on record in Vinton, Va is -23.9 C
     # http://www.climatespy.com/climate/summary/united-states/virginia/roanoke-regional 

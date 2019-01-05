@@ -39,13 +39,13 @@ process_GEFS <- function(file_name,
     begin_step <- as_datetime(head(d$forecast.date,1), tz = output_tz)
     end_step <- as_datetime(tail(d$forecast.date,1), tz = output_tz)
     full_time <- seq(begin_step, end_step, by = "1 hour", tz = output_tz) # grid
-    forecasts <- prep_for(d)
+    forecasts <- prep_for(d, input_tz = "US/Eastern", output_tz = output_tz)
     REPLACE_START_WITH_OBS = FALSE
     if(REPLACE_START_WITH_OBS == TRUE){
       # change this to read obs_met_outfile 
       last_obs_time = begin_step + 8*60*60
       recent.obs <- read.csv(met_obs_fname_wdir) %>% 
-        prep_obs() %>%
+        prep_obs(output_tz = output_tz) %>%
         dplyr::mutate(ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
                RelHum = ifelse(RelHum <0, 0, RelHum),
                RelHum = ifelse(RelHum > 100, 100, RelHum),
@@ -80,13 +80,16 @@ process_GEFS <- function(file_name,
   if(DOWNSCALE_MET == TRUE){
     ## Downscaling option
     print("Downscaling option")
-    load(file = paste(sim_files_folder,"/debiased.coefficients.RData", sep = ""))
+    # load(file = paste(sim_files_folder,"/debiased.coefficients.RData", sep = ""))
+    load(file = paste(working_glm,"/debiased.coefficients.RData", sep = ""))
+    load(file = paste(working_glm,"/debiased.covar.RData", sep = ""))
     ds = downscale_met(forecasts,
                        debiased.coefficients,
                        VarNames,
                        VarNamesStates,
                        USE_ENSEMBLE_MEAN = FALSE,
-                       PLOT = FALSE)
+                       PLOT = FALSE,
+                       output_tz = output_tz)
     if(ADD_NOISE == TRUE){
       ## Downscaling + noise addition option
       print("with noise")

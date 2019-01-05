@@ -7,19 +7,41 @@
 # --------------------------------------
 
 add_noise <- function(debiased, cov, n_ds_members, n_met_members){
-  with.noise <- debiased %>%
-    group_by(timestamp, NOAA.member, AirTemp, WindSpeed, RelHum, ShortWave, LongWave) %>%
-    expand(dscale.member = 1:n_ds_members) %>%
-    mutate(ShortWaveOld = ShortWave) %>%
-    ungroup()
+  
+  if("timestamp" %in% colnames(debiased)){
+    with.noise <- debiased %>%
+      group_by(timestamp, NOAA.member, AirTemp, RelHum, WindSpeed, ShortWave, LongWave) %>%
+      expand(dscale.member = 1:n_ds_members) %>%
+      dplyr::mutate(ShortWaveOld = ShortWave) %>%
+      ungroup()
+  }else{
+    with.noise <- debiased %>%
+      group_by(date, NOAA.member, AirTemp, RelHum, WindSpeed, ShortWave, LongWave) %>%
+      expand(dscale.member = 1:n_ds_members) %>%
+      dplyr::mutate(ShortWaveOld = ShortWave) %>%
+      ungroup()
+    
+  }
   
   # add option for covariance vs non covariance
 
   for(NOAA.ens in 1:n_met_members){
     for(dscale.ens in 1:n_ds_members){
       noise = rmvnorm(1, mean = c(0,0,0,0,0), sigma = cov)
-        with.noise[which(debiased$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),3:7] =
-          with.noise[which(debiased$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),3:7] + noise
+        with.noise[which(debiased$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),"AirTemp"] =
+          with.noise[which(debiased$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),"AirTemp"] + noise[1]
+        
+        with.noise[which(debiased$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),"RelHum"] =
+          with.noise[which(debiased$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),"RelHum"] + noise[2]
+        
+        with.noise[which(debiased$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),"WindSpeed"] =
+          with.noise[which(debiased$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),"WindSpeed"] + noise[3]
+        
+        with.noise[which(debiased$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),"ShortWave"] =
+          with.noise[which(debiased$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),"ShortWave"] + noise[4]
+        
+        with.noise[which(debiased$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),"LongWave"] =
+          with.noise[which(debiased$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),"LongWave"] + noise[5]
       }
   }
   return(with.noise)

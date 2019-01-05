@@ -37,8 +37,9 @@ fit_downscaling_parameters <- function(obs.file.path,
   NOAA.flux <- readRDS(paste(working_glm,"/NOAA.flux.forecasts", sep = ""))
   NOAA.state <- readRDS(paste(working_glm,"/NOAA.state.forecasts", sep = ""))
   NOAA.data = inner_join(NOAA.flux, NOAA.state, by = c("forecast.date","ensembles"))
+  NOAA_input_tz = attributes(NOAA.data$forecast.date)$tzone
   
-  forecasts = prep_for(NOAA.data) %>%
+  forecasts = prep_for(NOAA.data, input_tz = NOAA_input_tz, output_tz) %>%
     dplyr::group_by(NOAA.member, date(timestamp))  %>%
     dplyr::mutate(n = n()) %>%
     # force NA for days without 4 NOAA entries (because having less than 4 entries would introduce error in daily comparisons)
@@ -74,8 +75,8 @@ fit_downscaling_parameters <- function(obs.file.path,
   # 4. save linearly debias coefficients and do linear debiasing at daily resolution
   # -----------------------------------
   out <- get_daily_debias_coeff(joined.data = joined.data.daily)
-  debiased.coefficients <-  out$df
-  debiased.covar <-  out$df2 
+  debiased.coefficients <-  out[[1]]
+  debiased.covar <-  out[[2]]
   
   debiased <- daily_debias_from_coeff(daily.forecast, debiased.coefficients, VarNames)
   
@@ -143,7 +144,8 @@ fit_downscaling_parameters <- function(obs.file.path,
   model = lm(joined.hrly.obs.and.ds$LongWave.obs ~ joined.hrly.obs.and.ds$LongWave.ds)
   debiased.coefficients[5,5] = sd(residuals(model))
   debiased.coefficients[6,5] = summary(model)$r.squared
-  save(debiased.coefficients, debiased.covar, file = paste(working_glm,"debiased.coefficients.RData", sep = ""))
+  save(debiased.coefficients, file = paste(working_glm,"/debiased.coefficients.RData", sep = ""))
+  save(debiased.covar, file = paste(working_glm,"/debiased.covar.RData", sep = ""))
   
   print(debiased.coefficients)
   # -----------------------------------

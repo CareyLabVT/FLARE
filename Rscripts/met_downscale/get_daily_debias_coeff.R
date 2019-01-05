@@ -35,13 +35,13 @@ get_daily_debias_coeff <- function(joined.data){
   
   df2 = NULL
   for(colNum in 1:length(VarNames)){
-    print(VarNames[colNum])
     tmp <- as.numeric(unlist(get_lm_resid(joined.data[,paste0(VarNames[colNum],".obs")], joined.data[,paste0(VarNames[colNum],".for")])))
-    print(length(tmp))
     df2 = cbind(df2, tmp)
   }
   
-  df2 <- cov(df2)
+  cov <- cov(df2)
+  colnames(cov) <- VarNames
+  rownames(cov) <- VarNames
   
-  return(list(df = df, df2 = df2))
+  return(list(df, cov))
 }

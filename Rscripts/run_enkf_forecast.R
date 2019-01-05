@@ -328,7 +328,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                        n_ds_members,
                                        n_met_members,
                                        file_name,
-                                       output_tz = "US/Eastern", # output_tz = reference_tzone
+                                       output_tz = reference_tzone,
                                        FIT_PARAMETERS,
                                        DOWNSCALE_MET,
                                        ADD_NOISE)

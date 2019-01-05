@@ -6,7 +6,7 @@
 # summary: this function spatially downscaled forecasts from GEFS cell size to the specific site location and temporally downscaled from 6-hr resolution to hr-resolution using saved parameters from earlier fitting process (fit_downscaling_parameters.R)
 # --------------------------------------
 
-downscale_met <- function(forecasts, debiased.coefficients, VarNames, VarNamesStates, USE_ENSEMBLE_MEAN, PLOT){
+downscale_met <- function(forecasts, debiased.coefficients, VarNames, VarNamesStates, USE_ENSEMBLE_MEAN, PLOT, output_tz){
   # -----------------------------------
   # 0. summarize forecasts to ensemble mean if USE_ENSEMBLE_MEAN is TRUE
   # -----------------------------------
