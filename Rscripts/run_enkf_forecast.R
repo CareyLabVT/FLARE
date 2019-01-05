@@ -318,8 +318,8 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     #                                                        input_tz = "EST5EDT", 
     #                                                        output_tz = reference_tzone)
     FIT_PARAMETERS = FALSE
-    DOWNSCALE_MET = FALSE
-    ADD_NOISE = FALSE
+    DOWNSCALE_MET = TRUE
+    ADD_NOISE = TRUE
     met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder,
                                        noaa_location,
                                        met_station_location,

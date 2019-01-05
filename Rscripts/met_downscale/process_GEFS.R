@@ -90,7 +90,8 @@ process_GEFS <- function(file_name,
       ds.noise = add_noise(debiased = ds,
                            cov = debiased.covar,
                            n_ds_members,
-                           n_met_members) %>%
+                           n_met_members,
+                           VarNames = VarNames) %>%
           mutate(ShortWave = ifelse(ShortWaveOld == 0, 0, ShortWave),
                  ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
                  RelHum = ifelse(RelHum <0, 0, RelHum),

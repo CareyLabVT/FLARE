@@ -15,8 +15,6 @@ if("dscale.member" %in% colnames(output) == FALSE){
 
   mean.joined.day.1 = mean.joined %>%
     filter(timestamp <= time0 + 24*60*60)
-  print(mean.joined.day.1)
-    
   
   ## make a summary table of comparison between output and observations
   summary.table = data_frame(metric = c("AirTemp","RelHum","WindSpeed","ShortWave","LongWave"),
