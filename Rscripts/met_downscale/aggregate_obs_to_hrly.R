@@ -1,4 +1,5 @@
 aggregate_obs_to_hrly <- function(observations){
+  obs.tz = attributes(observations$timestamp)$tzone
   hrly.flux.obs <- observations %>%
     dplyr::mutate(date = date(timestamp)) %>%
     dplyr::mutate(hour = hour(timestamp)) %>%
@@ -6,7 +7,7 @@ aggregate_obs_to_hrly <- function(observations){
     dplyr::summarize(ShortWave = mean(ShortWave),
                      LongWave = mean(LongWave)) %>%
     ungroup() %>%
-    dplyr::mutate(timestamp = as_datetime(paste(date, " ", hour, ":","00:00", sep = ""), tz = output_tz) + 60*60) %>% # add one hour so that timestamp represents average over past hour
+    dplyr::mutate(timestamp = as_datetime(paste(date, " ", hour, ":","00:00", sep = ""), tz = obs.tz) + 60*60) %>% # add one hour so that timestamp represents average over past hour
     select(timestamp, ShortWave, LongWave)
   
   

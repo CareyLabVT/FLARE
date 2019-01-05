@@ -11,6 +11,7 @@ fit_downscaling_parameters <- function(obs.file.path,
                                        working_glm,
                                        VarNames,
                                        VarNamesStates,
+                                       replaceObsNames,
                                        USE_ENSEMBLE_MEAN,
                                        PLOT,
                                        output_tz){
@@ -19,7 +20,7 @@ fit_downscaling_parameters <- function(obs.file.path,
   obs.data <- read.csv(obs.file.path, skip = 4, header = F)
   d_names <- read.csv(obs.file.path, skip = 1, header = T, nrows = 1)
   names(obs.data) <- names(d_names)
-  observations = prep_obs(obs.data, output_tz) %>%
+  observations = prep_obs(obs.data, output_tz, replaceObsNames, VarNames) %>%
     # max air temp record in Vinton, VA is 40.6 C 
     # coldest air temp on record in Vinton, Va is -23.9 C
     # http://www.climatespy.com/climate/summary/united-states/virginia/roanoke-regional 
@@ -74,7 +75,7 @@ fit_downscaling_parameters <- function(obs.file.path,
   # -----------------------------------
   # 4. save linearly debias coefficients and do linear debiasing at daily resolution
   # -----------------------------------
-  out <- get_daily_debias_coeff(joined.data = joined.data.daily)
+  out <- get_daily_debias_coeff(joined.data = joined.data.daily, VarNames = VarNames)
   debiased.coefficients <-  out[[1]]
   debiased.covar <-  out[[2]]
   

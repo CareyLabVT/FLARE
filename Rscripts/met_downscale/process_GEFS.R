@@ -20,6 +20,8 @@ process_GEFS <- function(file_name,
                          output_tz,
                          VarNames,
                          VarNamesStates,
+                         replaceObsNames,
+                         hrly.observations,
                          DOWNSCALE_MET,
                          FIT_PARAMETERS,
                          ADD_NOISE,
@@ -44,14 +46,7 @@ process_GEFS <- function(file_name,
     if(REPLACE_START_WITH_OBS == TRUE){
       # change this to read obs_met_outfile 
       last_obs_time = begin_step + 8*60*60
-      recent.obs <- read.csv(met_obs_fname_wdir) %>% 
-        prep_obs(output_tz = output_tz) %>%
-        dplyr::mutate(ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
-               RelHum = ifelse(RelHum <0, 0, RelHum),
-               RelHum = ifelse(RelHum > 100, 100, RelHum),
-               # AirTemp = AirTemp - 273.15,
-               WindSpeed = ifelse(WindSpeed <0, 0, WindSpeed)) %>%
-        aggregate_obs_to_hrly() %>%
+      recent.obs <- hrly.observations %>%
         filter(timestamp <= last_obs_time & timestamp >= begin_step - 1)
       for(i in 1:length(recent.obs)){
         time_i = recent.obs$timestamp[i]
@@ -76,7 +71,6 @@ process_GEFS <- function(file_name,
   # 2. process forecast according to desired method
   # -----------------------------------
 
-  
   if(DOWNSCALE_MET == TRUE){
     ## Downscaling option
     print("Downscaling option")
@@ -127,6 +121,7 @@ process_GEFS <- function(file_name,
   # -----------------------------------
   met_file_list = NULL
   if(WRITE_FILES){
+    print("Write Output Files")
     # Rain and Snow are currently not downscaled, so they are calculated here
     hrly.Rain.Snow = forecasts %>% dplyr::mutate(Snow = 0) %>%
       select(timestamp, NOAA.member, Rain, Snow) %>%

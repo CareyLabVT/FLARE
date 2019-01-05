@@ -6,7 +6,8 @@
 #          observations                                    #
 # ---------------------------------------------------------#
 
-run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00", 
+run_enkf_forecast<-function(start_date = "2018-12-15 00:00:00",
+                            #start_day= "2018-07-06 00:00:00",
                             sim_name = NA, 
                             hist_days = 1,
                             forecast_days = 16,  
@@ -319,7 +320,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     #                                                        output_tz = reference_tzone)
     FIT_PARAMETERS = TRUE
     DOWNSCALE_MET = TRUE
-    ADD_NOISE = FALSE
+    ADD_NOISE = TRUE
     met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder,
                                        noaa_location,
                                        met_station_location,

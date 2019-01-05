@@ -1,4 +1,4 @@
-get_daily_debias_coeff <- function(joined.data){
+get_daily_debias_coeff <- function(joined.data, VarNames){
   # --------------------------------------
   # purpose: save coefficients for linear debiasing (slope, intercept, standard deviation of residuals, r2 of linear regression)
   # Creator: Laura Puckett, December 14 2018
