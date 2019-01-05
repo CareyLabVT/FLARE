@@ -109,7 +109,7 @@ process_GEFS <- function(file_name,
   }else{
     ## "out of box" option
     print("out of box option")
-    out.of.box = out_of_box(forecast, VarNames) %>%
+    out.of.box = out_of_box(forecasts, VarNames) %>%
       dplyr::mutate(AirTemp = AirTemp - 273.15,
                     RelHum = ifelse(RelHum <0, 0, RelHum),
                     RelHum = ifelse(RelHum > 100, 100, RelHum))

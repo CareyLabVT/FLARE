@@ -1,5 +1,7 @@
 compare_output_to_obs <- function(output, hrly.observations, PLOT){
-
+if("dscale.member" %in% colnames(output) == FALSE){
+  output = output %>% mutate(dscale.member = 0)
+}
   observations = hrly.observations %>%
     filter(timestamp >= min(output$timestamp) & timestamp <= max(output$timestamp)) %>% mutate(AirTemp = AirTemp - 273.15)
   
