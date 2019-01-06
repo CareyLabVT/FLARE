@@ -98,6 +98,7 @@ process_GEFS <- function(file_name,
                  RelHum = ifelse(RelHum > 100, 100, RelHum),
                  AirTemp = AirTemp - 273.15,
                  WindSpeed = ifelse(WindSpeed <0, 0, WindSpeed))
+      print("noise added")
       output = ds.noise
     }else{
       print("without noise")

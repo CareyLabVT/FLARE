@@ -10,13 +10,13 @@ add_noise <- function(debiased, cov, n_ds_members, n_met_members, VarNames){
   
   if("timestamp" %in% colnames(debiased)){
     with.noise <- debiased %>%
-      group_by(timestamp, NOAA.member, VarNames) %>%
+      dplyr::group_by_all() %>%
       expand(dscale.member = 1:n_ds_members) %>%
       dplyr::mutate(ShortWaveOld = ShortWave) %>%
       ungroup()
   }else{
     with.noise <- debiased %>%
-      group_by(date, NOAA.member, VarNames) %>%
+      group_by_all() %>%
       expand(dscale.member = 1:n_ds_members) %>%
       dplyr::mutate(ShortWaveOld = ShortWave) %>%
       ungroup()
