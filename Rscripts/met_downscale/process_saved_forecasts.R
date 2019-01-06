@@ -18,68 +18,27 @@ process_saved_forecasts <- function(data.path,working_glm, output_tz){
   # -----------------------------------
   # 0. Load data, initialize variables
   # -----------------------------------
-  forecast.files.list = list.files(data.path)
-  num.ensembles = 21 # there are 21 ensemble members in GEFS forecasts
-  st <- as.Date("2018-04-23") # start of available data for FCR site
-  en <- as.Date(Sys.Date()) 
+  forecast.files.list = list.files(data.path, "*00z.csv")
   flux.forecasts = NULL
   state.forecasts = NULL
-  
-  # -----------------------------------
-  # 1. Make list of all expected dates to obtain forecast files from
-  # -----------------------------------
-  
-  date.list <- seq(st, en, by = "1 day")
-  date.list <- force_tz(as_datetime(date.list), output_tz)
-  
-  # -----------------------------------
-  # 2. Get forecast data for first day of each saved file (if data is missing for a day, print notice of missing data)
-  # -----------------------------------
-  
-  for(i in 1:length(date.list)){
-    date.path = NULL
-    temp.data = NULL
-    temp.year = NULL
-    temp.month = NULL
-    temp.day = NULL
-    temp.year = lubridate::year(date.list[i])
-    temp.month = lubridate::month(date.list[i])
-    if(temp.month<10){
-      temp.month = paste("0",temp.month, sep = "")
-      }
-    temp.day = lubridate::day(date.list[i])
-    if(temp.day<10){
-      temp.day = paste("0",temp.day, sep = "")
-      }
-    date.path = paste(temp.year,temp.month,temp.day, sep = "")
-    
-    if(paste(date.path,"gep_all_00z.csv", sep = "")%in% forecast.files.list){
-      full.path = paste(data.path,'/',date.path,"gep_all_00z.csv", sep = "")
-      tmp.data = read.csv(full.path) %>% 
-        mutate(forecast.date = force_tz(as.POSIXct(strptime(forecast.date, "%Y-%m-%d %H:%M:%S")), output_tz),
-               NOAA.file.group = i) # group number for which file the data is from
-      # for states, select data up until 15th hour of day to obtain first 4 measurements (1 measurement is from previous date)
-      tmp.state <- tmp.data %>%
-        filter(as_datetime(forecast.date) <= as_datetime(date.list[i] + 15*60*60, tz = output_tz)) %>%
-        select(ensembles, tmp2m, rh2m, vgrd10m, ugrd10m, forecast.date, NOAA.file.group)
-      # for fluxes, select data between 1st hour and 20th hour of day to obtain first 4 measurements with data (measurement from previous day is NA because flux is average over past 6 hr period and has no values until 2nd 6-hour period)   
-      tmp.flux <- tmp.data %>%
-        filter(as_datetime(forecast.date) >= as_datetime(date.list[i] + 1*60*60, tz = output_tz) &
-                 as_datetime(forecast.date) <= as_datetime(date.list[i] + 20*60*60, tz = output_tz)) %>%
-        select(ensembles, pratesfc, dlwrfsfc, dswrfsfc, forecast.date, NOAA.file.group)
-      
-      flux.forecasts = rbind(flux.forecasts, tmp.flux)
-      state.forecasts = rbind(state.forecasts, tmp.state)
-    }else{
-      print(paste("Missing a file for date: ", date.path, sep = ""))
-    }
-    
+  for(i in 1:length(forecast.files.list)){
+    tmp.data = read.csv(paste0(data.path, "/", forecast.files.list[i]))
+    if(as_datetime(tmp.data$forecast.date[1]) < as_datetime('2018-12-07 00:00:00')){
+      input_tz = "US/Eastern"
+    }else{input_tz = output_tz}
+    tmp.data <- tmp.data %>%
+      dplyr::mutate(forecast.date = as_datetime(forecast.date, tz = input_tz))
+    tmp.data$forecast.date = with_tz(tmp.data$forecast.date, output_tz)
+    tmp.min.time = min(tmp.data$forecast.date)
+    tmp.state <- tmp.data %>%
+      filter(forecast.date <= tmp.min.time + 18*60*60) %>%
+      select(ensembles, tmp2m, rh2m, vgrd10m, ugrd10m, forecast.date)
+    tmp.flux <- tmp.data %>%
+      filter(forecast.date <= tmp.min.time + 24*60*60 & forecast.date > tmp.min.time) %>%
+      select(ensembles, forecast.date,pratesfc, dlwrfsfc, dswrfsfc)
+    flux.forecasts = rbind(flux.forecasts, tmp.flux)
+    state.forecasts = rbind(state.forecasts, tmp.state)
   }
-  
-  # -----------------------------------
-  # 3. Save flux and state dataframes as Rdata
-  # -----------------------------------
-  
   saveRDS(flux.forecasts, file = paste(working_glm,"/NOAA.flux.forecasts", sep = ""))
   saveRDS(state.forecasts, file = paste(working_glm,"/NOAA.state.forecasts", sep = ""))
 }

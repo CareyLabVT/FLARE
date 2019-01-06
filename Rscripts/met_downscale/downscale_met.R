@@ -6,7 +6,7 @@
 # summary: this function spatially downscaled forecasts from GEFS cell size to the specific site location and temporally downscaled from 6-hr resolution to hr-resolution using saved parameters from earlier fitting process (fit_downscaling_parameters.R)
 # --------------------------------------
 
-downscale_met <- function(forecasts, debiased.coefficients, VarNames, VarNamesStates, USE_ENSEMBLE_MEAN, PLOT){
+downscale_met <- function(forecasts, debiased.coefficients, VarNames, VarNamesStates, USE_ENSEMBLE_MEAN, PLOT, output_tz){
   # -----------------------------------
   # 0. summarize forecasts to ensemble mean if USE_ENSEMBLE_MEAN is TRUE
   # -----------------------------------
@@ -51,7 +51,7 @@ downscale_met <- function(forecasts, debiased.coefficients, VarNames, VarNamesSt
     repeat_6hr_to_hrly()
   
   ## downscale shortwave to hourly
-  ShortWave.ds = ShortWave_to_hrly(debiased, lat = 37.307, lon = 360 - 79.837)
+  ShortWave.ds = ShortWave_to_hrly(debiased, lat = 37.307, lon = 360 - 79.837, output_tz)
   
   # -----------------------------------
   # 4. join debiased forecasts of different variables into one dataframe

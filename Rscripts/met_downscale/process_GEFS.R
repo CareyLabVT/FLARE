@@ -20,6 +20,8 @@ process_GEFS <- function(file_name,
                          output_tz,
                          VarNames,
                          VarNamesStates,
+                         replaceObsNames,
+                         hrly.observations,
                          DOWNSCALE_MET,
                          FIT_PARAMETERS,
                          ADD_NOISE,
@@ -39,19 +41,12 @@ process_GEFS <- function(file_name,
     begin_step <- as_datetime(head(d$forecast.date,1), tz = output_tz)
     end_step <- as_datetime(tail(d$forecast.date,1), tz = output_tz)
     full_time <- seq(begin_step, end_step, by = "1 hour", tz = output_tz) # grid
-    forecasts <- prep_for(d)
+    forecasts <- prep_for(d, input_tz = "US/Eastern", output_tz = output_tz)
     REPLACE_START_WITH_OBS = FALSE
     if(REPLACE_START_WITH_OBS == TRUE){
       # change this to read obs_met_outfile 
       last_obs_time = begin_step + 8*60*60
-      recent.obs <- read.csv(met_obs_fname_wdir) %>% 
-        prep_obs() %>%
-        dplyr::mutate(ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
-               RelHum = ifelse(RelHum <0, 0, RelHum),
-               RelHum = ifelse(RelHum > 100, 100, RelHum),
-               # AirTemp = AirTemp - 273.15,
-               WindSpeed = ifelse(WindSpeed <0, 0, WindSpeed)) %>%
-        aggregate_obs_to_hrly() %>%
+      recent.obs <- hrly.observations %>%
         filter(timestamp <= last_obs_time & timestamp >= begin_step - 1)
       for(i in 1:length(recent.obs)){
         time_i = recent.obs$timestamp[i]
@@ -76,24 +71,27 @@ process_GEFS <- function(file_name,
   # 2. process forecast according to desired method
   # -----------------------------------
 
-  
   if(DOWNSCALE_MET == TRUE){
     ## Downscaling option
     print("Downscaling option")
-    load(file = paste(sim_files_folder,"/debiased.coefficients.RData", sep = ""))
+    # load(file = paste(sim_files_folder,"/debiased.coefficients.RData", sep = ""))
+    load(file = paste(working_glm,"/debiased.coefficients.RData", sep = ""))
+    load(file = paste(working_glm,"/debiased.covar.RData", sep = ""))
     ds = downscale_met(forecasts,
                        debiased.coefficients,
                        VarNames,
                        VarNamesStates,
                        USE_ENSEMBLE_MEAN = FALSE,
-                       PLOT = FALSE)
+                       PLOT = FALSE,
+                       output_tz = output_tz)
     if(ADD_NOISE == TRUE){
       ## Downscaling + noise addition option
       print("with noise")
       ds.noise = add_noise(debiased = ds,
                            cov = debiased.covar,
                            n_ds_members,
-                           n_met_members) %>%
+                           n_met_members,
+                           VarNames = VarNames) %>%
           mutate(ShortWave = ifelse(ShortWaveOld == 0, 0, ShortWave),
                  ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
                  RelHum = ifelse(RelHum <0, 0, RelHum),
@@ -112,7 +110,7 @@ process_GEFS <- function(file_name,
   }else{
     ## "out of box" option
     print("out of box option")
-    out.of.box = out_of_box(forecast, VarNames) %>%
+    out.of.box = out_of_box(forecasts, VarNames) %>%
       dplyr::mutate(AirTemp = AirTemp - 273.15,
                     RelHum = ifelse(RelHum <0, 0, RelHum),
                     RelHum = ifelse(RelHum > 100, 100, RelHum))
@@ -124,6 +122,7 @@ process_GEFS <- function(file_name,
   # -----------------------------------
   met_file_list = NULL
   if(WRITE_FILES){
+    print("Write Output Files")
     # Rain and Snow are currently not downscaled, so they are calculated here
     hrly.Rain.Snow = forecasts %>% dplyr::mutate(Snow = 0) %>%
       select(timestamp, NOAA.member, Rain, Snow) %>%

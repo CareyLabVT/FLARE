@@ -6,7 +6,7 @@
 #          observations                                    #
 # ---------------------------------------------------------#
 
-run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00", 
+run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                             sim_name = NA, 
                             hist_days = 1,
                             forecast_days = 16,  
@@ -317,9 +317,9 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     ##                                                        #NEED TO CHANGE TO GMT IF FORECASTING AFTER DEC 8 00:00:00 GMT
     #                                                        input_tz = "EST5EDT", 
     #                                                        output_tz = reference_tzone)
-    FIT_PARAMETERS = TRUE
+    FIT_PARAMETERS = FALSE
     DOWNSCALE_MET = TRUE
-    ADD_NOISE = FALSE
+    ADD_NOISE = TRUE
     met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder,
                                        noaa_location,
                                        met_station_location,
@@ -331,7 +331,8 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                        output_tz = reference_tzone,
                                        FIT_PARAMETERS,
                                        DOWNSCALE_MET,
-                                       ADD_NOISE)
+                                       ADD_NOISE,
+                                       ANALYZE_OUTPUT = TRUE)
   }
   
   ###MOVE DATA FILES AROUND
