@@ -29,7 +29,7 @@ forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_20
 restart_file <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/FCR_betaV2_hist_2018_10_1_forecast_2018_10_2_2018102_5_53.nc"
 spin_up_days <- 0
 push_to_git <- FALSE
-pull_from_git <- FALSE
+pull_from_git <- TRUE
 reference_tzone <- "GMT"
 n_enkf_members <- 1
 forecast_days <- 16
@@ -40,7 +40,7 @@ source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
 source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
 source(paste0(folder, "/", "Rscripts/plot_forecast.R"))
 
-sim_name <- "test" 
+sim_name <- "test_ds_no_noise" 
 start_day <- "2018-07-10 00:00:00" #GMT
 forecast_start_day <-"2018-07-11 00:00:00" #GMT 
 hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_tzone),
