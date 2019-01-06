@@ -20,6 +20,12 @@ data_location = "/Users/laurapuckett/Desktop/SCC_forecasting/SCC_data/"
 folder <- "/Users/laurapuckett/Desktop/SCC_forecasting/FLARE/"
 forecast_location <- "/Users/laurapuckett/Desktop/SCC_forecasting/forecasts/" 
 data_location <- "/Users/laurapuckett/Desktop/SCC_forecasting/SCC_data/" 
+
+
+data_location = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
+folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
+forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/" 
+
 restart_file <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/FCR_betaV2_hist_2018_10_1_forecast_2018_10_2_2018102_5_53.nc"
 spin_up_days <- 0
 push_to_git <- FALSE
