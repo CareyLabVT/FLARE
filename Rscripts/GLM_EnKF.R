@@ -16,11 +16,9 @@ GLM_EnKF <- function(x,
                      z_states,
                      alpha,
                      glm_output_vars,
-                     weather_uncertainity,
                      process_uncertainity,
                      initial_condition_uncertainity,
-                     parameter_uncertainity,
-                     met_downscale_uncertainity){
+                     parameter_uncertainity){
   
   nsteps <- length(full_time)
   nmembers <- dim(x)[2]
@@ -59,7 +57,7 @@ GLM_EnKF <- function(x,
         if(i > (hist_days + 1)){
           new_pars <- x[i - 1, m, (nstates + 1):(nstates+npars)]
           if(parameter_uncertainity == FALSE){
-            new_pars <- mean(x[i - 1, , (nstates+1):(nstates+npars)])
+            new_pars <- colMeans(x[i - 1, , (nstates+1):(nstates+npars)])
           }
         }else{
           new_pars <- rmvnorm(n = 1, 
@@ -143,11 +141,9 @@ GLM_EnKF <- function(x,
       if(met_index > n_met_members){
         met_index <- 1
       }
-      if(weather_uncertainity == FALSE & met_downscale_uncertainity == FALSE){
-        met_index <- 1
-      }
       
     }
+  
     
     # DEAL WITh ENSEMBLE MEMBERS ThAT ARE "BAD" AND 
     # PRODUCE NA VALUES OR hAVE NEGATIVE TEMPERATURES

@@ -108,7 +108,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   # SET UP NUMBER OF ENSEMBLE MEMBERS
   n_met_members <- 21
-  n_ds_members <- 5
+  n_ds_members <- 50
   
   #################################################
   ### STEP 1: GRAB DATA FROM REPO OR SERVER
@@ -318,6 +318,11 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   ####################################################
   
   ###CREATE HISTORICAL MET FILE
+  if(met_downscale_uncertainity == FALSE){
+    n_ds_members <- 1
+  }
+
+  
   met_file_names <- rep(NA, 1+(n_met_members*n_ds_members))
   obs_met_outfile <- paste0(working_glm, "/", "GLM_met.csv")
   create_obs_met_input(fname = met_obs_fname_wdir,
@@ -369,6 +374,15 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                        VarNames,
                                        VarNamesStates,
                                        replaceObsNames)
+    
+  if(weather_uncertainity == FALSE & met_downscale_uncertainity == TRUE){
+    met_file_names <- met_file_names[1:(1+(1*n_ds_members))]
+  }else if(weather_uncertainity == FALSE & met_downscale_uncertainity == FALSE){
+    met_file_names <- met_file_names[1:2]
+  }
+  if(weather_uncertainity == FALSE){
+    n_met_members <- 1
+  }
     
   plot_downscaled_met(met_file_names, VarNames, working_glm)
   }
@@ -989,11 +1003,9 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                           z_states,
                           alpha,
                           glm_output_vars,
-                          weather_uncertainity,
                           process_uncertainity,
                           initial_condition_uncertainity,
-                          parameter_uncertainity,
-                          met_downscale_uncertainity
+                          parameter_uncertainity
                           )
   
   x <- enkf_output$x

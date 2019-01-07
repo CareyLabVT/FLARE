@@ -31,16 +31,21 @@ spin_up_days <- 0
 push_to_git <- FALSE
 pull_from_git <- TRUE
 reference_tzone <- "GMT"
-n_enkf_members <- 1
 forecast_days <- 16
 include_wq <- FALSE
 use_ctd <- FALSE
+
+#Note: this number is multiplied by 
+# 1) the number of NOAA ensembles (21)
+# 2) the number of downscaling essembles (50 is current)
+# get to the total number of essembles
+n_enkf_members <- 1  
 
 source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
 source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
 source(paste0(folder, "/", "Rscripts/plot_forecast.R"))
 
-sim_name <- "test_ds_no_noise" 
+sim_name <- "test_only_ds_noise" 
 start_day <- "2018-07-10 00:00:00" #GMT
 forecast_start_day <-"2018-07-11 00:00:00" #GMT 
 hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_tzone),
