@@ -44,10 +44,6 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   ### CONFIGURATIONS THAT NEED TO BE GENERALIZED
   #################################################
   
-  FIT_PARAMETERS = TRUE
-  DOWNSCALE_MET = TRUE
-  ADD_NOISE = FALSE
-  
   ###RUN OPTIONS
   npars <- 3
   pre_scc <- FALSE
@@ -321,7 +317,22 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     ##                                                        #NEED TO CHANGE TO GMT IF FORECASTING AFTER DEC 8 00:00:00 GMT
     #                                                        input_tz = "EST5EDT", 
     #                                                        output_tz = reference_tzone)
-
+    FIT_PARAMETERS = TRUE
+    DOWNSCALE_MET = TRUE
+    ADD_NOISE = TRUE
+    VarNames = c("AirTemp",
+                 "WindSpeed",
+                 "RelHum",
+                 "ShortWave",
+                 "LongWave")
+    VarNamesStates = c("AirTemp",
+                       "WindSpeed",
+                       "RelHum")
+    replaceObsNames = c("AirTC_Avg" = "AirTemp",
+                        "WS_ms_Avg" = "WindSpeed",
+                        "RH" = "RelHum",
+                        "SR01Up_Avg" = "ShortWave",
+                        "IR01UpCo_Avg" = "LongWave")
     met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder,
                                        noaa_location,
                                        met_station_location,
@@ -334,7 +345,12 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                        FIT_PARAMETERS,
                                        DOWNSCALE_MET,
                                        ADD_NOISE,
-                                       ANALYZE_OUTPUT = TRUE)
+                                       ANALYZE_OUTPUT = TRUE,
+                                       VarNames,
+                                       VarNamesStates,
+                                       ReplaceObsNames)
+    
+  plot_downscaled_met(met_file_names, VarNames)
   }
   
   ###MOVE DATA FILES AROUND
