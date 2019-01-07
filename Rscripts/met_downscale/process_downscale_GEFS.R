@@ -17,7 +17,10 @@ process_downscale_GEFS <- function(folder,
                                    FIT_PARAMETERS,
                                    DOWNSCALE_MET,
                                    ADD_NOISE,
-                                   ANALYZE_OUTPUT){
+                                   ANALYZE_OUTPUT,
+                                   VarNames,
+                                   VarNamesStates,
+                                   ReplaceObsNames){
   # -----------------------------------
   # 0. Source necessary files
   # -----------------------------------
@@ -44,20 +47,6 @@ process_downscale_GEFS <- function(folder,
   
   obs.file.path = paste(met_station_location, "/FCRmet.csv", sep = "")
   for.file.path = noaa_location
-  
-  VarNames = c("AirTemp",
-               "WindSpeed",
-               "RelHum",
-               "ShortWave",
-               "LongWave")
-  VarNamesStates = c("AirTemp",
-                     "WindSpeed",
-                     "RelHum")
-  replaceObsNames = c("AirTC_Avg" = "AirTemp",
-                      "WS_ms_Avg" = "WindSpeed",
-                      "RH" = "RelHum",
-                      "SR01Up_Avg" = "ShortWave",
-                      "IR01UpCo_Avg" = "LongWave")
   
   # -----------------------------------
   # 1. Fit Parameters

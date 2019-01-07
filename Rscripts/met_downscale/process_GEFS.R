@@ -75,8 +75,8 @@ process_GEFS <- function(file_name,
     ## Downscaling option
     print("Downscaling option")
     # load(file = paste(sim_files_folder,"/debiased.coefficients.RData", sep = ""))
-    load(file = paste(out_directory,"/debiased.coefficients.RData", sep = ""))
-    load(file = paste(out_directory,"/debiased.covar.RData", sep = ""))
+    load(file = paste(working_glm,"/debiased.coefficients.RData", sep = ""))
+    load(file = paste(working_glm,"/debiased.covar.RData", sep = ""))
     ds = downscale_met(forecasts,
                        debiased.coefficients,
                        VarNames,
