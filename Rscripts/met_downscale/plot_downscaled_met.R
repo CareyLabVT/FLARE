@@ -1,4 +1,4 @@
-plot_downscaled_met <- function(met_file_names, VarNames){
+plot_downscaled_met <- function(met_file_names, VarNames, working_glm){
 
   full.data = NULL
   

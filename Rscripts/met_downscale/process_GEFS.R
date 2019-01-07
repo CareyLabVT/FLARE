@@ -24,7 +24,7 @@ process_GEFS <- function(file_name,
                          hrly.observations,
                          DOWNSCALE_MET,
                          FIT_PARAMETERS,
-                         ADD_NOISE,
+                         met_downscale_uncertainity,
                          WRITE_FILES){
   # -----------------------------------
   # 1. read in and reformat forecast data
@@ -75,8 +75,8 @@ process_GEFS <- function(file_name,
     ## Downscaling option
     print("Downscaling option")
     # load(file = paste(sim_files_folder,"/debiased.coefficients.RData", sep = ""))
-    load(file = paste(working_glm,"/debiased.coefficients.RData", sep = ""))
-    load(file = paste(working_glm,"/debiased.covar.RData", sep = ""))
+    load(file = paste(out_directory,"/debiased.coefficients.RData", sep = ""))
+    load(file = paste(out_directory,"/debiased.covar.RData", sep = ""))
     ds = downscale_met(forecasts,
                        debiased.coefficients,
                        VarNames,
@@ -84,7 +84,7 @@ process_GEFS <- function(file_name,
                        USE_ENSEMBLE_MEAN = FALSE,
                        PLOT = FALSE,
                        output_tz = output_tz)
-    if(ADD_NOISE == TRUE){
+    if(met_downscale_uncertainity == TRUE){
       ## Downscaling + noise addition option
       print("with noise")
       ds.noise = add_noise(debiased = ds,
@@ -151,7 +151,7 @@ process_GEFS <- function(file_name,
       Rain.Snow = hrly.Rain.Snow %>% filter(NOAA.member == NOAA.ens) %>%
         select(timestamp, Rain, Snow)
       if(DOWNSCALE_MET){
-        if(ADD_NOISE){ # downscale met with noise addition
+        if(met_downscale_uncertainity){ # downscale met with noise addition
           for(dscale.ens in 1:n_ds_members){
             GLM_climate_ds = ds.noise %>%
               filter(NOAA.member == NOAA.ens & dscale.member == dscale.ens) %>%

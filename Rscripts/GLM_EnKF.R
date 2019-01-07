@@ -19,7 +19,8 @@ GLM_EnKF <- function(x,
                      weather_uncertainity,
                      process_uncertainity,
                      initial_condition_uncertainity,
-                     parameter_uncertainity){
+                     parameter_uncertainity,
+                     met_downscale_uncertainity){
   
   nsteps <- length(full_time)
   nmembers <- dim(x)[2]
@@ -37,7 +38,7 @@ GLM_EnKF <- function(x,
     #1) Update GLM NML files to match the current day of the simulation
     curr_start <- (full_time[i - 1])
     curr_stop <- (full_time[i])
-
+    
     setwd(working_glm)
     
     #Create array to hold GLM predictions for each ensemble
@@ -139,7 +140,10 @@ GLM_EnKF <- function(x,
       
       #INCREMENT ThE MET_INDEX TO MOVE TO ThE NEXT NOAA ENSEMBLE
       met_index <- met_index + 1
-      if(met_index > n_met_members | weather_uncertainity == FALSE){
+      if(met_index > n_met_members){
+        met_index <- 1
+      }
+      if(weather_uncertainity == FALSE & met_downscale_uncertainity == FALSE){
         met_index <- 1
       }
       
@@ -277,7 +281,7 @@ GLM_EnKF <- function(x,
               x[i, m, ] <- colMeans(cbind(x_star, pars_corr)) 
             }else{
               x[i, m, ] <- cbind(colMeans(x_star),
-                               x[i, m, (nstates + 1):(nstates + npars)])
+                                 x[i, m, (nstates + 1):(nstates + npars)])
             }
           }
         }

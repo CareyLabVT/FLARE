@@ -16,11 +16,11 @@ process_downscale_GEFS <- function(folder,
                                    output_tz,
                                    FIT_PARAMETERS,
                                    DOWNSCALE_MET,
-                                   ADD_NOISE,
+                                   met_downscale_uncertainity,
                                    ANALYZE_OUTPUT,
                                    VarNames,
                                    VarNamesStates,
-                                   ReplaceObsNames){
+                                   replaceObsNames){
   # -----------------------------------
   # 0. Source necessary files
   # -----------------------------------
@@ -93,7 +93,7 @@ process_downscale_GEFS <- function(folder,
                        hrly.observations = hrly.observations,
                        DOWNSCALE_MET = DOWNSCALE_MET,
                        FIT_PARAMETERS = FIT_PARAMETERS,
-                       ADD_NOISE = ADD_NOISE,
+                       met_downscale_uncertainity = met_downscale_uncertainity,
                        WRITE_FILES = TRUE)
   files = met_forecast_output[[1]]
   output = met_forecast_output[[2]]

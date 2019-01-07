@@ -48,6 +48,9 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   npars <- 3
   pre_scc <- FALSE
   
+  FIT_PARAMETERS = TRUE
+  DOWNSCALE_MET = TRUE
+
   #Estimated parameters
   lake_depth_init <- 9.4  #not a modeled state
   zone2_temp <- 17
@@ -140,6 +143,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     weather_uncertainity <- TRUE
     initial_condition_uncertainity <- TRUE
     parameter_uncertainity <- TRUE
+    met_downscale_uncertainity <- TRUE
   }else if(uncert_mode == 2){
     #No sources of uncertainity and no data used to constrain 
     use_obs_constraint <- TRUE
@@ -149,6 +153,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     weather_uncertainity <- FALSE
     initial_condition_uncertainity <- FALSE
     parameter_uncertainity <- FALSE
+    met_downscale_uncertainity <- FALSE
   }else if(uncert_mode == 3){
     #Only process uncertainity
     use_obs_constraint <- TRUE
@@ -158,8 +163,9 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     weather_uncertainity <- FALSE
     initial_condition_uncertainity <- FALSE
     parameter_uncertainity <- FALSE
+    met_downscale_uncertainity <- FALSE
   }else if(uncert_mode == 4){
-    #only weather uncertainity
+    #only noaa weather uncertainity
     use_obs_constraint <- TRUE
     #SOURCES OF UNCERTAINITY
     observation_uncertainity <- TRUE
@@ -167,6 +173,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     weather_uncertainity <- TRUE
     initial_condition_uncertainity <- FALSE
     parameter_uncertainity <- FALSE
+    met_downscale_uncertainity <- FALSE
   }else if(uncert_mode == 5){
     #only initial condition uncertainity with data constraint
     use_obs_constraint <- TRUE
@@ -176,6 +183,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     weather_uncertainity <- FALSE
     initial_condition_uncertainity <- TRUE
     parameter_uncertainity <- FALSE
+    met_downscale_uncertainity <- FALSE
   }else if(uncert_mode == 6){
     #only initial condition uncertainity without data constraint
     use_obs_constraint <- FALSE
@@ -185,16 +193,30 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     weather_uncertainity <- FALSE
     initial_condition_uncertainity <- TRUE
     parameter_uncertainity <- FALSE
+    met_downscale_uncertainity <- FALSE
   }else if(uncert_mode == 7){
     #only parameter uncertainity
-    use_obs_constraint <- FALSE
+    use_obs_constraint <- TRUE
     #SOURCES OF UNCERTAINITY
     observation_uncertainity <- TRUE
     process_uncertainity <- FALSE
     weather_uncertainity <- FALSE
     initial_condition_uncertainity <- FALSE
     parameter_uncertainity <- TRUE
+    met_downscale_uncertainity <- FALSE
+  }else if(uncert_mode == 8){
+    #only met downscale uncertainity
+    use_obs_constraint <- TRUE
+    #SOURCES OF UNCERTAINITY
+    observation_uncertainity <- TRUE
+    process_uncertainity <- FALSE
+    weather_uncertainity <- FALSE
+    initial_condition_uncertainity <- FALSE
+    parameter_uncertainity <- FALSE
+    met_downscale_uncertainity <- TRUE
   }
+  
+  
   if(observation_uncertainity){
     obs_error <- 0.0001 #NEED TO DOUBLE CHECK
   }
@@ -317,9 +339,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     ##                                                        #NEED TO CHANGE TO GMT IF FORECASTING AFTER DEC 8 00:00:00 GMT
     #                                                        input_tz = "EST5EDT", 
     #                                                        output_tz = reference_tzone)
-    FIT_PARAMETERS = TRUE
-    DOWNSCALE_MET = TRUE
-    ADD_NOISE = TRUE
+
     VarNames = c("AirTemp",
                  "WindSpeed",
                  "RelHum",
@@ -344,13 +364,13 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                        output_tz = reference_tzone,
                                        FIT_PARAMETERS,
                                        DOWNSCALE_MET,
-                                       ADD_NOISE,
+                                       met_downscale_uncertainity,
                                        ANALYZE_OUTPUT = TRUE,
                                        VarNames,
                                        VarNamesStates,
-                                       ReplaceObsNames)
+                                       replaceObsNames)
     
-  plot_downscaled_met(met_file_names, VarNames)
+  plot_downscaled_met(met_file_names, VarNames, working_glm)
   }
   
   ###MOVE DATA FILES AROUND
@@ -972,7 +992,9 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                           weather_uncertainity,
                           process_uncertainity,
                           initial_condition_uncertainity,
-                          parameter_uncertainity)
+                          parameter_uncertainity,
+                          met_downscale_uncertainity
+                          )
   
   x <- enkf_output$x
   x_restart <- enkf_output$x_restart
