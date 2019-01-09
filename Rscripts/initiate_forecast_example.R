@@ -65,7 +65,7 @@ out <- run_enkf_forecast(start_day= start_day,
                          n_enkf_members = n_enkf_members,
                          include_wq = include_wq,
                          use_ctd = use_ctd,
-                         uncert_mode = 1,
+                         uncert_mode = 8,
                          reference_tzone,
                          cov_matrix = "Qt_cov_matrix_11June_14Aug2_18.csv",
                          alpha = c(0.5, 0.5, 0.9))
