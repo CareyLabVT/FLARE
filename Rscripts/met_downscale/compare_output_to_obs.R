@@ -1,7 +1,7 @@
-compare_output_to_obs <- function(output, hrly.observations, PLOT){
-if("dscale.member" %in% colnames(output) == FALSE){
-  output = output %>% mutate(dscale.member = 0)
-}
+compare_output_to_obs <- function(output, hrly.observations){
+  if("dscale.member" %in% colnames(output) == FALSE){
+    output = output %>% mutate(dscale.member = 0)
+  }
   observations = hrly.observations %>%
     filter(timestamp >= min(output$timestamp) & timestamp <= max(output$timestamp)) %>% mutate(AirTemp = AirTemp - 273.15)
   
@@ -12,7 +12,7 @@ if("dscale.member" %in% colnames(output) == FALSE){
     summarize_all("mean")
   
   time0 = min(output$timestamp)
-
+  
   mean.joined.day.1 = mean.joined %>%
     filter(timestamp <= time0 + 24*60*60)
   
@@ -70,54 +70,54 @@ if("dscale.member" %in% colnames(output) == FALSE){
   summary.table[5,6] = check_CI(df = joined, obs.col.name = "LongWave.obs", for.col.name = "LongWave.for")$check.95.pcnt
   summary.table[5,7] = check_CI(df = joined, obs.col.name = "LongWave.obs", for.col.name = "LongWave.for")$check.100.pcnt
   print(summary.table)
-  if(PLOT){
-    print(ggplot(data = joined, aes(x = timestamp)) +
-      geom_line(aes(y = AirTemp.for, color = "Downscaled", group = interaction(NOAA.member, dscale.member)), alpha = 0.3) +
-      geom_point(aes(y = AirTemp.obs, color = "Site Observations")) + 
-      geom_line(aes(y = AirTemp.obs, color = "Site Observations")) + 
-      ylab("Air Temperature (Degrees Celsius)")+
-      xlab("")+
-      theme_bw()+
-      theme(text = element_text(size = 14)) +
-      scale_color_manual(values = c("firebrick2","black")))
-    
-    print(ggplot(data = joined, aes(x = timestamp)) +
-      geom_line(aes(y = ShortWave.for, color = "Downscaled", group = interaction(NOAA.member, dscale.member)), alpha = 0.3) +
-      geom_line(aes(y = ShortWave.obs, color = "Site Observations")) + 
-      ylab("Shortwave Radiation (W/m2)")+
-      xlab("")+
-      theme_bw()+
-      theme(text = element_text(size = 14)) +
-      scale_color_manual(values = c("firebrick2","black")))
-    
-    print(ggplot(data = joined, aes(x = timestamp)) +
-      geom_line(aes(y = LongWave.for, color = "Downscaled", group = interaction(NOAA.member, dscale.member)), alpha = 0.4) +
-      geom_line(aes(y = LongWave.obs, color = "Site Observations")) + 
-      ylab("Longwave Radiation (W/m2)")+
-      xlab("")+
-      theme_bw()+
-      theme(text = element_text(size = 14)) +
-      scale_color_manual(values = c("firebrick2","black")))
-    
-    print(ggplot(data = joined, aes(x = timestamp)) +
-      geom_line(aes(y = RelHum.for, color = "Downscaled", group = interaction(NOAA.member, dscale.member)), alpha = 0.3) +
-      geom_point(aes(y = RelHum.obs, color = "Site Observations")) + 
-      geom_line(aes(y = RelHum.obs, color = "Site Observations")) + 
-      ylab("Relative Humidity (%)")+
-      xlab("")+
-      theme_bw()+
-      theme(text = element_text(size = 14)) +
-      scale_color_manual(values = c("firebrick2","black")))
-    
-    print(ggplot(data = joined, aes(x = timestamp)) +
-      geom_line(aes(y = WindSpeed.for, color = "Downscaled", group = interaction(NOAA.member, dscale.member)), alpha = 0.3) +
-      geom_point(aes(y = WindSpeed.obs, color = "Site Observations")) + 
-      geom_line(aes(y = WindSpeed.obs, color = "Site Observations")) + 
-      ylab("Wind Speed (m/s)")+
-      xlab("")+
-      theme_bw()+
-      theme(text = element_text(size = 14)) +
-      scale_color_manual(values = c("firebrick2","black")))
-  }
+  
+  print(ggplot(data = joined, aes(x = timestamp)) +
+          geom_line(aes(y = AirTemp.for, color = "Downscaled", group = interaction(NOAA.member, dscale.member)), alpha = 0.3) +
+          geom_point(aes(y = AirTemp.obs, color = "Site Observations")) + 
+          geom_line(aes(y = AirTemp.obs, color = "Site Observations")) + 
+          ylab("Air Temperature (Degrees Celsius)")+
+          xlab("")+
+          theme_bw()+
+          theme(text = element_text(size = 14)) +
+          scale_color_manual(values = c("firebrick2","black")))
+  
+  print(ggplot(data = joined, aes(x = timestamp)) +
+          geom_line(aes(y = ShortWave.for, color = "Downscaled", group = interaction(NOAA.member, dscale.member)), alpha = 0.3) +
+          geom_line(aes(y = ShortWave.obs, color = "Site Observations")) + 
+          ylab("Shortwave Radiation (W/m2)")+
+          xlab("")+
+          theme_bw()+
+          theme(text = element_text(size = 14)) +
+          scale_color_manual(values = c("firebrick2","black")))
+  
+  print(ggplot(data = joined, aes(x = timestamp)) +
+          geom_line(aes(y = LongWave.for, color = "Downscaled", group = interaction(NOAA.member, dscale.member)), alpha = 0.4) +
+          geom_line(aes(y = LongWave.obs, color = "Site Observations")) + 
+          ylab("Longwave Radiation (W/m2)")+
+          xlab("")+
+          theme_bw()+
+          theme(text = element_text(size = 14)) +
+          scale_color_manual(values = c("firebrick2","black")))
+  
+  print(ggplot(data = joined, aes(x = timestamp)) +
+          geom_line(aes(y = RelHum.for, color = "Downscaled", group = interaction(NOAA.member, dscale.member)), alpha = 0.3) +
+          geom_point(aes(y = RelHum.obs, color = "Site Observations")) + 
+          geom_line(aes(y = RelHum.obs, color = "Site Observations")) + 
+          ylab("Relative Humidity (%)")+
+          xlab("")+
+          theme_bw()+
+          theme(text = element_text(size = 14)) +
+          scale_color_manual(values = c("firebrick2","black")))
+  
+  print(ggplot(data = joined, aes(x = timestamp)) +
+          geom_line(aes(y = WindSpeed.for, color = "Downscaled", group = interaction(NOAA.member, dscale.member)), alpha = 0.3) +
+          geom_point(aes(y = WindSpeed.obs, color = "Site Observations")) + 
+          geom_line(aes(y = WindSpeed.obs, color = "Site Observations")) + 
+          ylab("Wind Speed (m/s)")+
+          xlab("")+
+          theme_bw()+
+          theme(text = element_text(size = 14)) +
+          scale_color_manual(values = c("firebrick2","black")))
+  
   return(summary.table)
 }

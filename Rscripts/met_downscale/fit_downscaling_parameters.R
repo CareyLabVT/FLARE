@@ -6,7 +6,7 @@
 
 ## setup
 
-fit_downscaling_parameters <- function(obs.file.path,
+fit_downscaling_parameters <- function(observations,
                                        for.file.path,
                                        working_glm,
                                        VarNames,
@@ -15,22 +15,7 @@ fit_downscaling_parameters <- function(obs.file.path,
                                        USE_ENSEMBLE_MEAN,
                                        PLOT,
                                        output_tz){
-  
-  # read in obs data
-  obs.data <- read.csv(obs.file.path, skip = 4, header = F)
-  d_names <- read.csv(obs.file.path, skip = 1, header = T, nrows = 1)
-  names(obs.data) <- names(d_names)
-  observations = prep_obs(obs.data, output_tz, replaceObsNames, VarNames) %>%
-    # max air temp record in Vinton, VA is 40.6 C 
-    # coldest air temp on record in Vinton, Va is -23.9 C
-    # http://www.climatespy.com/climate/summary/united-states/virginia/roanoke-regional 
-    # lots of bad data for longwave between 8/23/2018 and 9/11/2018 randomly for a couple minutes at a       # time. Removing entire section of data for now. Also bad data on a few other days
-    dplyr::mutate(AirTemp = ifelse(AirTemp> 273.15 + 41, NA, AirTemp),
-                  AirTemp = ifelse(AirTemp < 273.15 -23.9, NA, AirTemp),
-                  ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
-                  LongWave = ifelse(LongWave < 0, NA, LongWave)) %>%
-    filter(is.na(timestamp) == FALSE)
-  
+
   # process and read in saved forecast data
   process_saved_forecasts(for.file.path,
                           working_glm,
@@ -85,6 +70,7 @@ fit_downscaling_parameters <- function(obs.file.path,
   # 5.a. temporal downscaling step (a): redistribute to 6-hourly resolution
   # -----------------------------------
   redistributed = daily_to_6hr(forecasts, daily.forecast, debiased, VarNames)
+  
   # -----------------------------------
   # 5.b. temporal downscaling step (b): temporally downscale from 6-hourly to hourly
   # -----------------------------------
@@ -99,7 +85,7 @@ fit_downscaling_parameters <- function(obs.file.path,
     repeat_6hr_to_hrly()
   
   ## downscale shortwave to hourly
-  ShortWave.ds = ShortWave_to_hrly(debiased, lat = 37.307, lon = 360 - 79.837, output_tz)
+  ShortWave.ds = ShortWave_to_hrly(debiased, time0 = NA, lat = 37.307, lon = 360 - 79.837, output_tz)
   
   # -----------------------------------
   # 6. join debiased forecasts of different variables into one dataframe

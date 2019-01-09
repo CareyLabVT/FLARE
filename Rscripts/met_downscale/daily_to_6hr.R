@@ -1,15 +1,21 @@
-daily_to_6hr <- function(forecasts, daily.forecast, debiased,VarNames){
-  forecasts <- forecasts %>%
-    dplyr::mutate(date = date(timestamp))
-  deviations <- full_join(daily.forecast, forecasts, by = c("date","NOAA.member"), suffix = c(".daily",".6hr"))
+daily_to_6hr <- function(forecasts, daily.forecast, debiased, VarNames){
+  grouping = "NOAA.member"
+  if("fday.group" %in% colnames(forecasts)){
+    grouping = append(grouping, "fday.group")
+  }else{
+    grouping = append(grouping, "date")
+    forecasts <- forecasts %>% mutate(date = as_date(timestamp))
+  }
+  
+  deviations <- full_join(daily.forecast, forecasts, by = grouping, suffix = c(".daily",".6hr"))
   devNames = NULL
   for(Var in 1:length(VarNames)){
     deviations[,paste0(VarNames[Var],".dev")] = deviations[,paste0(VarNames[Var], ".6hr")] - deviations[,paste0(VarNames[Var], ".daily")]
     devNames = append(devNames, paste0(VarNames[Var],".dev"))
   }
-  deviations <- deviations %>% select(date, timestamp, NOAA.member, devNames)
+  deviations <- deviations %>% select(grouping, timestamp, devNames)
   
-  redistributed <- inner_join(debiased, deviations, by = c("date","NOAA.member"))
+  redistributed <- inner_join(debiased, deviations, by = grouping)
   for(Var in 1:length(VarNames)){
     redistributed[,VarNames[Var]] = redistributed[,VarNames[Var]] + redistributed[,paste0(VarNames[Var], ".dev")]
   }
