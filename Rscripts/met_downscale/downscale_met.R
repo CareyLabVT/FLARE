@@ -19,11 +19,18 @@ downscale_met <- function(forecasts, debiased.coefficients, VarNames, VarNamesSt
       dplyr::mutate(NOAA.member = "mean")
   }
   
+  time0 = min(forecasts$timestamp)
+  tzone = attributes(forecasts$timestamp)$tzone
+  forecasts <- forecasts %>%
+    dplyr::mutate(fday = as.numeric(difftime(timestamp, time0))/(24*60*60),
+                  fday.group = as.integer(fday + 0.75),
+                  fday.group = ifelse(timestamp == time0, 0, fday.group))
   # -----------------------------------
   # 1. aggregate forecasts and observations to daily resolution
   # -----------------------------------
   
-  daily.forecast = aggregate_to_daily(forecasts)
+  daily.forecast = aggregate_to_daily(forecasts) %>%
+    select(-date) # %>% filter(fday.group > 0)) 
   
   # -----------------------------------
   # 2. load saved parameters and spatially debias at daily scale
@@ -35,7 +42,7 @@ downscale_met <- function(forecasts, debiased.coefficients, VarNames, VarNamesSt
   # -----------------------------------
   # 3.a. temporal downscaling step (a): redistribute to 6-hourly resolution
   # -----------------------------------
-  redistributed = daily_to_6hr(forecasts, daily.forecast, debiased,VarNames)
+  redistributed = daily_to_6hr(forecasts, daily.forecast, debiased, VarNames)
   
   # -----------------------------------
   # 3.b. temporal downscaling step (b): temporally downscale from 6-hourly to hourly
@@ -51,7 +58,7 @@ downscale_met <- function(forecasts, debiased.coefficients, VarNames, VarNamesSt
     repeat_6hr_to_hrly()
   
   ## downscale shortwave to hourly
-  ShortWave.ds = ShortWave_to_hrly(debiased, lat = 37.307, lon = 360 - 79.837, output_tz)
+  ShortWave.ds = ShortWave_to_hrly(debiased, time0, lat = 37.307, lon = 360 - 79.837, output_tz)
   
   # -----------------------------------
   # 4. join debiased forecasts of different variables into one dataframe

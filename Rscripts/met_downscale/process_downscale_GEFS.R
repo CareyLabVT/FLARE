@@ -28,7 +28,7 @@ process_downscale_GEFS <- function(folder,
   path.met.ds.folder <- paste0(folder,"/","Rscripts/met_downscale/")
   
   for(f in list.files(path = path.met.ds.folder, pattern="*.R")){
-    if(f != "main_downscaling.R"){
+    if(f != "main_downscaling.R" & f != "process_downscale_GEFS.R"){
     source(paste0(path.met.ds.folder, f))
     }
   }
@@ -42,11 +42,29 @@ process_downscale_GEFS <- function(folder,
   library(ggplot2)
   
   # -----------------------------------
-  # 1. Setup
+  # 1. Load & reformat observational data
   # -----------------------------------
   
   obs.file.path = paste(met_station_location, "/FCRmet.csv", sep = "")
   for.file.path = noaa_location
+  
+  obs.data <- read.csv(obs.file.path, skip = 4, header = F)
+  d_names <- read.csv(obs.file.path, skip = 1, header = T, nrows = 1)
+  names(obs.data) <- names(d_names)
+  
+  observations <- obs.data %>% 
+    prep_obs(output_tz = output_tz, replaceObsNames = replaceObsNames, VarNames = VarNames) %>%
+    dplyr::mutate(ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
+                  RelHum = ifelse(RelHum <0, 0, RelHum),
+                  RelHum = ifelse(RelHum > 100, 100, RelHum),
+                  AirTemp = ifelse(AirTemp> 273.15 + 41, NA, AirTemp),
+                  AirTemp = ifelse(AirTemp < 273.15 -23.9, NA, AirTemp),
+                  LongWave = ifelse(LongWave < 0, NA, LongWave),
+                  # AirTemp = AirTemp - 273.15,
+                  WindSpeed = ifelse(WindSpeed <0, 0, WindSpeed)) %>%
+    filter(is.na(timestamp) == FALSE) 
+  
+  hrly.obs <- observations %>% aggregate_obs_to_hrly()
   
   # -----------------------------------
   # 1. Fit Parameters
@@ -54,29 +72,17 @@ process_downscale_GEFS <- function(folder,
   
   if(FIT_PARAMETERS){
     print("Fit Parameters")
-    fit_downscaling_parameters(obs.file.path = obs.file.path,
+    fit_downscaling_parameters(observations,
                                for.file.path = noaa_location,
                                working_glm,
                                VarNames = VarNames,
                                VarNamesStates,
                                replaceObsNames = replaceObsNames,
                                USE_ENSEMBLE_MEAN = FALSE,
-                               PLOT = TRUE,
+                               PLOT = FALSE,
                                output_tz = output_tz)
   }
-  obs.data <- read.csv(obs.file.path, skip = 4, header = F)
-  d_names <- read.csv(obs.file.path, skip = 1, header = T, nrows = 1)
-  names(obs.data) <- names(d_names)
-  
-  hrly.observations <- obs.data %>% 
-    prep_obs(output_tz = output_tz, replaceObsNames = replaceObsNames, VarNames = VarNames) %>%
-    dplyr::mutate(ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
-                  RelHum = ifelse(RelHum <0, 0, RelHum),
-                  RelHum = ifelse(RelHum > 100, 100, RelHum),
-                  # AirTemp = AirTemp - 273.15,
-                  WindSpeed = ifelse(WindSpeed <0, 0, WindSpeed)) %>%
-    aggregate_obs_to_hrly()
-  
+
   # -----------------------------------
   # 2. Process GEFS
   # -----------------------------------
@@ -90,7 +96,7 @@ process_downscale_GEFS <- function(folder,
                        VarNames = VarNames,
                        VarNamesStates = VarNamesStates,
                        replaceObsNames = replaceObsNames,
-                       hrly.observations = hrly.observations,
+                       hrly.observations = hrly.obs,
                        DOWNSCALE_MET = DOWNSCALE_MET,
                        FIT_PARAMETERS = FIT_PARAMETERS,
                        met_downscale_uncertainity = met_downscale_uncertainity,
@@ -99,7 +105,7 @@ process_downscale_GEFS <- function(folder,
   output = met_forecast_output[[2]]
   if(ANALYZE_OUTPUT == TRUE){
     "comparing forecast output to obs"
-    compare_output_to_obs(output, hrly.observations, PLOT = TRUE)
+    compare_output_to_obs(output, hrly.obs)
   }
   return(files)
 }
