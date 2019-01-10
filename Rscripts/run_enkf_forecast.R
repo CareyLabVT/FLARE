@@ -357,7 +357,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                         "WS_ms_Avg" = "WindSpeed",
                         "RH" = "RelHum",
                         "SR01Up_Avg" = "ShortWave",
-                        "IR01UpCo_Avg" = "LongWave")
+                        "IR01UpCo_Avg" = "LongWave") # "Rain_mm_Tot" = "Rain"
     met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder,
                                        noaa_location,
                                        met_station_location,
@@ -370,7 +370,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                        FIT_PARAMETERS,
                                        DOWNSCALE_MET,
                                        met_downscale_uncertainity,
-                                       ANALYZE_OUTPUT = TRUE,
+                                       ANALYZE_OUTPUT = FALSE,
                                        VarNames,
                                        VarNamesStates,
                                        replaceObsNames)
