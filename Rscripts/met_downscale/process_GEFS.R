@@ -144,6 +144,7 @@ process_GEFS <- function(file_name,
     hrly.Rain.Snow = forecasts %>% dplyr::mutate(Snow = 0) %>%
       select(timestamp, NOAA.member, Rain, Snow) %>%
       repeat_6hr_to_hrly()
+    hrly.Rain.Snow[which(hrly.Rain.Snow$timestamp == time0),"Rain"] = hrly.Rain.Snow[which(hrly.Rain.Snow$timestamp == time0 + 6*60*60),"Rain"]
     
     write_file <- function(df){
       # formats GLM_climate, writes it as a .csv file, and returns the filename
