@@ -11,6 +11,7 @@ out_of_box <- function(forecasts,VarNames){
            WindSpeed = na.interpolation(WindSpeed, option = "linear")) %>%
     ungroup() %>%
     select(timestamp, NOAA.member, VarNames, Rain, Snow)
+  forecasts.hrly[which(forecasts.hrly$timestamp == time0),"Rain"] = forecasts.hrly[which(forecasts.hrly$timestamp == time0 + 6*60*60),"Rain"]
   
   return(forecasts.hrly)
   
