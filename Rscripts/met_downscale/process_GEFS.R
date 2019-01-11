@@ -178,7 +178,6 @@ process_GEFS <- function(file_name,
             filter(NOAA.member == NOAA.ens) %>%
             arrange(timestamp) %>%
             select(timestamp, VarNames)
-          print(min(GLM_climate_ds$timestamp))
           GLM_climate_ds = full_join(Rain.Snow, GLM_climate_ds, by = "timestamp")
           current_filename = write_file(GLM_climate_ds)
           met_file_list = append(met_file_list, current_filename)
