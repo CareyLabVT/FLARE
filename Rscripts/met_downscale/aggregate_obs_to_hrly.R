@@ -8,7 +8,7 @@ aggregate_obs_to_hrly <- function(observations){
                      LongWave = mean(LongWave, na.rm = FALSE)) %>% 
     # ,Rain = mean(Rain, na.rm = FALSE)
     ungroup() %>%
-    dplyr::mutate(timestamp = as_datetime(paste(date, " ", hour, ":","00:00", sep = ""), tz = obs.tz) + 60*60) %>% # add one hour so that timestamp represents average over past hour
+    dplyr::mutate(timestamp = as_datetime(paste(date, " ", hour, ":","00:00", sep = ""), tz = obs.tz)) %>% # add one hour so that timestamp represents average over past hour
     select(timestamp, ShortWave, LongWave)
   
   

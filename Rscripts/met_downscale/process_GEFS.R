@@ -48,14 +48,7 @@ process_GEFS <- function(file_name,
   full_time <- seq(begin_step, end_step, by = "1 hour", tz = output_tz) # grid
   forecasts <- prep_for(d, input_tz = for.input_tz, output_tz = output_tz)
   time0 = min(forecasts$timestamp)
-  
-  # if(REPLACE_START_WITH_OBS == FALSE){
-  #   forecasts[which(forecasts$timestamp == min(forecasts$timestamp)),]$ShortWave = forecasts[which(forecasts$timestamp == min(forecasts$timestamp) + 24*60*60),]$ShortWave
-  #   # hack to give sw values for 1st measurement (that are in fact the values for the second day). This is to avoid having NAs for the first few hours of forecast
-  #   forecasts[which(forecasts$timestamp == min(forecasts$timestamp)),]$LongWave = forecasts[which(forecasts$timestamp == min(forecasts$timestamp) + 6*60*60),]$LongWave
-  #   forecasts[which(forecasts$timestamp == min(forecasts$timestamp)),]$Rain = forecasts[which(forecasts$timestamp == min(forecasts$timestamp) + 6*60*60),]$Rain
-  #   # hack to give lw values for 1st measurement (that are in fact the values of the next measurement, 6 hours later). This is to avoid having NAs for the first few hours of forecast
-  # }
+  time_end = max(forecasts$timestamp)
   
   # -----------------------------------
   # 2. process forecast according to desired method
@@ -119,8 +112,8 @@ process_GEFS <- function(file_name,
     mutate(AirTemp = AirTemp - 273.15)
   obs.time0 = hrly.observations %>% filter(timestamp == time0)
   
-  for(i in 1:length(VarNames)){
-    output[which(output$timestamp == time0),VarNames[i]] = obs.time0[VarNames[i]]
+  for(i in 1:length(VarNamesStates)){
+    output[which(output$timestamp == time0),VarNamesStates[i]] = obs.time0[VarNamesStates[i]]
   }
 
   
@@ -133,6 +126,7 @@ process_GEFS <- function(file_name,
            WindSpeed = ifelse(is.na(WindSpeed.splined), WindSpeed, WindSpeed.splined),
            RelHum = ifelse(is.na(RelHum.splined), RelHum, RelHum.splined)) %>%
     select(-AirTemp.splined, WindSpeed.splined, RelHum.splined)
+  output <- output %>% filter(timestamp < time_end)
 
   # -----------------------------------
   # 3. Produce output files
@@ -144,7 +138,7 @@ process_GEFS <- function(file_name,
     hrly.Rain.Snow = forecasts %>% dplyr::mutate(Snow = 0) %>%
       select(timestamp, NOAA.member, Rain, Snow) %>%
       repeat_6hr_to_hrly()
-    hrly.Rain.Snow[which(hrly.Rain.Snow$timestamp == time0),"Rain"] = hrly.Rain.Snow[which(hrly.Rain.Snow$timestamp == time0 + 6*60*60),"Rain"]
+
     
     write_file <- function(df){
       # formats GLM_climate, writes it as a .csv file, and returns the filename

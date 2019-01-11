@@ -27,7 +27,7 @@ ShortWave_to_hrly <- function(debiased, time0, lat, lon, output_tz){
   ShortWave.ds <- debiased %>% 
     select(ShortWave, grouping) %>%
     full_join(ShortWave.hours, by = grouping) %>%
-    dplyr::mutate(timestamp = as_datetime(paste(date, " ", hour, ":","00:00", sep = ""), tz = output_tz)) %>%
+    dplyr::mutate(timestamp = as_datetime(paste(date, " ", hour, ":","00:00", sep = ""), tz = output_tz) - 1*60*60) %>% # subtract one hour to convert times from representing pervious hour to representing the next hour
     dplyr::mutate(doy = yday(date) + hour/24) %>%
     dplyr::mutate(rpot = solar_geom(doy, lon, lat)) %>% # hourly sw flux calculated using solar geometry
     dplyr::group_by_at(grouping) %>%
