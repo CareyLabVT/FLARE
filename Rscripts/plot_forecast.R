@@ -449,8 +449,9 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     
     if(push_to_git){
       setwd(save_location)
-      file.copy(from = paste0(save_location,'/',pdf_file_name), to = paste0(save_location,'/','Current_forecast.png'),overwrite=TRUE)
-      system(paste0('git add ',pdf_file_name))
+      
+      file.copy(from = paste0(save_location,'/',pdf_file_name, "_management.png"), to = paste0(save_location,'/','Current_forecast.png'),overwrite=TRUE)
+      system(paste0('git add ', pdf_file_name, ".pdf"))
       system(paste0('git add Current_forecast.png'))
       system('git commit -m "forecast and plots"')
       system('git push')
