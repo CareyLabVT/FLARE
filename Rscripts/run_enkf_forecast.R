@@ -1050,6 +1050,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                     hour(Sys.time()), "_",
                                     (minute(Sys.time())))
   
+  print(FLAREversion)
   ###SAVE FORECAST
   write_forecast_netcdf(x = x,
                         full_time = full_time_local,

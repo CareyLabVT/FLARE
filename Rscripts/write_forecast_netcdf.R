@@ -1,5 +1,24 @@
-write_forecast_netcdf <- function(x,full_time,qt,modeled_depths,save_file_name,x_restart,qt_restart,time_of_forecast,hist_days,x_prior,
-                                  include_wq,wq_start,wq_end,par1,par2,par3,z,nstates,npars,GLMversion,FLAREversion){
+write_forecast_netcdf <- function(x,
+                                  full_time,
+                                  qt,
+                                  modeled_depths,
+                                  save_file_name,
+                                  x_restart,
+                                  qt_restart,
+                                  time_of_forecast,
+                                  hist_days,
+                                  x_prior,
+                                  include_wq,
+                                  wq_start,
+                                  wq_end,
+                                  par1,
+                                  par2,
+                                  par3,
+                                  z,
+                                  nstates,
+                                  npars,
+                                  GLMversion,
+                                  FLAREversion){
   
   obs <- z
   
@@ -172,12 +191,13 @@ write_forecast_netcdf <- function(x,full_time,qt,modeled_depths,save_file_name,x
   
   
   #Global file metadata
-  ncatt_put(ncout,0,"title",'Falling Creek Reservoir forecast')
-  ncatt_put(ncout,0,"institution",'Virginia Tech')
-  ncatt_put(ncout,0,"source",GLMversion)
+  ncatt_put(ncout,0,"title",'Falling Creek Reservoir forecast', prec =  "text")
+  ncatt_put(ncout,0,"institution",'Virginia Tech', prec =  "text")
+  ncatt_put(ncout,0,"GLM_version",as.character(GLMversion), prec =  "text")
+  ncatt_put(ncout,0,"FLARE_version",as.character(FLAREversion), prec =  "text")
   #ncatt_put(ncout,0,"references",references$value)
   history <- paste('Run date:',time_of_forecast, sep=", ")
-  ncatt_put(ncout,0,"history",history)
+  ncatt_put(ncout,0,"history",history, prec =  "text")
   #ncatt_put(ncout,0,"Conventions",)
   
   nc_close(ncout)
@@ -350,15 +370,16 @@ write_forecast_netcdf <- function(x,full_time,qt,modeled_depths,save_file_name,x
     ncvar_put(ncout,wq_def21,x[,,wq_start[21]:wq_end[21]])
   }
   
-  
+  print('here')
+  print(as.character(FLAREversion))
   #Global file metadata
-  ncatt_put(ncout,0,"title",'Falling Creek Reservoir forecast')
-  ncatt_put(ncout,0,"institution",'Virginia Tech')
-  ncatt_put(ncout,0,"GLM version",GLMversion)
-  ncatt_put(ncout,0,"FLARE version",FLAREversion)
+  ncatt_put(ncout,0,"title",'Falling Creek Reservoir forecast', prec =  "text")
+  ncatt_put(ncout,0,"institution",'Virginia Tech', prec =  "text")
+  ncatt_put(ncout,0,"GLM_version",as.character(GLMversion), prec =  "text")
+  ncatt_put(ncout,0,"FLARE_version",as.character(FLAREversion), prec =  "text")
   #ncatt_put(ncout,0,"references",references$value)
   history <- paste('Run date:',time_of_forecast, sep=", ")
-  ncatt_put(ncout,0,"history",history)
+  ncatt_put(ncout,0,"history",history, prec =  "text")
   #ncatt_put(ncout,0,"Conventions",)
   
   nc_close(ncout)

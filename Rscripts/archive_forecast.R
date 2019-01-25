@@ -45,9 +45,11 @@ archive_forecast <- function(working_glm,
   tmp <- file.copy(from = files_nc_edi, to = forecast_location)
   zip(zipfile = forecast_archive_dir, files = files)
   netcdf_name <- paste0(forecast_archive_dir_name, ".nc")
+  netcdf_name_edi <- paste0(forecast_archive_dir_name, "_EDI.nc")
   if(push_to_git){
     setwd(forecast_location)
     system(paste0('git add ',netcdf_name))
+    system(paste0('git add ',netcdf_name_edi))
     system('git commit -m "forecast" ')
     system("git push")
   }
