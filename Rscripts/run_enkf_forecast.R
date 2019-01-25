@@ -27,7 +27,8 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                             alpha = c(0.5,0.5,0.5),
                             downscaling_coeff = NA,
                             GLMversion,
-                            DOWNSCALE_MET = TRUE){
+                            DOWNSCALE_MET = TRUE,
+                            FLAREversion){
   
   #################################################
   ### LOAD R FUNCTIONS
@@ -1069,7 +1070,8 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                         z,
                         nstates,
                         npars,
-                        GLMversion)
+                        GLMversion,
+                        FLAREversion)
   
   ##ARCHIVE FORECAST
   restart_file_name <- archive_forecast(working_glm = working_glm,

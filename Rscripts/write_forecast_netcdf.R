@@ -1,5 +1,5 @@
 write_forecast_netcdf <- function(x,full_time,qt,modeled_depths,save_file_name,x_restart,qt_restart,time_of_forecast,hist_days,x_prior,
-                                  include_wq,wq_start,wq_end,par1,par2,par3,z,nstates,npars,GLMversion){
+                                  include_wq,wq_start,wq_end,par1,par2,par3,z,nstates,npars,GLMversion,FLAREversion){
   
   obs <- z
   
@@ -354,7 +354,8 @@ write_forecast_netcdf <- function(x,full_time,qt,modeled_depths,save_file_name,x
   #Global file metadata
   ncatt_put(ncout,0,"title",'Falling Creek Reservoir forecast')
   ncatt_put(ncout,0,"institution",'Virginia Tech')
-  ncatt_put(ncout,0,"source",GLMversion)
+  ncatt_put(ncout,0,"GLM version",GLMversion)
+  ncatt_put(ncout,0,"FLARE version",FLAREversion)
   #ncatt_put(ncout,0,"references",references$value)
   history <- paste('Run date:',time_of_forecast, sep=", ")
   ncatt_put(ncout,0,"history",history)

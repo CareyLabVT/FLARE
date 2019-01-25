@@ -36,6 +36,7 @@ num_forecast_periods <- NA
 wait_time <- 60*10
 GLMversion <- "GLM 3.0.0beta10"
 DOWNSCALE_MET <- TRUE
+FLAREversion <- "v1.0_beta.1"
 
 
 sim_name <- "test" 
@@ -151,7 +152,8 @@ repeat{
                            alpha = c(0.5, 0.5, 0.9),
                            downscaling_coeff = NA,
                            GLMversion,
-                           DOWNSCALE_MET)
+                           DOWNSCALE_MET,
+                           FLAREversion)
   
   forecast_day_count <- forecast_day_count + 1
   

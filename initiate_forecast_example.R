@@ -43,6 +43,7 @@ include_wq <- FALSE
 use_ctd <- FALSE
 DOWNSCALE_MET <- FALSE
 GLMversion <- "GLM 3.0.0beta10"
+FLAREversion <- "v1.0_beta.1"
 
 #Note: this number is multiplied by 
 # 1) the number of NOAA ensembles (21)
@@ -82,7 +83,8 @@ out <- run_enkf_forecast(start_day= start_day,
                          alpha = c(0.5, 0.5, 0.9),
                          downscaling_coeff = NA,
                          GLMversion,
-                         DOWNSCALE_MET)
+                         DOWNSCALE_MET,
+                         FLAREversion)
 
 
 plot_forecast(pdf_file_name = unlist(out)[2],
