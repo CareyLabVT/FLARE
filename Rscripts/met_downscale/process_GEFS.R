@@ -25,7 +25,8 @@ process_GEFS <- function(file_name,
                          DOWNSCALE_MET,
                          FIT_PARAMETERS,
                          met_downscale_uncertainity,
-                         WRITE_FILES){
+                         WRITE_FILES,
+                         downscaling_coeff){
   # -----------------------------------
   # 1. read in and reformat forecast data
   # -----------------------------------
@@ -57,9 +58,11 @@ process_GEFS <- function(file_name,
   if(DOWNSCALE_MET == TRUE){
     ## Downscaling option
     print("Downscaling option")
-    # load(file = paste(sim_files_folder,"/debiased.coefficients.RData", sep = ""))
-    load(file = paste(out_directory,"/debiased.coefficients.RData", sep = ""))
-    load(file = paste(out_directory,"/debiased.covar.RData", sep = ""))
+    if(is.na(downscaling_coeff)){
+      load(file = paste(out_directory,"/debiased.coefficients.RData", sep = ""))
+    }else{
+      load(file = paste(out_directory,"/",downscaling_coeff, sep = ""))
+    }
     ds = downscale_met(forecasts,
                        debiased.coefficients,
                        VarNames,

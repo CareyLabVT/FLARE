@@ -7,6 +7,9 @@ if (!"glmtools" %in% installed.packages()) install.packages("glmtools",
 if (!"RCurl" %in% installed.packages()) install.packages("RCurl")
 if (!"testit" %in% installed.packages()) install.packages("testit")
 if (!"imputeTS" %in% installed.packages()) install.packages("imputeTS")
+if (!"tidyr" %in% installed.packages()) install.packages("tidyr")
+if (!"dplyr" %in% installed.packages()) install.packages("dplyr")
+if (!"ggplot2" %in% installed.packages()) install.packages("ggplot2")
 
 library(mvtnorm)
 library(glmtools)
@@ -15,6 +18,10 @@ library(lubridate)
 library(RCurl)
 library(testit)
 library(imputeTS)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+
 
 data_location = "/Users/laurapuckett/Desktop/SCC_forecasting/SCC_data/"
 folder <- "/Users/laurapuckett/Desktop/SCC_forecasting/FLARE/"
@@ -34,18 +41,21 @@ reference_tzone <- "GMT"
 forecast_days <- 16
 include_wq <- FALSE
 use_ctd <- FALSE
+DOWNSCALE_MET <- FALSE
+GLMversion <- "GLM 3.0.0beta10"
 
 #Note: this number is multiplied by 
 # 1) the number of NOAA ensembles (21)
 # 2) the number of downscaling essembles (50 is current)
 # get to the total number of essembles
 n_enkf_members <- 1  
+n_ds_members <- 5
 
 source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
 source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
 source(paste0(folder, "/", "Rscripts/plot_forecast.R"))
 
-sim_name <- "test_only_ds_noise" 
+sim_name <- "test" 
 start_day <- "2018-07-10 00:00:00" #GMT
 forecast_start_day <-"2018-07-11 00:00:00" #GMT 
 hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_tzone),
@@ -63,12 +73,16 @@ out <- run_enkf_forecast(start_day= start_day,
                          pull_from_git = pull_from_git,
                          data_location = data_location,
                          n_enkf_members = n_enkf_members,
+                         n_ds_members = n_ds_members,
                          include_wq = include_wq,
                          use_ctd = use_ctd,
                          uncert_mode = 1,
                          reference_tzone,
-                         cov_matrix = "Qt_cov_matrix_11June_14Aug2_18.csv",
-                         alpha = c(0.5, 0.5, 0.9))
+                         cov_matrix = "Qt_cov_matrix_11June_11Aug_18.csv",
+                         alpha = c(0.5, 0.5, 0.9),
+                         downscaling_coeff = NA,
+                         GLMversion,
+                         DOWNSCALE_MET)
 
 
 plot_forecast(pdf_file_name = unlist(out)[2],

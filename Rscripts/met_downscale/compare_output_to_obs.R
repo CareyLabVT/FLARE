@@ -17,7 +17,7 @@ compare_output_to_obs <- function(output, hrly.observations){
     filter(timestamp <= time0 + 24*60*60)
   
   ## make a summary table of comparison between output and observations
-  summary.table = data_frame(metric = c("AirTemp","RelHum","WindSpeed","ShortWave","LongWave"),
+  summary.table = tibble(metric = c("AirTemp","RelHum","WindSpeed","ShortWave","LongWave"),
                              r2.AllDays = rep(NA,5),
                              r2.FirstDay = rep(NA,5),
                              mean.residual = rep(NA,5),

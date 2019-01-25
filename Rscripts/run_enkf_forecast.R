@@ -18,12 +18,16 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                             pull_from_git = TRUE, 
                             data_location = NA, 
                             n_enkf_members = NA,
+                            n_ds_members = 50,
                             include_wq = FALSE,
                             use_ctd = use_ctd,
                             uncert_mode = 1,
                             reference_tzone,
                             cov_matrix = NA,
-                            alpha = c(0.5,0.5,0.5)){
+                            alpha = c(0.5,0.5,0.5),
+                            downscaling_coeff = NA,
+                            GLMversion,
+                            DOWNSCALE_MET = TRUE){
   
   #################################################
   ### LOAD R FUNCTIONS
@@ -48,8 +52,17 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   npars <- 3
   pre_scc <- FALSE
   
-  FIT_PARAMETERS = TRUE
-  DOWNSCALE_MET = TRUE
+  ### METEROLOGY DOWNSCALING OPTIONS
+  if(is.na(downscaling_coeff)){
+    FIT_PARAMETERS <- TRUE
+  }else{
+    FIT_PARAMETERS <- FALSE
+  }
+  
+  if(DOWNSCALE_MET == FALSE){
+    FIT_PARAMETERS <- FALSE
+  }
+
 
   #Estimated parameters
   lake_depth_init <- 9.4  #not a modeled state
@@ -108,8 +121,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   # SET UP NUMBER OF ENSEMBLE MEMBERS
   n_met_members <- 21
-  n_ds_members <- 50
-  
+
   #################################################
   ### STEP 1: GRAB DATA FROM REPO OR SERVER
   #################################################
@@ -217,8 +229,8 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   }
   
   
-  if(observation_uncertainity){
-    obs_error <- 0.0001 #NEED TO DOUBLE CHECK
+  if(observation_uncertainity == FALSE){
+    obs_error <- 0.000001
   }
   
   ####################################################
@@ -373,7 +385,9 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                        ANALYZE_OUTPUT = FALSE,
                                        VarNames,
                                        VarNamesStates,
-                                       replaceObsNames)
+                                       replaceObsNames,
+                                       downscaling_coeff,
+                                       full_time_local)
     
   if(weather_uncertainity == FALSE & met_downscale_uncertainity == TRUE){
     met_file_names <- met_file_names[1:(1+(1*n_ds_members))]

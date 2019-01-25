@@ -20,7 +20,9 @@ process_downscale_GEFS <- function(folder,
                                    ANALYZE_OUTPUT,
                                    VarNames,
                                    VarNamesStates,
-                                   replaceObsNames){
+                                   replaceObsNames,
+                                   downscaling_coeff,
+                                   full_time_local){
   # -----------------------------------
   # 0. Source necessary files
   # -----------------------------------
@@ -32,14 +34,6 @@ process_downscale_GEFS <- function(folder,
     source(paste0(path.met.ds.folder, f))
     }
   }
-  
-  # library(imputeTS) # for out-of-box
-  # library(stringr) # for out-of-box
-  # library(lubridate)
-  library(tidyr)
-  library(lubridate)
-  library(dplyr)
-  library(ggplot2)
   
   # -----------------------------------
   # 1. Load & reformat observational data
@@ -53,6 +47,7 @@ process_downscale_GEFS <- function(folder,
   names(obs.data) <- names(d_names)
   
   observations <- obs.data %>% 
+    filter(strptime(TIMESTAMP, format="%Y-%m-%d %H:%M") < (max(full_time_local))) %>% 
     prep_obs(output_tz = output_tz, replaceObsNames = replaceObsNames, VarNames = VarNames) %>%
     dplyr::mutate(ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
                   RelHum = ifelse(RelHum <0, 0, RelHum),
@@ -62,7 +57,8 @@ process_downscale_GEFS <- function(folder,
                   LongWave = ifelse(LongWave < 0, NA, LongWave),
                   # AirTemp = AirTemp - 273.15,
                   WindSpeed = ifelse(WindSpeed <0, 0, WindSpeed)) %>%
-    filter(is.na(timestamp) == FALSE) 
+                  filter(is.na(timestamp) == FALSE)
+  
   
   hrly.obs <- observations %>% aggregate_obs_to_hrly()
   
@@ -100,7 +96,8 @@ process_downscale_GEFS <- function(folder,
                        DOWNSCALE_MET = DOWNSCALE_MET,
                        FIT_PARAMETERS = FIT_PARAMETERS,
                        met_downscale_uncertainity = met_downscale_uncertainity,
-                       WRITE_FILES = TRUE)
+                       WRITE_FILES = TRUE,
+                       downscaling_coeff)
   files = met_forecast_output[[1]]
   output = met_forecast_output[[2]]
   if(ANALYZE_OUTPUT == TRUE){

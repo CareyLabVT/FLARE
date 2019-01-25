@@ -15,6 +15,9 @@ library(lubridate)
 library(RCurl)
 library(testit)
 library(imputeTS)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
 
 folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
 forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/" 
@@ -24,12 +27,15 @@ spin_up_days <- 0
 push_to_git <- FALSE
 pull_from_git <- FALSE
 reference_tzone <- "GMT"
-n_enkf_members <- 50
+n_enkf_members <- 1
+n_ds_members <- 50
 forecast_days <- 16
 include_wq <- FALSE
 use_ctd <- FALSE
 num_forecast_periods <- NA
 wait_time <- 60*10
+GLMversion <- "GLM 3.0.0beta10"
+DOWNSCALE_MET <- TRUE
 
 
 sim_name <- "test" 
@@ -55,11 +61,15 @@ if(is.na(restart_file)){
                            pull_from_git = pull_from_git,
                            data_location = data_location,
                            n_enkf_members = n_enkf_members,
+                           n_ds_members = 50,
                            include_wq = include_wq,
                            use_ctd = use_ctd,
                            uncert_mode = 1,
-                           cov_matrix = "Qt_cov_matrix_11June_14Aug2_18.csv",
-                           alpha = c(0.5, 0.5, 0.9))
+                           cov_matrix = "Qt_cov_matrix_11June_11Aug_18.csv",
+                           alpha = c(0.5, 0.5, 0.9),
+                           downscaling_coeff = NA,
+                           GLMversion,
+                           DOWNSCALE_MET)
   
   plot_forecast(pdf_file_name = unlist(out)[2],
                 output_file = unlist(out)[1],

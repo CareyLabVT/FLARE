@@ -131,8 +131,7 @@ fit_downscaling_parameters <- function(observations,
   model = lm(joined.hrly.obs.and.ds$LongWave.obs ~ joined.hrly.obs.and.ds$LongWave.ds)
   debiased.coefficients[5,5] = sd(residuals(model))
   debiased.coefficients[6,5] = summary(model)$r.squared
-  save(debiased.coefficients, file = paste(working_glm,"/debiased.coefficients.RData", sep = ""))
-  save(debiased.covar, file = paste(working_glm,"/debiased.covar.RData", sep = ""))
+  save(debiased.coefficients,debiased.covar, file = paste(working_glm,"/debiased.coefficients.RData", sep = ""))
   
   print(debiased.coefficients)
   # -----------------------------------
