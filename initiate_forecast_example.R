@@ -38,7 +38,7 @@ spin_up_days <- 0
 push_to_git <- FALSE
 pull_from_git <- TRUE
 reference_tzone <- "GMT"
-forecast_days <- 0
+forecast_days <- 16
 include_wq <- FALSE
 use_ctd <- FALSE
 DOWNSCALE_MET <- FALSE
@@ -50,7 +50,7 @@ FLAREversion <- "v1.0_beta.1"
 # 2) the number of downscaling essembles (50 is current)
 # get to the total number of essembles
 n_enkf_members <- 1  
-n_ds_members <- 2
+n_ds_members <- 50
 
 source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
 source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))

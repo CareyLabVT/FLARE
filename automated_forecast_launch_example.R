@@ -20,12 +20,13 @@ library(dplyr)
 library(ggplot2)
 
 folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
-forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/test_forecast_jan25/" 
+forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FCR_forecasts/" 
 data_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/" 
+
 restart_file <- NA
 spin_up_days <- 0
-push_to_git <- FALSE
-pull_from_git <- FALSE
+push_to_git <- TRUE
+pull_from_git <- TRUE
 reference_tzone <- "GMT"
 n_enkf_members <- 1
 n_ds_members <- 2
@@ -33,15 +34,15 @@ forecast_days <- 16
 include_wq <- FALSE
 use_ctd <- FALSE
 num_forecast_periods <- NA
-wait_time <- 60*10
-GLMversion <- "GLM 3.0.0beta10"
-DOWNSCALE_MET <- TRUE
-FLAREversion <- "v1.0_beta.1"
+wait_time <- 60
+GLMversion <- "GLM_3.0.0beta10"
+DOWNSCALE_MET <- FALSE
+FLAREversion <- as.character("v1.0_beta.1")
 
 
 sim_name <- "test" 
 start_day <- "2018-07-10 00:00:00" #GMT
-forecast_start_day <-"2019-01-25 00:00:00" #GMT 
+forecast_start_day <-"2018-07-11 00:00:00" #GMT 
 
 source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
 source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
@@ -66,11 +67,13 @@ if(is.na(restart_file)){
                            include_wq = include_wq,
                            use_ctd = use_ctd,
                            uncert_mode = 1,
+                           reference_tzone,
                            cov_matrix = "Qt_cov_matrix_11June_11Aug_18.csv",
                            alpha = c(0.5, 0.5, 0.9),
                            downscaling_coeff = NA,
                            GLMversion,
-                           DOWNSCALE_MET)
+                           DOWNSCALE_MET,
+                           FLAREversion)
   
   plot_forecast(pdf_file_name = unlist(out)[2],
                 output_file = unlist(out)[1],
@@ -119,7 +122,7 @@ repeat{
     noaa_location <- paste0(data_location,'/','noaa-data')
     setwd(noaa_location)
     system(paste0('git pull'))
-
+    
     if(!file.exists(paste0(noaa_location,'/',forecast_base_name))){
       print('Waiting for NOAA forecast')
       Sys.sleep(wait_time)
@@ -148,6 +151,7 @@ repeat{
                            include_wq = include_wq,
                            use_ctd = use_ctd,
                            uncert_mode = 1,
+                           reference_tzone,
                            cov_matrix = "Qt_cov_matrix_11June_11Aug_18.csv",
                            alpha = c(0.5, 0.5, 0.9),
                            downscaling_coeff = NA,
