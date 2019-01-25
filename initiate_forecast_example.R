@@ -41,7 +41,7 @@ reference_tzone <- "GMT"
 forecast_days <- 16
 include_wq <- FALSE
 use_ctd <- FALSE
-DOWNSCALE_MET <- FALSE
+DOWNSCALE_MET <- TRUE
 GLMversion <- "GLM 3.0.0beta10"
 FLAREversion <- "v1.0_beta.1"
 
