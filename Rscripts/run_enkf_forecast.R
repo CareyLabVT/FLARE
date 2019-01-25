@@ -1033,20 +1033,14 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   ### CREATE FORECAST NAME
   
-  if(forecast_days >0){
-    save_file_name <- paste0(sim_name, "_hist_",
-                             year(full_time[1]), "_",
-                             month(full_time[1]), "_",
-                             day(full_time[1]), "_forecast_",
-                             year(full_time[hist_days+1]), "_",
-                             month(full_time[hist_days+1]), "_",
-                             day(full_time[hist_days+1]))
-  }else{
-    save_file_name <- paste0(sim_name, "_hist_",
-                             year(full_time[1]), "_",
-                             month(full_time[1]), "_",
-                             day(full_time[1]))    
-  }
+    save_file_name <- paste0(sim_name, "_H_",
+                             year(full_time[1]),
+                             month(full_time[1]),
+                             day(full_time[1]),'_',
+                             year(full_time[hist_days+1]),
+                             month(full_time[hist_days+1]),
+                             day(full_time[hist_days+1]),"_F_",
+                             forecast_days) 
   
   time_of_forecast <- Sys.time()
   time_of_forecast_string <- paste0(year(Sys.time()),
@@ -1074,7 +1068,8 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                         par3,
                         z,
                         nstates,
-                        npars)
+                        npars,
+                        GLMversion)
   
   ##ARCHIVE FORECAST
   restart_file_name <- archive_forecast(working_glm = working_glm,

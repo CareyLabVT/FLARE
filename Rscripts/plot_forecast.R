@@ -325,7 +325,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     }
     dev.off()
     
-  if(forecast_days > 0){
+  if(forecast_days == 16){
 
     full_time_past <- seq(full_time[1] - days(5), full_time[2], by = "1 day") # grid
     full_time_combined <- seq(full_time_past[1], full_time[length(full_time)], by = "1 day")
@@ -350,6 +350,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     par(mfrow=c(1,2))
     
     #PLOT OF TURNOVER PROBABILITY
+
     prob_zero <- rep(NA,length(seq(3,18,1)))
     for(i in 3:18){
       prob_zero[i-2] = 100*length(which(temp[i,,4] - temp[i,,25] < 1))/length((temp[i,,obs_index[1]]))

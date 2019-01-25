@@ -185,7 +185,7 @@ write_forecast_netcdf <- function(x,full_time,qt,modeled_depths,save_file_name,x
   ### EXPERIMENTAL CODE FOR EDI
   obs <- z
   
-  ncfname <- paste0(save_file_name,'EDI.nc')
+  ncfname <- paste0(save_file_name,'_EDI.nc')
   #Set dimensions
   ens <- seq(1,dim(x)[2],1)
   depths <- modeled_depths

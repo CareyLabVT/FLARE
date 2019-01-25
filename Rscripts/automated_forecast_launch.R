@@ -20,15 +20,15 @@ library(dplyr)
 library(ggplot2)
 
 folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
-forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/" 
+forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/test_forecast_jan25/" 
 data_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/" 
-restart_file <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/test_hist_2018_7_10_20181219_23_46.nc"
+restart_file <- NA
 spin_up_days <- 0
 push_to_git <- FALSE
 pull_from_git <- FALSE
 reference_tzone <- "GMT"
 n_enkf_members <- 1
-n_ds_members <- 50
+n_ds_members <- 2
 forecast_days <- 16
 include_wq <- FALSE
 use_ctd <- FALSE
@@ -39,8 +39,8 @@ DOWNSCALE_MET <- TRUE
 
 
 sim_name <- "test" 
-start_day <- "2018-12-19 00:00:00" #GMT
-forecast_start_day <-"2018-12-20 00:00:00" #GMT 
+start_day <- "2018-07-10 00:00:00" #GMT
+forecast_start_day <-"2019-01-25 00:00:00" #GMT 
 
 source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
 source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
@@ -61,7 +61,7 @@ if(is.na(restart_file)){
                            pull_from_git = pull_from_git,
                            data_location = data_location,
                            n_enkf_members = n_enkf_members,
-                           n_ds_members = 50,
+                           n_ds_members = n_ds_members,
                            include_wq = include_wq,
                            use_ctd = use_ctd,
                            uncert_mode = 1,
@@ -143,11 +143,15 @@ repeat{
                            pull_from_git = pull_from_git,
                            data_location = data_location,
                            n_enkf_members = n_enkf_members,
+                           n_ds_members = n_ds_members,
                            include_wq = include_wq,
                            use_ctd = use_ctd,
                            uncert_mode = 1,
-                           cov_matrix = "Qt_cov_matrix_11June_14Aug2_18.csv",
-                           alpha = c(0.5, 0.5, 0.9))
+                           cov_matrix = "Qt_cov_matrix_11June_11Aug_18.csv",
+                           alpha = c(0.5, 0.5, 0.9),
+                           downscaling_coeff = NA,
+                           GLMversion,
+                           DOWNSCALE_MET)
   
   forecast_day_count <- forecast_day_count + 1
   

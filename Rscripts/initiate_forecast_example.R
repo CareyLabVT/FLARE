@@ -38,7 +38,7 @@ spin_up_days <- 0
 push_to_git <- FALSE
 pull_from_git <- TRUE
 reference_tzone <- "GMT"
-forecast_days <- 16
+forecast_days <- 0
 include_wq <- FALSE
 use_ctd <- FALSE
 DOWNSCALE_MET <- FALSE
@@ -49,7 +49,7 @@ GLMversion <- "GLM 3.0.0beta10"
 # 2) the number of downscaling essembles (50 is current)
 # get to the total number of essembles
 n_enkf_members <- 1  
-n_ds_members <- 5
+n_ds_members <- 2
 
 source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
 source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
