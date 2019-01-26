@@ -2,8 +2,8 @@
    sim_name = 'FCR'
    max_layers = 500
    min_layer_vol = 0.025
-   min_layer_thick = 0.05
-   max_layer_thick = 0.5
+   min_layer_thick = 0.5
+   max_layer_thick = 1.5
    non_avg = .true.
 /
 &light
@@ -63,8 +63,8 @@
    meteo_fl = 'FCR_GLM_met_NLDAS2_010113_010118_GMTadjusted.csv'
    subdaily = .true.
    wind_factor = 1.0
-   sw_factor = 1.0
-   lw_factor = 1.0 
+   sw_factor = 0.95
+   lw_factor = 0.95
    at_factor = 1
    rh_factor = 1
    rain_factor = 1
@@ -98,18 +98,16 @@
 /
 &snowice
    snow_albedo_factor = 1
-   snow_rho_max = 500
-   snow_rho_min = 100
+   snow_rho_max = 300
+   snow_rho_min = 50
 /
 &sediment
   benthic_mode = 2
   n_zones = 2
-  zone_heights =  6, 9.5 !!!!4,9.5
+  zone_heights =  5, 9.5 !!!!4,9.5
   sed_heat_Ksoil = 1.2, 1.2, !1.8, 1.8
-  sed_temp_depth = 0.2, 0.2
-  sed_temp_mean = 11, 17!!!!14.6,8 !14.6,10.6
-  sed_temp_amplitude = 0, 0, 
+  sed_temp_depth = 0.5, 0.5
+  sed_temp_mean = 11, 17
+  sed_temp_amplitude = 6, 6, !6,6
   sed_temp_peak_doy = 275, 275
-!  sed_reflectivity = 0.1,0.01, 0.01
-!  sed_roughness = 0.1,0.01
 /
