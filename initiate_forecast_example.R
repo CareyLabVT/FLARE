@@ -38,10 +38,10 @@ spin_up_days <- 0
 push_to_git <- FALSE
 pull_from_git <- TRUE
 reference_tzone <- "GMT"
-forecast_days <- 16
+forecast_days <- 2
 include_wq <- FALSE
 use_ctd <- FALSE
-DOWNSCALE_MET <- TRUE
+DOWNSCALE_MET <- FALSE
 GLMversion <- "GLM 3.0.0beta10"
 FLAREversion <- "v1.0_beta.1"
 
@@ -49,8 +49,8 @@ FLAREversion <- "v1.0_beta.1"
 # 1) the number of NOAA ensembles (21)
 # 2) the number of downscaling essembles (50 is current)
 # get to the total number of essembles
-n_enkf_members <- 1  
-n_ds_members <- 50
+n_enkf_members <- 20
+n_ds_members <- 1
 
 source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
 source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
@@ -58,7 +58,7 @@ source(paste0(folder, "/", "Rscripts/plot_forecast.R"))
 
 sim_name <- "test" 
 start_day <- "2018-07-10 00:00:00" #GMT
-forecast_start_day <-"2018-07-11 00:00:00" #GMT 
+forecast_start_day <-"2019-01-25 00:00:00" #GMT 
 hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_tzone),
                                  as.POSIXct(start_day, tz = reference_tzone)))
 
@@ -80,7 +80,7 @@ out <- run_enkf_forecast(start_day= start_day,
                          uncert_mode = 1,
                          reference_tzone,
                          cov_matrix = "Qt_cov_matrix_11June_11Aug_18.csv",
-                         alpha = c(0.5, 0.5, 0.9),
+                         alpha = c(0, 0, 0),
                          downscaling_coeff = NA,
                          GLMversion,
                          DOWNSCALE_MET,

@@ -14,6 +14,7 @@ write_forecast_netcdf <- function(x,
                                   par1,
                                   par2,
                                   par3,
+                                  par4,
                                   z,
                                   nstates,
                                   npars,
@@ -71,8 +72,10 @@ write_forecast_netcdf <- function(x,
   par1_def <- ncvar_def("zone1temp","deg_C",list(timedim,ensdim),fillvalue,dlname,prec="single")
   dlname <- 'zone 2 temperature'
   par2_def <- ncvar_def("zone2temp","deg_C",list(timedim,ensdim),fillvalue,dlname,prec="single")
+  dlname <- 'SW/LW factor parameter'
+  par3_def <- ncvar_def("SW_LW_factor","proportion",list(timedim,ensdim),fillvalue,dlname,prec="single")
   dlname <- 'Kw'
-  par3_def <- ncvar_def("Kw","unitless",list(timedim,ensdim),fillvalue,dlname,prec="single")
+  par4_def <- ncvar_def("Kw","unitless",list(timedim,ensdim),fillvalue,dlname,prec="single")
   dlname <- 'restart covariance matrix'
   qt_restart_def <- ncvar_def("qt_restart","-",list(statedim,statedim),fillvalue,dlname,prec="float")
   dlname <- 'matrix for restarting EnKF'
@@ -132,12 +135,12 @@ write_forecast_netcdf <- function(x,
     dlname <- 'ZOO_COPEPODS1'
     wq_def21 <- ncvar_def("ZOO_DAPHNIASMALL3","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
     
-    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,x_prior_def,obs_def,
+    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def,
                                     wq_def1,wq_def2,wq_def3,wq_def4,wq_def5,wq_def6,wq_def7,wq_def8,wq_def9,wq_def10,wq_def11,wq_def12, wq_def13,wq_def14,wq_def15,
                                     wq_def16,wq_def17,wq_def18,wq_def19,wq_def20,wq_def21),force_v4=T)
     
   }else{
-    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,x_prior_def,obs_def),force_v4=T)
+    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def),force_v4=T)
   }
   
   # create netCDF file and put arrays
@@ -154,6 +157,7 @@ write_forecast_netcdf <- function(x,
   ncvar_put(ncout,par2_def,array(x[,,par2]))
   
   ncvar_put(ncout,par3_def,array(x[,,par3]))
+  ncvar_put(ncout,par4_def,array(x[,,par4]))
   
   ncvar_put(ncout,forecast_def,as.array(forecasted))
   
@@ -256,6 +260,8 @@ write_forecast_netcdf <- function(x,
   par2_def <- ncvar_def("zone2temp","deg_C",list(timedim,ensdim),fillvalue,dlname,prec="single")
   dlname <- 'SW/LW factor parameter'
   par3_def <- ncvar_def("SW_LW_factor","proportion",list(timedim,ensdim),fillvalue,dlname,prec="single")
+  dlname <- 'Kw'
+  par4_def <- ncvar_def("Kw","unitless",list(timedim,ensdim),fillvalue,dlname,prec="single")
   dlname <- 'restart covariance matrix'
   qt_restart_def <- ncvar_def("qt_restart","-",list(statedim,statedim),fillvalue,dlname,prec="float")
   dlname <- 'state plus parameter matrix for restarting EnKF'
@@ -313,12 +319,12 @@ write_forecast_netcdf <- function(x,
     dlname <- 'ZOO_COPEPODS1'
     wq_def21 <- ncvar_def("ZOO_DAPHNIASMALL3","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
     
-    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,x_prior_def,obs_def,
+    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def,
                                     wq_def1,wq_def2,wq_def3,wq_def4,wq_def5,wq_def6,wq_def7,wq_def8,wq_def9,wq_def10,wq_def11,wq_def12, wq_def13,wq_def14,wq_def15,
                                     wq_def16,wq_def17,wq_def18,wq_def19,wq_def20,wq_def21),force_v4=T)
     
   }else{
-    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,x_prior_def,obs_def),force_v4=T)
+    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def),force_v4=T)
   }
   
   # create netCDF file and put arrays
@@ -335,6 +341,8 @@ write_forecast_netcdf <- function(x,
   ncvar_put(ncout,par2_def,array(x[,,par2]))
   
   ncvar_put(ncout,par3_def,array(x[,,par3]))
+  
+  ncvar_put(ncout,par4_def,array(x[,,par4]))
   
   ncvar_put(ncout,forecast_def,as.array(forecasted))
   

@@ -50,7 +50,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   #################################################
   
   ###RUN OPTIONS
-  npars <- 3
+  npars <- 4
   pre_scc <- FALSE
   
   ### METEROLOGY DOWNSCALING OPTIONS
@@ -67,12 +67,14 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
 
   #Estimated parameters
   lake_depth_init <- 9.4  #not a modeled state
-  zone2_temp <- 17
+  zone2_temp <- 11
   zone1_temp <- 11
-  zone1temp_init_qt <- 0.01 #THIS IS THE VARIANCE, NOT THE SD
-  zone2temp_init_qt <- 0.01 #THIS IS THE VARIANCE, NOT THE SD
-  swf_lwf_init <- 1.0
-  swf_lwf_init_qt <- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
+  zone1temp_init_qt <- 0.001 #THIS IS THE VARIANCE, NOT THE SD
+  zone2temp_init_qt <- 0.001 #THIS IS THE VARIANCE, NOT THE SD
+  swf_lwf_init <- 0.75
+  swf_lwf_init_qt <- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
+  kw_init <-0.87
+  kw_init_qt <- 0.001^2
   
   obs_error <- 0.0001 #NEED TO DOUBLE CHECK
   
@@ -233,6 +235,8 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   if(observation_uncertainity == FALSE){
     obs_error <- 0.000001
   }
+  
+  use_obs_constraint <- TRUE
   
   ####################################################
   #### STEP 2: DETECT PLATFORM  
@@ -555,10 +559,12 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
         par1 <- wq_end[num_wq_vars] + 1
         par2 <- par1 + 1
         par3 <-  par2 + 1
+        par4 <-  par3 + 1
       }else{
         par1 <- wq_end[num_wq_vars]
         par2 <- wq_end[num_wq_vars]
         par3 <- wq_end[num_wq_vars]
+        par4 <- wq_end[num_wq_vars]
       }
       
     }
@@ -569,10 +575,12 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
       par1 <- temp_end + 1
       par2 <- par1 + 1
       par3 <-  par2 + 1
+      par4 <-  par3 + 1
     }else{
       par1 <- temp_end
       par2 <- temp_end
       par3 <- temp_end
+      par4 <- temp_end
     }
   }
   
@@ -842,7 +850,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   #Covariance matrix for parameters
   qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
-  diag(qt_pars) <- c(zone1temp_init_qt, zone2temp_init_qt, swf_lwf_init_qt)
+  diag(qt_pars) <- c(zone1temp_init_qt, zone2temp_init_qt, swf_lwf_init_qt,kw_init_qt)
   
   #######################################################
   #### STEP 10: CREATE THE PSI VECTOR (DATA UNCERTAINITY)  
@@ -873,18 +881,24 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                     mean=c(the_temps_init, 
                                            wq_init_vals), 
                                     sigma=as.matrix(qt))
-        x[1, ,(nstates+1):(nstates+npars)] <- rmvnorm(n=nmembers, 
-                                                      mean=c(zone1_temp,
-                                                             zone2_temp,
-                                                             swf_lwf_init),
-                                                      sigma = as.matrix(qt_pars))
+        #x[1, ,(nstates+1):(nstates+npars)] <- rmvnorm(n=nmembers, 
+        #                                              mean=c(zone1_temp,
+        #                                                     zone2_temp,
+        #                                                     swf_lwf_init,
+        #                                                     kw_init),
+        #                                              sigma = as.matrix(qt_pars))
+        x[1, ,(nstates+1)] <- runif(n=nmembers,5, 20)
+        x[1, ,(nstates+2)] <- runif(n=nmembers,5, 20)
+        x[1, ,(nstates+3)] <- runif(n=nmembers,0.5, 1.0)
+        x[1, ,(nstates+4)] <- runif(n=nmembers,0.5, 1.5)
         if(initial_condition_uncertainity == FALSE){
           for(m in 1:nmembers){
             x[1,m, ] <- c(the_temps_init,
                           wq_init_vals,
                           zone1_temp,
                           zone2_temp,
-                          swf_lwf_init)
+                          swf_lwf_init,
+                          kw_init)
           }
         }
       }else{
@@ -902,14 +916,19 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
         x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
                                     mean=the_temps_init,
                                     sigma=as.matrix(qt))
-        x[1, ,(nstates+1):(nstates+npars)] <- rmvnorm(n=nmembers, 
-                                                      mean=c(zone1_temp,
-                                                             zone2_temp,
-                                                             swf_lwf_init),
-                                                      sigma = as.matrix(qt_pars))
+        #x[1, ,(nstates+1):(nstates+npars)] <- rmvnorm(n=nmembers, 
+        #                                              mean=c(zone1_temp,
+        #                                                     zone2_temp,
+        #                                                     swf_lwf_init,
+        #                                                     kw_init),
+        #                                              sigma = as.matrix(qt_pars))
+        x[1, ,(nstates+1)] <- runif(n=nmembers,5, 20)
+        x[1, ,(nstates+2)] <- runif(n=nmembers,5, 20)
+        x[1, ,(nstates+3)] <- runif(n=nmembers,0.5, 1.0)
+        x[1, ,(nstates+4)] <- runif(n=nmembers,0.5, 1.5)
         if(initial_condition_uncertainity == FALSE){
           for(m in 1:nmembers){
-            x[1, m, ] <- c(the_temps_init, zone1_temp, zone2_temp, swf_lwf_init)
+            x[1, m, ] <- c(the_temps_init, zone1_temp, zone2_temp, swf_lwf_init, kw_init)
           }
         }
       }else{
@@ -1050,7 +1069,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                     hour(Sys.time()), "_",
                                     (minute(Sys.time())))
   
-  print(FLAREversion)
+
   ###SAVE FORECAST
   write_forecast_netcdf(x = x,
                         full_time = full_time_local,
@@ -1068,6 +1087,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                         par1,
                         par2,
                         par3,
+                        par4,
                         z,
                         nstates,
                         npars,

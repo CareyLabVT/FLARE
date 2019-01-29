@@ -39,6 +39,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     temp_lower  <- ncvar_get(nc,'temp_lowerCI')
     depths <- ncvar_get(nc,'z')
     Kw <- ncvar_get(nc,'Kw')
+    SW_LW_factor <- ncvar_get(nc,'SW_LW_factor')
     zone1temp <- ncvar_get(nc,'zone1temp')
     zone2temp <- ncvar_get(nc,'zone2temp')
     forecasted <- ncvar_get(nc,'forecasted')
@@ -210,9 +211,30 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     
     ###PLOT OF PARAMETERS IF FIT
     plot.new()
-    plot(rowMeans(Kw[,]),xlab ='Day',ylab = 'SW & LW Factor',type='l')
-    plot(rowMeans(zone1temp[,]),xlab ='Day',ylab = 'Zone 1 sediment temp',type='l')
-    plot(rowMeans(zone2temp[,]),xlab ='Day',ylab = 'Zone 2 sediment temp',type='l')
+    plot(full_time,rowMeans(Kw[,]),xlab ='Day',ylab = 'Kw',type='l',ylim = range(c(Kw),na.rm=TRUE))
+    if(length(Kw[1,]) > 1){
+      for(m in 1:length(Kw[1,])){
+        points(full_time,Kw[,m],type='l')
+      }
+    }
+    plot(full_time,rowMeans(zone1temp[,]),xlab ='Day',ylab = 'Zone 1 sediment temp',type='l',ylim = range(c(zone1temp),na.rm=TRUE))
+    if(length(zone1temp[1,]) > 1){
+      for(m in 1:length(zone1temp[1,])){
+        points(full_time,zone1temp[,m],type='l')
+      }
+    }
+    plot(full_time,rowMeans(zone2temp[,]),xlab ='Day',ylab = 'Zone 2 sediment temp',type='l',ylim = range(c(zone2temp),na.rm=TRUE))
+    if(length(zone2temp[1,]) > 1){
+      for(m in 1:length(zone2temp[1,])){
+        points(full_time,zone2temp[,m],type='l')
+      }
+    }
+    plot(full_time,rowMeans(SW_LW_factor[,]),xlab ='Day',ylab = 'SW_LW_factor',type='l',ylim = range(c(SW_LW_factor),na.rm=TRUE))
+    if(length(SW_LW_factor[1,]) > 1){
+      for(m in 1:length(SW_LW_factor[1,])){
+        points(full_time,SW_LW_factor[,m],type='l')
+      }
+    }
     
     if(include_wq){
       par(mfrow=c(4,3))

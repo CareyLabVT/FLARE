@@ -65,11 +65,12 @@ GLM_EnKF <- function(x,
                               sigma=as.matrix(qt_pars))
         }
         
-        update_var(c(round(new_pars[1] ,3) ,round(new_pars[2] ,3)),
+        update_var(c(round(new_pars[1] ,3) ,round(max(c(4,new_pars[2])),3)),
                    "sed_temp_mean",
                    working_glm)
         update_var(round(new_pars[3], 3), "sw_factor", working_glm)
-        update_var(round(new_pars[3], 3), "lw_factor", working_glm)
+        #update_var(round(new_pars[3], 3), "lw_factor", working_glm)
+        update_var(round(new_pars[4], 4), "Kw", working_glm)
         pars_corr[m, ] <- new_pars
       }
       
@@ -255,8 +256,13 @@ GLM_EnKF <- function(x,
         #between the dims here and the dims in the EnKF formulations)
         x[i, , 1:nstates] <- t(t(x_corr) + k_t %*% (d_mat - h %*% t(x_corr)))
         for(pp in 1:npars){
-          x[i, , (nstates+pp)] <- alpha[pp]*x[i - 1, , (nstates+pp)] + 
-            (1-alpha[pp]) * t(t(pars_corr) + k_t_pars %*% (d_mat - h %*% t(x_corr)))[ ,pp]
+          #x[i, , (nstates+pp)] <- alpha[pp]*x[i - 1, , (nstates+pp)] + 
+          #  (1-alpha[pp]) * t(t(pars_corr) + k_t_pars %*% (d_mat - h %*% t(x_corr)))[ ,pp]
+          x[i, , (nstates+pp)] <- t(t(pars_corr) + 
+                                      k_t_pars %*% (d_mat - h %*% t(x_corr)))[ ,pp]
+          if(pp == 2){
+            x[i,which(x[i, , (nstates+pp)] < 4), (nstates+pp)] <- 4
+          }
         }
         
         if(include_wq){
