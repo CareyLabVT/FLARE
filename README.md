@@ -21,7 +21,7 @@ note: that FLARE has not been fully generalized and only works at Falling Creek 
 
 `data_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"`
 
-4) Move either `initiate_forecast_example.R` or `automated_forecast_launch_example.R` to your `forecast_locations` and modify the following variables.
+4) Move either `initiate_forecast_example.R` or `automated_forecast_launch_example.R` to your `forecast_location` and modify the following variables.
 
 5) Set the following variables 
 
@@ -53,7 +53,7 @@ note: that FLARE has not been fully generalized and only works at Falling Creek 
 
 `DOWNSCALE_MET <- TRUE`: Set to TRUE if the NOAA 1x1 resolution gridded forecast is downscaled to local site.
 
-`FLAREversion <- "v1.0_beta.1.01"`: Version of FLARE that is used The user needs to set this so that the output file has correct documentation
+`FLAREversion <- "v1.0_beta.1.01"`: Version of FLARE that is used. The user needs to set this so that the output file has correct documentation
 
 `sim_name <- "FCRv1.beta2"`: Name of simulations that is used in the output files and plots 
 
