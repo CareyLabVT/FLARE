@@ -69,12 +69,12 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   lake_depth_init <- 9.4  #not a modeled state
   zone2_temp <- 11
   zone1_temp <- 11
-  zone1temp_init_qt <- 0.001 #THIS IS THE VARIANCE, NOT THE SD
-  zone2temp_init_qt <- 0.001 #THIS IS THE VARIANCE, NOT THE SD
+  zone1temp_init_qt <- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
+  zone2temp_init_qt <- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
   swf_lwf_init <- 0.75
   swf_lwf_init_qt <- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
   kw_init <-0.87
-  kw_init_qt <- 0.001^2
+  kw_init_qt <- 0.01^2
   
   obs_error <- 0.0001 #NEED TO DOUBLE CHECK
   

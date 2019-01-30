@@ -252,18 +252,17 @@ GLM_EnKF <- function(x,
         k_t <- p_t %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t)
         k_t_pars <- p_t_pars %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t)
         
+        #sigma_t <- 1.5
+        #k_t_pars <- (1/(nmembers-1))*sigma_t*p_t_pars %*% t(h) %*% 
+        #  ((1/(nmembers-1))*sigma_t*solve(h %*% p_t %*% t(h) + psi_t))
+        
         #Update states array (transposes are necessary to convert 
         #between the dims here and the dims in the EnKF formulations)
         x[i, , 1:nstates] <- t(t(x_corr) + k_t %*% (d_mat - h %*% t(x_corr)))
-        for(pp in 1:npars){
-          #x[i, , (nstates+pp)] <- alpha[pp]*x[i - 1, , (nstates+pp)] + 
-          #  (1-alpha[pp]) * t(t(pars_corr) + k_t_pars %*% (d_mat - h %*% t(x_corr)))[ ,pp]
-          x[i, , (nstates+pp)] <- t(t(pars_corr) + 
-                                      k_t_pars %*% (d_mat - h %*% t(x_corr)))[ ,pp]
-          if(pp == 2){
-            x[i,which(x[i, , (nstates+pp)] < 4), (nstates+pp)] <- 4
-          }
-        }
+        x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + 
+                                      k_t_pars %*% (d_mat - h %*% t(x_corr)))
+        x[i,which(x[i, , (nstates+2)] < 4), (nstates+2)] <- 4
+
         
         if(include_wq){
           for(m in 1:nmembers){
