@@ -2,7 +2,7 @@
 Forecasting Lake And Reservoir Ecosystems
 
 Directions for using FLARE
-note: that FLARE has not been fully generalized and only works at Falling Creek Reservior.  We are working to generalize for use in other lakes
+note: that FLARE has not been fully generalized and only works at Falling Creek Reservoir.  We are working to generalize for use in other lakes
 
 
 `initiate_forecast_example.R` provides an example for running FLARE once
