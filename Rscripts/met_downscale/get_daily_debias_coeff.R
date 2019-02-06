@@ -41,7 +41,7 @@ get_daily_debias_coeff <- function(joined.data, VarInfo){
 
   ## covariance matrix
   df2 = NULL
-
+  
   for(colNum in 1:n_vars){
     VarName = VarNames[colNum]
     method = VarInfo$debias_method[colNum]
@@ -49,9 +49,18 @@ get_daily_debias_coeff <- function(joined.data, VarInfo){
     df2 = cbind(df2, tmp)
   }
   
+  noCovVarNames = VarInfo %>% filter(use_covariance == FALSE)
+  noCovVarNames = noCovVarNames$VarNames
+  
   cov <- cov(df2)
   colnames(cov) <- VarNames
   rownames(cov) <- VarNames
+  
+  for(i in length(noCovVarNames)){
+    
+    cov[noCovVarNames[i],] = 0
+    cov[,noCovVarNames[i]] = 0
+  }
   
   return(list(df, cov))
 }

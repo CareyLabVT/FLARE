@@ -362,19 +362,45 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     #                                                        input_tz = "EST5EDT", 
     #                                                        output_tz = reference_tzone)
 
-    VarNames = c("AirTemp",
-                 "WindSpeed",
-                 "RelHum",
-                 "ShortWave",
-                 "LongWave")
-    VarNamesStates = c("AirTemp",
-                       "WindSpeed",
-                       "RelHum")
+    VarInfo = data.frame("VarNames" = c("AirTemp",
+                                        "WindSpeed",
+                                        "RelHum",
+                                        "ShortWave",
+                                        "LongWave",
+                                        "Rain"),
+                         "VarType" = c("State",
+                                       "State",
+                                       "State",
+                                       "Flux",
+                                       "Flux",
+                                       "Flux"),
+                         "ds_res" = c("hour",
+                                      "hour",
+                                      "hour",
+                                      "hour",
+                                      "6hr",
+                                      "6hr"),
+                         "debias_method" = c("lm",
+                                             "lm",
+                                             "lm",
+                                             "lm",
+                                             "lm",
+                                             "compare_totals"),
+                         "use_covariance" = c(TRUE,
+                                              TRUE,
+                                              TRUE,
+                                              TRUE,
+                                              TRUE,
+                                              FALSE),
+                         stringsAsFactors = FALSE)
+    
     replaceObsNames = c("AirTC_Avg" = "AirTemp",
                         "WS_ms_Avg" = "WindSpeed",
                         "RH" = "RelHum",
                         "SR01Up_Avg" = "ShortWave",
-                        "IR01UpCo_Avg" = "LongWave") # "Rain_mm_Tot" = "Rain"
+                        "IR01UpCo_Avg" = "LongWave",
+                        "Rain_mm_Tot" = "Rain")
+    
     met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder,
                                        noaa_location,
                                        met_station_location,
@@ -388,8 +414,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                        DOWNSCALE_MET,
                                        met_downscale_uncertainity,
                                        ANALYZE_OUTPUT = FALSE,
-                                       VarNames,
-                                       VarNamesStates,
+                                       VarInfo,
                                        replaceObsNames,
                                        downscaling_coeff,
                                        full_time_local)
@@ -403,7 +428,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     n_met_members <- 1
   }
     
-  plot_downscaled_met(met_file_names, VarNames, working_glm)
+  plot_downscaled_met(met_file_names, VarInfo$VarNames, working_glm)
   }
   
   ###MOVE DATA FILES AROUND

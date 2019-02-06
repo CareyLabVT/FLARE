@@ -26,11 +26,12 @@ library(ggplot2)
 data_location = "/Users/laurapuckett/Desktop/SCC_forecasting/SCC_data/"
 folder <- "/Users/laurapuckett/Desktop/SCC_forecasting/FLARE/"
 forecast_location <- "/Users/laurapuckett/Desktop/SCC_forecasting/forecasts/" 
+data_location <- "/Users/laurapuckett/Desktop/SCC_forecasting/SCC_data/" 
 
 
 data_location = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
 folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
-forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/"
+forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/" 
 
 restart_file <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/FCR_betaV2_hist_2018_10_1_forecast_2018_10_2_2018102_5_53.nc"
 spin_up_days <- 0
@@ -60,30 +61,6 @@ start_day <- "2018-07-10 00:00:00" #GMT
 forecast_start_day <-"2019-01-25 00:00:00" #GMT 
 hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_tzone),
                                  as.POSIXct(start_day, tz = reference_tzone)))
-# 
-# start_day= "2018-07-06 00:00:00"
-# sim_name = NA
-# hist_days = 1
-# forecast_days = 16  
-# spin_up_days = 0
-# restart_file = NA
-# folder 
-# forecast_location = NA
-# push_to_git = FALSE
-# pull_from_git = TRUE 
-#  
-# n_enkf_members = NA
-# n_ds_members = 5
-# include_wq = FALSE
-# use_ctd = use_ctd
-# uncert_mode = 1
-# reference_tzone
-# cov_matrix = NA
-# alpha = c(0.5,0.5,0.5)
-# downscaling_coeff = NA
-# GLMversion
-# DOWNSCALE_MET = TRUE
-# FLAREversion
 
 out <- run_enkf_forecast(start_day= start_day,
                          sim_name = sim_name,
