@@ -15,7 +15,7 @@ fit_downscaling_parameters <- function(observations,
                                        USE_ENSEMBLE_MEAN,
                                        PLOT,
                                        output_tz){
-
+  
   # process and read in saved forecast data
   process_saved_forecasts(for.file.path,
                           working_glm,
@@ -29,10 +29,10 @@ fit_downscaling_parameters <- function(observations,
     dplyr::group_by(NOAA.member, date(timestamp))  %>%
     dplyr::mutate(n = n()) %>%
     # force NA for days without 4 NOAA entries (because having less than 4 entries would introduce error in daily comparisons)
-    dplyr::mutate_at(vars(VarNames),funs(ifelse(n == 4, ., NA))) %>%
+    dplyr::mutate_at(vars(VarInfo$VarNames),funs(ifelse(n == 4, ., NA))) %>%
     ungroup() %>%
-    dplyr::select(-"date(timestamp)", -n)
-
+    dplyr::select(-"date(timestamp)", -n) 
+  
   
   
   # if(USE_ENSEMBLE_MEAN){
@@ -60,29 +60,38 @@ fit_downscaling_parameters <- function(observations,
   # -----------------------------------
   # 4. save linearly debias coefficients and do linear debiasing at daily resolution
   # -----------------------------------
-  out <- get_daily_debias_coeff(joined.data = joined.data.daily, VarNames = VarNames)
+  out <- get_daily_debias_coeff(joined.data = joined.data.daily, VarInfo = VarInfo)
   debiased.coefficients <-  out[[1]]
   debiased.covar <-  out[[2]]
   
-  debiased <- daily_debias_from_coeff(daily.forecast, debiased.coefficients, VarNames)
+  debiased <- daily_debias_from_coeff(daily.forecast, debiased.coefficients, VarInfo)
   
   # -----------------------------------
   # 5.a. temporal downscaling step (a): redistribute to 6-hourly resolution
   # -----------------------------------
-  redistributed = daily_to_6hr(forecasts, daily.forecast, debiased, VarNames)
+  redistributed = daily_to_6hr(forecasts, daily.forecast, debiased, VarNames = VarInfo$VarNames)
   
   # -----------------------------------
   # 5.b. temporal downscaling step (b): temporally downscale from 6-hourly to hourly
   # -----------------------------------
   
   ## downscale states to hourly resolution (air temperature, relative humidity, average wind speed) 
-  states.ds.hrly = spline_to_hourly(redistributed, VarNamesStates)
+  VarNamesStates = VarInfo %>%
+    filter(VarType == "State")
+  VarNamesStates = VarNamesStates$VarNames
+  states.ds.hrly = spline_to_hourly(redistributed,
+                                    VarNamesStates = VarNamesStates)
   # if filtering out incomplete days, that would need to happen here
   
+  VarNames_6hr = VarInfo %>%
+    filter(ds_res == "6hr")
+  VarNames_6hr = VarNames_6hr$VarNames
+  
   ## convert longwave to hourly (just copy 6 hourly values over past 6-hour time period)
-  LongWave.hrly <- redistributed %>%
-    select(timestamp, NOAA.member, LongWave) %>%
+  nonSW.flux.hrly <- redistributed %>%
+    select(timestamp, NOAA.member, VarNames_6hr) %>%
     repeat_6hr_to_hrly()
+  
   
   ## downscale shortwave to hourly
   ShortWave.ds = ShortWave_to_hrly(debiased, time0 = NA, lat = 37.307, lon = 360 - 79.837, output_tz)
@@ -92,21 +101,26 @@ fit_downscaling_parameters <- function(observations,
   # -----------------------------------
   
   joined.ds <- full_join(states.ds.hrly, ShortWave.ds, by = c("timestamp","NOAA.member"), suffix = c(".obs",".ds")) %>%
-    full_join(LongWave.hrly, by = c("timestamp","NOAA.member"), suffix = c(".obs",".ds")) %>%
+    full_join(nonSW.flux.hrly, by = c("timestamp","NOAA.member"), suffix = c(".obs",".ds")) %>%
     filter(timestamp >= min(forecasts$timestamp) & timestamp <= max(forecasts$timestamp))
   
   # -----------------------------------
   # 7. prepare dataframes of hourly observational data for comparison with forecasts
   # -----------------------------------
   
-  # get hourly dataframe of shortwave and longwave observations
+  # get hourly dataframe of observations
   hrly.obs = aggregate_obs_to_hrly(observations)
   
   # -----------------------------------
   # 8. join hourly observations and hourly debiased forecasts
   # -----------------------------------
   
-  joined.hrly.obs.and.ds <- inner_join(hrly.obs,joined.ds, by = "timestamp", suffix = c(".obs",".ds"))
+  joined.hrly.obs.and.ds <- inner_join(hrly.obs,joined.ds, by = "timestamp", suffix = c(".obs",".ds")) %>%
+    mutate(Rain.ds = ifelse(Rain.ds<0,0,Rain.ds),
+           ShortWave.ds = ifelse(ShortWave.ds<0,0,ShortWave.ds),
+           LongWave.ds = ifelse(LongWave.ds<0,0,LongWave.ds),
+           RelHum.ds = ifelse(RelHum.ds<0,0,RelHum.ds),
+           RelHum.ds = ifelse(RelHum.ds>100,100,RelHum.ds))
   
   # -----------------------------------
   # 9. Calculate and save coefficients from hourly downscaling (R2 and standard deviation of residuals)
@@ -157,6 +171,9 @@ fit_downscaling_parameters <- function(observations,
     ggplot(data = joined.hrly.obs.and.ds[1:5000,], aes(x = timestamp)) +
       geom_line(aes(y = LongWave.obs, color = "observations"))+
       geom_line(aes(y = LongWave.ds, color = "downscaled forecast average", group = NOAA.member))
+    ggplot(data = joined.hrly.obs.and.ds[1:5000,], aes(x = timestamp)) +
+      geom_line(aes(y = Rain.obs, color = "observations"))+
+      geom_line(aes(y = Rain.ds, color = "downscaled forecast average", group = NOAA.member))
   }
 }
 

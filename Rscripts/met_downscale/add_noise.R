@@ -11,17 +11,20 @@ add_noise <- function(debiased, cov, n_ds_members, n_met_members, VarNames){
     with.noise <- debiased %>%
       group_by_all() %>%
       expand(dscale.member = 1:n_ds_members) %>%
-      dplyr::mutate(ShortWaveOld = ShortWave) %>%
+      dplyr::mutate(ShortWaveOld = ShortWave,
+                    RainOld = Rain) %>%
       ungroup() 
 
   # add option for covariance vs non covariance
   
   for(NOAA.ens in 1:n_met_members){
     for(dscale.ens in 1:n_ds_members){
-      noise = rmvnorm(1, mean = c(0,0,0,0,0), sigma = cov)
-      for(Var in 1:length(VarNames)){
-        with.noise[which(with.noise$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),VarNames[Var]] =
-          with.noise[which(with.noise$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),VarNames[Var]] + noise[Var]
+      noise = rmvnorm(1, mean = rep(0, length(VarNames)), sigma = cov)
+      colnames(noise) <- colnames(cov)
+      for(VarNum in 1:length(VarNames)){
+        VarName = VarNames[VarNum]
+        with.noise[which(with.noise$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),VarName] =
+          with.noise[which(with.noise$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),VarName] + noise[,VarName]
       }
     }
   }

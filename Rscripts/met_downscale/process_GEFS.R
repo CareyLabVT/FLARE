@@ -18,8 +18,7 @@ process_GEFS <- function(file_name,
                          in_directory,
                          out_directory,
                          output_tz,
-                         VarNames,
-                         VarNamesStates,
+                         VarInfo,
                          replaceObsNames,
                          hrly.observations,
                          DOWNSCALE_MET,
@@ -65,11 +64,10 @@ process_GEFS <- function(file_name,
     }
     ds = downscale_met(forecasts,
                        debiased.coefficients,
-                       VarNames,
-                       VarNamesStates,
-                       USE_ENSEMBLE_MEAN = FALSE,
+                       VarInfo = VarInfo,
                        PLOT = FALSE,
                        output_tz = output_tz)
+    ds <- ds %>% mutate(AirTemp = AirTemp - 273.15) # from Kelvin to Celsius 
     if(met_downscale_uncertainity == TRUE){
       ## Downscaling + noise addition option
       print("with noise")
@@ -77,13 +75,13 @@ process_GEFS <- function(file_name,
                            cov = debiased.covar,
                            n_ds_members,
                            n_met_members,
-                           VarNames = VarNames) %>%
+                           VarNames = VarInfo$VarNames) %>%
         mutate(ShortWave = ifelse(ShortWaveOld == 0, 0, ShortWave),
                ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
                RelHum = ifelse(RelHum <0, 0, RelHum),
                RelHum = ifelse(RelHum > 100, 100, RelHum),
-               AirTemp = AirTemp - 273.15,
-               WindSpeed = ifelse(WindSpeed <0, 0, WindSpeed)) %>%
+               WindSpeed = ifelse(WindSpeed <0, 0, WindSpeed),
+               Rain = ifelse(Rain <0, 0, Rain)) %>%
         arrange(NOAA.member, dscale.member, timestamp)
       print("noise added")
       output = ds.noise
@@ -93,7 +91,7 @@ process_GEFS <- function(file_name,
         mutate(ShortWave = ifelse(ShortWave <0, 0, ShortWave),
                RelHum = ifelse(RelHum <0, 0, RelHum),
                RelHum = ifelse(RelHum > 100, 100, RelHum),
-               AirTemp = AirTemp - 273.15) %>%
+               Rain = ifelse(Rain <0, 0, Rain)) %>%
         arrange(NOAA.member, timestamp)
       output = ds
     }
@@ -101,7 +99,7 @@ process_GEFS <- function(file_name,
   }else{
     ## "out of box" option
     print("out of box option")
-    out.of.box = out_of_box(forecasts, VarNames) %>%
+    out.of.box = out_of_box(forecasts, VarInfo$VarNames) %>%
       dplyr::mutate(AirTemp = AirTemp - 273.15,
                     RelHum = ifelse(RelHum <0, 0, RelHum),
                     RelHum = ifelse(RelHum > 100, 100, RelHum),
@@ -114,6 +112,10 @@ process_GEFS <- function(file_name,
   hrly.observations = hrly.observations %>%
     mutate(AirTemp = AirTemp - 273.15)
   obs.time0 = hrly.observations %>% filter(timestamp == time0)
+  
+  VarNamesStates = VarInfo %>%
+    filter(VarType == "State")
+  VarNamesStates = VarNamesStates$VarNames
   
   for(i in 1:length(VarNamesStates)){
     output[which(output$timestamp == time0),VarNamesStates[i]] = obs.time0[VarNamesStates[i]]
@@ -138,9 +140,9 @@ process_GEFS <- function(file_name,
   if(WRITE_FILES){
     print("Write Output Files")
     # Rain and Snow are currently not downscaled, so they are calculated here
-    hrly.Rain.Snow = forecasts %>% dplyr::mutate(Snow = 0) %>%
-      select(timestamp, NOAA.member, Rain, Snow) %>%
-      repeat_6hr_to_hrly()
+    # hrly.Rain.Snow = forecasts %>% dplyr::mutate(Snow = 0) %>%
+    #   select(timestamp, NOAA.member, Rain, Snow) %>%
+    #   repeat_6hr_to_hrly()
 
     
     write_file <- function(df){
@@ -162,16 +164,18 @@ process_GEFS <- function(file_name,
     }
     
     for(NOAA.ens in 1:21){
-      Rain.Snow = hrly.Rain.Snow %>% filter(NOAA.member == NOAA.ens) %>%
-        select(timestamp, Rain, Snow)
+      # Rain.Snow = hrly.Rain.Snow %>% filter(NOAA.member == NOAA.ens) %>%
+      #   select(timestamp, Rain, Snow)
       if(DOWNSCALE_MET){
         if(met_downscale_uncertainity){ # downscale met with noise addition
           for(dscale.ens in 1:n_ds_members){
             GLM_climate_ds = output %>%
               filter(NOAA.member == NOAA.ens & dscale.member == dscale.ens) %>%
               arrange(timestamp) %>%
-              select(timestamp, VarNames)
-            GLM_climate_ds = full_join(Rain.Snow, GLM_climate_ds, by = "timestamp")
+              select(timestamp, VarInfo$VarNames)
+            # GLM_climate_ds = full_join(Rain.Snow, GLM_climate_ds, by = "timestamp")
+            GLM_climate_ds = GLM_climate_ds %>% 
+              mutate(Snow = 0)
             current_filename = write_file(GLM_climate_ds)
             met_file_list = append(met_file_list, current_filename)
           }
@@ -180,8 +184,10 @@ process_GEFS <- function(file_name,
           GLM_climate_ds = output %>%
             filter(NOAA.member == NOAA.ens) %>%
             arrange(timestamp) %>%
-            select(timestamp, VarNames)
-          GLM_climate_ds = full_join(Rain.Snow, GLM_climate_ds, by = "timestamp")
+            select(timestamp, VarInfo$VarNames)
+          # GLM_climate_ds = full_join(Rain.Snow, GLM_climate_ds, by = "timestamp")
+          GLM_climate_ds = GLM_climate_ds %>% 
+            mutate(Snow = 0)
           current_filename = write_file(GLM_climate_ds)
           met_file_list = append(met_file_list, current_filename)
         }
@@ -190,7 +196,7 @@ process_GEFS <- function(file_name,
         GLM_climate_no_ds = output %>%
           filter(NOAA.member == NOAA.ens) %>%
           arrange(timestamp) %>%
-          select(timestamp, Rain, Snow, VarNames)
+          select(timestamp, Snow, VarInfo$VarNames)
         current_filename = write_file(GLM_climate_no_ds)
         met_file_list = append(met_file_list, current_filename)
       }

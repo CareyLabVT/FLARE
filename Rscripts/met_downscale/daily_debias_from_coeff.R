@@ -1,4 +1,4 @@
-daily_debias_from_coeff <- function(daily.forecast, coeff.df, VarNames){
+daily_debias_from_coeff <- function(daily.forecast, coeff.df, VarInfo){
   # --------------------------------------
   # purpose: does linear debiasing from previously calculated coefficients
   # Creator: Laura Puckett, December 14 2018
@@ -16,12 +16,15 @@ if("fday.group" %in% colnames(daily.forecast)){
     modeled = col.for*slope + intercept
     return(modeled)
   }
+
   debiased = daily.forecast %>% select(grouping)
-  for(Var in 1:length(VarNames)){
-    assign(VarNames[Var], value = as_data_frame(lin_mod(daily.forecast[,VarNames[Var]],
-                                          coeff.df[,VarNames[Var]])))
-    debiased <- cbind(debiased, get(VarNames[Var]))
+  for(Var in 1:length(VarInfo$VarNames)){
+    VarName = VarInfo$VarNames[Var]
+    assign(VarName, value = as_data_frame(lin_mod(daily.forecast[,VarName],
+                                          coeff.df[,VarName])))
+    debiased <- cbind(debiased, get(VarName))
   }
+  
   return(debiased)
 }
 

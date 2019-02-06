@@ -14,7 +14,7 @@ prep_for <- function(NOAA.data, input_tz, output_tz){
                   LongWave = ifelse(dlwrfsfc==NOAA.na.value, NA, dlwrfsfc),
                   ShortWave = ifelse(dswrfsfc==NOAA.na.value, NA, dswrfsfc),
                   RelHum = rh2m,
-                  Rain = pratesfc*60*60*24*0.001) %>%
+                  Rain = pratesfc*60*60*24/1000) %>% # (convert from mm/s to total m over 6 hrs)
     select(NOAA.member, timestamp, AirTemp, LongWave, ShortWave, RelHum, WindSpeed, Rain)
   forecast.data$timestamp <- with_tz(forecast.data$timestamp, output_tz)
   return(forecast.data)

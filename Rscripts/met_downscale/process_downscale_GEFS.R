@@ -18,8 +18,7 @@ process_downscale_GEFS <- function(folder,
                                    DOWNSCALE_MET,
                                    met_downscale_uncertainity,
                                    ANALYZE_OUTPUT,
-                                   VarNames,
-                                   VarNamesStates,
+                                   VarInfo,
                                    replaceObsNames,
                                    downscaling_coeff,
                                    full_time_local){
@@ -47,15 +46,14 @@ process_downscale_GEFS <- function(folder,
   names(obs.data) <- names(d_names)
   
   observations <- obs.data %>% 
-    filter(strptime(TIMESTAMP, format="%Y-%m-%d %H:%M") < (max(full_time_local))) %>% 
-    prep_obs(output_tz = output_tz, replaceObsNames = replaceObsNames, VarNames = VarNames) %>%
+    # filter(strptime(TIMESTAMP, format="%Y-%m-%d %H:%M") < (max(full_time_local))) %>% 
+    prep_obs(output_tz = output_tz, replaceObsNames = replaceObsNames, VarNames = VarInfo$VarNames) %>%
     dplyr::mutate(ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
                   RelHum = ifelse(RelHum <0, 0, RelHum),
                   RelHum = ifelse(RelHum > 100, 100, RelHum),
                   AirTemp = ifelse(AirTemp> 273.15 + 41, NA, AirTemp),
                   AirTemp = ifelse(AirTemp < 273.15 -23.9, NA, AirTemp),
                   LongWave = ifelse(LongWave < 0, NA, LongWave),
-                  # AirTemp = AirTemp - 273.15,
                   WindSpeed = ifelse(WindSpeed <0, 0, WindSpeed)) %>%
                   filter(is.na(timestamp) == FALSE)
   
@@ -89,8 +87,7 @@ process_downscale_GEFS <- function(folder,
                        in_directory = noaa_location,
                        out_directory = working_glm,
                        output_tz = output_tz,
-                       VarNames = VarNames,
-                       VarNamesStates = VarNamesStates,
+                       VarInfo = VarInfo,
                        replaceObsNames = replaceObsNames,
                        hrly.observations = hrly.obs,
                        DOWNSCALE_MET = DOWNSCALE_MET,

@@ -17,13 +17,13 @@ compare_output_to_obs <- function(output, hrly.observations){
     filter(timestamp <= time0 + 24*60*60)
   
   ## make a summary table of comparison between output and observations
-  summary.table = tibble(metric = c("AirTemp","RelHum","WindSpeed","ShortWave","LongWave"),
-                             r2.AllDays = rep(NA,5),
-                             r2.FirstDay = rep(NA,5),
-                             mean.residual = rep(NA,5),
-                             CI.90 = rep(NA,5),
-                             CI.95 = rep(NA,5),
-                             CI.100 = rep(NA,5))
+  summary.table = tibble(metric = c("AirTemp","RelHum","WindSpeed","ShortWave","LongWave", "Rain"),
+                             r2.AllDays = rep(NA,6),
+                             r2.FirstDay = rep(NA,6),
+                             mean.residual = rep(NA,6),
+                             CI.90 = rep(NA,6),
+                             CI.95 = rep(NA,6),
+                             CI.100 = rep(NA,6))
   
   formula = lm(mean.joined$AirTemp.obs ~ mean.joined$AirTemp.for)
   summary.table[1,2] = summary(lm(formula))$r.squared
@@ -69,7 +69,17 @@ compare_output_to_obs <- function(output, hrly.observations){
   summary.table[5,5] = check_CI(df = joined, obs.col.name = "LongWave.obs", for.col.name = "LongWave.for")$check.90.pcnt
   summary.table[5,6] = check_CI(df = joined, obs.col.name = "LongWave.obs", for.col.name = "LongWave.for")$check.95.pcnt
   summary.table[5,7] = check_CI(df = joined, obs.col.name = "LongWave.obs", for.col.name = "LongWave.for")$check.100.pcnt
+
+  formula = lm(mean.joined$Rain.obs ~ mean.joined$Rain.for)
+  summary.table[6,2] = summary(lm(formula))$r.squared
+  formula = lm(mean.joined.day.1$Rain.obs ~ mean.joined.day.1$Rain.for)
+  summary.table[6,3] = summary(lm(formula))$r.squared
+  summary.table[6,4] = mean(mean.joined$Rain.obs - mean.joined$Rain.for, na.rm = TRUE)
+  summary.table[6,5] = check_CI(df = joined, obs.col.name = "Rain.obs", for.col.name = "Rain.for")$check.90.pcnt
+  summary.table[6,6] = check_CI(df = joined, obs.col.name = "Rain.obs", for.col.name = "Rain.for")$check.95.pcnt
+  summary.table[6,7] = check_CI(df = joined, obs.col.name = "Rain.obs", for.col.name = "Rain.for")$check.100.pcnt
   print(summary.table)
+  
   
   print(ggplot(data = joined, aes(x = timestamp)) +
           geom_line(aes(y = AirTemp.for, color = "Downscaled", group = interaction(NOAA.member, dscale.member)), alpha = 0.3) +
@@ -114,6 +124,15 @@ compare_output_to_obs <- function(output, hrly.observations){
           geom_point(aes(y = WindSpeed.obs, color = "Site Observations")) + 
           geom_line(aes(y = WindSpeed.obs, color = "Site Observations")) + 
           ylab("Wind Speed (m/s)")+
+          xlab("")+
+          theme_bw()+
+          theme(text = element_text(size = 14)) +
+          scale_color_manual(values = c("firebrick2","black")))
+  
+  print(ggplot(data = joined, aes(x = timestamp)) +
+          geom_line(aes(y = Rain.for, color = "Downscaled", group = interaction(NOAA.member, dscale.member)), alpha = 0.3) +
+          geom_line(aes(y = Rain.obs, color = "Site Observations")) + 
+          ylab("Rain (m/day)")+
           xlab("")+
           theme_bw()+
           theme(text = element_text(size = 14)) +

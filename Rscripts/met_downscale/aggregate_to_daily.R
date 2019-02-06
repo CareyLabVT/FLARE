@@ -8,12 +8,13 @@ aggregate_to_daily <- function(data){
   if("NOAA.member" %in% colnames(data)){
     grouping = append(grouping, "NOAA.member")
   }
+
   daily.data <- data %>%
     dplyr::mutate(date = date(timestamp)) %>%
+    select(-timestamp) %>%
     group_by_at(grouping) %>%
-    dplyr::summarize_all("mean", na.rm = FALSE) %>%
-    ungroup() %>%
-    select(-timestamp)
+    dplyr::summarize_all(funs(mean), na.rm = FALSE) %>%
+    ungroup()
   if("fday" %in% colnames(daily.data)){
     daily.data <- daily.data %>% select(-fday)
   }
