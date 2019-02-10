@@ -362,7 +362,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     #                                                        input_tz = "EST5EDT", 
     #                                                        output_tz = reference_tzone)
 
-    VarInfo = data.frame("VarNames" = c("AirTemp",
+    VarInfo <- data.frame("VarNames" = c("AirTemp",
                                         "WindSpeed",
                                         "RelHum",
                                         "ShortWave",
@@ -394,7 +394,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                               FALSE),
                          stringsAsFactors = FALSE)
     
-    replaceObsNames = c("AirTC_Avg" = "AirTemp",
+    replaceObsNames <- c("AirTC_Avg" = "AirTemp",
                         "WS_ms_Avg" = "WindSpeed",
                         "RH" = "RelHum",
                         "SR01Up_Avg" = "ShortWave",

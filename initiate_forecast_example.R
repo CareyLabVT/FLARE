@@ -48,7 +48,7 @@ FLAREversion <- "v1.0_beta.1"
 # 1) the number of NOAA ensembles (21)
 # 2) the number of downscaling essembles (50 is current)
 # get to the total number of essembles
-n_enkf_members <- 20
+n_enkf_members <- 2
 n_ds_members <- 1
 
 source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))

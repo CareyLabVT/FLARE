@@ -14,7 +14,8 @@ fit_downscaling_parameters <- function(observations,
                                        replaceObsNames,
                                        USE_ENSEMBLE_MEAN,
                                        PLOT,
-                                       output_tz){
+                                       output_tz,
+                                       VarInfo){
   
   # process and read in saved forecast data
   process_saved_forecasts(for.file.path,

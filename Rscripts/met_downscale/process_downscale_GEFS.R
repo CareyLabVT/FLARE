@@ -74,7 +74,8 @@ process_downscale_GEFS <- function(folder,
                                replaceObsNames = replaceObsNames,
                                USE_ENSEMBLE_MEAN = FALSE,
                                PLOT = FALSE,
-                               output_tz = output_tz)
+                               output_tz = output_tz,
+                               VarInfo)
   }
 
   # -----------------------------------

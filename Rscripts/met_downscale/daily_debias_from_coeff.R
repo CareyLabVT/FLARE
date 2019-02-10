@@ -20,7 +20,7 @@ if("fday.group" %in% colnames(daily.forecast)){
   debiased = daily.forecast %>% select(grouping)
   for(Var in 1:length(VarInfo$VarNames)){
     VarName = VarInfo$VarNames[Var]
-    assign(VarName, value = as_data_frame(lin_mod(daily.forecast[,VarName],
+    assign(VarName, value = as_tibble(lin_mod(daily.forecast[,VarName],
                                           coeff.df[,VarName])))
     debiased <- cbind(debiased, get(VarName))
   }
