@@ -64,14 +64,14 @@ hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_t
 # start_day= "2018-07-06 00:00:00"
 # sim_name = NA
 # hist_days = 1
-# forecast_days = 16  
+# forecast_days = 16
 # spin_up_days = 0
 # restart_file = NA
-# folder 
+# folder
 # forecast_location = NA
 # push_to_git = FALSE
-# pull_from_git = TRUE 
-#  
+# pull_from_git = TRUE
+# 
 # n_enkf_members = NA
 # n_ds_members = 5
 # include_wq = FALSE
@@ -84,6 +84,8 @@ hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_t
 # GLMversion
 # DOWNSCALE_MET = TRUE
 # FLAREversion
+# met_ds_obs_start = as.Date("2018-04-06")
+# met_ds_obs_end = Sys.Date()
 
 out <- run_enkf_forecast(start_day= start_day,
                          sim_name = sim_name,
@@ -107,7 +109,9 @@ out <- run_enkf_forecast(start_day= start_day,
                          downscaling_coeff = NA,
                          GLMversion,
                          DOWNSCALE_MET,
-                         FLAREversion)
+                         FLAREversion,
+                         met_ds_obs_start = as.Date("2018-04-06"),
+                         met_ds_obs_end = Sys.Date())
 
 
 plot_forecast(pdf_file_name = unlist(out)[2],
