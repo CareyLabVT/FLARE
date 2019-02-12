@@ -21,7 +21,9 @@ process_downscale_GEFS <- function(folder,
                                    VarInfo,
                                    replaceObsNames,
                                    downscaling_coeff,
-                                   full_time_local){
+                                   full_time_local,
+                                   first_obs_date,
+                                   last_obs_date){
   # -----------------------------------
   # 0. Source necessary files
   # -----------------------------------
@@ -44,7 +46,7 @@ process_downscale_GEFS <- function(folder,
   obs.data <- read.csv(obs.file.path, skip = 4, header = F)
   d_names <- read.csv(obs.file.path, skip = 1, header = T, nrows = 1)
   names(obs.data) <- names(d_names)
-  
+
   observations <- obs.data %>% 
     # filter(strptime(TIMESTAMP, format="%Y-%m-%d %H:%M") < (max(full_time_local))) %>% 
     prep_obs(output_tz = output_tz, replaceObsNames = replaceObsNames, VarNames = VarInfo$VarNames) %>%
@@ -56,9 +58,9 @@ process_downscale_GEFS <- function(folder,
                   LongWave = ifelse(LongWave < 0, NA, LongWave),
                   WindSpeed = ifelse(WindSpeed <0, 0, WindSpeed)) %>%
                   filter(is.na(timestamp) == FALSE)
-  
-  
+  rm(obs.data)
   hrly.obs <- observations %>% aggregate_obs_to_hrly()
+  
   
   # -----------------------------------
   # 1. Fit Parameters
@@ -75,9 +77,10 @@ process_downscale_GEFS <- function(folder,
                                USE_ENSEMBLE_MEAN = FALSE,
                                PLOT = FALSE,
                                output_tz = output_tz,
-                               VarInfo)
+                               VarInfo,
+                               first_obs_date,
+                               last_obs_date)
   }
-
   # -----------------------------------
   # 2. Process GEFS
   # -----------------------------------

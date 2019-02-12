@@ -15,7 +15,9 @@ fit_downscaling_parameters <- function(observations,
                                        USE_ENSEMBLE_MEAN,
                                        PLOT,
                                        output_tz,
-                                       VarInfo){
+                                       VarInfo,
+                                       first_obs_date,
+                                       last_obs_date){
   
   # process and read in saved forecast data
   process_saved_forecasts(for.file.path,
@@ -32,9 +34,8 @@ fit_downscaling_parameters <- function(observations,
     # force NA for days without 4 NOAA entries (because having less than 4 entries would introduce error in daily comparisons)
     dplyr::mutate_at(vars(VarInfo$VarNames),funs(ifelse(n == 4, ., NA))) %>%
     ungroup() %>%
-    dplyr::select(-"date(timestamp)", -n) 
-  
-  
+    dplyr::select(-"date(timestamp)", -n) %>%
+    filter(timestamp >= first_obs_date & timestamp <= last_obs_date)
   
   # if(USE_ENSEMBLE_MEAN){
   #   forecasts <- forecasts %>%
@@ -57,6 +58,8 @@ fit_downscaling_parameters <- function(observations,
   joined.data.daily <- inner_join(daily.forecast, daily.obs, by = "date", suffix = c(".for",".obs")) %>%
     ungroup() %>%
     filter_all(all_vars(is.na(.)==FALSE))
+  
+  rm(NOAA.flux, NOAA.state, NOAA.data, daily.obs)
   
   # -----------------------------------
   # 4. save linearly debias coefficients and do linear debiasing at daily resolution
@@ -153,7 +156,7 @@ fit_downscaling_parameters <- function(observations,
   # 10. Visual check (comparing observations and downscaled forecast ensemble mean)
   # -----------------------------------
   if(PLOT == TRUE){
-    ggplot(data = joined.hrly.obs.and.ds[1:5000,], aes(x = timestamp)) +
+    ggplot(data = joined.hrly.obs.and.ds[1:50000,], aes(x = timestamp)) +
       geom_line(aes(y = AirTemp.obs, color = "observations"))+
       geom_line(aes(y = AirTemp.ds, color = "downscaled forecast average", group = NOAA.member))
     
