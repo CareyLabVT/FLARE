@@ -31,9 +31,9 @@ GLM_EnKF <- function(x,
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
   
   ###START EnKF
-  met_index <- 1
+
   for(i in 2:nsteps){
-    
+    met_index <- 1
     #1) Update GLM NML files to match the current day of the simulation
     curr_start <- (full_time[i - 1])
     curr_stop <- (full_time[i])
