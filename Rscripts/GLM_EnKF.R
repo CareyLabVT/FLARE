@@ -102,7 +102,15 @@ GLM_EnKF <- function(x,
       
       while(!pass){
         unlink(paste0(working_glm, "/output.nc")) 
+        
+        if(machine == "unix" | machine == "mac"){
         system(paste0(working_glm, "/", "glm"))
+        }else if(machine == "windows"){
+          system(paste0(working_glm, "/", "glm.exe"))
+        }else{
+          print("Machine not identified")
+          stop()
+        }
         
         if(file.exists(paste0(working_glm, "/output.nc")) & 
            !has_error(nc <- nc_open("output.nc"))){

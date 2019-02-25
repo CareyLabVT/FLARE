@@ -28,7 +28,9 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                             downscaling_coeff = NA,
                             GLMversion,
                             DOWNSCALE_MET = TRUE,
-                            FLAREversion){
+                            FLAREversion,
+                            met_ds_obs_start,
+                            met_ds_obs_end){
   
   #################################################
   ### LOAD R FUNCTIONS
@@ -244,7 +246,8 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   switch(Sys.info() [["sysname"]],
          Linux = { machine <- "unix" },
-         Darwin = { machine <- "mac" })
+         Darwin = { machine <- "mac" },
+         Windows = { machine <- "windows"})
   
   ###INSTALL PREREQUISITES##
   

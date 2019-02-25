@@ -1,12 +1,13 @@
 if (!"mvtnorm" %in% installed.packages()) install.packages("mvtnorm")
 if (!"ncdf4" %in% installed.packages()) install.packages("ncdf4")
 if (!"lubridate" %in% installed.packages()) install.packages("lubridate")
-if (!"glmtools" %in% installed.packages()) install.packages("glmtools",
-                                                            repos=c("http://cran.rstudio.com",
-                                                                    "http://owi.usgs.gov/R"))
 if (!"RCurl" %in% installed.packages()) install.packages("RCurl")
 if (!"testit" %in% installed.packages()) install.packages("testit")
 if (!"imputeTS" %in% installed.packages()) install.packages("imputeTS")
+if (!"tidyverse" %in% installed.packages()) install.packages("tidyverse")
+if (!"glmtools" %in% installed.packages()) install.packages("glmtools",
+                                                            repos=c("http://cran.rstudio.com",
+                                                                    "http://owi.usgs.gov/R"))
 
 library(mvtnorm)
 library(glmtools)
@@ -69,11 +70,13 @@ if(is.na(restart_file)){
                            uncert_mode = 1,
                            reference_tzone,
                            cov_matrix = "Qt_cov_matrix_11June_11Aug_18.csv",
-                           alpha = c(0.5, 0.5, 0.9),
+                           alpha = c(0, 0, 0),
                            downscaling_coeff = NA,
                            GLMversion,
                            DOWNSCALE_MET,
-                           FLAREversion)
+                           FLAREversion,
+                           met_ds_obs_start = as.Date("2018-04-06"),
+                           met_ds_obs_end = Sys.Date())
   
   plot_forecast(pdf_file_name = unlist(out)[2],
                 output_file = unlist(out)[1],
@@ -153,11 +156,13 @@ repeat{
                            uncert_mode = 1,
                            reference_tzone,
                            cov_matrix = "Qt_cov_matrix_11June_11Aug_18.csv",
-                           alpha = c(0.5, 0.5, 0.9),
+                           alpha = c(0, 0, 0),
                            downscaling_coeff = NA,
                            GLMversion,
                            DOWNSCALE_MET,
-                           FLAREversion)
+                           FLAREversion,
+                           met_ds_obs_start = as.Date("2018-04-06"),
+                           met_ds_obs_end = Sys.Date())
   
   forecast_day_count <- forecast_day_count + 1
   
