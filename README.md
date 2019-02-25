@@ -17,7 +17,7 @@ note: that FLARE has not been fully generalized and only works at Falling Creek 
 
 `forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FCR_forecasts/"`
 
-3) Set the directory were the data used by FLARE is located (note: this involves setting a set of github repositories.  We will provide instructions for that in the future
+3) Set the directory were the data used by FLARE is located (see bottom for instructions on how to set up the github repositories)
 
 `data_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"`
 
@@ -60,3 +60,13 @@ note: that FLARE has not been fully generalized and only works at Falling Creek 
 `start_day <- "2018-07-10 00:00:00"` Date-time in GMT that FLARE starts
 
 `forecast_start_day <-"2019-01-24 00:00:00"`:  Date-time in GMT that switch from historical data assimilation to a forecast occurs.  
+
+#Setting up data repositories for FCR
+
+In your `data_location` directory run the following three commands at the command line:
+
+`git clone -b carina-data --single-branch https://github.com/CareyLabVT/SCCData.git carina-data`
+`git clone -b mia-data --single-branch https://github.com/CareyLabVT/SCCData.git mia-data`
+`git clone -b noaa-data --single-branch https://github.com/CareyLabVT/SCCData.git noaa-data`
+
+
