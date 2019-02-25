@@ -61,7 +61,7 @@ note: that FLARE has not been fully generalized and only works at Falling Creek 
 
 `forecast_start_day <-"2019-01-24 00:00:00"`:  Date-time in GMT that switch from historical data assimilation to a forecast occurs.  
 
-#Setting up data repositories for FCR
+# Setting up data repositories for FCR
 
 In your `data_location` directory run the following three commands at the command line:
 
