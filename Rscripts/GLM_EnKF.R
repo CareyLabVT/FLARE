@@ -18,7 +18,8 @@ GLM_EnKF <- function(x,
                      glm_output_vars,
                      process_uncertainity,
                      initial_condition_uncertainity,
-                     parameter_uncertainity){
+                     parameter_uncertainity,
+                     machine){
   
   nsteps <- length(full_time)
   nmembers <- dim(x)[2]

@@ -1080,7 +1080,8 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                           glm_output_vars,
                           process_uncertainity,
                           initial_condition_uncertainity,
-                          parameter_uncertainity
+                          parameter_uncertainity,
+                          machine
   )
   
   x <- enkf_output$x
