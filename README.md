@@ -66,7 +66,9 @@ note: that FLARE has not been fully generalized and only works at Falling Creek 
 In your `data_location` directory run the following three commands at the command line:
 
 `git clone -b carina-data --single-branch https://github.com/CareyLabVT/SCCData.git carina-data`
+
 `git clone -b mia-data --single-branch https://github.com/CareyLabVT/SCCData.git mia-data`
+
 `git clone -b noaa-data --single-branch https://github.com/CareyLabVT/SCCData.git noaa-data`
 
 
