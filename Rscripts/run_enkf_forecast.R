@@ -137,12 +137,15 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   if(pull_from_git){
     
     if(!file.exists(temperature_location)){
+      setwd(data_location)
       system("git clone -b mia-data --single-branch https://github.com/CareyLabVT/SCCData.git mia-data")
     }
     if(!file.exists(met_station_location)){
+      setwd(data_location)
       system("git clone -b carina-data --single-branch https://github.com/CareyLabVT/SCCData.git carina-data")
     }
     if(!file.exists(noaa_location)){
+      setwd(data_location)
       system("git clone -b noaa-data --single-branch https://github.com/CareyLabVT/SCCData.git noaa-data")
     }
 
