@@ -65,8 +65,8 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   if(DOWNSCALE_MET == FALSE){
     FIT_PARAMETERS <- FALSE
   }
-
-
+  
+  
   #Estimated parameters
   lake_depth_init <- 9.4  #not a modeled state
   zone2_temp <- 11
@@ -126,26 +126,36 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   # SET UP NUMBER OF ENSEMBLE MEMBERS
   n_met_members <- 21
-
+  
   #################################################
   ### STEP 1: GRAB DATA FROM REPO OR SERVER
   #################################################
   
   temperature_location <- paste0(data_location, "/", "mia-data")
-  setwd(temperature_location)
-  if(pull_from_git){
-    system(paste0("git pull"))
-  }
   met_station_location <- paste0(data_location, "/", "carina-data")
-  setwd(met_station_location)
-  if(pull_from_git){
-    system(paste0("git pull"))
-  }
   noaa_location <- paste0(data_location, "/", "noaa-data")
-  setwd(noaa_location)
   if(pull_from_git){
+    
+    if(!file.exists(temperature_location)){
+      system("git clone -b mia-data --single-branch https://github.com/CareyLabVT/SCCData.git mia-data")
+    }
+    if(!file.exists(met_station_location)){
+      system("git clone -b carina-data --single-branch https://github.com/CareyLabVT/SCCData.git carina-data")
+    }
+    if(!file.exists(noaa_location)){
+      system("git clone -b noaa-data --single-branch https://github.com/CareyLabVT/SCCData.git noaa-data")
+    }
+
+    setwd(temperature_location)
+    system(paste0("git pull"))
+    
+    setwd(met_station_location)
+    system(paste0("git pull"))
+    
+    setwd(noaa_location)
     system(paste0("git pull"))
   }
+  
   
   #################################################
   ### OPTIONS TO ISOLATE COMPONENTS OF UNCERTAINITY
@@ -341,7 +351,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   if(met_downscale_uncertainity == FALSE){
     n_ds_members <- 1
   }
-
+  
   
   met_file_names <- rep(NA, 1+(n_met_members*n_ds_members))
   obs_met_outfile <- paste0(working_glm, "/", "GLM_met.csv")
@@ -364,74 +374,74 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     ##                                                        #NEED TO CHANGE TO GMT IF FORECASTING AFTER DEC 8 00:00:00 GMT
     #                                                        input_tz = "EST5EDT", 
     #                                                        output_tz = reference_tzone)
-
+    
     VarInfo <- data.frame("VarNames" = c("AirTemp",
-                                        "WindSpeed",
-                                        "RelHum",
-                                        "ShortWave",
-                                        "LongWave",
-                                        "Rain"),
-                         "VarType" = c("State",
-                                       "State",
-                                       "State",
-                                       "Flux",
-                                       "Flux",
-                                       "Flux"),
-                         "ds_res" = c("hour",
-                                      "hour",
-                                      "hour",
-                                      "hour",
-                                      "6hr",
-                                      "6hr"),
-                         "debias_method" = c("lm",
-                                             "lm",
-                                             "lm",
-                                             "lm",
-                                             "lm",
-                                             "compare_totals"),
-                         "use_covariance" = c(TRUE,
-                                              TRUE,
-                                              TRUE,
-                                              TRUE,
-                                              TRUE,
-                                              FALSE),
-                         stringsAsFactors = FALSE)
+                                         "WindSpeed",
+                                         "RelHum",
+                                         "ShortWave",
+                                         "LongWave",
+                                         "Rain"),
+                          "VarType" = c("State",
+                                        "State",
+                                        "State",
+                                        "Flux",
+                                        "Flux",
+                                        "Flux"),
+                          "ds_res" = c("hour",
+                                       "hour",
+                                       "hour",
+                                       "hour",
+                                       "6hr",
+                                       "6hr"),
+                          "debias_method" = c("lm",
+                                              "lm",
+                                              "lm",
+                                              "lm",
+                                              "lm",
+                                              "compare_totals"),
+                          "use_covariance" = c(TRUE,
+                                               TRUE,
+                                               TRUE,
+                                               TRUE,
+                                               TRUE,
+                                               FALSE),
+                          stringsAsFactors = FALSE)
     
     replaceObsNames <- c("AirTC_Avg" = "AirTemp",
-                        "WS_ms_Avg" = "WindSpeed",
-                        "RH" = "RelHum",
-                        "SR01Up_Avg" = "ShortWave",
-                        "IR01UpCo_Avg" = "LongWave",
-                        "Rain_mm_Tot" = "Rain")
+                         "WS_ms_Avg" = "WindSpeed",
+                         "RH" = "RelHum",
+                         "SR01Up_Avg" = "ShortWave",
+                         "IR01UpCo_Avg" = "LongWave",
+                         "Rain_mm_Tot" = "Rain")
     
     met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder,
-                                       noaa_location,
-                                       met_station_location,
-                                       working_glm,
-                                       sim_files_folder = paste0(folder, "/", "sim_files"),
-                                       n_ds_members,
-                                       n_met_members,
-                                       file_name,
-                                       output_tz = reference_tzone,
-                                       FIT_PARAMETERS,
-                                       DOWNSCALE_MET,
-                                       met_downscale_uncertainity,
-                                       ANALYZE_OUTPUT = FALSE,
-                                       VarInfo,
-                                       replaceObsNames,
-                                       downscaling_coeff,
-                                       full_time_local)
+                                                                                 noaa_location,
+                                                                                 met_station_location,
+                                                                                 working_glm,
+                                                                                 sim_files_folder = paste0(folder, "/", "sim_files"),
+                                                                                 n_ds_members,
+                                                                                 n_met_members,
+                                                                                 file_name,
+                                                                                 output_tz = reference_tzone,
+                                                                                 FIT_PARAMETERS,
+                                                                                 DOWNSCALE_MET,
+                                                                                 met_downscale_uncertainity,
+                                                                                 ANALYZE_OUTPUT = FALSE,
+                                                                                 VarInfo,
+                                                                                 replaceObsNames,
+                                                                                 downscaling_coeff,
+                                                                                 full_time_local)
     
-  if(weather_uncertainity == FALSE & met_downscale_uncertainity == TRUE){
-    met_file_names <- met_file_names[1:(1+(1*n_ds_members))]
-  }else if(weather_uncertainity == FALSE & met_downscale_uncertainity == FALSE){
-    met_file_names <- met_file_names[1:2]
-  }
-  if(weather_uncertainity == FALSE){
-    n_met_members <- 1
-  }
+    if(weather_uncertainity == FALSE & met_downscale_uncertainity == TRUE){
+      met_file_names <- met_file_names[1:(1+(1*n_ds_members))]
+    }else if(weather_uncertainity == FALSE & met_downscale_uncertainity == FALSE){
+      met_file_names <- met_file_names[1:2]
+    }
+    if(weather_uncertainity == FALSE){
+      n_met_members <- 1
+    }
     
-  plot_downscaled_met(met_file_names, VarInfo$VarNames, working_glm)
+    plot_downscaled_met(met_file_names, VarInfo$VarNames, working_glm)
   }
   
   ###MOVE DATA FILES AROUND
@@ -716,58 +726,58 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   if(full_time_day_local[1] == 
      strftime("2018-07-09",format="%Y-%m-%d",tz = "EST5EDT") &
      include_wq){
-  curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9,10)
-  #mg/L
-  curr_values <- c(3.764, 3.781, 3.578, 5.156, 5.2735, 5.5165, 5.222, 5.368)
-  curr_values <- (curr_values*1000)/(10*12)
-  inter <- approxfun(curr_depths,curr_values,rule=2)
-  CAR_dic_init_depth <- inter(modeled_depths)
-  
-  curr_depths <- c(0.1,1.6,3.8,5,6.2,8,9,9.5)
-  #umol CH4/L
-  curr_values <- c(3.91E-04,0.370572728,0.107597836,0.126096596,
-                   0.088502664,0.086276629,0.07256043,0.07249431)
-  curr_values <- curr_values*1000
-  inter <- approxfun(curr_depths,curr_values,rule=2)
-  CAR_ch4_init_depth <- inter(modeled_depths)
-  
-  curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
-  #ug/L
-  curr_values <- c(12.65291714,4.213596723,10.5935375,13.43611258,
-                   11.34765394,11.95676704,11.98577285,12.82695814)
-  curr_values <- (curr_values*1000)/14
-  inter <- approxfun(curr_depths,curr_values,rule=2)
-  NIT_amm_init_depth <- inter(modeled_depths)
-  
-  curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
-  curr_values <-c(5.68,3.82,4.46,3.71,4.18,5.08,3.01,7.72)
-  curr_values <- (curr_values*1000)/14
-  #ug/L
-  inter <- approxfun(curr_depths,curr_values,rule=2)
-  NIT_nit_init_depth <- inter(modeled_depths)
-  
-  curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
-  #ug/L
-  curr_values <- c(8.96,7.66,6.26,6.22,7.72,9.69,7.95,10.5)
-  curr_values <- (curr_values*1000)/18
-  inter <- approxfun(curr_depths,curr_values,rule=2)
-  PHS_frp_init_depth <- inter(modeled_depths)
-  
-  curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
-  ##mg/L
-  curr_values <- c(4.2315,4.374, 3.2655,2.9705,2.938,2.922,2.773,2.9525)
-  curr_values <- (curr_values*1000)/(10*12)
-  inter <- approxfun(curr_depths,curr_values,rule=2)
-  OGM_doc_init_depth <- inter(modeled_depths)
-  
-  curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
-  ##mg/L
-  curr_values <- c(0.2855,0.261,0.218,0.2135,0.2185,0.223,0.2025,0.2065)
-  curr_values <- (curr_values*1000)/(10*14)
-  inter <- approxfun(curr_depths,curr_values,rule=2)
-  DN_init_depth <- inter(modeled_depths)
-  OGM_don_init_depth <- DN_init_depth - NIT_amm_init_depth - NIT_nit_init_depth
-}
+    curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9,10)
+    #mg/L
+    curr_values <- c(3.764, 3.781, 3.578, 5.156, 5.2735, 5.5165, 5.222, 5.368)
+    curr_values <- (curr_values*1000)/(10*12)
+    inter <- approxfun(curr_depths,curr_values,rule=2)
+    CAR_dic_init_depth <- inter(modeled_depths)
+    
+    curr_depths <- c(0.1,1.6,3.8,5,6.2,8,9,9.5)
+    #umol CH4/L
+    curr_values <- c(3.91E-04,0.370572728,0.107597836,0.126096596,
+                     0.088502664,0.086276629,0.07256043,0.07249431)
+    curr_values <- curr_values*1000
+    inter <- approxfun(curr_depths,curr_values,rule=2)
+    CAR_ch4_init_depth <- inter(modeled_depths)
+    
+    curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
+    #ug/L
+    curr_values <- c(12.65291714,4.213596723,10.5935375,13.43611258,
+                     11.34765394,11.95676704,11.98577285,12.82695814)
+    curr_values <- (curr_values*1000)/14
+    inter <- approxfun(curr_depths,curr_values,rule=2)
+    NIT_amm_init_depth <- inter(modeled_depths)
+    
+    curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
+    curr_values <-c(5.68,3.82,4.46,3.71,4.18,5.08,3.01,7.72)
+    curr_values <- (curr_values*1000)/14
+    #ug/L
+    inter <- approxfun(curr_depths,curr_values,rule=2)
+    NIT_nit_init_depth <- inter(modeled_depths)
+    
+    curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
+    #ug/L
+    curr_values <- c(8.96,7.66,6.26,6.22,7.72,9.69,7.95,10.5)
+    curr_values <- (curr_values*1000)/18
+    inter <- approxfun(curr_depths,curr_values,rule=2)
+    PHS_frp_init_depth <- inter(modeled_depths)
+    
+    curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
+    ##mg/L
+    curr_values <- c(4.2315,4.374, 3.2655,2.9705,2.938,2.922,2.773,2.9525)
+    curr_values <- (curr_values*1000)/(10*12)
+    inter <- approxfun(curr_depths,curr_values,rule=2)
+    OGM_doc_init_depth <- inter(modeled_depths)
+    
+    curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
+    ##mg/L
+    curr_values <- c(0.2855,0.261,0.218,0.2135,0.2185,0.223,0.2025,0.2065)
+    curr_values <- (curr_values*1000)/(10*14)
+    inter <- approxfun(curr_depths,curr_values,rule=2)
+    DN_init_depth <- inter(modeled_depths)
+    OGM_don_init_depth <- DN_init_depth - NIT_amm_init_depth - NIT_nit_init_depth
+  }
   
   wq_init_vals <- c(OXY_oxy_init_depth,
                     CAR_pH_init_depth,
@@ -1068,7 +1078,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                           process_uncertainity,
                           initial_condition_uncertainity,
                           parameter_uncertainity
-                          )
+  )
   
   x <- enkf_output$x
   x_restart <- enkf_output$x_restart
@@ -1081,14 +1091,14 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   ### CREATE FORECAST NAME
   
-    save_file_name <- paste0(sim_name, "_H_",
-                             year(full_time[1]),
-                             month(full_time[1]),
-                             day(full_time[1]),'_',
-                             year(full_time[hist_days+1]),
-                             month(full_time[hist_days+1]),
-                             day(full_time[hist_days+1]),"_F_",
-                             forecast_days) 
+  save_file_name <- paste0(sim_name, "_H_",
+                           year(full_time[1]),
+                           month(full_time[1]),
+                           day(full_time[1]),'_',
+                           year(full_time[hist_days+1]),
+                           month(full_time[hist_days+1]),
+                           day(full_time[hist_days+1]),"_F_",
+                           forecast_days) 
   
   time_of_forecast <- Sys.time()
   time_of_forecast_string <- paste0(year(Sys.time()),
@@ -1097,7 +1107,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                     hour(Sys.time()), "_",
                                     (minute(Sys.time())))
   
-
+  
   ###SAVE FORECAST
   write_forecast_netcdf(x = x,
                         full_time = full_time_local,
