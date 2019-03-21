@@ -43,7 +43,7 @@ archive_forecast <- function(working_glm,
   tmp <- file.copy(from = files_pdf, to = forecast_location)
   tmp <- file.copy(from = files_nc, to = forecast_location)
   tmp <- file.copy(from = files_nc_edi, to = forecast_location)
-  zip(zipfile = forecast_archive_dir, files = files)
+  #zip(zipfile = forecast_archive_dir, files = files)
   netcdf_name <- paste0(forecast_archive_dir_name, ".nc")
   netcdf_name_edi <- paste0(forecast_archive_dir_name, "_EDI.nc")
   if(push_to_git){

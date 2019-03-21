@@ -46,6 +46,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   source(paste0(folder,"/","Rscripts/write_forecast_netcdf.R")) 
   source(paste0(folder,"/","Rscripts/GLM_EnKF.R")) 
   source(paste0(folder,"/","Rscripts/met_downscale/process_downscale_GEFS.R")) 
+  source(paste0(folder,"/","Rscripts/update_qt.R"))
   
   #################################################
   ### CONFIGURATIONS THAT NEED TO BE GENERALIZED
@@ -74,7 +75,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   zone1temp_init_qt <- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
   zone2temp_init_qt <- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
   swf_lwf_init <- 0.75
-  swf_lwf_init_qt <- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
+  swf_lwf_init_qt <- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
   kw_init <-0.87
   kw_init_qt <- 0.01^2
   
@@ -148,7 +149,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
       setwd(data_location)
       system("git clone -b noaa-data --single-branch https://github.com/CareyLabVT/SCCData.git noaa-data")
     }
-
+    
     setwd(temperature_location)
     system(paste0("git pull"))
     
@@ -172,7 +173,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     process_uncertainity <- TRUE
     weather_uncertainity <- TRUE
     initial_condition_uncertainity <- TRUE
-    parameter_uncertainity <- FALSE
+    parameter_uncertainity <- TRUE
     met_downscale_uncertainity <- TRUE
   }else if(uncert_mode == 2){
     #No sources of uncertainity and no data used to constrain 
@@ -251,7 +252,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     obs_error <- 0.000001
   }
   
-  use_obs_constraint <- TRUE
+  #use_obs_constraint <- TRUE
   
   ####################################################
   #### STEP 2: DETECT PLATFORM  
@@ -278,7 +279,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   # so that they directly interface with the NOAA forecast
   # The output is converted back to local time before being saved
   
-  begin_sim  <- as.POSIXct(start_day,tz = reference_tzone)
+  begin_sim  <- as_datetime(start_day,tz = reference_tzone)
   total_days <- hist_days + forecast_days
   end_sim <- begin_sim + total_days*24*60*60
   start_forecast_step <- hist_days
@@ -433,7 +434,9 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                                                                  VarInfo,
                                                                                  replaceObsNames,
                                                                                  downscaling_coeff,
-                                                                                 full_time_local)
+                                                                                 full_time_local,
+                                                                                 first_obs_date = met_ds_obs_start,
+                                                                                 last_obs_date = met_ds_obs_end)
     
     if(weather_uncertainity == FALSE & met_downscale_uncertainity == TRUE){
       met_file_names <- met_file_names[1:(1+(1*n_ds_members))]
@@ -444,7 +447,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
       n_met_members <- 1
     }
     
-    plot_downscaled_met(met_file_names, VarInfo$VarNames, working_glm)
+    #plot_downscaled_met(met_file_names, VarInfo$VarNames, working_glm)
   }
   
   ###MOVE DATA FILES AROUND
@@ -868,42 +871,16 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   #Matrix for knowing which state the observation corresponds to
   z_states <- t(matrix(obs_index, nrow = length(obs_index), ncol = nsteps))
   
-  ####################################################
-  #### STEP 9: CREATE THE QT ARRAY (MODEL VARIANCE)
-  ####################################################
-  
-  #Process error 
-  if(is.na(cov_matrix)){
-    qt <- read.csv(paste0(working_glm, "/", "qt_cov_matrix.csv"))
-  }else{
-    qt <- read.csv(paste0(working_glm, "/", cov_matrix))
-  }
-  
-  if(include_wq){
-    for(i in 1:num_wq_vars){
-      for(j in 1:ndepths_modeled){
-        qt <- rbind(qt, rep(0.0, ncol(qt)))
-        qt <- cbind(qt, rep(0.0, nrow(qt)))
-        qt[ncol(qt),nrow(qt)] <- wq_var_error[i]
-      }
-    }
-  }
-  
-  #Covariance matrix for parameters
-  qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
-  diag(qt_pars) <- c(zone1temp_init_qt, zone2temp_init_qt, swf_lwf_init_qt,kw_init_qt)
   
   #######################################################
-  #### STEP 10: CREATE THE PSI VECTOR (DATA UNCERTAINITY)  
+  #### STEP 9: CREATE THE PSI VECTOR (DATA UNCERTAINITY)  
   #######################################################
   
   psi <- rep(obs_error, length(obs_index))
   
-  ################################################################
-  #### STEP 11: CREATE THE X ARRAY (STATES X TIME);INCLUDES INITIALATION
-  ################################################################
-  nmembers <- n_enkf_members*n_met_members*n_ds_members
-  
+  ####################################################
+  #### STEP 12: CREATE THE QT ARRAY (MODEL VARIANCE)
+  ####################################################
   restart_present <- FALSE
   if(!is.na(restart_file)){
     if(file.exists(restart_file)){
@@ -911,6 +888,41 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     }
   }
   
+  if(restart_present){
+    nc <- nc_open(restart_file)
+    qt <- ncvar_get(nc, "qt_restart")
+    resid30day <- ncvar_get(nc, "resid30day")
+    nc_close(nc)
+  }else{
+    #Process error 
+    if(is.na(cov_matrix)){
+      qt <- read.csv(paste0(working_glm, "/", "qt_cov_matrix.csv"))
+    }else{
+      qt <- read.csv(paste0(working_glm, "/", cov_matrix))
+    }
+    
+    if(include_wq){
+      for(i in 1:num_wq_vars){
+        for(j in 1:ndepths_modeled){
+          qt <- rbind(qt, rep(0.0, ncol(qt)))
+          qt <- cbind(qt, rep(0.0, nrow(qt)))
+          qt[ncol(qt),nrow(qt)] <- wq_var_error[i]
+        }
+      }
+    }
+    resid30day <- array(NA, dim =c(30, nrow(qt)))
+  }
+  #Covariance matrix for parameters
+  qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
+  diag(qt_pars) <- c(zone1temp_init_qt, zone2temp_init_qt, swf_lwf_init_qt,kw_init_qt)
+  
+  
+  ################################################################
+  #### STEP 10: CREATE THE X ARRAY (STATES X TIME);INCLUDES INITIALATION
+  ################################################################
+  nmembers <- n_enkf_members*n_met_members*n_ds_members
+  
+
   x <- array(NA, dim=c(nsteps, nmembers, nstates + npars))
   
   
@@ -1056,6 +1068,9 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   surface_height <- array(NA, dim=c(nsteps, nmembers))
   surface_height[1, ] <- lake_depth_init
   
+
+  
+  
   ####################################################
   #### STEP 11: Run Ensemble Kalman Filter
   ####################################################
@@ -1081,13 +1096,15 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                           process_uncertainity,
                           initial_condition_uncertainity,
                           parameter_uncertainity,
-                          machine
-  )
+                          machine,
+                          resid30day,
+                          hist_days)
   
   x <- enkf_output$x
   x_restart <- enkf_output$x_restart
   qt_restart <- enkf_output$qt_restart
   x_prior <- enkf_output$x_prior
+  resid30day <- enkf_output$resid30day
   
   ####################################################
   #### STEP 12: PROCESS OUTPUT
@@ -1096,18 +1113,18 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   ### CREATE FORECAST NAME
   
   save_file_name <- paste0(sim_name, "_H_",
-                           year(full_time[1]),
-                           month(full_time[1]),
-                           day(full_time[1]),'_',
-                           year(full_time[hist_days+1]),
-                           month(full_time[hist_days+1]),
-                           day(full_time[hist_days+1]),"_F_",
+                           month(full_time[1]),"_",
+                           day(full_time[1]),"_",
+                           (year(full_time[1]) - 2000),"_",
+                           month(full_time[hist_days+1]),"_",
+                           day(full_time[hist_days+1]),"_",
+                           (year(full_time[hist_days+1])-2000),"_F_",
                            forecast_days) 
   
   time_of_forecast <- Sys.time()
-  time_of_forecast_string <- paste0(year(Sys.time()),
-                                    month(Sys.time()),
-                                    day(Sys.time()), "_",
+  time_of_forecast_string <- paste0(month(Sys.time()),
+                                    day(Sys.time()),
+                                    year(Sys.time()-2000),"_",
                                     hour(Sys.time()), "_",
                                     (minute(Sys.time())))
   
@@ -1134,7 +1151,8 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                         nstates,
                         npars,
                         GLMversion,
-                        FLAREversion)
+                        FLAREversion,
+                        resid30day)
   
   ##ARCHIVE FORECAST
   restart_file_name <- archive_forecast(working_glm = working_glm,

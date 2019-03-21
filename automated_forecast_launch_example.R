@@ -16,34 +16,32 @@ library(lubridate)
 library(RCurl)
 library(testit)
 library(imputeTS)
-library(tidyr)
-library(dplyr)
-library(ggplot2)
+library(tidyverse)
 
 folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
-forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FCR_forecasts/" 
+forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/" 
 data_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/" 
 
 restart_file <- NA
 spin_up_days <- 0
-push_to_git <- TRUE
+push_to_git <- FALSE
 pull_from_git <- TRUE
 reference_tzone <- "GMT"
 n_enkf_members <- 1
-n_ds_members <- 2
+n_ds_members <- 1
 forecast_days <- 16
 include_wq <- FALSE
 use_ctd <- FALSE
-num_forecast_periods <- NA
+num_forecast_periods <- 1
 wait_time <- 60
 GLMversion <- "GLM_3.0.0beta10"
-DOWNSCALE_MET <- FALSE
+DOWNSCALE_MET <- TRUE
 FLAREversion <- as.character("v1.0_beta.1")
 
 
 sim_name <- "test" 
 start_day <- "2018-07-10 00:00:00" #GMT
-forecast_start_day <-"2018-07-11 00:00:00" #GMT 
+forecast_start_day <-"2018-09-01 00:00:00" #GMT 
 
 source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
 source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
@@ -69,14 +67,14 @@ if(is.na(restart_file)){
                            use_ctd = use_ctd,
                            uncert_mode = 1,
                            reference_tzone,
-                           cov_matrix = "Qt_cov_matrix_11June_11Aug_18.csv",
+                           cov_matrix = "Qt_cov_matrix_init.csv",
                            alpha = c(0, 0, 0),
                            downscaling_coeff = NA,
                            GLMversion,
                            DOWNSCALE_MET,
                            FLAREversion,
                            met_ds_obs_start = as.Date("2018-04-06"),
-                           met_ds_obs_end = Sys.Date())
+                           met_ds_obs_end = Sys.Date(start_day))
   
   plot_forecast(pdf_file_name = unlist(out)[2],
                 output_file = unlist(out)[1],
@@ -155,14 +153,14 @@ repeat{
                            use_ctd = use_ctd,
                            uncert_mode = 1,
                            reference_tzone,
-                           cov_matrix = "Qt_cov_matrix_11June_11Aug_18.csv",
+                           cov_matrix = "Qt_cov_matrix_init.csv",
                            alpha = c(0, 0, 0),
                            downscaling_coeff = NA,
                            GLMversion,
                            DOWNSCALE_MET,
                            FLAREversion,
                            met_ds_obs_start = as.Date("2018-04-06"),
-                           met_ds_obs_end = Sys.Date())
+                           met_ds_obs_end = as.Date(start_day))
   
   forecast_day_count <- forecast_day_count + 1
   

@@ -1,21 +1,24 @@
 
 extract_temp_chain <- function(fname,full_time,depths = modeled_depths,observed_depths_temp = observed_depths_temp,input_tz, output_tz){
-  d <- read.csv(fname, skip =4, na.strings = 'NAN')
+  d <- read.csv(fname, skip =4, na.strings = 'NAN', stringsAsFactors = FALSE)
   d_names <- read.csv(fname, skip =1)
   names(d) <- names(d_names)
   
+
   obs <- array(NA,dim=c(length(full_time),length(depths)))
   depths_w_obs <- observed_depths_temp
   obs_index <-   rep(NA,length(depths_w_obs))
   for(i in 1:length(depths_w_obs)){
     obs_index[i] <- which.min(abs(depths - depths_w_obs[i]))
   }
+
+  TIMESTAMP_in <- as_datetime(d$TIMESTAMP,tz = input_tz)
+  d$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = output_tz)
   
-  TIMESTAMP_in <- as.POSIXct(d$TIMESTAMP,origin = '1970-01-01 00:00.00 UTC',tz = input_tz)
-  d$TIMESTAMP <- as.POSIXct(TIMESTAMP_in,tz = output_tz)
-  full_time <- as.POSIXct(full_time,tz = output_tz)
-  for(i in 1:length(full_time)){
-    index = which(d$TIMESTAMP==full_time[i])
+  full_time_tmp <- as.POSIXct(full_time,tz = output_tz)
+  for(i in 1:length(full_time_tmp)){
+    
+    index = which(d$TIMESTAMP==full_time_tmp[i])
     if(length(index)>0){
       obs[i,obs_index] <- unlist(d[index,5:14])
       if(is.na(obs[i,obs_index[2]]) & !is.na(d[index,23])){
@@ -35,7 +38,7 @@ extract_temp_chain <- function(fname,full_time,depths = modeled_depths,observed_
 
 
 extract_do_chain <- function(fname = catwalk_fname,full_time,depths = modeled_depths,observed_depths_do= observed_depths_do,input_tz = 'EST5EDT', output_tz = 'GMT'){
-  d <- read.csv(fname, skip =3, na.strings = 'NAN')
+  d <- read.csv(fname, skip =3, na.strings = 'NAN', stringsAsFactors = FALSE)
   d_names <- read.csv(fname, skip =1)
   names(d) <- names(d_names)
   
@@ -46,8 +49,9 @@ extract_do_chain <- function(fname = catwalk_fname,full_time,depths = modeled_de
     obs_index[i] <- which.min(abs(depths - depths_w_obs[i]))
   }
   
-  TIMESTAMP_in <- as.POSIXct(d$TIMESTAMP,origin = '1970-01-01 00:00.00 UTC',tz = input_tz)
-  d$TIMESTAMP <- as.POSIXct(TIMESTAMP_in,tz = output_tz)
+  TIMESTAMP_in <- as_datetime(d$TIMESTAMP,tz = input_tz)
+  d$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = output_tz)
+  
   full_time <- as.POSIXct(full_time,tz = output_tz)
   for(i in 1:length(full_time)){
     index = which(abs(as.POSIXct(d$TIMESTAMP)-as.POSIXct(full_time[i])) == min(abs(as.POSIXct(d$TIMESTAMP) - as.POSIXct(full_time[i]))))
@@ -62,7 +66,7 @@ extract_do_chain <- function(fname = catwalk_fname,full_time,depths = modeled_de
 }
 
 extract_chla_chain <- function(fname = catwalk_fname,full_time,depths = modeled_depths,observed_depths_chla_fdom= observed_depths_chla_fdom,input_tz = 'EST5EDT', output_tz = 'GMT'){
-  d <- read.csv(fname, skip =3, na.strings = 'NAN')
+  d <- read.csv(fname, skip =3, na.strings = 'NAN', stringsAsFactors = FALSE)
   d_names <- read.csv(fname, skip =1)
   names(d) <- names(d_names)
   
@@ -77,8 +81,8 @@ extract_chla_chain <- function(fname = catwalk_fname,full_time,depths = modeled_
     obs_index[i] <- which.min(abs(depths - observed_depths_chla_fdom[i]))
   }
   
-  TIMESTAMP_in <- as.POSIXct(d$TIMESTAMP,origin = '1970-01-01 00:00.00 UTC',tz = input_tz)
-  d$TIMESTAMP <- as.POSIXct(TIMESTAMP_in,tz = output_tz)
+  TIMESTAMP_in <- as_datetime(d$TIMESTAMP,tz = input_tz)
+  d$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = output_tz)
   full_time <- as.POSIXct(full_time,tz = output_tz)
   for(i in 1:length(full_time)){
     index = which(abs(as.POSIXct(d$TIMESTAMP)-as.POSIXct(full_time[i])) == min(abs(as.POSIXct(d$TIMESTAMP) - as.POSIXct(full_time[i]))))

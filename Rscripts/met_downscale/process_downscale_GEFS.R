@@ -58,9 +58,16 @@ process_downscale_GEFS <- function(folder,
                   LongWave = ifelse(LongWave < 0, NA, LongWave),
                   WindSpeed = ifelse(WindSpeed <0, 0, WindSpeed)) %>%
                   filter(is.na(timestamp) == FALSE)
+
+  observations$RelHum <- na.interpolation(observations$RelHum)
+  observations$AirTemp <- na.interpolation(observations$AirTemp)
+  observations$LongWave <- na.interpolation(observations$LongWave)
+  observations$WindSpeed <- na.interpolation(observations$WindSpeed)
+  
   rm(obs.data)
   hrly.obs <- observations %>% aggregate_obs_to_hrly()
   
+
   
   # -----------------------------------
   # 1. Fit Parameters

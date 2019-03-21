@@ -19,7 +19,8 @@ write_forecast_netcdf <- function(x,
                                   nstates,
                                   npars,
                                   GLMversion,
-                                  FLAREversion){
+                                  FLAREversion,
+                                  resid30day){
   
   obs <- z
   
@@ -30,6 +31,7 @@ write_forecast_netcdf <- function(x,
   t <- as.numeric(as.POSIXct(full_time,tz='EST5EDT',origin = '1970-01-01 00:00.00 UTC'))
   states <- seq(1,nstates,1)
   states_aug <- seq(1,dim(x)[3],1)
+  qt_update_days <- seq(1,dim(resid30day)[1],1)
   #obs_states <- seq(1,dim(z)[2],1)
   
   #Set variable that states whether value is forecasted
@@ -56,6 +58,7 @@ write_forecast_netcdf <- function(x,
   timedim <- ncdim_def("time",units = 'seconds', longname = 'seconds since 1970-01-01 00:00.00 UTC',vals = t)
   statedim <- ncdim_def("states",units = '', vals = states)
   stateagudim <- ncdim_def("states_aug",units = '', vals = states_aug, longname = 'length of model states plus parameters')
+  qt_update_days_dim <- ncdim_def("qt_update_days",units = '', vals = qt_update_days, longname = 'Number of running days that qt smooths over')
   #obsdim <- ncdim_def("obs_dim",units = '', vals = obs_states, longname = 'length of ')
   
   #Define variables
@@ -84,6 +87,8 @@ write_forecast_netcdf <- function(x,
   x_prior_def <- ncvar_def("x_prior","-",list(timedim,ensdim,stateagudim),fillvalue,dlname,prec="float")
   dlname <- 'temperature observations'
   obs_def <- ncvar_def("obs","various",list(timedim,depthdim),fillvalue,dlname,prec="single")
+  dlname <- 'running residual of water temperature for updating qt'
+  resid30day_def <- ncvar_def("resid30day","various",list(qt_update_days_dim,depthdim),fillvalue,dlname,prec="single")
   
   fillvalue <- -99
   dlname <- '0 = historical; 1 = forecasted'
@@ -135,12 +140,12 @@ write_forecast_netcdf <- function(x,
     dlname <- 'ZOO_COPEPODS1'
     wq_def21 <- ncvar_def("ZOO_DAPHNIASMALL3","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
     
-    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def,
+    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def,qt_restart_def,resid30day_def,
                                     wq_def1,wq_def2,wq_def3,wq_def4,wq_def5,wq_def6,wq_def7,wq_def8,wq_def9,wq_def10,wq_def11,wq_def12, wq_def13,wq_def14,wq_def15,
                                     wq_def16,wq_def17,wq_def18,wq_def19,wq_def20,wq_def21),force_v4=T)
     
   }else{
-    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def),force_v4=T)
+    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def,qt_restart_def,resid30day_def),force_v4=T)
   }
   
   # create netCDF file and put arrays
@@ -165,9 +170,11 @@ write_forecast_netcdf <- function(x,
   
   ncvar_put(ncout,x_prior_def,as.matrix(x_prior))
   
-  #ncvar_put(ncout,qt_restart_def,as.matrix(qt_restart))
+  ncvar_put(ncout,qt_restart_def,as.matrix(qt_restart))
   
   ncvar_put(ncout,obs_def,obs)
+  
+  ncvar_put(ncout,resid30day_def,resid30day)
   
   if(include_wq){
     ncvar_put(ncout,wq_def1,x[,,wq_start[1]:wq_end[1]])
@@ -216,6 +223,7 @@ write_forecast_netcdf <- function(x,
   t <- as.numeric(as.POSIXct(full_time,tz='UTC',origin = '1970-01-01 00:00.00 UTC'))
   states <- seq(1,nstates,1)
   states_aug <- seq(1,dim(x)[3],1)
+  qt_update_days <- seq(1,dim(resid30day)[1],1)
   #obs_states <- seq(1,dim(z)[2],1)
   
   #Set variable that states whether value is forecasted
@@ -242,6 +250,8 @@ write_forecast_netcdf <- function(x,
   timedim <- ncdim_def("time",units = 'seconds', longname = 'seconds since 1970-01-01 00:00.00 UTC',vals = t)
   statedim <- ncdim_def("states",units = '', vals = states)
   stateagudim <- ncdim_def("states_aug",units = '', vals = states_aug, longname = 'length of model states plus parameters')
+  qt_update_days_dim <- ncdim_def("qt_update_days",units = '', vals = qt_update_days, longname = 'Number of running days that qt smooths over')
+  
   #obsdim <- ncdim_def("obs_dim",units = '', vals = obs_states, longname = 'length of ')
   
   #Define variables
@@ -270,6 +280,9 @@ write_forecast_netcdf <- function(x,
   x_prior_def <- ncvar_def("x_prior","-",list(timedim,ensdim,stateagudim),fillvalue,dlname,prec="float")
   dlname <- 'water temperature observations'
   obs_def <- ncvar_def("obs","deg_C",list(timedim,depthdim),fillvalue,dlname,prec="single")
+  dlname <- 'running residual of water temperature for updating qt'
+  resid30day_def <- ncvar_def("resid30day","various",list(qt_update_days_dim,depthdim),fillvalue,dlname,prec="single")
+  
   
   fillvalue <- -99
   dlname <- '0 = historical; 1 = forecasted'
@@ -319,12 +332,12 @@ write_forecast_netcdf <- function(x,
     dlname <- 'ZOO_COPEPODS1'
     wq_def21 <- ncvar_def("ZOO_DAPHNIASMALL3","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
     
-    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def,
+    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def, qt_restart_def,resid30day_def,
                                     wq_def1,wq_def2,wq_def3,wq_def4,wq_def5,wq_def6,wq_def7,wq_def8,wq_def9,wq_def10,wq_def11,wq_def12, wq_def13,wq_def14,wq_def15,
                                     wq_def16,wq_def17,wq_def18,wq_def19,wq_def20,wq_def21),force_v4=T)
     
   }else{
-    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def),force_v4=T)
+    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def, qt_restart_def,resid30day_def),force_v4=T)
   }
   
   # create netCDF file and put arrays
@@ -350,9 +363,11 @@ write_forecast_netcdf <- function(x,
   
   ncvar_put(ncout,x_prior_def,as.matrix(x_prior))
   
-  #ncvar_put(ncout,qt_restart_def,as.matrix(qt_restart))
+  ncvar_put(ncout,qt_restart_def,as.matrix(qt_restart))
   
   ncvar_put(ncout,obs_def,obs)
+  
+  ncvar_put(ncout,resid30day_def,resid30day)
   
   if(include_wq){
     ncvar_put(ncout,wq_def1,x[,,wq_start[1]:wq_end[1]])
@@ -378,8 +393,6 @@ write_forecast_netcdf <- function(x,
     ncvar_put(ncout,wq_def21,x[,,wq_start[21]:wq_end[21]])
   }
   
-  print('here')
-  print(as.character(FLAREversion))
   #Global file metadata
   ncatt_put(ncout,0,"title",'Falling Creek Reservoir forecast', prec =  "text")
   ncatt_put(ncout,0,"institution",'Virginia Tech', prec =  "text")

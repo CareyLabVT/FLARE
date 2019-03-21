@@ -4,15 +4,18 @@ spline_to_hourly <- function(df,VarNamesStates){
   # Creator: Laura Puckett, December 16 2018
   # --------------------------------------
   # @param: df, a dataframe of debiased 6-hourly forecasts
-  
+
   interpolate <- function(jday, var){
     result <- splinefun(jday, var, method = "monoH.FC")
     return(result(seq(min(as.numeric(jday)), max(as.numeric(jday)), 1/24)))
   }
   
+
+  
   t0 = min(df$timestamp)
   df <- df %>%
     mutate(days_since_t0 = difftime(.$timestamp, t0, units = "days"))
+  
   if("dscale.member" %in% colnames(df)){
     by.ens <- df %>% 
       group_by(NOAA.member, dscale.member)

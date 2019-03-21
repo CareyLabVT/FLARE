@@ -62,7 +62,7 @@ update_time <- function(start_value,stop_value,working_glm){
       }
     }
   }
-  orig_nml[[index1]][index2] = start_value
+  orig_nml[[index1]][index2] = as.character(start_value)
   orig_nml[[index3]][index4] = stop_value
   write_nml(orig_nml, paste0(working_glm,'/','glm3.nml'))
 }

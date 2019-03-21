@@ -19,7 +19,9 @@ GLM_EnKF <- function(x,
                      process_uncertainity,
                      initial_condition_uncertainity,
                      parameter_uncertainity,
-                     machine){
+                     machine,
+                     resid30day,
+                     hist_days){
   
   nsteps <- length(full_time)
   nmembers <- dim(x)[2]
@@ -208,6 +210,13 @@ GLM_EnKF <- function(x,
           }
         }
       }else{
+        
+        #does previous day have an observation
+        previous_day_obs <- FALSE
+        if(length(which(!is.na(z[i-1, ]))) > 0){
+        previous_day_obs <- TRUE
+        }
+        
         #if observation then calucate Kalman adjustment
         zt <- z[i, z_index]
         z_states_t <- z_states[i, z_index]
@@ -231,6 +240,16 @@ GLM_EnKF <- function(x,
         
         #Ensemble mean
         ens_mean <- apply(x_corr, 2, mean)
+        
+        if(previous_day_obs){
+          resid30day[1:29, ] <- resid30day[2:30, ]
+          resid30day[30, z_index] <- ens_mean[z_index] - zt
+          if(!is.na(resid30day[1, z_index[1]])){
+             qt <- update_qt(resid30day, modeled_depths, qt, include_wq)
+          }
+        }
+      
+        
         if(npars > 0){
           par_mean <- apply(pars_corr, 2, mean)
         }
@@ -290,7 +309,7 @@ GLM_EnKF <- function(x,
             if(parameter_uncertainity == FALSE){
               x[i, m, ] <- colMeans(cbind(x_star, pars_corr)) 
             }else{
-              x[i, m, ] <- cbind(colMeans(x_star),
+              x[i, m, ] <- c(colMeans(x_star),
                                  x[i, m, (nstates + 1):(nstates + npars)])
             }
           }
@@ -311,5 +330,6 @@ GLM_EnKF <- function(x,
   return(list(x = x, 
               x_restart = x_restart, 
               qt_restart = qt_restart, 
-              x_prior = x_prior))
+              x_prior = x_prior,
+              resid30day = resid30day))
 }

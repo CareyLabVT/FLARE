@@ -7,9 +7,8 @@ if (!"glmtools" %in% installed.packages()) install.packages("glmtools",
 if (!"RCurl" %in% installed.packages()) install.packages("RCurl")
 if (!"testit" %in% installed.packages()) install.packages("testit")
 if (!"imputeTS" %in% installed.packages()) install.packages("imputeTS")
-if (!"tidyr" %in% installed.packages()) install.packages("tidyr")
-if (!"dplyr" %in% installed.packages()) install.packages("dplyr")
-if (!"ggplot2" %in% installed.packages()) install.packages("ggplot2")
+if (!"tidyverse" %in% installed.packages()) install.packages("tidyverse")
+
 
 library(mvtnorm)
 library(glmtools)
@@ -18,15 +17,7 @@ library(lubridate)
 library(RCurl)
 library(testit)
 library(imputeTS)
-library(tidyr)
-library(dplyr)
-library(ggplot2)
-
-
-data_location = "/Users/laurapuckett/Desktop/SCC_forecasting/SCC_data/"
-folder <- "/Users/laurapuckett/Desktop/SCC_forecasting/FLARE/"
-forecast_location <- "/Users/laurapuckett/Desktop/SCC_forecasting/forecasts/" 
-
+library(tidyverse)
 
 data_location = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
 folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
@@ -37,7 +28,7 @@ spin_up_days <- 0
 push_to_git <- FALSE
 pull_from_git <- TRUE
 reference_tzone <- "GMT"
-forecast_days <- 2
+forecast_days <- 16
 include_wq <- FALSE
 use_ctd <- FALSE
 DOWNSCALE_MET <- FALSE
@@ -48,44 +39,18 @@ FLAREversion <- "v1.0_beta.1"
 # 1) the number of NOAA ensembles (21)
 # 2) the number of downscaling essembles (50 is current)
 # get to the total number of essembles
-n_enkf_members <- 2
+n_enkf_members <- 1
 n_ds_members <- 1
 
 source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
 source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
 source(paste0(folder, "/", "Rscripts/plot_forecast.R"))
 
-sim_name <- "test" 
+sim_name <- "test1" 
 start_day <- "2018-07-10 00:00:00" #GMT
-forecast_start_day <-"2019-01-25 00:00:00" #GMT 
+forecast_start_day <-"2018-09-01 00:00:00" #GMT 
 hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_tzone),
                                  as.POSIXct(start_day, tz = reference_tzone)))
-# 
-# start_day= "2018-07-06 00:00:00"
-# sim_name = NA
-# hist_days = 1
-# forecast_days = 16
-# spin_up_days = 0
-# restart_file = NA
-# folder
-# forecast_location = NA
-# push_to_git = FALSE
-# pull_from_git = TRUE
-# 
-# n_enkf_members = NA
-# n_ds_members = 5
-# include_wq = FALSE
-# use_ctd = use_ctd
-# uncert_mode = 1
-# reference_tzone
-# cov_matrix = NA
-# alpha = c(0.5,0.5,0.5)
-# downscaling_coeff = NA
-# GLMversion
-# DOWNSCALE_MET = TRUE
-# FLAREversion
-# met_ds_obs_start = as.Date("2018-04-06")
-# met_ds_obs_end = Sys.Date()
 
 out <- run_enkf_forecast(start_day= start_day,
                          sim_name = sim_name,
@@ -104,14 +69,14 @@ out <- run_enkf_forecast(start_day= start_day,
                          use_ctd = use_ctd,
                          uncert_mode = 1,
                          reference_tzone,
-                         cov_matrix = "Qt_cov_matrix_11June_11Aug_18.csv",
+                         cov_matrix = "Qt_cov_matrix_init.csv",
                          alpha = c(0, 0, 0),
                          downscaling_coeff = NA,
                          GLMversion,
                          DOWNSCALE_MET,
                          FLAREversion,
                          met_ds_obs_start = as.Date("2018-04-06"),
-                         met_ds_obs_end = Sys.Date())
+                         met_ds_obs_end = as.Date(start_day))
 
 
 plot_forecast(pdf_file_name = unlist(out)[2],
