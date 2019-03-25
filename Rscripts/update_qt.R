@@ -1,4 +1,5 @@
 update_qt <- function(resid30day, modeled_depths, qt, include_wq){
+  
   old_qt <- qt
   
   index <- which(!is.na(resid30day[1, ]))

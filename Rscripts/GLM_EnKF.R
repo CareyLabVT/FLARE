@@ -23,6 +23,7 @@ GLM_EnKF <- function(x,
                      resid30day,
                      hist_days){
   
+  npars <- 0 
   nsteps <- length(full_time)
   nmembers <- dim(x)[2]
   n_met_members <- length(met_file_names) - 1
@@ -33,7 +34,7 @@ GLM_EnKF <- function(x,
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
   
   ###START EnKF
-
+  
   for(i in 2:nsteps){
     met_index <- 1
     #1) Update GLM NML files to match the current day of the simulation
@@ -45,10 +46,14 @@ GLM_EnKF <- function(x,
     #Create array to hold GLM predictions for each ensemble
     x_star <- array(NA, dim = c(nmembers, nstates))
     x_corr <- array(NA, dim = c(nmembers, nstates))
-    pars_corr <-  array(NA, dim = c(nmembers, npars))
+    
     #Matrix to store calculated ensemble specific deviations and innovations
     dit <- array(NA, dim = c(nmembers, nstates))
-    dit_pars<- array(NA,dim = c(nmembers, npars))
+    
+    if(npars > 0){
+      pars_corr <-  array(NA, dim = c(nmembers, npars))
+      dit_pars<- array(NA,dim = c(nmembers, npars))
+    }
     
     for(m in 1:nmembers){
       
@@ -107,7 +112,7 @@ GLM_EnKF <- function(x,
         unlink(paste0(working_glm, "/output.nc")) 
         
         if(machine == "unix" | machine == "mac"){
-        system(paste0(working_glm, "/", "glm"))
+          system(paste0(working_glm, "/", "glm"))
         }else if(machine == "windows"){
           system(paste0(working_glm, "/", "glm.exe"))
         }else{
@@ -155,7 +160,7 @@ GLM_EnKF <- function(x,
       }
       
     }
-  
+    
     
     # DEAL WITh ENSEMBLE MEMBERS ThAT ARE "BAD" AND 
     # PRODUCE NA VALUES OR hAVE NEGATIVE TEMPERATURES
@@ -192,7 +197,11 @@ GLM_EnKF <- function(x,
       }
     }
     
-    x_prior[i, , ] <- cbind(x_corr, pars_corr)
+    if(npars > 0){
+      x_prior[i, , ] <- cbind(x_corr, pars_corr)
+    }else{
+      x_prior[i, , ] <- x_corr
+    }
     
     if(i >= spin_up_days + 1){
       #Obs for time step
@@ -200,6 +209,7 @@ GLM_EnKF <- function(x,
       
       #if no observations at a time step then just propogate model uncertainity
       if(length(z_index) == 0 | i > (hist_days + 1)){
+        if(npars > 0){
         x[i, , ] <- cbind(x_corr, pars_corr) 
         if(process_uncertainity == FALSE & i > (hist_days + 1)){
           x[i, , ] <- cbind(x_star, pars_corr)
@@ -209,12 +219,23 @@ GLM_EnKF <- function(x,
             x[i, m, ] <- colMeans(cbind(x_star, pars_corr)) 
           }
         }
+        }else{
+          x[i, , ] <- x_corr 
+          if(process_uncertainity == FALSE & i > (hist_days + 1)){
+            x[i, , ] <- x_star
+          }
+          if(i == (hist_days + 1) & initial_condition_uncertainity == FALSE){
+            for(m in 1:nmembers){
+              x[i, m, ] <- colMeans(x_star) 
+            }
+          }
+        }
       }else{
         
         #does previous day have an observation
         previous_day_obs <- FALSE
         if(length(which(!is.na(z[i-1, ]))) > 0){
-        previous_day_obs <- TRUE
+          previous_day_obs <- TRUE
         }
         
         #if observation then calucate Kalman adjustment
@@ -245,10 +266,10 @@ GLM_EnKF <- function(x,
           resid30day[1:29, ] <- resid30day[2:30, ]
           resid30day[30, z_index] <- ens_mean[z_index] - zt
           if(!is.na(resid30day[1, z_index[1]])){
-             qt <- update_qt(resid30day, modeled_depths, qt, include_wq)
+            qt <- update_qt(resid30day, modeled_depths, qt, include_wq)
           }
         }
-      
+        
         
         if(npars > 0){
           par_mean <- apply(pars_corr, 2, mean)
@@ -263,22 +284,32 @@ GLM_EnKF <- function(x,
         for(m in 1:nmembers){  
           #  #Ensemble specific deviation
           dit[m, ] <- x_corr[m, ] - ens_mean
-          dit_pars[m, ] <- pars_corr[m, ] - par_mean
+          if(npars > 0){
+            dit_pars[m, ] <- pars_corr[m, ] - par_mean
+          }
           if(m == 1){
             p_it <- dit[m, ] %*% t(dit[m, ]) 
-            p_it_pars <- dit_pars[m, ] %*% t(dit[m, ])
+            if(npars > 0){
+              p_it_pars <- dit_pars[m, ] %*% t(dit[m, ])
+            }
           }else{
             p_it <- dit[m, ] %*% t(dit[m, ]) +  p_it 
-            p_it_pars <- dit_pars[m, ] %*% t(dit[m, ]) + p_it_pars
+            if(npars > 0){
+              p_it_pars <- dit_pars[m, ] %*% t(dit[m, ]) + p_it_pars
+            }
           }
         }
         
         #estimate covariance
         p_t <- p_it / (nmembers - 1)
-        p_t_pars <- p_it_pars / (nmembers - 1)
+        if(npars > 0){
+          p_t_pars <- p_it_pars / (nmembers - 1)
+        }
         #Kalman gain
         k_t <- p_t %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t)
-        k_t_pars <- p_t_pars %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t)
+        if(npars > 0){
+          k_t_pars <- p_t_pars %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t)
+        }
         
         #sigma_t <- 1.5
         #k_t_pars <- (1/(nmembers-1))*sigma_t*p_t_pars %*% t(h) %*% 
@@ -287,10 +318,13 @@ GLM_EnKF <- function(x,
         #Update states array (transposes are necessary to convert 
         #between the dims here and the dims in the EnKF formulations)
         x[i, , 1:nstates] <- t(t(x_corr) + k_t %*% (d_mat - h %*% t(x_corr)))
-        x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + 
-                                      k_t_pars %*% (d_mat - h %*% t(x_corr)))
-        x[i,which(x[i, , (nstates+2)] < 4), (nstates+2)] <- 4
+        if(npars > 0){
+          x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + 
+                                                     k_t_pars %*% (d_mat - h %*% t(x_corr)))
+          x[i,which(x[i, , (nstates+2)] < 4), (nstates+2)] <- 4
+        }
 
+        
         
         if(include_wq){
           for(m in 1:nmembers){
@@ -305,31 +339,38 @@ GLM_EnKF <- function(x,
         #IF NO INITIAL CONDITION UNCERTAINITY ThEN SET EACh ENSEMBLE MEMBER TO ThE MEAN
         #AT ThE INITIATION OF ThE FUTURE FORECAST
         if(i == (hist_days + 1) & initial_condition_uncertainity == FALSE){
-          for(m in 1:nmembers){
-            if(parameter_uncertainity == FALSE){
-              x[i, m, ] <- colMeans(cbind(x_star, pars_corr)) 
-            }else{
-              x[i, m, ] <- c(colMeans(x_star),
-                                 x[i, m, (nstates + 1):(nstates + npars)])
+          if(npars > 0){
+            for(m in 1:nmembers){
+              if(parameter_uncertainity == FALSE){
+                x[i, m, ] <- colMeans(cbind(x_star, pars_corr)) 
+              }else{
+                x[i, m, ] <- c(colMeans(x_star),
+                               x[i, m, (nstates + 1):(nstates + npars)])
+              }
             }
+          }else{
+            x[i, m, ] <- colMeans(x_star)
           }
         }
-        
-      }
-    }else{
+    }
+  }else{
+    if(npars > 0){
       x[i, , ] <- cbind(x_star, pars_corr)
+    }else{
+      x[i, , ] <- x_star
     }
-    
-    if(i == (hist_days + 1)){
-      x_restart <- x[i, , ]
-      qt_restart <- qt
-    }
-    
   }
   
-  return(list(x = x, 
-              x_restart = x_restart, 
-              qt_restart = qt_restart, 
-              x_prior = x_prior,
-              resid30day = resid30day))
+  if(i == (hist_days + 1)){
+    x_restart <- x[i, , ]
+    qt_restart <- qt
+  }
+  
+}
+
+return(list(x = x, 
+            x_restart = x_restart, 
+            qt_restart = qt_restart, 
+            x_prior = x_prior,
+            resid30day = resid30day))
 }

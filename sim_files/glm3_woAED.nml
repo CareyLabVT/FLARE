@@ -63,7 +63,7 @@
    meteo_fl = 'FCR_GLM_met_NLDAS2_010113_010118_GMTadjusted.csv'
    subdaily = .true.
    wind_factor = 1.0
-   sw_factor =0.95
+   sw_factor =0.70
    lw_factor = 1.0
    at_factor = 1
    rh_factor = 1
@@ -81,7 +81,7 @@
    subm_flag = .false.
    strm_hf_angle = 55 !55
    strmbd_slope = 0.05
-   strmbd_drag = 0.016 !0.03
+   strmbd_drag = 0.03 !0.03
    inflow_factor = 1
    inflow_fl = 'FCR_inflow_20180419gep_all_00z.csv'
    inflow_varnum = 13
@@ -107,7 +107,7 @@
   zone_heights =  5, 9.5 !!!!4,9.5
   sed_heat_Ksoil = 1.2, 1.2, !1.8, 1.8
   sed_temp_depth = 0.5, 0.5
-  sed_temp_mean = 11, 17
+  sed_temp_mean = 10, 15
   sed_temp_amplitude = 0, 0, !6,6
   sed_temp_peak_doy = 275, 275
 /

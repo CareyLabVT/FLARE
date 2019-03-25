@@ -53,7 +53,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   #################################################
   
   ###RUN OPTIONS
-  npars <- 4
+  npars <- 0
   pre_scc <- FALSE
   
   ### METEROLOGY DOWNSCALING OPTIONS
@@ -75,7 +75,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   zone1temp_init_qt <- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
   zone2temp_init_qt <- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
   swf_lwf_init <- 0.75
-  swf_lwf_init_qt <- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
+  swf_lwf_init_qt <- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
   kw_init <-0.87
   kw_init_qt <- 0.01^2
   
@@ -173,7 +173,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     process_uncertainity <- TRUE
     weather_uncertainity <- TRUE
     initial_condition_uncertainity <- TRUE
-    parameter_uncertainity <- TRUE
+    parameter_uncertainity <- FALSE
     met_downscale_uncertainity <- TRUE
   }else if(uncert_mode == 2){
     #No sources of uncertainity and no data used to constrain 
@@ -888,12 +888,12 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     }
   }
   
-  if(restart_present){
-    nc <- nc_open(restart_file)
-    qt <- ncvar_get(nc, "qt_restart")
-    resid30day <- ncvar_get(nc, "resid30day")
-    nc_close(nc)
-  }else{
+ # if(restart_present){
+#    nc <- nc_open(restart_file)
+#    qt <- ncvar_get(nc, "qt_restart")
+#    resid30day <- ncvar_get(nc, "resid30day")
+#    nc_close(nc)
+#  }else{
     #Process error 
     if(is.na(cov_matrix)){
       qt <- read.csv(paste0(working_glm, "/", "qt_cov_matrix.csv"))
@@ -911,10 +911,14 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
       }
     }
     resid30day <- array(NA, dim =c(30, nrow(qt)))
-  }
+#  }
   #Covariance matrix for parameters
+  if(npars > 0){
   qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
   diag(qt_pars) <- c(zone1temp_init_qt, zone2temp_init_qt, swf_lwf_init_qt,kw_init_qt)
+  }else{
+    qt_pars <- NA
+  }
   
   
   ################################################################
@@ -934,12 +938,6 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                     mean=c(the_temps_init, 
                                            wq_init_vals), 
                                     sigma=as.matrix(qt))
-        #x[1, ,(nstates+1):(nstates+npars)] <- rmvnorm(n=nmembers, 
-        #                                              mean=c(zone1_temp,
-        #                                                     zone2_temp,
-        #                                                     swf_lwf_init,
-        #                                                     kw_init),
-        #                                              sigma = as.matrix(qt_pars))
         x[1, ,(nstates+1)] <- runif(n=nmembers,5, 20)
         x[1, ,(nstates+2)] <- runif(n=nmembers,5, 20)
         x[1, ,(nstates+3)] <- runif(n=nmembers,0.5, 1.0)
@@ -969,12 +967,6 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
         x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
                                     mean=the_temps_init,
                                     sigma=as.matrix(qt))
-        #x[1, ,(nstates+1):(nstates+npars)] <- rmvnorm(n=nmembers, 
-        #                                              mean=c(zone1_temp,
-        #                                                     zone2_temp,
-        #                                                     swf_lwf_init,
-        #                                                     kw_init),
-        #                                              sigma = as.matrix(qt_pars))
         x[1, ,(nstates+1)] <- runif(n=nmembers,5, 20)
         x[1, ,(nstates+2)] <- runif(n=nmembers,5, 20)
         x[1, ,(nstates+3)] <- runif(n=nmembers,0.5, 1.0)

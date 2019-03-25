@@ -4,7 +4,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     source(paste0(code_location,'/extract_temp_CTD.R'))
   
     the_depths_init <- c(0.1, 0.33, 0.66, 1.00, 1.33,1.66,2.00,2.33,2.66,3.0,3.33,3.66,4.0,4.33,4.66,5.0,5.33,5.66,6.0,6.33,6.66,7.00,7.33,7.66,8.0,8.33,8.66,9.00,9.33)
-    num_pars <- 3
+    num_pars <- 0
     output_tz <- 'EST5EDT'
     TempObservedDepths <- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8,9)
     DoObservedDepths <- c(1,5,9)
@@ -211,6 +211,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     
     ###PLOT OF PARAMETERS IF FIT
     plot.new()
+    if(num_pars > 0){
     plot(full_time,rowMeans(Kw[,]),xlab ='Day',ylab = 'Kw',type='l',ylim = range(c(Kw),na.rm=TRUE))
     if(length(Kw[1,]) > 1){
       for(m in 1:length(Kw[1,])){
@@ -234,6 +235,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
       for(m in 1:length(SW_LW_factor[1,])){
         points(full_time,SW_LW_factor[,m],type='l')
       }
+    }
     }
     
     if(include_wq){
