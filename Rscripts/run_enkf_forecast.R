@@ -888,12 +888,12 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     }
   }
   
- # if(restart_present){
-#    nc <- nc_open(restart_file)
-#    qt <- ncvar_get(nc, "qt_restart")
-#    resid30day <- ncvar_get(nc, "resid30day")
-#    nc_close(nc)
-#  }else{
+ if(restart_present){
+    nc <- nc_open(restart_file)
+    qt <- ncvar_get(nc, "qt_restart")
+    resid30day <- ncvar_get(nc, "resid30day")
+    nc_close(nc)
+  }else{
     #Process error 
     if(is.na(cov_matrix)){
       qt <- read.csv(paste0(working_glm, "/", "qt_cov_matrix.csv"))
@@ -911,7 +911,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
       }
     }
     resid30day <- array(NA, dim =c(30, nrow(qt)))
-#  }
+  }
   #Covariance matrix for parameters
   if(npars > 0){
   qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
@@ -1104,12 +1104,33 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   ### CREATE FORECAST NAME
   
+  if(day(full_time[1]) < 10){
+    file_name_H_day <- paste0("0",day(full_time[1]))
+  }else{
+    file_name_H_day <- day(full_time[1]) 
+  }
+  if(day(full_time[hist_days+1]) < 10){
+    file_name_F_day <- paste0("0",day(full_time[hist_days+1]))
+  }else{
+    file_name_F_day <- day(full_time[hist_days+1]) 
+  }
+  if(day(month(full_time[1])) < 10){
+    file_name_H_month <- paste0("0",month(full_time[1]))
+  }else{
+    file_name_H_month <- month(full_time[1]) 
+  }
+  if(day(month(full_time[hist_days+1])) < 10){
+    file_name_F_month <- paste0("0",month(full_time[hist_days+1]))
+  }else{
+    file_name_F_month <- month(full_time[hist_days+1]) 
+  }
+  
   save_file_name <- paste0(sim_name, "_H_",
-                           month(full_time[1]),"_",
-                           day(full_time[1]),"_",
+                           file_name_H_month,"_",
+                           file_name_H_day,"_",
                            (year(full_time[1]) - 2000),"_",
-                           month(full_time[hist_days+1]),"_",
-                           day(full_time[hist_days+1]),"_",
+                           file_name_F_month,"_",
+                           file_name_F_day,"_",
                            (year(full_time[hist_days+1])-2000),"_F_",
                            forecast_days) 
   
