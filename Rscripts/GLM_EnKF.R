@@ -23,7 +23,7 @@ GLM_EnKF <- function(x,
                      resid30day,
                      hist_days){
   
-  npars <- 0 
+  npars <- 4 
   nsteps <- length(full_time)
   nmembers <- dim(x)[2]
   n_met_members <- length(met_file_names) - 1
@@ -78,7 +78,7 @@ GLM_EnKF <- function(x,
                    working_glm)
         update_var(round(new_pars[3], 3), "sw_factor", working_glm)
         #update_var(round(new_pars[3], 3), "lw_factor", working_glm)
-        update_var(round(new_pars[4], 4), "Kw", working_glm)
+        #update_var(round(new_pars[4], 4), "Kw", working_glm)
         pars_corr[m, ] <- new_pars
       }
       

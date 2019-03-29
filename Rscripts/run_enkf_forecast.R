@@ -53,7 +53,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   #################################################
   
   ###RUN OPTIONS
-  npars <- 0
+  npars <- 4
   pre_scc <- FALSE
   
   ### METEROLOGY DOWNSCALING OPTIONS
@@ -72,12 +72,12 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   lake_depth_init <- 9.4  #not a modeled state
   zone2_temp <- 11
   zone1_temp <- 11
-  zone1temp_init_qt <- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
-  zone2temp_init_qt <- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
+  zone1temp_init_qt <- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
+  zone2temp_init_qt <- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
   swf_lwf_init <- 0.75
   swf_lwf_init_qt <- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
   kw_init <-0.87
-  kw_init_qt <- 0.01^2
+  kw_init_qt <- 0.000000001^2
   
   obs_error <- 0.0001 #NEED TO DOUBLE CHECK
   
@@ -941,7 +941,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
         x[1, ,(nstates+1)] <- runif(n=nmembers,5, 20)
         x[1, ,(nstates+2)] <- runif(n=nmembers,5, 20)
         x[1, ,(nstates+3)] <- runif(n=nmembers,0.5, 1.0)
-        x[1, ,(nstates+4)] <- runif(n=nmembers,0.5, 1.5)
+        x[1, ,(nstates+4)] <- rep(kw_init, nmembers) #runif(n=nmembers,0.5, 1.5)
         if(initial_condition_uncertainity == FALSE){
           for(m in 1:nmembers){
             x[1,m, ] <- c(the_temps_init,
@@ -970,7 +970,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
         x[1, ,(nstates+1)] <- runif(n=nmembers,5, 20)
         x[1, ,(nstates+2)] <- runif(n=nmembers,5, 20)
         x[1, ,(nstates+3)] <- runif(n=nmembers,0.5, 1.0)
-        x[1, ,(nstates+4)] <- runif(n=nmembers,0.5, 1.5)
+        x[1, ,(nstates+4)] <- rep(kw_init, nmembers) #runif(n=nmembers,0.5, 1.5)
         if(initial_condition_uncertainity == FALSE){
           for(m in 1:nmembers){
             x[1, m, ] <- c(the_temps_init, zone1_temp, zone2_temp, swf_lwf_init, kw_init)
