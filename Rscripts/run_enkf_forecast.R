@@ -173,7 +173,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     process_uncertainity <- TRUE
     weather_uncertainity <- TRUE
     initial_condition_uncertainity <- TRUE
-    parameter_uncertainity <- FALSE
+    parameter_uncertainity <- TRUE
     met_downscale_uncertainity <- TRUE
   }else if(uncert_mode == 2){
     #No sources of uncertainity and no data used to constrain 
