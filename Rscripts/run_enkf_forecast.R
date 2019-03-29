@@ -1126,12 +1126,12 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   }
   
   save_file_name <- paste0(sim_name, "_H_",
+                           (year(full_time[1])),"_",
                            file_name_H_month,"_",
                            file_name_H_day,"_",
-                           (year(full_time[1]) - 2000),"_",
+                           (year(full_time[hist_days+1])),
                            file_name_F_month,"_",
-                           file_name_F_day,"_",
-                           (year(full_time[hist_days+1])-2000),"_F_",
+                           file_name_F_day,"_","_F_",
                            forecast_days) 
   
   time_of_forecast <- Sys.time()
