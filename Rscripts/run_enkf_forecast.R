@@ -1114,12 +1114,12 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   }else{
     file_name_F_day <- day(full_time[hist_days+1]) 
   }
-  if(day(month(full_time[1])) < 10){
+  if(month(full_time[1]) < 10){
     file_name_H_month <- paste0("0",month(full_time[1]))
   }else{
     file_name_H_month <- month(full_time[1]) 
   }
-  if(day(month(full_time[hist_days+1])) < 10){
+  if(month(full_time[hist_days+1]) < 10){
     file_name_F_month <- paste0("0",month(full_time[hist_days+1]))
   }else{
     file_name_F_month <- month(full_time[hist_days+1]) 
