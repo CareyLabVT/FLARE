@@ -438,9 +438,9 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                                                                  first_obs_date = met_ds_obs_start,
                                                                                  last_obs_date = met_ds_obs_end)
     
-    if(weather_uncertainity == FALSE & met_downscale_uncertainity == TRUE){
+    if(weather_uncertainity == FALSE & met_downscale_uncertainty == TRUE){
       met_file_names <- met_file_names[1:(1+(1*n_ds_members))]
-    }else if(weather_uncertainity == FALSE & met_downscale_uncertainity == FALSE){
+    }else if(weather_uncertainity == FALSE & met_downscale_uncertainty == FALSE){
       met_file_names <- met_file_names[1:2]
     }
     if(weather_uncertainity == FALSE){
