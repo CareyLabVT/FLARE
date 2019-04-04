@@ -12,7 +12,6 @@ fit_downscaling_parameters <- function(observations,
                                        VarNames,
                                        VarNamesStates,
                                        replaceObsNames,
-                                       USE_ENSEMBLE_MEAN,
                                        PLOT,
                                        output_tz,
                                        VarInfo,
@@ -36,15 +35,6 @@ fit_downscaling_parameters <- function(observations,
     ungroup() %>%
     dplyr::select(-"date(timestamp)", -n) %>%
     filter(timestamp >= first_obs_date & timestamp <= last_obs_date)
-  
-  # if(USE_ENSEMBLE_MEAN){
-  #   forecasts <- forecasts %>%
-  #     dplyr::group_by(timestamp) %>%
-  #     dplyr::select(-NOAA.member) %>%
-  #     # take mean across ensembles at each timestamp
-  #     dplyr::summarize_all("mean", na.rm = FALSE) %>%
-  #     dplyr::mutate(NOAA.member = "mean")
-  # }
   
   # -----------------------------------
   # 3. aggregate forecasts and observations to daily resolution and join datasets
