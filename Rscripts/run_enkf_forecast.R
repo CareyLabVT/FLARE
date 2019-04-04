@@ -174,7 +174,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     weather_uncertainity <- TRUE
     initial_condition_uncertainity <- TRUE
     parameter_uncertainity <- TRUE
-    met_downscale_uncertainity <- TRUE
+    met_downscale_uncertainty <- TRUE
   }else if(uncert_mode == 2){
     #No sources of uncertainity and no data used to constrain 
     use_obs_constraint <- TRUE
@@ -194,7 +194,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     weather_uncertainity <- FALSE
     initial_condition_uncertainity <- FALSE
     parameter_uncertainity <- FALSE
-    met_downscale_uncertainity <- FALSE
+    met_downscale_uncertainty <- FALSE
   }else if(uncert_mode == 4){
     #only noaa weather uncertainity
     use_obs_constraint <- TRUE
