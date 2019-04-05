@@ -17,7 +17,7 @@ process_downscale_GEFS <- function(folder,
                                    FIT_PARAMETERS,
                                    DOWNSCALE_MET,
                                    met_downscale_uncertainty,
-                                   compare_obs_to_output,
+                                   compare_output_to_obs,
                                    VarInfo,
                                    replaceObsNames,
                                    downscaling_coeff,
@@ -31,7 +31,7 @@ process_downscale_GEFS <- function(folder,
   path.met.ds.folder <- paste0(folder,"/","Rscripts/met_downscale/")
   
   for(f in list.files(path = path.met.ds.folder, pattern="*.R")){
-    if(f != "main_downscaling.R" & f != "process_downscale_GEFS.R"){
+    if(f != "process_downscale_GEFS.R" & f != "run_met_downscaling.R"& f != "main_downscaling.R"){
     source(paste0(path.met.ds.folder, f))
     }
   }
