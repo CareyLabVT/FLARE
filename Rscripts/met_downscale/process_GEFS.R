@@ -23,7 +23,7 @@ process_GEFS <- function(file_name,
                          hrly.observations,
                          DOWNSCALE_MET,
                          FIT_PARAMETERS,
-                         met_downscale_uncertainity,
+                         met_downscale_uncertainty,
                          WRITE_FILES,
                          downscaling_coeff){
   # -----------------------------------
@@ -40,11 +40,14 @@ process_GEFS <- function(file_name,
   full_time <- rep(NA,length(d$forecast.date)*6)
   begin_step <- as_datetime(head(d$forecast.date,1), tz = output_tz)
   end_step <- as_datetime(tail(d$forecast.date,1), tz = output_tz)
-  if(date(begin_step)>as_date("2018-12-07")){
+  
+  # adjust for different timezones in saved GEFS forecasts 
+  if(date(begin_step)>as_date("2018-12-07")){ 
     for.input_tz = "GMT"
   }else{
     for.input_tz = "US/Eastern"
   }
+  
   full_time <- seq(begin_step, end_step, by = "1 hour", tz = output_tz) # grid
   forecasts <- prep_for(d, input_tz = for.input_tz, output_tz = output_tz)
   time0 = min(forecasts$timestamp)
@@ -68,7 +71,7 @@ process_GEFS <- function(file_name,
                        PLOT = FALSE,
                        output_tz = output_tz)
     ds <- ds %>% mutate(AirTemp = AirTemp - 273.15) # from Kelvin to Celsius 
-    if(met_downscale_uncertainity == TRUE){
+    if(met_downscale_uncertainty == TRUE){
       ## Downscaling + noise addition option
       print("with noise")
       ds.noise = add_noise(debiased = ds,
@@ -117,15 +120,13 @@ process_GEFS <- function(file_name,
     filter(VarType == "State")
   VarNamesStates = VarNamesStates$VarNames
   
+  # replace the first measurements of the downscaled output with observations so that the model has a smooth transition from past observations to future forecast
+  
   for(i in 1:length(VarNamesStates)){
     output[which(output$timestamp == time0),VarNamesStates[i]] = obs.time0[VarNamesStates[i]]
   }
-
-  
   output.time0.6.hrs = output %>% filter(timestamp == time0 | timestamp == time0 + 6*60*60)
-  
   states.output0.6.hrs = spline_to_hourly(output.time0.6.hrs,VarNamesStates)
-  
   output <- output %>% full_join(states.output0.6.hrs, by = c("NOAA.member","dscale.member","timestamp"), suffix = c("",".splined")) %>%
     mutate(AirTemp = ifelse(is.na(AirTemp.splined), AirTemp, AirTemp.splined),
            WindSpeed = ifelse(is.na(WindSpeed.splined), WindSpeed, WindSpeed.splined),
@@ -167,7 +168,7 @@ process_GEFS <- function(file_name,
       # Rain.Snow = hrly.Rain.Snow %>% filter(NOAA.member == NOAA.ens) %>%
       #   select(timestamp, Rain, Snow)
       if(DOWNSCALE_MET){
-        if(met_downscale_uncertainity){ # downscale met with noise addition
+        if(met_downscale_uncertainty){ # downscale met with noise addition
           for(dscale.ens in 1:n_ds_members){
             GLM_climate_ds = output %>%
               filter(NOAA.member == NOAA.ens & dscale.member == dscale.ens) %>%

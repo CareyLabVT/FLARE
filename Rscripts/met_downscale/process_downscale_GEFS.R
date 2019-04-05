@@ -16,7 +16,7 @@ process_downscale_GEFS <- function(folder,
                                    output_tz,
                                    FIT_PARAMETERS,
                                    DOWNSCALE_MET,
-                                   met_downscale_uncertainity,
+                                   met_downscale_uncertainty,
                                    ANALYZE_OUTPUT,
                                    VarInfo,
                                    replaceObsNames,
@@ -46,15 +46,26 @@ process_downscale_GEFS <- function(folder,
   obs.data <- read.csv(obs.file.path, skip = 4, header = F)
   d_names <- read.csv(obs.file.path, skip = 1, header = T, nrows = 1)
   names(obs.data) <- names(d_names)
+  
+maxTempC = 41 # an upper bound of realistic temperature for the study site in deg C
+minTempC = -24 # an lower bound of realistic temperature for the study site in deg C
 
   observations <- obs.data %>% 
-    # filter(strptime(TIMESTAMP, format="%Y-%m-%d %H:%M") < (max(full_time_local))) %>% 
-    prep_obs(output_tz = output_tz, replaceObsNames = replaceObsNames, VarNames = VarInfo$VarNames) %>%
+    plyr::rename(replaceObsNames) %>%
+    dplyr::mutate(TIMESTAMP = as.character(TIMESTAMP)) %>%
+    dplyr::mutate_at(VarNames, as.numeric) %>%
+    dplyr::mutate(timestamp = as_datetime(TIMESTAMP,
+                                          tz = 'EST5EDT')) %>%
+    dplyr::mutate(AirTemp = AirTemp + 273.15,# convert from C to Kelvin
+                  Rain = Rain* 60 * 24/1000) %>% # convert from mm to m
+    select(timestamp, VarNames)
+  observations$timestamp <- with_tz(observations$timestamp, output_tz)
+  observations <- observation %>%
     dplyr::mutate(ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
                   RelHum = ifelse(RelHum <0, 0, RelHum),
                   RelHum = ifelse(RelHum > 100, 100, RelHum),
-                  AirTemp = ifelse(AirTemp> 273.15 + 41, NA, AirTemp),
-                  AirTemp = ifelse(AirTemp < 273.15 -23.9, NA, AirTemp),
+                  AirTemp = ifelse(AirTemp> 273.15 + maxTempC, NA, AirTemp),
+                  AirTemp = ifelse(AirTemp < 273.15 + minTempC, NA, AirTemp),
                   LongWave = ifelse(LongWave < 0, NA, LongWave),
                   WindSpeed = ifelse(WindSpeed <0, 0, WindSpeed)) %>%
                   filter(is.na(timestamp) == FALSE)
@@ -81,7 +92,6 @@ process_downscale_GEFS <- function(folder,
                                VarNames = VarNames,
                                VarNamesStates,
                                replaceObsNames = replaceObsNames,
-                               USE_ENSEMBLE_MEAN = FALSE,
                                PLOT = FALSE,
                                output_tz = output_tz,
                                VarInfo,
@@ -103,12 +113,12 @@ process_downscale_GEFS <- function(folder,
                        hrly.observations = hrly.obs,
                        DOWNSCALE_MET = DOWNSCALE_MET,
                        FIT_PARAMETERS = FIT_PARAMETERS,
-                       met_downscale_uncertainity = met_downscale_uncertainity,
+                       met_downscale_uncertainty,
                        WRITE_FILES = TRUE,
                        downscaling_coeff)
   files = met_forecast_output[[1]]
   output = met_forecast_output[[2]]
-  if(ANALYZE_OUTPUT == TRUE){
+  if(compare_output_to_obs == TRUE){
     "comparing forecast output to obs"
     compare_output_to_obs(output, hrly.obs)
   }
