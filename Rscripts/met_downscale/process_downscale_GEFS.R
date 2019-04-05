@@ -17,7 +17,7 @@ process_downscale_GEFS <- function(folder,
                                    FIT_PARAMETERS,
                                    DOWNSCALE_MET,
                                    met_downscale_uncertainty,
-                                   ANALYZE_OUTPUT,
+                                   compare_obs_to_output,
                                    VarInfo,
                                    replaceObsNames,
                                    downscaling_coeff,
@@ -47,9 +47,10 @@ process_downscale_GEFS <- function(folder,
   d_names <- read.csv(obs.file.path, skip = 1, header = T, nrows = 1)
   names(obs.data) <- names(d_names)
   
-maxTempC = 41 # an upper bound of realistic temperature for the study site in deg C
-minTempC = -24 # an lower bound of realistic temperature for the study site in deg C
-
+  VarNames = as.vector(VarInfo$VarNames)
+  
+  maxTempC = 41 # an upper bound of realistic temperature for the study site in deg C
+  minTempC = -24 # an lower bound of realistic temperature for the study site in deg C
   observations <- obs.data %>% 
     plyr::rename(replaceObsNames) %>%
     dplyr::mutate(TIMESTAMP = as.character(TIMESTAMP)) %>%
@@ -60,7 +61,7 @@ minTempC = -24 # an lower bound of realistic temperature for the study site in d
                   Rain = Rain* 60 * 24/1000) %>% # convert from mm to m
     select(timestamp, VarNames)
   observations$timestamp <- with_tz(observations$timestamp, output_tz)
-  observations <- observation %>%
+  observations <- observations %>%
     dplyr::mutate(ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
                   RelHum = ifelse(RelHum <0, 0, RelHum),
                   RelHum = ifelse(RelHum > 100, 100, RelHum),
@@ -77,8 +78,6 @@ minTempC = -24 # an lower bound of realistic temperature for the study site in d
   
   rm(obs.data)
   hrly.obs <- observations %>% aggregate_obs_to_hrly()
-  
-
   
   # -----------------------------------
   # 1. Fit Parameters
