@@ -55,6 +55,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   ###RUN OPTIONS
   npars <- 4
   pre_scc <- FALSE
+  hold_inflow_outflow_constant <- FALSE
   
   ### METEROLOGY DOWNSCALING OPTIONS
   if(is.na(downscaling_coeff)){
@@ -483,7 +484,9 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     create_inflow_outflow_file(full_time = full_time_day,
                                working_glm = working_glm, 
                                input_tz = "EST5EDT",
-                               output_tz = reference_tzone)
+                               output_tz = reference_tzone,
+                               start_forecast_step = start_forecast_step,
+                               hold_inflow_outflow_constant)
   }
   
   #Extract observations
@@ -1129,9 +1132,9 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                            (year(full_time[1])),"_",
                            file_name_H_month,"_",
                            file_name_H_day,"_",
-                           (year(full_time[hist_days+1])),
+                           (year(full_time[hist_days+1])),"_",
                            file_name_F_month,"_",
-                           file_name_F_day,"_","_F_",
+                           file_name_F_day,"_F_",
                            forecast_days) 
   
   time_of_forecast <- Sys.time()

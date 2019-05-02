@@ -1,4 +1,4 @@
-create_inflow_outflow_file <- function(full_time_day,working_glm,input_tz = 'EST5EDT', output_tz = reference_tzone){
+create_inflow_outflow_file <- function(full_time_day,working_glm,input_tz = 'EST5EDT', output_tz = reference_tzone, start_forecast_step,hold_inflow_outflow_constant){
   
   full_time_day_2017 <- as.POSIXct(full_time_day,
                                    tz = reference_tzone) - 365*24*60*60
@@ -41,12 +41,23 @@ create_inflow_outflow_file <- function(full_time_day,working_glm,input_tz = 'EST
     curr_month <- month(full_time_day[i])
     index1 <- which(day(inflow$time) == curr_day & month(inflow$time) == curr_month)
     index2 <- which(day(spillway$time) == curr_day & month(spillway$time) == curr_month)
-    for(j in 2:8){
-    inflow_new[i,j] <- mean(inflow[index1,j])
+    if(i < (start_forecast_step+1)){
+      hist_index1 <- index1
+      hist_index2 <- index2
     }
-    spillway_new[i,2] <- mean(spillway[index2,2])
+    if(i < (start_forecast_step+1) & hold_inflow_outflow_constant){
+      for(j in 2:8){
+        inflow_new[i,j] <- mean(inflow[index1,j])
+      }
+      spillway_new[i,2] <- mean(spillway[index2,2])
+    }else{
+      for(j in 2:8){
+        inflow_new[i,j] <- mean(inflow[hist_index1,j])
+      }
+      spillway_new[i,2] <- mean(spillway[hist_index2,2])
+    }
   }
-
+  
   inflow_new$time =  full_time_day
   spillway_new$time =  full_time_day
   
