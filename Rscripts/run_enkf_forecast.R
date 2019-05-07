@@ -56,7 +56,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   npars <- 4
   pre_scc <- FALSE
   hold_inflow_outflow_constant <- FALSE
-  print_glm2screen <- FALSE
+  print_glm2screen <- TRUE
   
   ### METEROLOGY DOWNSCALING OPTIONS
   if(is.na(downscaling_coeff)){
@@ -120,10 +120,11 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                 "PHY_CYANOPCH1",
                 "PHY_CYANONPCH2",
                 "PHY_CHLOROPCH3",
-                "PHY_DIATOMPCH4",
-                "ZOO_COPEPODS1",
-                "ZOO_DAPHNIABIG2",
-                "ZOO_DAPHNIASMALL3")
+                "PHY_DIATOMPCH4"
+                #"ZOO_COPEPODS1",
+                #"ZOO_DAPHNIABIG2",
+                #"ZOO_DAPHNIASMALL3"
+                )
   
   local_tzone <- "EST5EDT"
   
@@ -178,7 +179,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     parameter_uncertainty <- TRUE
     met_downscale_uncertainty <- TRUE
   }else if(uncert_mode == 2){
-    #No sources of uncertainty and no data used to constrain 
+    #No sources of uncertainty  data used to constrain 
     use_obs_constraint <- TRUE
     #SOURCES OF uncertainty
     observation_uncertainty <- TRUE
@@ -247,6 +248,16 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     initial_condition_uncertainty <- FALSE
     parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- TRUE
+  }else if(uncert_mode == 9){
+    #No sources of uncertainty and no data used to constrain 
+    use_obs_constraint <- FALSE
+    #SOURCES OF uncertainty
+    observation_uncertainty <- FALSE
+    process_uncertainty <- FALSE
+    weather_uncertainty <- FALSE
+    initial_condition_uncertainty <- FALSE
+    parameter_uncertainty <- FALSE
+    met_downscale_uncertainty <- FALSE
   }
   
   
@@ -445,11 +456,11 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     }else if(weather_uncertainty == FALSE & met_downscale_uncertainty == FALSE){
       met_file_names <- met_file_names[1:2]
     }
-    if(weather_uncertainty == FALSE){
-      n_met_members <- 1
-    }
-    
     #plot_downscaled_met(met_file_names, VarInfo$VarNames, working_glm)
+  }
+  
+  if(weather_uncertainty == FALSE){
+    n_met_members <- 4
   }
   
   ###MOVE DATA FILES AROUND
@@ -576,9 +587,11 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     if(include_wq){
       do_inter <- approxfun(init_obs_do_depths, init_do_obs, rule=2)
       do_init <- do_inter(modeled_depths)
-      if(length(which(!is.na(init_pH_obs))) > 0){
-        pH_inter <- approxfun(init_obs_pH_depths, init_pH_obs, rule=2)
-        pH_init <- pH_inter(modeled_depths)
+      if(use_ctd){
+        if(length(which(!is.na(init_pH_obs))) > 0){
+          pH_inter <- approxfun(init_obs_pH_depths, init_pH_obs, rule=2)
+          pH_init <- pH_inter(modeled_depths)
+        }
       }
     }
   }
@@ -696,10 +709,11 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                     PHY_CYANOPCH1_error,
                     PHY_CYANONPCH2_error,
                     PHY_CHLOROPCH3_error,
-                    PHY_DIATOMPCH4_error,
-                    ZOO_COPEPODS1_error,
-                    ZOO_DAPHNIABIG2_error,
-                    ZOO_DAPHNIASMALL3_error)
+                    PHY_DIATOMPCH4_error
+                    #ZOO_COPEPODS1_error,
+                    #ZOO_DAPHNIABIG2_error,
+                    #ZOO_DAPHNIASMALL3_error)
+                    )
   
   if(include_wq){
     OXY_oxy_init_depth <- do_init
@@ -806,10 +820,10 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                     PHY_CYANOPCH1_init_depth,
                     PHY_CYANONPCH2_init_depth,
                     PHY_CHLOROPCH3_init_depth,
-                    PHY_DIATOMPCH4_init_depth,
-                    ZOO_COPEPODS1_init_depth,
-                    ZOO_DAPHNIABIG2_init_depth,
-                    ZOO_DAPHNIASMALL3_init_depth)
+                    PHY_DIATOMPCH4_init_depth)
+                    #ZOO_COPEPODS1_init_depth,
+                    #ZOO_DAPHNIABIG2_init_depth,
+                    #ZOO_DAPHNIASMALL3_init_depth)
   
   #UPDATE NML WITH PARAMETERS AND INITIAL CONDITIONS
   if(include_wq){
@@ -892,7 +906,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     }
   }
   
- if(restart_present){
+  if(restart_present){
     nc <- nc_open(restart_file)
     qt <- ncvar_get(nc, "qt_restart")
     resid30day <- ncvar_get(nc, "resid30day")
@@ -918,8 +932,8 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   }
   #Covariance matrix for parameters
   if(npars > 0){
-  qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
-  diag(qt_pars) <- c(zone1temp_init_qt, zone2temp_init_qt, swf_lwf_init_qt,kw_init_qt)
+    qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
+    diag(qt_pars) <- c(zone1temp_init_qt, zone2temp_init_qt, swf_lwf_init_qt,kw_init_qt)
   }else{
     qt_pars <- NA
   }
@@ -930,7 +944,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   ################################################################
   nmembers <- n_enkf_members*n_met_members*n_ds_members
   
-
+  
   x <- array(NA, dim=c(nsteps, nmembers, nstates + npars))
   
   
@@ -1064,7 +1078,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   surface_height <- array(NA, dim=c(nsteps, nmembers))
   surface_height[1, ] <- lake_depth_init
   
-
+  
   
   
   ####################################################

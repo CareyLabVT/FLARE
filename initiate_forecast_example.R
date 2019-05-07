@@ -28,8 +28,8 @@ spin_up_days <- 0
 push_to_git <- FALSE
 pull_from_git <- TRUE
 reference_tzone <- "GMT"
-forecast_days <- 16
-include_wq <- FALSE
+forecast_days <- 0
+include_wq <- TRUE
 use_ctd <- FALSE
 DOWNSCALE_MET <- FALSE
 GLMversion <- "GLM 3.0.0beta10"

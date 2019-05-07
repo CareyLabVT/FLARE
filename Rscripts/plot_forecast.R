@@ -15,8 +15,8 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
                   'NIT_amm', 'NIT_nit',
                   'PHS_frp',
                   'OGM_doc','OGM_poc','OGM_don','OGM_pon','OGM_dop','OGM_pop',
-                  'PHY_CYANOPCH1','PHY_CYANONPCH2','PHY_CHLOROPCH3','PHY_DIATOMPCH4',
-                  'ZOO_COPEPODS1','ZOO_DAPHNIABIG2','ZOO_DAPHNIASMALL3')
+                  'PHY_CYANOPCH1','PHY_CYANONPCH2','PHY_CHLOROPCH3','PHY_DIATOMPCH4') #,
+                  #'ZOO_COPEPODS1','ZOO_DAPHNIABIG2','ZOO_DAPHNIASMALL3')
     nMETmembers =21
     
     
