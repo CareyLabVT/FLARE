@@ -63,6 +63,7 @@ update_time <- function(start_value,stop_value,working_glm){
     }
   }
   orig_nml[[index1]][index2] = as.character(start_value)
+  orig_nml[[index1]][index2] = as.character(start_value)
   orig_nml[[index3]][index4] = stop_value
   write_nml(orig_nml, paste0(working_glm,'/','glm3.nml'))
 }
@@ -162,5 +163,5 @@ get_glm_nc_var_all_wq <- function(ncFile,z_out,vars){
   }
   nc_close(glm_nc)
   return(list(output = output,
-              surface_height = elev_surf[2,length(tallest_layer)]))
+              surface_height = elev_surf[length(tallest_layer), 2]))
 }

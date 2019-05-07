@@ -1,7 +1,9 @@
 
 extract_temp_chain <- function(fname,full_time,depths = modeled_depths,observed_depths_temp = observed_depths_temp,input_tz, output_tz){
+
+  #Different lakes are going to have to modify this for their temperature data format
   d <- read.csv(fname, skip =4, na.strings = 'NAN', stringsAsFactors = FALSE)
-  d_names <- read.csv(fname, skip =1)
+  d_names <- read.csv(fname, skip =1, stringsAsFactors = FALSE)
   names(d) <- names(d_names)
   
 

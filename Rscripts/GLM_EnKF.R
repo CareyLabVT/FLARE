@@ -16,12 +16,13 @@ GLM_EnKF <- function(x,
                      z_states,
                      alpha,
                      glm_output_vars,
-                     process_uncertainity,
-                     initial_condition_uncertainity,
-                     parameter_uncertainity,
+                     process_uncertainty,
+                     initial_condition_uncertainty,
+                     parameter_uncertainty,
                      machine,
                      resid30day,
-                     hist_days){
+                     hist_days,
+                     print_glm2screen){
   
   npars <- 4 
   nsteps <- length(full_time)
@@ -36,6 +37,7 @@ GLM_EnKF <- function(x,
   ###START EnKF
   
   for(i in 2:nsteps){
+    print(paste0("Running time step ", i, " : ", full_time[i - 1], " - ", full_time[i]))
     met_index <- 1
     #1) Update GLM NML files to match the current day of the simulation
     curr_start <- (full_time[i - 1])
@@ -52,7 +54,7 @@ GLM_EnKF <- function(x,
     
     if(npars > 0){
       pars_corr <-  array(NA, dim = c(nmembers, npars))
-      dit_pars<- array(NA,dim = c(nmembers, npars))
+      dit_pars<- array(NA, dim = c(nmembers, npars))
     }
     
     for(m in 1:nmembers){
@@ -64,7 +66,7 @@ GLM_EnKF <- function(x,
       if(npars > 0){
         if(i > (hist_days + 1)){
           new_pars <- x[i - 1, m, (nstates + 1):(nstates+npars)]
-          if(parameter_uncertainity == FALSE){
+          if(parameter_uncertainty == FALSE){
             new_pars <- colMeans(x[i - 1, , (nstates+1):(nstates+npars)])
           }
         }else{
@@ -112,9 +114,9 @@ GLM_EnKF <- function(x,
         unlink(paste0(working_glm, "/output.nc")) 
         
         if(machine == "unix" | machine == "mac"){
-          system(paste0(working_glm, "/", "glm"))
+          system2(paste0(working_glm, "/", "glm"), stdout = print_glm2screen, stderr = print_glm2screen)
         }else if(machine == "windows"){
-          system(paste0(working_glm, "/", "glm.exe"))
+          system2(paste0(working_glm, "/", "glm.exe"), invisible = print_glm2screen)
         }else{
           print("Machine not identified")
           stop()
@@ -211,20 +213,20 @@ GLM_EnKF <- function(x,
       if(length(z_index) == 0 | i > (hist_days + 1)){
         if(npars > 0){
         x[i, , ] <- cbind(x_corr, pars_corr) 
-        if(process_uncertainity == FALSE & i > (hist_days + 1)){
+        if(process_uncertainty == FALSE & i > (hist_days + 1)){
           x[i, , ] <- cbind(x_star, pars_corr)
         }
-        if(i == (hist_days + 1) & initial_condition_uncertainity == FALSE){
+        if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
             x[i, m, ] <- colMeans(cbind(x_star, pars_corr)) 
           }
         }
         }else{
           x[i, , ] <- x_corr 
-          if(process_uncertainity == FALSE & i > (hist_days + 1)){
+          if(process_uncertainty == FALSE & i > (hist_days + 1)){
             x[i, , ] <- x_star
           }
-          if(i == (hist_days + 1) & initial_condition_uncertainity == FALSE){
+          if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
             for(m in 1:nmembers){
               x[i, m, ] <- colMeans(x_star) 
             }
@@ -338,10 +340,10 @@ GLM_EnKF <- function(x,
         
         #IF NO INITIAL CONDITION UNCERTAINITY ThEN SET EACh ENSEMBLE MEMBER TO ThE MEAN
         #AT ThE INITIATION OF ThE FUTURE FORECAST
-        if(i == (hist_days + 1) & initial_condition_uncertainity == FALSE){
+        if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
           if(npars > 0){
             for(m in 1:nmembers){
-              if(parameter_uncertainity == FALSE){
+              if(parameter_uncertainty == FALSE){
                 x[i, m, ] <- colMeans(cbind(x_star, pars_corr)) 
               }else{
                 x[i, m, ] <- c(colMeans(x_star),

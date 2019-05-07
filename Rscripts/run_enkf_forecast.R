@@ -56,6 +56,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   npars <- 4
   pre_scc <- FALSE
   hold_inflow_outflow_constant <- FALSE
+  print_glm2screen <- FALSE
   
   ### METEROLOGY DOWNSCALING OPTIONS
   if(is.na(downscaling_coeff)){
@@ -163,93 +164,93 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   
   #################################################
-  ### OPTIONS TO ISOLATE COMPONENTS OF UNCERTAINITY
+  ### OPTIONS TO ISOLATE COMPONENTS OF uncertainty
   #################################################
   
   if(uncert_mode == 1){
-    #All sources of uncertainity and data used to constrain 
+    #All sources of uncertainty and data used to constrain 
     use_obs_constraint <- TRUE
-    #SOURCES OF UNCERTAINITY
-    observation_uncertainity <- TRUE
-    process_uncertainity <- TRUE
-    weather_uncertainity <- TRUE
-    initial_condition_uncertainity <- TRUE
-    parameter_uncertainity <- TRUE
+    #SOURCES OF uncertainty
+    observation_uncertainty <- TRUE
+    process_uncertainty <- TRUE
+    weather_uncertainty <- TRUE
+    initial_condition_uncertainty <- TRUE
+    parameter_uncertainty <- TRUE
     met_downscale_uncertainty <- TRUE
   }else if(uncert_mode == 2){
-    #No sources of uncertainity and no data used to constrain 
+    #No sources of uncertainty and no data used to constrain 
     use_obs_constraint <- TRUE
-    #SOURCES OF UNCERTAINITY
-    observation_uncertainity <- TRUE
-    process_uncertainity <- FALSE
-    weather_uncertainity <- FALSE
-    initial_condition_uncertainity <- FALSE
-    parameter_uncertainity <- FALSE
+    #SOURCES OF uncertainty
+    observation_uncertainty <- TRUE
+    process_uncertainty <- FALSE
+    weather_uncertainty <- FALSE
+    initial_condition_uncertainty <- FALSE
+    parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- FALSE
   }else if(uncert_mode == 3){
-    #Only process uncertainity
+    #Only process uncertainty
     use_obs_constraint <- TRUE
-    #SOURCES OF UNCERTAINITY
-    observation_uncertainity <- TRUE
-    process_uncertainity <- TRUE
-    weather_uncertainity <- FALSE
-    initial_condition_uncertainity <- FALSE
-    parameter_uncertainity <- FALSE
+    #SOURCES OF uncertainty
+    observation_uncertainty <- TRUE
+    process_uncertainty <- TRUE
+    weather_uncertainty <- FALSE
+    initial_condition_uncertainty <- FALSE
+    parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- FALSE
   }else if(uncert_mode == 4){
-    #only noaa weather uncertainity
+    #only noaa weather uncertainty
     use_obs_constraint <- TRUE
-    #SOURCES OF UNCERTAINITY
-    observation_uncertainity <- TRUE
-    process_uncertainity <- FALSE
-    weather_uncertainity <- TRUE
-    initial_condition_uncertainity <- FALSE
-    parameter_uncertainity <- FALSE
+    #SOURCES OF uncertainty
+    observation_uncertainty <- TRUE
+    process_uncertainty <- FALSE
+    weather_uncertainty <- TRUE
+    initial_condition_uncertainty <- FALSE
+    parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- FALSE
   }else if(uncert_mode == 5){
-    #only initial condition uncertainity with data constraint
+    #only initial condition uncertainty with data constraint
     use_obs_constraint <- TRUE
-    #SOURCES OF UNCERTAINITY
-    observation_uncertainity <- TRUE
-    process_uncertainity <- FALSE
-    weather_uncertainity <- FALSE
-    initial_condition_uncertainity <- TRUE
-    parameter_uncertainity <- FALSE
+    #SOURCES OF uncertainty
+    observation_uncertainty <- TRUE
+    process_uncertainty <- FALSE
+    weather_uncertainty <- FALSE
+    initial_condition_uncertainty <- TRUE
+    parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- FALSE
   }else if(uncert_mode == 6){
-    #only initial condition uncertainity without data constraint
+    #only initial condition uncertainty without data constraint
     use_obs_constraint <- FALSE
-    #SOURCES OF UNCERTAINITY
-    observation_uncertainity <- TRUE
-    process_uncertainity <- FALSE
-    weather_uncertainity <- FALSE
-    initial_condition_uncertainity <- TRUE
-    parameter_uncertainity <- FALSE
+    #SOURCES OF uncertainty
+    observation_uncertainty <- TRUE
+    process_uncertainty <- FALSE
+    weather_uncertainty <- FALSE
+    initial_condition_uncertainty <- TRUE
+    parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- FALSE
   }else if(uncert_mode == 7){
-    #only parameter uncertainity
+    #only parameter uncertainty
     use_obs_constraint <- TRUE
-    #SOURCES OF UNCERTAINITY
-    observation_uncertainity <- TRUE
-    process_uncertainity <- FALSE
-    weather_uncertainity <- FALSE
-    initial_condition_uncertainity <- FALSE
-    parameter_uncertainity <- TRUE
+    #SOURCES OF uncertainty
+    observation_uncertainty <- TRUE
+    process_uncertainty <- FALSE
+    weather_uncertainty <- FALSE
+    initial_condition_uncertainty <- FALSE
+    parameter_uncertainty <- TRUE
     met_downscale_uncertainty <- FALSE
   }else if(uncert_mode == 8){
-    #only met downscale uncertainity
+    #only met downscale uncertainty
     use_obs_constraint <- TRUE
-    #SOURCES OF UNCERTAINITY
-    observation_uncertainity <- TRUE
-    process_uncertainity <- FALSE
-    weather_uncertainity <- FALSE
-    initial_condition_uncertainity <- FALSE
-    parameter_uncertainity <- FALSE
+    #SOURCES OF uncertainty
+    observation_uncertainty <- TRUE
+    process_uncertainty <- FALSE
+    weather_uncertainty <- FALSE
+    initial_condition_uncertainty <- FALSE
+    parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- TRUE
   }
   
   
-  if(observation_uncertainity == FALSE){
+  if(observation_uncertainty == FALSE){
     obs_error <- 0.000001
   }
   
@@ -439,12 +440,12 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                                                                  first_obs_date = met_ds_obs_start,
                                                                                  last_obs_date = met_ds_obs_end)
     
-    if(weather_uncertainity == FALSE & met_downscale_uncertainty == TRUE){
+    if(weather_uncertainty == FALSE & met_downscale_uncertainty == TRUE){
       met_file_names <- met_file_names[1:(1+(1*n_ds_members))]
-    }else if(weather_uncertainity == FALSE & met_downscale_uncertainty == FALSE){
+    }else if(weather_uncertainty == FALSE & met_downscale_uncertainty == FALSE){
       met_file_names <- met_file_names[1:2]
     }
-    if(weather_uncertainity == FALSE){
+    if(weather_uncertainty == FALSE){
       n_met_members <- 1
     }
     
@@ -876,7 +877,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   
   #######################################################
-  #### STEP 9: CREATE THE PSI VECTOR (DATA UNCERTAINITY)  
+  #### STEP 9: CREATE THE PSI VECTOR (DATA uncertainty)  
   #######################################################
   
   psi <- rep(obs_error, length(obs_index))
@@ -945,7 +946,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
         x[1, ,(nstates+2)] <- runif(n=nmembers,5, 20)
         x[1, ,(nstates+3)] <- runif(n=nmembers,0.5, 1.0)
         x[1, ,(nstates+4)] <- rep(kw_init, nmembers) #runif(n=nmembers,0.5, 1.5)
-        if(initial_condition_uncertainity == FALSE){
+        if(initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
             x[1,m, ] <- c(the_temps_init,
                           wq_init_vals,
@@ -959,7 +960,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
         x[1, , ] <- rmvnorm(n=nmembers, 
                             mean=c(the_temps_init,wq_init_vals),
                             sigma=as.matrix(qt))
-        if(initial_condition_uncertainity == FALSE){
+        if(initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
             x[1, m, ] <- c(the_temps_init, do_init, wq_init_vals)
           }
@@ -974,7 +975,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
         x[1, ,(nstates+2)] <- runif(n=nmembers,5, 20)
         x[1, ,(nstates+3)] <- runif(n=nmembers,0.5, 1.0)
         x[1, ,(nstates+4)] <- rep(kw_init, nmembers) #runif(n=nmembers,0.5, 1.5)
-        if(initial_condition_uncertainity == FALSE){
+        if(initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
             x[1, m, ] <- c(the_temps_init, zone1_temp, zone2_temp, swf_lwf_init, kw_init)
           }
@@ -984,7 +985,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                             mean=the_temps_init,
                             sigma=as.matrix(qt))
         
-        if(initial_condition_uncertainity == FALSE){
+        if(initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
             if(npars > 0){
               x[1, m, ] <- the_temps_init
@@ -1021,7 +1022,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                  replace=FALSE)
       restart_x_previous <- ncvar_get(nc, "x_restart")
       x_previous <- restart_x_previous[sampled_nmembers, ]
-      if(initial_condition_uncertainity == FALSE & hist_days == 0){
+      if(initial_condition_uncertainty == FALSE & hist_days == 0){
         x_previous_1 <- colMeans(x_previous)
         for(m in 1:nmembers){
           x_previous[m, ] <- x_previous_1
@@ -1033,7 +1034,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                  replace = TRUE)
       restart_x_previous <- ncvar_get(nc, "x_restart")
       x_previous <- restart_x_previous[sampled_nmembers, ]
-      if(initial_condition_uncertainity == FALSE & hist_days == 0){
+      if(initial_condition_uncertainty == FALSE & hist_days == 0){
         x_previous_1 <- colMeans(x_previous)
         for(m in 1:nmembers){
           x_previous[m, ] <- x_previous_1
@@ -1041,7 +1042,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
       }
     }else{
       x_previous <- ncvar_get(nc, "x_restart")   
-      if(initial_condition_uncertainity == FALSE & hist_days == 0){
+      if(initial_condition_uncertainty == FALSE & hist_days == 0){
         x_previous_1 <- colMeans(x_previous) 
         for(m in 1:nmembers){
           x_previous[m, ] <- x_previous_1
@@ -1088,12 +1089,13 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                           z_states,
                           alpha,
                           glm_output_vars,
-                          process_uncertainity,
-                          initial_condition_uncertainity,
-                          parameter_uncertainity,
+                          process_uncertainty,
+                          initial_condition_uncertainty,
+                          parameter_uncertainty,
                           machine,
                           resid30day,
-                          hist_days)
+                          hist_days,
+                          print_glm2screen)
   
   x <- enkf_output$x
   x_restart <- enkf_output$x_restart
