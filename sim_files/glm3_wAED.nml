@@ -84,16 +84,16 @@
    time_fmt = 'YYYY-MM-DD hh:mm:ss'
 /
 &inflow
-   num_inflows = 1
-   names_of_strms = 'river'
-   subm_flag = .false.
-   strm_hf_angle = 55
-   strmbd_slope = 0.05
-   strmbd_drag = 0.016
-   inflow_factor = 1
-   inflow_fl = 'FCR_inflow_20180419gep_all_00z.csv'
-    inflow_varnum = 8
-   inflow_vars = 'FLOW','TEMP','SALT','NIT_amm','NIT_nit','PHS_frp','OGM_doc','OXY_oxy'
+num_inflows = 2
+   names_of_strms = 'weir','wetland'
+   subm_flag = .false., .false.
+   strm_hf_angle = 55,55 !85,35
+   strmbd_slope = 0.05,0.05 !0.05,0.05 !3,10
+   strmbd_drag = 0.03,0.016 !0.03,0.009
+   inflow_factor = 1, 1 !previously set to 1,0.5
+   inflow_fl = 'inflow_file1.csv','inflow_file2.csv'
+   inflow_varnum = 15 !NOTE TO CCC to change back to 9 if there are both OGM_doc and OGM_docr pools
+   inflow_vars = 'FLOW','TEMP','SALT','OXY_oxy','NIT_amm','NIT_nit','PHS_frp','OGM_doc','OGM_docr','OGM_poc','OGM_don','OGM_dop','OGM_pop','PHS_frp_ads','OGM_pon'
 /
 &outflow
    num_outlet = 1
@@ -101,7 +101,7 @@
    outl_elvs = 506.9
    bsn_len_outl = 711.699
    bsn_wid_outl = 226.03
-   outflow_fl = 'FCR_spillway_outflow_20180419gep_all_00z.csv'
+   outflow_fl = 'outflow_file1.csv'
    outflow_factor = 1
 /
 &snowice
@@ -110,14 +110,12 @@
    snow_rho_min = 100
 /
 &sediment
-  benthic_mode = 2
+    benthic_mode = 2
   n_zones = 2
-  zone_heights =  6, 9.5 !!!!4,9.5
-  sed_heat_Ksoil = 1.2, 1.2, !1.8, 1.8
-  sed_temp_depth = 0.2, 0.2
-  sed_temp_mean = 11, 17!!!!14.6,8 !14.6,10.6
-  sed_temp_amplitude = 0, 0, 
-  sed_temp_peak_doy = 275, 275
-!  sed_reflectivity = 0.1,0.01, 0.01
-!  sed_roughness = 0.1,0.01
+  zone_heights = 5,9.5 !!!!5,9.5
+  sed_heat_Ksoil = 1.8,1.8 !!!!0.25,0.9 !more organic, closer to 0.25, up to 2.9, default=1.2
+  sed_temp_depth = 0.2,0.2
+  sed_temp_mean = 11,17 !8,14!!!!14.6,8 !14.6,10.6
+  sed_temp_amplitude = 6,6 !4,10
+  sed_temp_peak_doy = 275,275
 /

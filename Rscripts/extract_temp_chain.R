@@ -90,9 +90,9 @@ extract_chla_chain <- function(fname = catwalk_fname,full_time,depths = modeled_
     index = which(abs(as.POSIXct(d$TIMESTAMP)-as.POSIXct(full_time[i])) == min(abs(as.POSIXct(d$TIMESTAMP) - as.POSIXct(full_time[i]))))
     index = which(as.POSIXct(d$TIMESTAMP)==as.POSIXct(full_time[i]))
     if(length(index)>0){
-      Chla_obs[obs_index] <- d$Chla_1[index]
-      BGAPC_obs[obs_index] <- d$BGAPC_1[index]
-      fDOM_obs[obs_index] <- d$fDOM_QSU_1[index]
+      Chla_obs[i] <- d$Chla_1[index]
+      BGAPC_obs[i] <- d$BGAPC_1[index]
+      fDOM_obs[i] <- d$fDOM_QSU_1[index]
     }
   }
   return(list(Chla_obs = Chla_obs, BGAPC_obs = BGAPC_obs, fDOM_obs = fDOM_obs, depths = depths))

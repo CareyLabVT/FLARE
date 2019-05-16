@@ -72,13 +72,13 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   #Estimated parameters
   lake_depth_init <- 9.4  #not a modeled state
-  zone2_temp <- 11
+  zone2_temp <- 17 #11
   zone1_temp <- 11
   zone1temp_init_qt <- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
   zone2temp_init_qt <- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
   swf_lwf_init <- 0.75
   swf_lwf_init_qt <- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
-  kw_init <-0.87
+  kw_init <-0.15 #0.87
   kw_init_qt <- 0.000000001^2
   
   obs_error <- 0.0001 #NEED TO DOUBLE CHECK
@@ -101,6 +101,10 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   
   temp_obs_fname <- "Catwalk.csv"
   met_obs_fname <- "FCRmet.csv"
+  
+  inflow_file1 <- "FCR_weir_inflow_newEDI_2013_2017_20190128_allfractions.csv"
+  outflow_file1 <- "FCR_spillway_outflow_newEDI_SUMMED_WeirWetland_2013_2017_20190128.csv"
+  inflow_file2 <- "FCR_wetland_inflow_newEDI_2013_2017_20190305_allfractions.csv"
   
   #define water quality variables modeled.  Not used if include_wq == FALSE
   wq_names <- c("OXY_oxy",
@@ -498,7 +502,10 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                                input_tz = "EST5EDT",
                                output_tz = reference_tzone,
                                start_forecast_step = start_forecast_step,
-                               hold_inflow_outflow_constant)
+                               hold_inflow_outflow_constant,
+                               inflow_file1,
+                               inflow_file2,
+                               outflow_file1)
   }
   
   #Extract observations
@@ -670,27 +677,27 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
   ZOO_DAPHNIABIG2_init <- 4.3
   ZOO_DAPHNIASMALL3_init <- 40
   
-  OXY_oxy_error <- OXY_oxy_init*1.0
-  CAR_pH_error <- CAR_pH_init*0.001
-  CAR_dic_error <- CAR_dic_init*0.001
-  CAR_ch4_error <- CAR_ch4_init*0.001
-  SIL_rsi_error <- SIL_rsi_init*0.001
-  NIT_amm_error <- NIT_amm_init*0.001
-  NIT_nit_error <- NIT_nit_init*0.001
-  PHS_frp_error <- PHS_frp_init*0.001
-  OGM_doc_error <- OGM_doc_init*0.001
-  OGM_poc_error <- OGM_poc_init*0.001
-  OGM_don_error <- OGM_don_init*0.001
-  OGM_pon_error <- OGM_pon_init*0.001
-  OGM_dop_error <- OGM_dop_init*0.001
-  OGM_pop_error <- OGM_pop_init*0.001
-  PHY_CYANOPCH1_error <- PHY_CYANOPCH1_init*0.01
-  PHY_CYANONPCH2_error <-PHY_CYANONPCH2_init*0.01
-  PHY_CHLOROPCH3_error <-PHY_CHLOROPCH3_init*0.01
-  PHY_DIATOMPCH4_error <- PHY_DIATOMPCH4_init*0.01
-  ZOO_COPEPODS1_error <- ZOO_COPEPODS1_init*0.001
-  ZOO_DAPHNIABIG2_error <- ZOO_DAPHNIABIG2_init*0.001
-  ZOO_DAPHNIASMALL3_error <- ZOO_DAPHNIASMALL3_init*0.001
+  OXY_oxy_error <- OXY_oxy_init*0.00001
+  CAR_pH_error <- CAR_pH_init*0.00001
+  CAR_dic_error <- CAR_dic_init*0.00001
+  CAR_ch4_error <- CAR_ch4_init*0.00001
+  SIL_rsi_error <- SIL_rsi_init*0.00001
+  NIT_amm_error <- NIT_amm_init*0.00001
+  NIT_nit_error <- NIT_nit_init*0.00001
+  PHS_frp_error <- PHS_frp_init*0.00001
+  OGM_doc_error <- OGM_doc_init*0.00001
+  OGM_poc_error <- OGM_poc_init*0.00001
+  OGM_don_error <- OGM_don_init*0.00001
+  OGM_pon_error <- OGM_pon_init*0.00001
+  OGM_dop_error <- OGM_dop_init*0.00001
+  OGM_pop_error <- OGM_pop_init*0.00001
+  PHY_CYANOPCH1_error <- PHY_CYANOPCH1_init*0.0001
+  PHY_CYANONPCH2_error <-PHY_CYANONPCH2_init*0.0001
+  PHY_CHLOROPCH3_error <-PHY_CHLOROPCH3_init*0.0001
+  PHY_DIATOMPCH4_error <- PHY_DIATOMPCH4_init*0.0001
+  ZOO_COPEPODS1_error <- ZOO_COPEPODS1_init*0.00001
+  ZOO_DAPHNIABIG2_error <- ZOO_DAPHNIABIG2_init*0.00001
+  ZOO_DAPHNIASMALL3_error <- ZOO_DAPHNIASMALL3_init*0.00001
   
   wq_var_error <- c(OXY_oxy_error,
                     CAR_pH_error,
@@ -715,10 +722,11 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
                     #ZOO_DAPHNIASMALL3_error)
                     )
   
-  if(include_wq){
+  if(include_wq & use_ctd){
     OXY_oxy_init_depth <- do_init
   }else{
-    OXY_oxy_init_depth <- rep(OXY_oxy_init, ndepths_modeled)    
+    OXY_oxy_init_depth <- rep(OXY_oxy_init, ndepths_modeled)  
+    OXY_oxy_init_depth[1] <- 400
   }
   if(include_wq & use_ctd){
     CAR_pH_init_depth <- pH_init
@@ -761,7 +769,7 @@ run_enkf_forecast<-function(start_day= "2018-07-06 00:00:00",
     #umol CH4/L
     curr_values <- c(3.91E-04,0.370572728,0.107597836,0.126096596,
                      0.088502664,0.086276629,0.07256043,0.07249431)
-    curr_values <- curr_values*1000
+    curr_values <- curr_values#*1000
     inter <- approxfun(curr_depths,curr_values,rule=2)
     CAR_ch4_init_depth <- inter(modeled_depths)
     

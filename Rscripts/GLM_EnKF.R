@@ -97,8 +97,8 @@ GLM_EnKF <- function(x,
         update_var(paste0("FCR_spillway_outflow.csv"), "outflow_fl", working_glm)
       }else{
         update_var(met_file_names[1], "meteo_fl", working_glm)
-        update_var(paste0("FCR_inflow.csv"), "inflow_fl", working_glm)
-        update_var(paste0("FCR_spillway_outflow.csv"), "outflow_fl", working_glm)
+        #update_var(paste0("FCR_weir_inflow.csv"), "inflow_fl", working_glm)
+        #update_var(paste0("FCR_spillway_outflow.csv"), "outflow_fl", working_glm)
       }
       
       

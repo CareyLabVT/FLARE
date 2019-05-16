@@ -47,8 +47,8 @@ source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
 source(paste0(folder, "/", "Rscripts/plot_forecast.R"))
 
 sim_name <- "test1" 
-start_day <- "2018-07-10 00:00:00" #GMT
-forecast_start_day <-"2018-09-01 00:00:00" #GMT 
+start_day <- "2018-07-12 00:00:00" #GMT
+forecast_start_day <-"2019-05-01 00:00:00" #GMT 
 hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_tzone),
                                  as.POSIXct(start_day, tz = reference_tzone)))
 
@@ -67,7 +67,7 @@ out <- run_enkf_forecast(start_day= start_day,
                          n_ds_members = n_ds_members,
                          include_wq = include_wq,
                          use_ctd = use_ctd,
-                         uncert_mode = 1,
+                         uncert_mode = 9,
                          reference_tzone,
                          cov_matrix = "Qt_cov_matrix_init.csv",
                          alpha = c(0, 0, 0),

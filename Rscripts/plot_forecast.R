@@ -5,7 +5,8 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
   
     the_depths_init <- c(0.1, 0.33, 0.66, 1.00, 1.33,1.66,2.00,2.33,2.66,3.0,3.33,3.66,4.0,4.33,4.66,5.0,5.33,5.66,6.0,6.33,6.66,7.00,7.33,7.66,8.0,8.33,8.66,9.00,9.33)
     num_pars <- 4
-    output_tz <- 'EST5EDT'
+    output_tz <- "EST5EDT"
+    reference_tzone <- "GMT"
     TempObservedDepths <- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8,9)
     DoObservedDepths <- c(1,5,9)
     Chla_fDOM_ObservedDepths <- 1

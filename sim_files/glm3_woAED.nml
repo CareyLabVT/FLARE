@@ -77,13 +77,13 @@
 /
 &inflow
    num_inflows = 1
-   names_of_strms = 'river'
+   names_of_strms = 'weir'
    subm_flag = .false.
    strm_hf_angle = 55 !55
    strmbd_slope = 0.05
    strmbd_drag = 0.03 !0.03
    inflow_factor = 1
-   inflow_fl = 'FCR_inflow_20180419gep_all_00z.csv'
+   inflow_fl = 'inflow_file1.csv'
    inflow_varnum = 13
    inflow_vars = 'FLOW','TEMP','SALT','OGM_doc','NIT_amm','OXY_oxy','NIT_nit','PHS_frp','PHS_dop','PHS_pop','NIT_don','NIT_pon','CAR_ch4'
 /
@@ -93,7 +93,7 @@
    outl_elvs = 506.9
    bsn_len_outl = 711.699
    bsn_wid_outl = 226.03
-   outflow_fl = 'FCR_spillway_outflow_20180419gep_all_00z.csv'
+   outflow_fl = 'outflow_file1.csv'
    outflow_factor = 1
 /
 &snowice
