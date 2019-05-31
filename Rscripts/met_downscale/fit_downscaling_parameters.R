@@ -24,14 +24,14 @@ fit_downscaling_parameters <- function(observations,
                           output_tz) # geneartes flux.forecasts and state.forecasts dataframes
   NOAA.flux <- readRDS(paste(working_glm,"/NOAA.flux.forecasts", sep = ""))
   NOAA.state <- readRDS(paste(working_glm,"/NOAA.state.forecasts", sep = ""))
-  NOAA.data = inner_join(NOAA.flux, NOAA.state, by = c("forecast.date","ensembles"))
-  NOAA_input_tz = attributes(NOAA.data$forecast.date)$tzone
+  NOAA.data <- inner_join(NOAA.flux, NOAA.state, by = c("forecast.date","ensembles"))
+  NOAA_input_tz <- attributes(NOAA.data$forecast.date)$tzone
   
   forecasts = prep_for(NOAA.data, input_tz = NOAA_input_tz, output_tz) %>%
     dplyr::group_by(NOAA.member, date(timestamp))  %>%
     dplyr::mutate(n = n()) %>%
     # force NA for days without 4 NOAA entries (because having less than 4 entries would introduce error in daily comparisons)
-    dplyr::mutate_at(vars(VarInfo$VarNames),funs(ifelse(n == 4, ., NA))) %>%
+    dplyr::mutate_at(vars(VarInfo$VarNames), funs(ifelse(n == 4, ., NA))) %>%
     ungroup() %>%
     dplyr::select(-"date(timestamp)", -n) %>%
     filter(timestamp >= first_obs_date & timestamp <= last_obs_date)
@@ -40,7 +40,7 @@ fit_downscaling_parameters <- function(observations,
   # 3. aggregate forecasts and observations to daily resolution and join datasets
   # -----------------------------------
   
-  daily.forecast = aggregate_to_daily(forecasts)
+  daily.forecast = aggregate_to_daily(data = forecasts)
   
   daily.obs = aggregate_to_daily(data = observations)
   # might eventually alter this so days with at least a certain percentage of data remain in dataset (instead of becoming NA if a single minute of data is missing)
@@ -54,7 +54,7 @@ fit_downscaling_parameters <- function(observations,
   # -----------------------------------
   # 4. save linearly debias coefficients and do linear debiasing at daily resolution
   # -----------------------------------
-  out <- get_daily_debias_coeff(joined.data = joined.data.daily, VarInfo = VarInfo)
+  out <- get_daily_debias_coeff(joined.data = joined.data.daily, VarInfo = VarInfo, PLOT, working_glm)
   debiased.coefficients <-  out[[1]]
   debiased.covar <-  out[[2]]
   
@@ -88,7 +88,7 @@ fit_downscaling_parameters <- function(observations,
   
   
   ## downscale shortwave to hourly
-  ShortWave.ds = ShortWave_to_hrly(debiased, time0 = NA, lat = 37.307, lon = 360 - 79.837, output_tz)
+  ShortWave.ds <- ShortWave_to_hrly(debiased, time0 = NA, lat = 37.307, lon = 360 - 79.837, output_tz)
   
   # -----------------------------------
   # 6. join debiased forecasts of different variables into one dataframe
@@ -150,15 +150,15 @@ fit_downscaling_parameters <- function(observations,
       geom_line(aes(y = AirTemp.obs, color = "observations"))+
       geom_line(aes(y = AirTemp.ds, color = "downscaled forecast average", group = NOAA.member))
     
-    ggplot(data = joined.hrly.obs.and.ds[1:5000,], aes(x = timestamp)) +
+    ggplot(data = joined.hrly.obs.and.ds[1:50000,], aes(x = timestamp)) +
       geom_line(aes(y = WindSpeed.obs, color = "observations"))+
       geom_line(aes(y = WindSpeed.ds, color = "downscaled forecast average", group = NOAA.member))
     
-    ggplot(data = joined.hrly.obs.and.ds[1:5000,], aes(x = timestamp)) +
+    ggplot(data = joined.hrly.obs.and.ds[1:50000,], aes(x = timestamp)) +
       geom_line(aes(y = RelHum.obs, color = "observations"))+
       geom_line(aes(y = RelHum.ds, color = "downscaled forecast average", group = NOAA.member))
     
-    ggplot(data = joined.hrly.obs.and.ds[1:5000,], aes(x = timestamp)) +
+    ggplot(data = joined.hrly.obs.and.ds[1:50000,], aes(x = timestamp)) +
       geom_line(aes(y = ShortWave.obs, color = "observations"))+
       geom_line(aes(y = ShortWave.ds, color = "downscaled forecast average", group = NOAA.member))
     

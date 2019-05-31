@@ -59,7 +59,7 @@ process_downscale_GEFS <- function(folder,
                                           tz = 'EST5EDT')) %>%
     dplyr::mutate(AirTemp = AirTemp + 273.15,# convert from C to Kelvin
                   Rain = Rain* 60 * 24/1000) %>% # convert from mm to m
-    select(timestamp, VarNames)
+    dplyr::select(timestamp, VarNames)
   observations$timestamp <- with_tz(observations$timestamp, output_tz)
   observations <- observations %>%
     dplyr::mutate(ShortWave = ifelse(ShortWave < 0, 0, ShortWave),

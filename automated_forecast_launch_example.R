@@ -43,14 +43,13 @@ sim_name <- "test"
 start_day <- "2018-07-10 00:00:00" #GMT
 forecast_start_day <-"2018-09-01 00:00:00" #GMT 
 
-source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
-source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
+source(paste0(folder, "/", "Rscripts/run_flare.R"))
 source(paste0(folder, "/", "Rscripts/plot_forecast.R"))
 
 if(is.na(restart_file)){
   hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_tzone), as.POSIXct(start_day,tz = reference_tzone)))
   
-  out <- run_enkf_forecast(start_day= start_day,
+  out <- run_flare(start_day= start_day,
                            sim_name = sim_name,
                            hist_days = hist_days,
                            forecast_days = 0,
@@ -68,7 +67,6 @@ if(is.na(restart_file)){
                            uncert_mode = 1,
                            reference_tzone,
                            cov_matrix = "Qt_cov_matrix_init.csv",
-                           alpha = c(0, 0, 0),
                            downscaling_coeff = NA,
                            GLMversion,
                            DOWNSCALE_MET,
@@ -136,7 +134,7 @@ repeat{
   
   hist_days <- 1
   spin_up_days <- 0
-  out <- run_enkf_forecast(start_day= start_day,
+  out <- run_flare(start_day= start_day,
                            sim_name = sim_name,
                            hist_days = hist_days,
                            forecast_days = forecast_days,
@@ -154,7 +152,6 @@ repeat{
                            uncert_mode = 1,
                            reference_tzone,
                            cov_matrix = "Qt_cov_matrix_init.csv",
-                           alpha = c(0, 0, 0),
                            downscaling_coeff = NA,
                            GLMversion,
                            DOWNSCALE_MET,
