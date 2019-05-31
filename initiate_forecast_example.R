@@ -23,7 +23,9 @@ data_location = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
 folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
 forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/"
 
-restart_file <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/FCR_betaV2_hist_2018_10_1_forecast_2018_10_2_2018102_5_53.nc"
+#restart_file <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/FCR_betaV2_hist_2018_10_1_forecast_2018_10_2_2018102_5_53.nc"
+restart_file = NA
+
 spin_up_days <- 0
 push_to_git <- FALSE
 pull_from_git <- TRUE
@@ -35,7 +37,7 @@ DOWNSCALE_MET <- FALSE
 GLMversion <- "GLM 3.0.0beta10"
 FLAREversion <- "v1.0_beta.1"
 spin_up_days = 0
-restart_file = NA
+
 uncert_mode = 1
 cov_matrix = "Qt_cov_matrix_init.csv"
 downscaling_coeff = NA
