@@ -21,7 +21,7 @@ library(tidyverse)
 
 data_location = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
 folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
-forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/"
+forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/testing_AED/"
 
 #restart_file <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/FCR_betaV2_hist_2018_10_1_forecast_2018_10_2_2018102_5_53.nc"
 restart_file = NA
@@ -31,7 +31,7 @@ push_to_git <- FALSE
 pull_from_git <- TRUE
 reference_tzone <- "GMT"
 forecast_days <- 0
-include_wq <- FALSE
+include_wq <- TRUE
 use_ctd <- FALSE
 DOWNSCALE_MET <- FALSE
 GLMversion <- "GLM 3.0.0beta10"

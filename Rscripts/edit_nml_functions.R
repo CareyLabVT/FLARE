@@ -32,7 +32,7 @@ update_temps <- function(curr_temps,curr_depths,working_glm){
 }
 
 
-update_var <- function(var_value,var_name,working_glm){
+update_var <- function(var_value,var_name,working_glm, working_glm_docker){
   orig_nml = read_nml(paste0(working_glm,'/','glm3.nml'))
   index1 = NA; index2 = NA
   for (g in 1:length(orig_nml)) {
@@ -68,8 +68,8 @@ update_time <- function(start_value,stop_value,working_glm){
   write_nml(orig_nml, paste0(working_glm,'/','glm3.nml'))
 }
 
-get_glm_nc_var <- function(ncFile,z_out,var = 'temp'){
-  glm_nc <- nc_open(ncFile)
+get_glm_nc_var <- function(ncFile,working_dir, z_out,var = 'temp'){
+  glm_nc <- nc_open(paste0(working_dir,ncFile))
   tallest_layer <- ncvar_get(glm_nc, "NS")
   elev <- ncvar_get(glm_nc, "z")
   temp <- ncvar_get(glm_nc, var)
@@ -132,11 +132,11 @@ update_phyto <- function(p_initial,nml_name = 'aed2_phyto_pars.nml'){
   sink()
 }
 
-get_glm_nc_var_all_wq <- function(ncFile,z_out,vars){
-  glm_nc <- nc_open(ncFile)
+get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars){
+  glm_nc <- nc_open(paste0(working_dir,ncFile))
   tallest_layer <- ncvar_get(glm_nc, "NS")
   elev <- ncvar_get(glm_nc, "z")
-  elev_surf = get_surface_height(ncFile)
+  elev_surf = get_surface_height(paste0(working_dir,ncFile))
   max_i <- tallest_layer[length(tallest_layer)]
   elev <- elev[1:max_i, length(tallest_layer)]
   num_step <- length(tallest_layer)

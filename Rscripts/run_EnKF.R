@@ -93,12 +93,15 @@ run_EnKF <- function(x,
       
       
       #ALLOWS ThE LOOPING ThROUGh NOAA ENSEMBLES
+      
+      working_glm_docker <- "/GLM/TestLake"
       if(i > (hist_days + 1)){
         update_var(met_file_names[1 + met_index], "meteo_fl", working_glm)
         update_var(paste0("FCR_inflow.csv"), "inflow_fl", working_glm)
         update_var(paste0("FCR_spillway_outflow.csv"), "outflow_fl", working_glm)
       }else{
         update_var(met_file_names[1], "meteo_fl", working_glm)
+        update_var("GLM_met.csv", "meteo_fl", working_glm)
         #update_var(paste0("FCR_weir_inflow.csv"), "inflow_fl", working_glm)
         #update_var(paste0("FCR_spillway_outflow.csv"), "outflow_fl", working_glm)
       }
@@ -115,28 +118,63 @@ run_EnKF <- function(x,
       while(!pass){
         unlink(paste0(working_glm, "/output.nc")) 
         
-        if(machine == "unix" | machine == "mac"){
-          system2(paste0(working_glm, "/", "glm"), stdout = print_glm2screen, stderr = print_glm2screen)
-        }else if(machine == "windows"){
-          system2(paste0(working_glm, "/", "glm.exe"), invisible = print_glm2screen)
+        if(!print_glm2screen){
+          system(paste0('docker run -it -d -v ',working_glm,':/GLM/TestLake hydrobert/glm-aed2 /bin/bash -c \"cd TestLake; /GLM/glm\"'))
         }else{
-          print("Machine not identified")
-          stop()
+          # start docker as background process (detached)
+          system(paste0('docker run -it -d -v ',working_glm,':/GLM/TestLake hydrobert/glm-aed2 /bin/bash'))
+          # get the id of your running container
+          dockerps <- system('docker ps',intern = TRUE)
+          dockerid <- strsplit(dockerps, split = "/t")
+          dockerid <- strsplit(dockerid[[2]], split = " ")
+          dockerid <- dockerid[[1]][1]
+          # start the simulation (i - interactive, t - tty (user input))
+          system(paste('docker exec -t',dockerid,'/bin/bash -c \"cd TestLake; /GLM/glm\"'))
+          
+          # stops and removes all running dockers
+          system('docker kill $(docker ps -q)')
+          system('docker rm $(docker ps -a -q)')
         }
         
+        
+        ptm <- proc.time()
+        system(paste0('docker run -it -d -v ',working_glm,':/GLM/TestLake hydrobert/glm-aed2 /bin/bash -c \"cd TestLake; /GLM/glm\"'))
+        docker <- proc.time() - ptm
+        
+        ptm <- proc.time()
+        system2(paste0(working_glm, "/", "glm"), stdout = print_glm2screen, stderr = print_glm2screen)
+        local <- proc.time() - ptm
+        
+        ((docker - local)/local)*100
+        
+        
+        #if(machine == "unix" | machine == "mac"){
+          #system2(paste0(working_glm, "/", "glm"), stdout = print_glm2screen, stderr = print_glm2screen)
+        #}else if(machine == "windows"){
+        #  system2(paste0(working_glm, "/", "glm.exe"), invisible = print_glm2screen)
+        #}else{
+        #  print("Machine not identified")
+        #  stop()
+        #}
+        print("here1")
         if(file.exists(paste0(working_glm, "/output.nc")) & 
-           !has_error(nc <- nc_open("output.nc"))){
+           !has_error(nc <- nc_open(paste0(working_glm, "/output.nc")))){
+          print("here2")
           if(length(ncvar_get(nc, "time")) > 1){
             nc_close(nc)
             if(include_wq){
-              GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "output.nc",
+              GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "/output.nc",
+                                                       working_dir = working_glm,
                                                        z_out = modeled_depths,
                                                        vars = glm_output_vars)
               x_star[m, 1:nstates] <- c(GLM_temp_wq_out$output)
             }else{
-              GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "output.nc",
+              print("here3")
+              GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "/output.nc",
+                                                       working_dir = working_glm,
                                                        z_out = modeled_depths,
                                                        vars = "temp")
+              print("here4")
               x_star[m, 1:length(modeled_depths)] <- c(GLM_temp_wq_out$output)
             }
             
@@ -214,15 +252,15 @@ run_EnKF <- function(x,
       #if no observations at a time step then just propogate model uncertainity
       if(length(z_index) == 0 | i > (hist_days + 1)){
         if(npars > 0){
-        x[i, , ] <- cbind(x_corr, pars_corr) 
-        if(process_uncertainty == FALSE & i > (hist_days + 1)){
-          x[i, , ] <- cbind(x_star, pars_corr)
-        }
-        if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
-          for(m in 1:nmembers){
-            x[i, m, ] <- colMeans(cbind(x_star, pars_corr)) 
+          x[i, , ] <- cbind(x_corr, pars_corr) 
+          if(process_uncertainty == FALSE & i > (hist_days + 1)){
+            x[i, , ] <- cbind(x_star, pars_corr)
           }
-        }
+          if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
+            for(m in 1:nmembers){
+              x[i, m, ] <- colMeans(cbind(x_star, pars_corr)) 
+            }
+          }
         }else{
           x[i, , ] <- x_corr 
           if(process_uncertainty == FALSE & i > (hist_days + 1)){
@@ -327,7 +365,7 @@ run_EnKF <- function(x,
                                                      k_t_pars %*% (d_mat - h %*% t(x_corr)))
           x[i,which(x[i, , (nstates+2)] < 4), (nstates+2)] <- 4
         }
-
+        
         
         
         if(include_wq){
@@ -356,25 +394,25 @@ run_EnKF <- function(x,
             x[i, m, ] <- colMeans(x_star)
           }
         }
-    }
-  }else{
-    if(npars > 0){
-      x[i, , ] <- cbind(x_star, pars_corr)
+      }
     }else{
-      x[i, , ] <- x_star
+      if(npars > 0){
+        x[i, , ] <- cbind(x_star, pars_corr)
+      }else{
+        x[i, , ] <- x_star
+      }
     }
+    
+    if(i == (hist_days + 1)){
+      x_restart <- x[i, , ]
+      qt_restart <- qt
+    }
+    
   }
   
-  if(i == (hist_days + 1)){
-    x_restart <- x[i, , ]
-    qt_restart <- qt
-  }
-  
-}
-
-return(list(x = x, 
-            x_restart = x_restart, 
-            qt_restart = qt_restart, 
-            x_prior = x_prior,
-            resid30day = resid30day))
+  return(list(x = x, 
+              x_restart = x_restart, 
+              qt_restart = qt_restart, 
+              x_prior = x_prior,
+              resid30day = resid30day))
 }

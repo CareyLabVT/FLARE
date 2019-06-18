@@ -55,7 +55,7 @@ run_flare<-function(start_day= "2018-07-06 00:00:00",
   npars <- 4
   pre_scc <- FALSE
   hold_inflow_outflow_constant <- FALSE
-  print_glm2screen <- TRUE
+  print_glm2screen <- FALSE
   
   ### METEROLOGY DOWNSCALING OPTIONS
   if(is.na(downscaling_coeff)){
