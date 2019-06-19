@@ -6,8 +6,8 @@
 #          observations                                    #
 # ---------------------------------------------------------#
 
-run_flare<-function(start_day= "2018-07-06 00:00:00",
-                            sim_name = NA, 
+run_flare<-function(start_day = "2018-07-06 00:00:00",
+                    sim_name = NA, 
                             hist_days = 1,
                             forecast_days = 16,  
                             spin_up_days = 0,
@@ -29,7 +29,8 @@ run_flare<-function(start_day= "2018-07-06 00:00:00",
                             DOWNSCALE_MET = TRUE,
                             FLAREversion,
                             met_ds_obs_start,
-                            met_ds_obs_end){
+                            met_ds_obs_end,
+                            modeled_depths){
   
   #################################################
   ### LOAD R FUNCTIONS
@@ -46,6 +47,7 @@ run_flare<-function(start_day= "2018-07-06 00:00:00",
   source(paste0(folder,"/","Rscripts/run_EnKF.R")) 
   source(paste0(folder,"/","Rscripts/met_downscale/process_downscale_GEFS.R")) 
   source(paste0(folder,"/","Rscripts/update_qt.R"))
+  source(paste0(folder,"/","Rscripts/glmtools.R"))
   
   #################################################
   ### CONFIGURATIONS THAT NEED TO BE GENERALIZED
@@ -56,19 +58,7 @@ run_flare<-function(start_day= "2018-07-06 00:00:00",
   pre_scc <- FALSE
   hold_inflow_outflow_constant <- FALSE
   print_glm2screen <- FALSE
-  
-  ### METEROLOGY DOWNSCALING OPTIONS
-  if(is.na(downscaling_coeff)){
-    FIT_PARAMETERS <- TRUE
-  }else{
-    FIT_PARAMETERS <- FALSE
-  }
-  
-  if(DOWNSCALE_MET == FALSE){
-    FIT_PARAMETERS <- FALSE
-  }
-  
-  
+
   #Estimated parameters
   lake_depth_init <- 9.4  #not a modeled state
   zone2_temp_init_mean <- 17 #11
@@ -90,17 +80,22 @@ run_flare<-function(start_day= "2018-07-06 00:00:00",
   
   obs_error <- 0.0001 #NEED TO DOUBLE CHECK
   
+
   #Define modeled depths and depths with observations
-  modeled_depths <- c(0.1, 0.33, 0.66, 
-                      1.00, 1.33, 1.66,
-                      2.00, 2.33, 2.66,
-                      3.0, 3.33, 3.66,
-                      4.0, 4.33, 4.66,
-                      5.0, 5.33, 5.66,
-                      6.0, 6.33, 6.66,
-                      7.00, 7.33, 7.66,
-                      8.0, 8.33, 8.66,
-                      9.00, 9.33)
+#  if(!include_wq){
+#  modeled_depths <- c(0.1, 0.33, 0.66, 
+#                      1.00, 1.33, 1.66,
+#                      2.00, 2.33, 2.66,
+#                      3.0, 3.33, 3.66,
+#                      4.0, 4.33, 4.66,
+#                      5.0, 5.33, 5.66,
+#                      6.0, 6.33, 6.66,
+#                      7.00, 7.33, 7.66,
+#                      8.0, 8.33, 8.66,
+#                      9.00, 9.33)
+#  }else{
+#    modeled_depths <- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
+#  }
   
   observed_depths_temp <- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9)
   observed_depths_do <- c(1, 5, 9)
@@ -141,6 +136,17 @@ run_flare<-function(start_day= "2018-07-06 00:00:00",
   
   # SET UP NUMBER OF ENSEMBLE MEMBERS
   n_met_members <- 21
+  
+  ### METEROLOGY DOWNSCALING OPTIONS
+  if(is.na(downscaling_coeff)){
+    FIT_PARAMETERS <- TRUE
+  }else{
+    FIT_PARAMETERS <- FALSE
+  }
+  
+  if(DOWNSCALE_MET == FALSE){
+    FIT_PARAMETERS <- FALSE
+  }
   
   #################################################
   ### STEP 1: GRAB DATA FROM REPO OR SERVER
@@ -1180,13 +1186,13 @@ run_flare<-function(start_day= "2018-07-06 00:00:00",
   ###SAVE FORECAST
   write_forecast_netcdf(x = x,
                         full_time = full_time_local,
-                        qt = qt,
-                        modeled_depths = modeled_depths,
-                        save_file_name = save_file_name,
-                        x_restart = x_restart,
-                        qt_restart = qt_restart,
-                        time_of_forecast = time_of_forecast,
-                        hist_days = hist_days,
+                        qt,
+                        modeled_depths,
+                        save_file_name,
+                        x_restart,
+                        qt_restart,
+                        time_of_forecast,
+                        hist_days,
                         x_prior,
                         include_wq,
                         wq_start,
@@ -1200,7 +1206,8 @@ run_flare<-function(start_day= "2018-07-06 00:00:00",
                         npars,
                         GLMversion,
                         FLAREversion,
-                        resid30day)
+                        resid30day,
+                        local_tzone)
   
   ##ARCHIVE FORECAST
   restart_file_name <- archive_forecast(working_glm = working_glm,

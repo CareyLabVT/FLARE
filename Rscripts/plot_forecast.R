@@ -1,9 +1,26 @@
-plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,forecast_days,code_location,save_location,data_location,plot_summaries,pre_scc,push_to_git,pull_from_git,use_ctd){
+plot_forecast <- function(pdf_file_name,
+                          output_file,
+                          catwalk_fname,
+                          include_wq,
+                          forecast_days,
+                          code_location,
+                          save_location,
+                          data_location,
+                          plot_summaries,
+                          pre_scc,
+                          push_to_git,
+                          pull_from_git,
+                          use_ctd,
+                          modeled_depths){
 
     source(paste0(code_location,'/extract_temp_chain.R'))
     source(paste0(code_location,'/extract_temp_CTD.R'))
   
-    the_depths_init <- c(0.1, 0.33, 0.66, 1.00, 1.33,1.66,2.00,2.33,2.66,3.0,3.33,3.66,4.0,4.33,4.66,5.0,5.33,5.66,6.0,6.33,6.66,7.00,7.33,7.66,8.0,8.33,8.66,9.00,9.33)
+  focal_depths <- c(1,5,9)
+  focal_depths_2 <- c(1,5,9) #c(4,16,25)
+  index_1m <- 2
+  index_8m <- 9
+   # modeled_depths <- c(0.1, 0.33, 0.66, 1.00, 1.33,1.66,2.00,2.33,2.66,3.0,3.33,3.66,4.0,4.33,4.66,5.0,5.33,5.66,6.0,6.33,6.66,7.00,7.33,7.66,8.0,8.33,8.66,9.00,9.33)
     num_pars <- 4
     output_tz <- "EST5EDT"
     reference_tzone <- "GMT"
@@ -18,7 +35,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
                   'OGM_doc','OGM_poc','OGM_don','OGM_pon','OGM_dop','OGM_pop',
                   'PHY_CYANOPCH1','PHY_CYANONPCH2','PHY_CHLOROPCH3','PHY_DIATOMPCH4') #,
                   #'ZOO_COPEPODS1','ZOO_DAPHNIABIG2','ZOO_DAPHNIASMALL3')
-    nMETmembers =21
+    nMETmembers <- 21
     
     
     mia_location <- paste0(data_location,'/','mia-data')
@@ -60,7 +77,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     
     #PROCESS TEMPERATURE OBSERVATIONS
 
-    obs_temp <- extract_temp_chain(fname = catwalk_fname,full_time,depths = the_depths_init,observed_depths_temp = TempObservedDepths,input_tz = 'EST5EDT', output_tz = reference_tzone)
+    obs_temp <- extract_temp_chain(fname = catwalk_fname,full_time,depths = modeled_depths,observed_depths_temp = TempObservedDepths,input_tz = 'EST5EDT', output_tz = reference_tzone)
     for(i in 1:length(obs_temp$obs[,1])){
       for(j in 1:length(obs_temp$obs[1,])){
         if(obs_temp$obs[i,j] == 0 | is.na(obs_temp$obs[i,j]) | is.nan(obs_temp$obs[i,j])){
@@ -73,17 +90,17 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     
     #PROCESS DO OBSERVATIONS
 
-    obs_do <- extract_do_chain(fname = catwalk_fname,full_time,depths = the_depths_init,observed_depths_do= DoObservedDepths,input_tz = 'EST5EDT', output_tz = reference_tzone)
+    obs_do <- extract_do_chain(fname = catwalk_fname,full_time,depths = modeled_depths,observed_depths_do= DoObservedDepths,input_tz = 'EST5EDT', output_tz = reference_tzone)
     obs_do$obs <- obs_do$obs*1000/32  #mg/L (obs units) -> mmol/m3 (glm units)
     init_do1 <- obs_do$obs[1,]
   
-    obs_chla_fdom <- extract_chla_chain(fname = catwalk_fname,full_time,depths = the_depths_init,observed_depths_chla_fdom= Chla_fDOM_ObservedDepths,input_tz = 'EST5EDT', output_tz = reference_tzone)
+    obs_chla_fdom <- extract_chla_chain(fname = catwalk_fname,full_time,depths = modeled_depths,observed_depths_chla_fdom= Chla_fDOM_ObservedDepths,input_tz = 'EST5EDT', output_tz = reference_tzone)
     
     #Use the CTD observation rather than the sensor string when CTD data is avialable
     if(use_ctd){
       ## LOOK AT CTD DATA
       fl <- c(list.files('/Users/quinn/Dropbox (VTFRS)/Research/SSC_forecasting/SCC_data/preSCC/', pattern = 'CTD', full.names = TRUE))
-      obs_ctd <- extract_temp_CTD(fname = fl[1],full_time_day,depths = the_depths_init,input_tz = 'EST5EDT', output_tz = reference_tzone)
+      obs_ctd <- extract_temp_CTD(fname = fl[1],full_time_day,depths = modeled_depths,input_tz = 'EST5EDT', output_tz = reference_tzone)
       obs_ctd$obs_do <- obs_ctd$obs_do*1000/32
       for(i in 1:length(full_time_day)){
         if(!is.na(obs_ctd$obs_temp[i,1])){
@@ -123,16 +140,16 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     num_wq_vars <- length(wq_names) 
     if(include_wq){
       temp_start <- 1
-      temp_end <- length(the_depths_init)
+      temp_end <- length(modeled_depths)
       wq_start <- rep(NA,num_wq_vars)
       wq_end <- rep(NA,num_wq_vars)
       for(wq in 1:num_wq_vars){
         if(wq == 1){
           wq_start[wq] <- temp_end+1
-          wq_end[wq] <- temp_end + (length(the_depths_init))
+          wq_end[wq] <- temp_end + (length(modeled_depths))
         }else{
           wq_start[wq] <- wq_end[wq-1]+1
-          wq_end[wq] <- wq_end[wq-1] + (length(the_depths_init))
+          wq_end[wq] <- wq_end[wq-1] + (length(modeled_depths))
         }
         
         if(num_pars > 0){
@@ -148,7 +165,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
       }
     }else{
       temp_start <- 1
-      temp_end <- length(the_depths_init)
+      temp_end <- length(modeled_depths)
       if(num_pars > 0){
         par1 <- temp_end + 1
         par2 <- par1 + 1
@@ -162,14 +179,14 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     
     #FIGURE OUT WHICH DEPTHS HAVE OBSERVATIONS
     if(include_wq){
-      obs_index <- rep(NA,length(the_depths_init)*(num_wq_vars+1))
-      obs_index[1:length(the_depths_init)] <- seq(1,length(the_depths_init),1)
+      obs_index <- rep(NA,length(modeled_depths)*(num_wq_vars+1))
+      obs_index[1:length(modeled_depths)] <- seq(1,length(modeled_depths),1)
       for(wq in 1:num_wq_vars){
         obs_index[wq_start[wq]:wq_end[wq]] <- seq(wq_start[wq],wq_end[wq],1)
       }
     }else{
-      obs_index <- rep(NA,length(the_depths_init))
-      obs_index[1:length(the_depths_init)] <- seq(1,length(the_depths_init),1)
+      obs_index <- rep(NA,length(modeled_depths))
+      obs_index[1:length(modeled_depths)] <- seq(1,length(modeled_depths),1)
     }
     
     
@@ -244,8 +261,8 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
       
       for(i in 1:nlayers){
         model = i
-        if(length(which(z_states[1,] == length(the_depths_init)+i) > 0)){
-          obs = which(z_states[1,] == length(the_depths_init)+i)
+        if(length(which(z_states[1,] == length(modeled_depths)+i) > 0)){
+          obs = which(z_states[1,] == length(modeled_depths)+i)
         }else{
           obs = NA
         }
@@ -278,8 +295,8 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
       
       for(i in 1:nlayers){
         model = i
-        if(length(which(z_states[1,] == length(the_depths_init)+i) > 0)){
-          obs = which(z_states[1,] == length(the_depths_init)+i)
+        if(length(which(z_states[1,] == length(modeled_depths)+i) > 0)){
+          obs = which(z_states[1,] == length(modeled_depths)+i)
         }else{
           obs = NA
         }
@@ -305,7 +322,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
       par(mfrow=c(4,3))
       for(wq in 1:length(wq_names)){
         
-        for(i in c(4,16,25)){
+        for(i in focal_depths){
         ylim = range(c(wq_output[wq,,,]),na.rm = TRUE) 
         plot(full_time,wq_output[wq,,1,i],type='l',ylab=wq_names[wq],xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
           for(m in 2:length(temp[1,,model])){
@@ -357,7 +374,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     full_time_plotting <- seq(full_time_past[1]-days(3), full_time[length(full_time)]+days(5), by = "1 day")
     
     
-    obs_temp <- extract_temp_chain(fname = catwalk_fname,full_time_past,depths = the_depths_init,observed_depths_temp = TempObservedDepths,input_tz = 'EST5EDT', output_tz = reference_tzone)
+    obs_temp <- extract_temp_chain(fname = catwalk_fname,full_time_past,depths = modeled_depths,observed_depths_temp = TempObservedDepths,input_tz = 'EST5EDT', output_tz = reference_tzone)
     for(i in 1:length(obs_temp$obs[,1])){
       for(j in 1:length(obs_temp$obs[1,])){
         if(obs_temp$obs[i,j] == 0 | is.na(obs_temp$obs[i,j]) | is.nan(obs_temp$obs[i,j])){
@@ -370,7 +387,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
     forecast_index <- which(forecasted == 1)[1]
     nlayers <- length(depths)
     
-    focal_depths <- c(4,16,25)
+    focal_depths <- focal_depths_2
     png( paste0(save_location,'/',pdf_file_name, "_management.png"),width = 12, height = 6,units = 'in',res=300)
     par(mfrow=c(1,2))
     
@@ -378,7 +395,7 @@ plot_forecast <- function(pdf_file_name,output_file,catwalk_fname,include_wq,for
 
     prob_zero <- rep(NA,length(seq(3,18,1)))
     for(i in 3:18){
-      prob_zero[i-2] = 100*length(which(temp[i,,4] - temp[i,,25] < 1))/length((temp[i,,obs_index[1]]))
+      prob_zero[i-2] = 100*length(which(temp[i,,index_1m] - temp[i,,index_8m] < 1))/length((temp[i,,obs_index[1]]))
     }
     
     plot(full_time_plotting,rep(-99,length(full_time_plotting)),ylim=c(0,100),xlab = 'date',ylab = '% chance')

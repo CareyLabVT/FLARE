@@ -20,7 +20,8 @@ write_forecast_netcdf <- function(x,
                                   npars,
                                   GLMversion,
                                   FLAREversion,
-                                  resid30day){
+                                  resid30day,
+                                  local_tzone){
   
   obs <- z
   
@@ -28,11 +29,11 @@ write_forecast_netcdf <- function(x,
   #Set dimensions
   ens <- seq(1,dim(x)[2],1)
   depths <- modeled_depths
-  t <- as.numeric(as.POSIXct(full_time,tz='EST5EDT',origin = '1970-01-01 00:00.00 UTC'))
+  t <- as.numeric(as.POSIXct(full_time,tz=local_tzone,origin = '1970-01-01 00:00.00 UTC'))
   states <- seq(1,nstates,1)
   states_aug <- seq(1,dim(x)[3],1)
   qt_update_days <- seq(1,dim(resid30day)[1],1)
-  #obs_states <- seq(1,dim(z)[2],1)
+  obs_states <- seq(1,dim(z)[2],1)
   
   #Set variable that states whether value is forecasted
   forecasted <- rep(1,length(t))
@@ -59,7 +60,7 @@ write_forecast_netcdf <- function(x,
   statedim <- ncdim_def("states",units = '', vals = states)
   stateagudim <- ncdim_def("states_aug",units = '', vals = states_aug, longname = 'length of model states plus parameters')
   qt_update_days_dim <- ncdim_def("qt_update_days",units = '', vals = qt_update_days, longname = 'Number of running days that qt smooths over')
-  #obsdim <- ncdim_def("obs_dim",units = '', vals = obs_states, longname = 'length of ')
+  obsdim <- ncdim_def("obs_dim",units = '', vals = obs_states, longname = 'length of ')
   
   #Define variables
   fillvalue <- 1e32
@@ -86,9 +87,9 @@ write_forecast_netcdf <- function(x,
   dlname <- 'Predicted states prior to Kalman correction'
   x_prior_def <- ncvar_def("x_prior","-",list(timedim,ensdim,stateagudim),fillvalue,dlname,prec="float")
   dlname <- 'temperature observations'
-  obs_def <- ncvar_def("obs","various",list(timedim,depthdim),fillvalue,dlname,prec="single")
+  obs_def <- ncvar_def("obs","various",list(timedim,obsdim),fillvalue,dlname,prec="single")
   dlname <- 'running residual of water temperature for updating qt'
-  resid30day_def <- ncvar_def("resid30day","various",list(qt_update_days_dim,depthdim),fillvalue,dlname,prec="single")
+  resid30day_def <- ncvar_def("resid30day","various",list(qt_update_days_dim,statedim),fillvalue,dlname,prec="single")
   
   fillvalue <- -99
   dlname <- '0 = historical; 1 = forecasted'
@@ -281,9 +282,9 @@ write_forecast_netcdf <- function(x,
   dlname <- 'Predicted states prior to Kalman correction'
   x_prior_def <- ncvar_def("x_prior","-",list(timedim,ensdim,stateagudim),fillvalue,dlname,prec="float")
   dlname <- 'water temperature observations'
-  obs_def <- ncvar_def("obs","deg_C",list(timedim,depthdim),fillvalue,dlname,prec="single")
+  obs_def <- ncvar_def("obs","deg_C",list(timedim,obsdim),fillvalue,dlname,prec="single")
   dlname <- 'running residual of water temperature for updating qt'
-  resid30day_def <- ncvar_def("resid30day","various",list(qt_update_days_dim,depthdim),fillvalue,dlname,prec="single")
+  resid30day_def <- ncvar_def("resid30day","various",list(qt_update_days_dim,statedim),fillvalue,dlname,prec="single")
   
   
   fillvalue <- -99

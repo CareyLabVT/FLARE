@@ -118,48 +118,48 @@ run_EnKF <- function(x,
       while(!pass){
         unlink(paste0(working_glm, "/output.nc")) 
         
-        if(!print_glm2screen){
-          system(paste0('docker run -it -d -v ',working_glm,':/GLM/TestLake hydrobert/glm-aed2 /bin/bash -c \"cd TestLake; /GLM/glm\"'))
-        }else{
+        #if(!print_glm2screen){
+        #  system(paste0('docker run -it -d -v ',working_glm,':/GLM/TestLake hydrobert/glm-aed2 /bin/bash -c \"cd TestLake; /GLM/glm\"'))
+        #}else{
           # start docker as background process (detached)
-          system(paste0('docker run -it -d -v ',working_glm,':/GLM/TestLake hydrobert/glm-aed2 /bin/bash'))
+        #  system(paste0('docker run -it -d -v ',working_glm,':/GLM/TestLake hydrobert/glm-aed2 /bin/bash'))
           # get the id of your running container
-          dockerps <- system('docker ps',intern = TRUE)
-          dockerid <- strsplit(dockerps, split = "/t")
-          dockerid <- strsplit(dockerid[[2]], split = " ")
-          dockerid <- dockerid[[1]][1]
+        #  dockerps <- system('docker ps',intern = TRUE)
+        #  dockerid <- strsplit(dockerps, split = "/t")
+        #  dockerid <- strsplit(dockerid[[2]], split = " ")
+        #  dockerid <- dockerid[[1]][1]
           # start the simulation (i - interactive, t - tty (user input))
-          system(paste('docker exec -t',dockerid,'/bin/bash -c \"cd TestLake; /GLM/glm\"'))
+        #  system(paste('docker exec -t',dockerid,'/bin/bash -c \"cd TestLake; /GLM/glm\"'))
           
           # stops and removes all running dockers
-          system('docker kill $(docker ps -q)')
-          system('docker rm $(docker ps -a -q)')
-        }
-        
-        
-        ptm <- proc.time()
-        system(paste0('docker run -it -d -v ',working_glm,':/GLM/TestLake hydrobert/glm-aed2 /bin/bash -c \"cd TestLake; /GLM/glm\"'))
-        docker <- proc.time() - ptm
-        
-        ptm <- proc.time()
-        system2(paste0(working_glm, "/", "glm"), stdout = print_glm2screen, stderr = print_glm2screen)
-        local <- proc.time() - ptm
-        
-        ((docker - local)/local)*100
-        
-        
-        #if(machine == "unix" | machine == "mac"){
-          #system2(paste0(working_glm, "/", "glm"), stdout = print_glm2screen, stderr = print_glm2screen)
-        #}else if(machine == "windows"){
-        #  system2(paste0(working_glm, "/", "glm.exe"), invisible = print_glm2screen)
-        #}else{
-        #  print("Machine not identified")
-        #  stop()
+        #  system('docker kill $(docker ps -q)')
+        #  system('docker rm $(docker ps -a -q)')
         #}
-        print("here1")
+        
+        
+        #ptm <- proc.time()
+        #system(paste0('docker run -it -d -v ',working_glm,':/GLM/TestLake hydrobert/glm-aed2 /bin/bash -c \"cd TestLake; /GLM/glm\"'))
+        #docker <- proc.time() - ptm
+        
+        #ptm <- proc.time()
+        #system2(paste0(working_glm, "/", "glm"), stdout = print_glm2screen, stderr = print_glm2screen)
+        #local <- proc.time() - ptm
+        
+        #((docker - local)/local)*100
+        
+        
+        if(machine == "unix" | machine == "mac"){
+          system2(paste0(working_glm, "/", "glm"), stdout = print_glm2screen, stderr = print_glm2screen)
+        }else if(machine == "windows"){
+          system2(paste0(working_glm, "/", "glm.exe"), invisible = print_glm2screen)
+        }else{
+          print("Machine not identified")
+          stop()
+        }
+
         if(file.exists(paste0(working_glm, "/output.nc")) & 
            !has_error(nc <- nc_open(paste0(working_glm, "/output.nc")))){
-          print("here2")
+
           if(length(ncvar_get(nc, "time")) > 1){
             nc_close(nc)
             if(include_wq){

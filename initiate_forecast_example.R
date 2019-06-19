@@ -1,17 +1,17 @@
 if (!"mvtnorm" %in% installed.packages()) install.packages("mvtnorm")
 if (!"ncdf4" %in% installed.packages()) install.packages("ncdf4")
 if (!"lubridate" %in% installed.packages()) install.packages("lubridate")
-if (!"glmtools" %in% installed.packages()) install.packages("glmtools",
-                                                            repos=c("http://cran.rstudio.com",
-                                                                    "http://owi.usgs.gov/R"))
+#if (!"glmtools" %in% installed.packages()) install.packages("glmtools",
+#                                                            repos=c("http://cran.rstudio.com",
+#                                                                    "http://owi.usgs.gov/R"))
 if (!"RCurl" %in% installed.packages()) install.packages("RCurl")
 if (!"testit" %in% installed.packages()) install.packages("testit")
 if (!"imputeTS" %in% installed.packages()) install.packages("imputeTS")
 if (!"tidyverse" %in% installed.packages()) install.packages("tidyverse")
-
+#if (!"GLMr" %in% installed.packages()) install.packages("GLMr")
 
 library(mvtnorm)
-library(glmtools)
+#library(glmtools)
 library(ncdf4)
 library(lubridate)
 library(RCurl)
@@ -39,16 +39,31 @@ FLAREversion <- "v1.0_beta.1"
 spin_up_days = 0
 
 uncert_mode = 1
-cov_matrix = "Qt_cov_matrix_init.csv"
+cov_matrix = "Qt_cov_matrix_init_AED.csv"
 downscaling_coeff = NA
 met_ds_obs_start = as.Date("2018-04-06")
 met_ds_obs_end = as.Date("2018-12-06")
+
+if(!include_wq){
+  modeled_depths <- c(0.1, 0.33, 0.66, 
+                      1.00, 1.33, 1.66,
+                      2.00, 2.33, 2.66,
+                      3.0, 3.33, 3.66,
+                      4.0, 4.33, 4.66,
+                      5.0, 5.33, 5.66,
+                      6.0, 6.33, 6.66,
+                      7.00, 7.33, 7.66,
+                      8.0, 8.33, 8.66,
+                      9.00, 9.33)
+}else{
+  modeled_depths <- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
+}
 
 #Note: this number is multiplied by 
 # 1) the number of NOAA ensembles (21)
 # 2) the number of downscaling essembles (50 is current)
 # get to the total number of essembles
-n_enkf_members <- 21
+n_enkf_members <- 1
 n_ds_members <- 1
 
 source(paste0(folder, "/", "Rscripts/run_flare.R"))
@@ -86,7 +101,8 @@ out <- run_flare(start_day= start_day,
                          DOWNSCALE_MET = DOWNSCALE_MET,
                          FLAREversion = FLAREversion,
                          met_ds_obs_start = met_ds_obs_start,
-                         met_ds_obs_end = met_ds_obs_end)
+                         met_ds_obs_end = met_ds_obs_end,
+                         modeled_depths = modeled_depths)
 
 
 plot_forecast(pdf_file_name = unlist(out)[2],
@@ -100,4 +116,5 @@ plot_forecast(pdf_file_name = unlist(out)[2],
               pre_scc = FALSE,
               push_to_git = push_to_git,
               pull_from_git = pull_from_git,
-              use_ctd = use_ctd)
+              use_ctd = use_ctd,
+              modeled_depths = modeled_depths)
