@@ -18,65 +18,31 @@ library(RCurl)
 library(testit)
 library(imputeTS)
 library(tidyverse)
+library(tools)
+
+
 
 data_location = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
 folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
 forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/testing_AED/"
 
-#restart_file <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/FCR_betaV2_hist_2018_10_1_forecast_2018_10_2_2018102_5_53.nc"
-restart_file = NA
-
-spin_up_days <- 0
-push_to_git <- FALSE
-pull_from_git <- TRUE
-reference_tzone <- "GMT"
-forecast_days <- 0
-include_wq <- TRUE
-use_ctd <- FALSE
-DOWNSCALE_MET <- FALSE
-GLMversion <- "GLM 3.0.0beta10"
-FLAREversion <- "v1.0_beta.1"
-spin_up_days = 0
-
-uncert_mode = 1
-cov_matrix = "Qt_cov_matrix_init_AED.csv"
-downscaling_coeff = NA
-met_ds_obs_start = as.Date("2018-04-06")
-met_ds_obs_end = as.Date("2018-12-06")
-
-if(!include_wq){
-  modeled_depths <- c(0.1, 0.33, 0.66, 
-                      1.00, 1.33, 1.66,
-                      2.00, 2.33, 2.66,
-                      3.0, 3.33, 3.66,
-                      4.0, 4.33, 4.66,
-                      5.0, 5.33, 5.66,
-                      6.0, 6.33, 6.66,
-                      7.00, 7.33, 7.66,
-                      8.0, 8.33, 8.66,
-                      9.00, 9.33)
-}else{
-  modeled_depths <- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
-}
-
-#Note: this number is multiplied by 
-# 1) the number of NOAA ensembles (21)
-# 2) the number of downscaling essembles (50 is current)
-# get to the total number of essembles
-n_enkf_members <- 1
-n_ds_members <- 1
-
+source(paste0(folder,"/","configure_FLARE.R"))
 source(paste0(folder, "/", "Rscripts/run_flare.R"))
 source(paste0(folder, "/", "Rscripts/plot_forecast.R"))
 
+#restart_file <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/FCR_betaV2_hist_2018_10_1_forecast_2018_10_2_2018102_5_53.nc"
+restart_file <- "/Users/quinn/Dropbox/Research/SSC_forecasting/testing_AED/test1_H_2018_10_12_2018_10_22_F_0_2019623_16_22.nc"
+restart_file <- NA
+
+
+forecast_days <- 0
+spin_up_days <- 0
 sim_name <- "test1" 
-start_day <- "2018-07-12 00:00:00" #GMT
-forecast_start_day <-"2018-07-20 00:00:00" #GMT 
-hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_tzone),
-                                 as.POSIXct(start_day, tz = reference_tzone)))
-
-
-
+start_day_local <- "2018-10-05"
+start_time_local <- "00:00:00"
+forecast_start_day_local <-"2018-10-10" 
+hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day_local, tz = local_tzone),
+                                 as.POSIXct(start_day_local, tz = local_tzone)))
 
 out <- run_flare(start_day= start_day,
                          sim_name = sim_name,

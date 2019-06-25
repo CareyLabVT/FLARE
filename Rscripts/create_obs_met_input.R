@@ -1,34 +1,36 @@
 create_obs_met_input <- function(fname,
                                  outfile,
-                                 full_time_hour_obs,
-                                 input_tz = "EST5EDT",
-                                 output_tz = "GMT") {
+                                 full_time_hour_local,
+                                 input_file_tz = "EST5EDT",
+                                 local_tzone) {
+  
   d <- read.csv( fname, skip = 3)
   d_names <- read.csv(fname, skip = 1)
   names(d) <- names(d_names)
   
   d <- d[-85572, ]
   
-  ShortWave <- rep(NA, length(full_time_hour_obs) - 1)
-  LongWave <- rep(NA, length(full_time_hour_obs) - 1)
-  AirTemp <- rep(NA, length(full_time_hour_obs) - 1)
-  RelHum <- rep(NA, length(full_time_hour_obs) - 1)
-  WindSpeed <- rep(NA, length(full_time_hour_obs) - 1)
-  Rain <- rep(NA, length(full_time_hour_obs) - 1)
-  Snow <- rep(NA, length(full_time_hour_obs) - 1)
+  ShortWave <- rep(NA, length(full_time_hour_local) - 1)
+  LongWave <- rep(NA, length(full_time_hour_local) - 1)
+  AirTemp <- rep(NA, length(full_time_hour_local) - 1)
+  RelHum <- rep(NA, length(full_time_hour_local) - 1)
+  WindSpeed <- rep(NA, length(full_time_hour_local) - 1)
+  Rain <- rep(NA, length(full_time_hour_local) - 1)
+  Snow <- rep(NA, length(full_time_hour_local) - 1)
   
-  d_time_tmp_in <- as.POSIXct(d$TIMESTAMP, 
+  TIMESTAMP_in <- as.POSIXct(d$TIMESTAMP, 
                               format= "%Y-%m-%d %H:%M",
-                              tz = input_tz)
-
-  d_time_tmp <- with_tz(d_time_tmp_in, tzone = output_tz)
-  full_time_tmp <-  full_time_hour_obs
+                              tz = input_file_tz)
   
-  if(length(which(d_time_tmp == full_time_tmp[1])) > 0){
+  d$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = local_tzone)
+  
+  full_time_hour_local <- as.POSIXct(full_time_hour_local, tz = local_tz)
+
+  if(length(which(d$TIMESTAMP == full_time_hour_local[1])) > 0){
     
-    for(i in 1:(length(full_time_hour_obs) - 1)){
-      index <- which(d_time_tmp == full_time_tmp[i])
-      index_2 <- which(d_time_tmp == full_time_tmp[i + 1])
+    for(i in 1:(length(full_time_hour_local) - 1)){
+      index <- which(d$TIMESTAMP == full_time_hour_local[i])
+      index_2 <- which(d$TIMESTAMP == full_time_hour_local[i + 1])
       if(length(index) > 0 & length(index_2) > 0){
         ShortWave[i] <- max(mean(d$SR01Up_Avg[index:index_2]), 0.0)
         LongWave[i] <- mean(d$IR01UpCo_Avg[index:index_2])
@@ -52,13 +54,13 @@ create_obs_met_input <- function(fname,
     WindSpeed <- WindSpeed[remove_hours]
     Rain <- Rain[remove_hours]
     Snow <- Snow[remove_hours]
-    full_time_hour_obs <- full_time_hour_obs[remove_hours]
+    full_time_hour_local <- full_time_hour_local[remove_hours]
     
     #Save in GLM Format
-    full_time_hour_obs <- strftime(full_time_hour_obs, 
-                                  format="%Y-%m-%d %H:%M",
-                                  tz = output_tz)
-    GLM_climate <- data.frame(full_time_hour_obs,
+    #full_time_hour_obs <- strftime(full_time_hour_obs, 
+    #                              format="%Y-%m-%d %H:%M",
+    #                              tz = output_tz)
+    GLM_climate <- data.frame(full_time_hour_local,
                              ShortWave,
                              LongWave,
                              AirTemp,

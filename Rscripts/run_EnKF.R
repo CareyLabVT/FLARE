@@ -3,7 +3,7 @@ run_EnKF <- function(x,
                      qt,
                      qt_pars,
                      psi,
-                     full_time,
+                     full_time_local,
                      working_glm,
                      npars,
                      modeled_depths,
@@ -21,10 +21,11 @@ run_EnKF <- function(x,
                      machine,
                      resid30day,
                      hist_days,
-                     print_glm2screen){
+                     print_glm2screen,
+                     x_phyto_groups){
   
-  npars <- 4 
-  nsteps <- length(full_time)
+  #npars <- 4 
+  nsteps <- length(full_time_local)
   nmembers <- dim(x)[2]
   n_met_members <- length(met_file_names) - 1
   nstates <- dim(x)[3] - npars
@@ -36,11 +37,11 @@ run_EnKF <- function(x,
   ###START EnKF
   
   for(i in 2:nsteps){
-    print(paste0("Running time step ", i, " : ", full_time[i - 1], " - ", full_time[i]))
+    print(paste0("Running time step ", i, " : ", full_time_local[i - 1], " - ", full_time_local[i]))
     met_index <- 1
     #1) Update GLM NML files to match the current day of the simulation
-    curr_start <- (full_time[i - 1])
-    curr_stop <- (full_time[i])
+    curr_start <- (full_time_local[i - 1])
+    curr_stop <- (full_time_local[i])
     
     setwd(working_glm)
     
@@ -48,6 +49,8 @@ run_EnKF <- function(x,
     x_star <- array(NA, dim = c(nmembers, nstates))
     x_corr <- array(NA, dim = c(nmembers, nstates))
     
+    donc <- array(NA, dim = c(nmembers, length(modeled_depths)))
+    dopc <- array(NA, dim = c(nmembers, length(modeled_depths)))
     #Matrix to store calculated ensemble specific deviations and innovations
     dit <- array(NA, dim = c(nmembers, nstates))
     
@@ -57,7 +60,7 @@ run_EnKF <- function(x,
     }
     
     for(m in 1:nmembers){
-      
+
       tmp <- update_temps(curr_temps = round(x[i - 1, m, 1:length(modeled_depths)], 3),
                           curr_depths = modeled_depths,
                           working_glm)
@@ -87,8 +90,10 @@ run_EnKF <- function(x,
       }
       
       if(include_wq){
-        wq_init_vals <- round(c(x[i - 1, m, wq_start[1]:wq_end[num_wq_vars]]), 3)
-        update_var(wq_init_vals, "wq_init_vals" ,working_glm)
+        non_phytos <- round(c(x[i - 1, m, wq_start[1]:wq_end[num_wq_vars-1]]), 3)
+        phytos <- round(x_phyto_groups[i-1, m, ],3)
+        wq_init_vals_w_phytos <- c(non_phytos, phytos)
+        update_var(wq_init_vals_w_phytos, "wq_init_vals" ,working_glm)
       }
       
       
@@ -97,8 +102,8 @@ run_EnKF <- function(x,
       working_glm_docker <- "/GLM/TestLake"
       if(i > (hist_days + 1)){
         update_var(met_file_names[1 + met_index], "meteo_fl", working_glm)
-        update_var(paste0("FCR_inflow.csv"), "inflow_fl", working_glm)
-        update_var(paste0("FCR_spillway_outflow.csv"), "outflow_fl", working_glm)
+        #update_var(paste0("FCR_inflow.csv"), "inflow_fl", working_glm)
+        #update_var(paste0("FCR_spillway_outflow.csv"), "outflow_fl", working_glm)
       }else{
         update_var(met_file_names[1], "meteo_fl", working_glm)
         update_var("GLM_met.csv", "meteo_fl", working_glm)
@@ -166,15 +171,16 @@ run_EnKF <- function(x,
               GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "/output.nc",
                                                        working_dir = working_glm,
                                                        z_out = modeled_depths,
-                                                       vars = glm_output_vars)
-              x_star[m, 1:nstates] <- c(GLM_temp_wq_out$output)
+                                                       vars = c(glm_output_vars,tchla_components_vars))
+              x_star[m, 1:nstates] <- c(GLM_temp_wq_out$output[1:nstates])
+              x_phyto_groups[i, m, ] <- GLM_temp_wq_out$output[(nstates+1):length(GLM_temp_wq_out$output)]
+              donc[m, ] <- GLM_temp_wq_out$output[wq_start[11]:wq_end[11]]/GLM_temp_wq_out$output[wq_start[9]:wq_end[9]]
+              dopc[m, ] <- GLM_temp_wq_out$output[wq_start[13]:wq_end[13]]/GLM_temp_wq_out$output[wq_start[9]:wq_end[9]]
             }else{
-              print("here3")
               GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "/output.nc",
                                                        working_dir = working_glm,
                                                        z_out = modeled_depths,
                                                        vars = "temp")
-              print("here4")
               x_star[m, 1:length(modeled_depths)] <- c(GLM_temp_wq_out$output)
             }
             
@@ -190,7 +196,7 @@ run_EnKF <- function(x,
         }else{
           num_reruns <- num_reruns + 1
         }
-        if(num_reruns > 1000){
+        if(num_reruns > 5000){
           stop(paste0("Too many re-runs (> 1000) due to NaN values in output"))
         }
       }
@@ -308,7 +314,8 @@ run_EnKF <- function(x,
           resid30day[1:29, ] <- resid30day[2:30, ]
           resid30day[30, z_index] <- ens_mean[z_index] - zt
           if(!is.na(resid30day[1, z_index[1]])){
-            qt <- update_qt(resid30day, modeled_depths, qt, include_wq)
+            #qt <- update_qt(resid30day, modeled_depths, qt, include_wq)
+            qt <- qt
           }
         }
         
@@ -360,6 +367,7 @@ run_EnKF <- function(x,
         #Update states array (transposes are necessary to convert 
         #between the dims here and the dims in the EnKF formulations)
         x[i, , 1:nstates] <- t(t(x_corr) + k_t %*% (d_mat - h %*% t(x_corr)))
+        write.csv(k_t,paste0(working_glm,"/iter_",i,"_kalman_gain.csv"),row.names = FALSE)
         if(npars > 0){
           x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + 
                                                      k_t_pars %*% (d_mat - h %*% t(x_corr)))
@@ -379,7 +387,7 @@ run_EnKF <- function(x,
         }
         
         #IF NO INITIAL CONDITION UNCERTAINITY ThEN SET EACh ENSEMBLE MEMBER TO ThE MEAN
-        #AT ThE INITIATION OF ThE FUTURE FORECAST
+        #AT THE INITIATION OF ThE FUTURE FORECAST
         if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
           if(npars > 0){
             for(m in 1:nmembers){
@@ -400,6 +408,25 @@ run_EnKF <- function(x,
         x[i, , ] <- cbind(x_star, pars_corr)
       }else{
         x[i, , ] <- x_star
+      }
+    }
+    
+    if(include_wq){
+      for(m in 1:nmembers){
+        phyto_biomass <- matrix(x_phyto_groups[i, m, ], nrow = length(modeled_depths), ncol = length(tchla_components_vars))
+        phyto_proportions <- phyto_biomass
+        index <- 0
+        for(d in 1:length(modeled_depths)){
+          for(pp in 1:length(tchla_components_vars)){
+            index <- index + 1
+            phyto_proportions[d, pp] <- (phyto_biomass[d, pp]/biomass_to_chla[pp])/sum(phyto_biomass[d,]/biomass_to_chla)
+            #Update the phyto groups based on there ratios before CHLA updating
+            x_phyto_groups[i, m, index] <- biomass_to_chla[pp] * phyto_proportions[d, pp] * x[i, m, wq_start[num_wq_vars] + (d-1)]
+          }
+        }
+        #Maintain the DOC/DON and DOC/DOP ratios after updating of DOC
+        x[i, m, wq_start[11]:wq_end[11]] <- x[i, m, wq_start[9]:wq_end[9]] * donc[m, ]
+        x[i, m, wq_start[13]:wq_end[13]] <- x[i, m, wq_start[9]:wq_end[9]] * dopc[m, ]
       }
     }
     

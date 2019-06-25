@@ -1,5 +1,5 @@
 write_forecast_netcdf <- function(x,
-                                  full_time,
+                                  full_time_local,
                                   qt,
                                   modeled_depths,
                                   save_file_name,
@@ -29,7 +29,7 @@ write_forecast_netcdf <- function(x,
   #Set dimensions
   ens <- seq(1,dim(x)[2],1)
   depths <- modeled_depths
-  t <- as.numeric(as.POSIXct(full_time,tz=local_tzone,origin = '1970-01-01 00:00.00 UTC'))
+  t <- as.numeric(as.POSIXct(full_time_local,tz=local_tzone,origin = '1970-01-01 00:00.00 UTC'))
   states <- seq(1,nstates,1)
   states_aug <- seq(1,dim(x)[3],1)
   qt_update_days <- seq(1,dim(resid30day)[1],1)
@@ -126,14 +126,14 @@ write_forecast_netcdf <- function(x,
     wq_def13 <- ncvar_def("OGM_dop","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
     dlname <- 'OGM_pop'
     wq_def14 <- ncvar_def("OGM_pop","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
-    dlname <- 'PHY_CYANOPCH1'
-    wq_def15 <- ncvar_def("PHY_CYANOPCH1","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
-    dlname <- 'PHY_CYANONPCH2'
-    wq_def16 <- ncvar_def("PHY_CYANONPCH2","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
-    dlname <- 'PHY_CHLOROPCH3'
-    wq_def17 <- ncvar_def("PHY_CHLOROPCH3","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
-    dlname <- 'PHY_DIATOMPCH4'
-    wq_def18 <- ncvar_def("PHY_DIATOMPCH4","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single") 
+    dlname <- 'PHY_TCHLA'
+    wq_def15 <- ncvar_def("PHY_TCHLA","mg/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
+    #dlname <- 'PHY_CYANONPCH2'
+    #wq_def16 <- ncvar_def("PHY_CYANONPCH2","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
+    #dlname <- 'PHY_CHLOROPCH3'
+    #wq_def17 <- ncvar_def("PHY_CHLOROPCH3","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
+    #dlname <- 'PHY_DIATOMPCH4'
+    #wq_def18 <- ncvar_def("PHY_DIATOMPCH4","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single") 
     #dlname <- 'ZOO_COPEPODS1'
     #wq_def19 <- ncvar_def("ZOO_COPEPODS1","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
     #dlname <- 'ZOO_COPEPODS1'
@@ -142,8 +142,7 @@ write_forecast_netcdf <- function(x,
     #wq_def21 <- ncvar_def("ZOO_DAPHNIASMALL3","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
     
     ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def,qt_restart_def,resid30day_def,
-                                    wq_def1,wq_def2,wq_def3,wq_def4,wq_def5,wq_def6,wq_def7,wq_def8,wq_def9,wq_def10,wq_def11,wq_def12, wq_def13,wq_def14,wq_def15,
-                                    wq_def16,wq_def17,wq_def18
+                                    wq_def1,wq_def2,wq_def3,wq_def4,wq_def5,wq_def6,wq_def7,wq_def8,wq_def9,wq_def10,wq_def11,wq_def12, wq_def13,wq_def14,wq_def15
                                     #,,wq_def19,wq_def20,wq_def21 #Removing zooplankton
                                     ),force_v4=T)
     
@@ -195,9 +194,9 @@ write_forecast_netcdf <- function(x,
     ncvar_put(ncout,wq_def13,x[,,wq_start[13]:wq_end[13]])
     ncvar_put(ncout,wq_def14,x[,,wq_start[14]:wq_end[14]])
     ncvar_put(ncout,wq_def15,x[,,wq_start[15]:wq_end[15]])
-    ncvar_put(ncout,wq_def16,x[,,wq_start[16]:wq_end[16]])
-    ncvar_put(ncout,wq_def17,x[,,wq_start[17]:wq_end[17]])
-    ncvar_put(ncout,wq_def18,x[,,wq_start[18]:wq_end[18]])
+    #ncvar_put(ncout,wq_def16,x[,,wq_start[16]:wq_end[16]])
+    #ncvar_put(ncout,wq_def17,x[,,wq_start[17]:wq_end[17]])
+    #ncvar_put(ncout,wq_def18,x[,,wq_start[18]:wq_end[18]])
     #ncvar_put(ncout,wq_def19,x[,,wq_start[19]:wq_end[19]])
     #ncvar_put(ncout,wq_def20,x[,,wq_start[20]:wq_end[20]])
     #ncvar_put(ncout,wq_def21,x[,,wq_start[21]:wq_end[21]])
@@ -209,6 +208,7 @@ write_forecast_netcdf <- function(x,
   ncatt_put(ncout,0,"institution",'Virginia Tech', prec =  "text")
   ncatt_put(ncout,0,"GLM_version",as.character(GLMversion), prec =  "text")
   ncatt_put(ncout,0,"FLARE_version",as.character(FLAREversion), prec =  "text")
+  ncatt_put(ncout,0,"time_zone_of_simulation",as.character(local_tzone), prec =  "text")
   #ncatt_put(ncout,0,"references",references$value)
   history <- paste('Run date:',time_of_forecast, sep=", ")
   ncatt_put(ncout,0,"history",history, prec =  "text")
@@ -223,7 +223,7 @@ write_forecast_netcdf <- function(x,
   #Set dimensions
   ens <- seq(1,dim(x)[2],1)
   depths <- modeled_depths
-  t <- as.numeric(as.POSIXct(full_time,tz='UTC',origin = '1970-01-01 00:00.00 UTC'))
+  t <- as.numeric(as.POSIXct(full_time_local,tz='UTC',origin = '1970-01-01 00:00.00 UTC'))
   states <- seq(1,nstates,1)
   states_aug <- seq(1,dim(x)[3],1)
   qt_update_days <- seq(1,dim(resid30day)[1],1)
@@ -320,14 +320,14 @@ write_forecast_netcdf <- function(x,
     wq_def13 <- ncvar_def("OGM_dop","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
     dlname <- 'OGM_pop'
     wq_def14 <- ncvar_def("OGM_pop","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
-    dlname <- 'PHY_CYANOPCH1'
-    wq_def15 <- ncvar_def("PHY_CYANOPCH1","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
-    dlname <- 'PHY_CYANONPCH2'
-    wq_def16 <- ncvar_def("PHY_CYANONPCH2","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
-    dlname <- 'PHY_CHLOROPCH3'
-    wq_def17 <- ncvar_def("PHY_CHLOROPCH3","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
-    dlname <- 'PHY_DIATOMPCH4'
-    wq_def18 <- ncvar_def("PHY_DIATOMPCH4","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single") 
+    dlname <- 'PHY_TCHLA'
+    wq_def15 <- ncvar_def("PHY_TCHLA","mg/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
+    #dlname <- 'PHY_CYANONPCH2'
+    #wq_def16 <- ncvar_def("PHY_CYANONPCH2","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
+    #dlname <- 'PHY_CHLOROPCH3'
+    #wq_def17 <- ncvar_def("PHY_CHLOROPCH3","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
+    #dlname <- 'PHY_DIATOMPCH4'
+    #wq_def18 <- ncvar_def("PHY_DIATOMPCH4","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single") 
     #dlname <- 'ZOO_COPEPODS1'
     #wq_def19 <- ncvar_def("ZOO_COPEPODS1","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
     #dlname <- 'ZOO_COPEPODS1'
@@ -336,8 +336,7 @@ write_forecast_netcdf <- function(x,
     #wq_def21 <- ncvar_def("ZOO_DAPHNIASMALL3","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
     
     ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def, qt_restart_def,resid30day_def,
-                                    wq_def1,wq_def2,wq_def3,wq_def4,wq_def5,wq_def6,wq_def7,wq_def8,wq_def9,wq_def10,wq_def11,wq_def12, wq_def13,wq_def14,wq_def15,
-                                    wq_def16,wq_def17,wq_def18
+                                    wq_def1,wq_def2,wq_def3,wq_def4,wq_def5,wq_def6,wq_def7,wq_def8,wq_def9,wq_def10,wq_def11,wq_def12, wq_def13,wq_def14,wq_def15
                                     #,wq_def19,wq_def20,wq_def21  remove zooplankton
                                     ),force_v4=T)
     
@@ -390,9 +389,9 @@ write_forecast_netcdf <- function(x,
     ncvar_put(ncout,wq_def13,x[,,wq_start[13]:wq_end[13]])
     ncvar_put(ncout,wq_def14,x[,,wq_start[14]:wq_end[14]])
     ncvar_put(ncout,wq_def15,x[,,wq_start[15]:wq_end[15]])
-    ncvar_put(ncout,wq_def16,x[,,wq_start[16]:wq_end[16]])
-    ncvar_put(ncout,wq_def17,x[,,wq_start[17]:wq_end[17]])
-    ncvar_put(ncout,wq_def18,x[,,wq_start[18]:wq_end[18]])
+    #ncvar_put(ncout,wq_def16,x[,,wq_start[16]:wq_end[16]])
+    #ncvar_put(ncout,wq_def17,x[,,wq_start[17]:wq_end[17]])
+    #ncvar_put(ncout,wq_def18,x[,,wq_start[18]:wq_end[18]])
     #ncvar_put(ncout,wq_def19,x[,,wq_start[19]:wq_end[19]])
     #ncvar_put(ncout,wq_def20,x[,,wq_start[20]:wq_end[20]])
     #ncvar_put(ncout,wq_def21,x[,,wq_start[21]:wq_end[21]])
@@ -402,6 +401,7 @@ write_forecast_netcdf <- function(x,
   ncatt_put(ncout,0,"title",'Falling Creek Reservoir forecast', prec =  "text")
   ncatt_put(ncout,0,"institution",'Virginia Tech', prec =  "text")
   ncatt_put(ncout,0,"GLM_version",as.character(GLMversion), prec =  "text")
+  ncatt_put(ncout,0,"time_zone_of_simulation",as.character(local_tzone), prec =  "text")
   ncatt_put(ncout,0,"FLARE_version",as.character(FLAREversion), prec =  "text")
   #ncatt_put(ncout,0,"references",references$value)
   history <- paste('Run date:',time_of_forecast, sep=", ")

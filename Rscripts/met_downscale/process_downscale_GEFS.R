@@ -13,7 +13,7 @@ process_downscale_GEFS <- function(folder,
                                    n_ds_members,
                                    n_met_members,
                                    file_name,
-                                   output_tz,
+                                   local_tzone,
                                    FIT_PARAMETERS,
                                    DOWNSCALE_MET,
                                    met_downscale_uncertainty,
@@ -23,7 +23,8 @@ process_downscale_GEFS <- function(folder,
                                    downscaling_coeff,
                                    full_time_local,
                                    first_obs_date,
-                                   last_obs_date){
+                                   last_obs_date,
+                                   input_met_file_tz){
   # -----------------------------------
   # 0. Source necessary files
   # -----------------------------------
@@ -56,11 +57,11 @@ process_downscale_GEFS <- function(folder,
     dplyr::mutate(TIMESTAMP = as.character(TIMESTAMP)) %>%
     dplyr::mutate_at(VarNames, as.numeric) %>%
     dplyr::mutate(timestamp = as_datetime(TIMESTAMP,
-                                          tz = 'EST5EDT')) %>%
+                                          tz = input_met_file_tz)) %>%
     dplyr::mutate(AirTemp = AirTemp + 273.15,# convert from C to Kelvin
                   Rain = Rain* 60 * 24/1000) %>% # convert from mm to m
     dplyr::select(timestamp, VarNames)
-  observations$timestamp <- with_tz(observations$timestamp, output_tz)
+  observations$timestamp <- with_tz(observations$timestamp, local_tzone)
   observations <- observations %>%
     dplyr::mutate(ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
                   RelHum = ifelse(RelHum <0, 0, RelHum),
@@ -88,11 +89,11 @@ process_downscale_GEFS <- function(folder,
     fit_downscaling_parameters(observations,
                                for.file.path = noaa_location,
                                working_glm,
-                               VarNames = VarNames,
+                               VarNames,
                                VarNamesStates,
-                               replaceObsNames = replaceObsNames,
+                               replaceObsNames,
                                PLOT = FALSE,
-                               output_tz = output_tz,
+                               local_tzone,
                                VarInfo,
                                first_obs_date,
                                last_obs_date)
@@ -100,21 +101,22 @@ process_downscale_GEFS <- function(folder,
   # -----------------------------------
   # 2. Process GEFS
   # -----------------------------------
-  met_forecast_output = process_GEFS(file_name = file_name,
-                       n_ds_members = n_ds_members,
-                       n_met_members = n_met_members,
-                       sim_files_folder = sim_files_folder,
+  met_forecast_output <- process_GEFS(file_name,
+                       n_ds_members,
+                       n_met_members,
+                       sim_files_folder,
                        in_directory = noaa_location,
                        out_directory = working_glm,
-                       output_tz = output_tz,
-                       VarInfo = VarInfo,
-                       replaceObsNames = replaceObsNames,
+                       local_tzone,
+                       VarInfo,
+                       replaceObsNames,
                        hrly.observations = hrly.obs,
-                       DOWNSCALE_MET = DOWNSCALE_MET,
-                       FIT_PARAMETERS = FIT_PARAMETERS,
+                       DOWNSCALE_MET,
+                       FIT_PARAMETERS,
                        met_downscale_uncertainty,
                        WRITE_FILES = TRUE,
-                       downscaling_coeff)
+                       downscaling_coeff,
+                       full_time_local)
   files = met_forecast_output[[1]]
   output = met_forecast_output[[2]]
   if(compare_output_to_obs == TRUE){

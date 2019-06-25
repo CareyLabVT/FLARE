@@ -1,4 +1,4 @@
-prep_for <- function(NOAA.data, input_tz, output_tz){
+prep_for <- function(NOAA.data, input_tz, local_tzone){
   # --------------------------------------
   # purpose: convert forecasts dataframe to units/names for comparison with observations
   # Creator: Laura Puckett, December 14 2018
@@ -16,6 +16,6 @@ prep_for <- function(NOAA.data, input_tz, output_tz){
                   RelHum = rh2m,
                   Rain = pratesfc*60*60*24/1000) %>% # (convert from mm/s to total m over 6 hrs)
     select(NOAA.member, timestamp, AirTemp, LongWave, ShortWave, RelHum, WindSpeed, Rain)
-  forecast.data$timestamp <- with_tz(forecast.data$timestamp, output_tz)
+  forecast.data$timestamp <- with_tz(forecast.data$timestamp, local_tzone)
   return(forecast.data)
 }
