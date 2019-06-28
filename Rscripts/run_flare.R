@@ -741,9 +741,9 @@ run_flare<-function(start_day,
   CAR_dic_init <- 59.1
   CAR_ch4_init <- 0.58
   SIL_rsi_init <- 300
-  NIT_amm_init <- 0.69*10
-  NIT_nit_init <- 0.05*10
-  PHS_frp_init <- 0.07*10
+  NIT_amm_init <- 0.69
+  NIT_nit_init <- 0.05
+  PHS_frp_init <- 0.07
   OGM_doc_init <- 47.4
   OGM_poc_init <- 78.5
   OGM_don_init <- 1.3

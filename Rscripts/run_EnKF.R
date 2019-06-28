@@ -78,16 +78,16 @@ run_EnKF <- function(x,
         }
         
         
-        #update_var(c(round(max(c(4,new_pars[1])) ,3) ,round(max(c(4,new_pars[2])),3)),
-        #           "sed_temp_mean",
-        #           working_glm, "glm3.nml")
+        update_var(c(round(max(c(4,new_pars[1])) ,3) ,round(max(c(4,new_pars[2])),3)),
+                   "sed_temp_mean",
+                   working_glm, "glm3.nml")
         
-        #update_var(round(new_pars[3], 3), "sw_factor", working_glm, "glm3.nml")
+        update_var(round(new_pars[3], 3), "sw_factor", working_glm, "glm3.nml")
         
         if(include_wq){
-          #update_var(round(new_pars[4],3), "Fsed_oxy", working_glm, "aed2.nml")
-          #update_var(round(new_pars[5],3), "Rdom_minerl", working_glm, "aed2.nml")
-          #update_var(round(c(new_pars[6],0.5,1,1.5),3), "pd%R_growth", working_glm, "aed2_phyto_pars.nml")          
+          update_var(round(new_pars[4],3), "Fsed_oxy", working_glm, "aed2.nml")
+          update_var(round(new_pars[5],3), "Rdom_minerl", working_glm, "aed2.nml")
+          update_var(round(c(new_pars[6],0.5,1,1.5),3), "pd%R_growth", working_glm, "aed2_phyto_pars.nml")          
         }
         new_pars <- x[i - 1, m, (nstates + 1):(nstates+npars)]
         pars_corr[m, ] <- new_pars

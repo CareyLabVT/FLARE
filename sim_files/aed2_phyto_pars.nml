@@ -85,7 +85,7 @@
   pd%simDINUptake         =             1,            1,            1,            1
   pd%simDONUptake         =             0,            0,            0,            0
   pd%simNFixation         =             0,            0,            0,            0
-  pd%simINDynamics        =             1,            1,            2,            2
+  pd%simINDynamics        =             0,            1,            2,            2
   pd%N_o                  =             0,            0,            0,            0
   pd%K_N                  =             1,            1,          2.7,          3.5
   pd%X_ncon               =         0.035,        0.035,        0.035,        0.035
@@ -95,7 +95,7 @@
   pd%k_nfix               =          0.67,         0.67,            1,            1
   pd%R_nfix               =          0.13,         0.13,            0,            0
   pd%simDIPUptake         =             1,            1,            1,            1
-  pd%simIPDynamics        =             2,            2,            2,            2
+  pd%simIPDynamics        =             0,            2,            2,            2
   pd%P_0                  =             0,            0,            0,            0
   pd%K_P                  =           0.5,          0.5,          0.7,          0.7
   pd%X_pcon               =        0.0015,       0.0015,       0.0013,       0.0017
