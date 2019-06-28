@@ -47,7 +47,7 @@ plot_forecast <- function(pdf_file_name,
   
   nc <- nc_open(output_file)
   t <- ncvar_get(nc,'time')
-  local_tzone <- "GMT" #ncatt_get(nc, 0)$time_zone_of_simulation
+  local_tzone <- ncatt_get(nc, 0)$time_zone_of_simulation
   full_time_local <- as.POSIXct(t, origin = '1970-01-01 00:00.00 UTC', tz = local_tzone)
   full_time_day_local <- as_date(full_time_local)
   temp_mean <- ncvar_get(nc,'temp_mean')
