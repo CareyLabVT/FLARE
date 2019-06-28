@@ -54,7 +54,6 @@ plot_forecast <- function(pdf_file_name,
   temp_upper <- ncvar_get(nc,'temp_upperCI')
   temp_lower  <- ncvar_get(nc,'temp_lowerCI')
   depths <- ncvar_get(nc,'z')
-  Kw <- ncvar_get(nc,'Kw')
   SW_LW_factor <- ncvar_get(nc,'SW_LW_factor')
   zone1temp <- ncvar_get(nc,'zone1temp')
   zone2temp <- ncvar_get(nc,'zone2temp')
@@ -69,6 +68,9 @@ plot_forecast <- function(pdf_file_name,
     OXY_oxy <- wq_output[which(wq_names == 'OXY_oxy'),,,]
     PHY_TCHLA <- wq_output[which(wq_names == 'PHY_TCHLA'),,,]
     OGM_doc <- wq_output[which(wq_names == 'OGM_doc'),,,]
+    Fsed_oxy <- ncvar_get(nc,'Fsed_oxy')
+    Rdom_minerl <- ncvar_get(nc,'Rdom_minerl')
+    R_growth <- ncvar_get(nc,'R_growth')
   }
   
   nc_close(nc)
@@ -255,12 +257,6 @@ plot_forecast <- function(pdf_file_name,
   ###PLOT OF PARAMETERS IF FIT
   plot.new()
   if(npars > 0){
-    plot(full_time_local,rowMeans(Kw[,]),xlab ='Day',ylab = 'Kw',type='l',ylim = range(c(Kw),na.rm=TRUE))
-    if(length(Kw[1,]) > 1){
-      for(m in 1:length(Kw[1,])){
-        points(full_time_local,Kw[,m],type='l')
-      }
-    }
     plot(full_time_local,rowMeans(zone1temp[,]),xlab ='Day',ylab = 'Zone 1 sediment temp',type='l',ylim = range(c(zone1temp),na.rm=TRUE))
     if(length(zone1temp[1,]) > 1){
       for(m in 1:length(zone1temp[1,])){
@@ -277,6 +273,26 @@ plot_forecast <- function(pdf_file_name,
     if(length(SW_LW_factor[1,]) > 1){
       for(m in 1:length(SW_LW_factor[1,])){
         points(full_time_local,SW_LW_factor[,m],type='l')
+      }
+    }
+    if(include_wq){
+      plot(full_time_local,rowMeans(Fsed_oxy[,]),xlab ='Day',ylab = 'Fsed_oxy',type='l',ylim = range(c(Fsed_oxy),na.rm=TRUE))
+      if(length(Fsed_oxy[1,]) > 1){
+        for(m in 1:length(Fsed_oxy[1,])){
+          points(full_time_local,Fsed_oxy[,m],type='l')
+        }
+      }
+      plot(full_time_local,rowMeans(Rdom_minerl[,]),xlab ='Day',ylab = 'Rdom_minerl',type='l',ylim = range(c(Rdom_minerl),na.rm=TRUE))
+      if(length(Rdom_minerl[1,]) > 1){
+        for(m in 1:length(Rdom_minerl[1,])){
+          points(full_time_local,Rdom_minerl[,m],type='l')
+        }
+      }
+      plot(full_time_local,rowMeans(R_growth[,]),xlab ='Day',ylab = 'R_growth',type='l',ylim = range(c(R_growth),na.rm=TRUE))
+      if(length(R_growth[1,]) > 1){
+        for(m in 1:length(R_growth[1,])){
+          points(full_time_local,R_growth[,m],type='l')
+        }
       }
     }
   }

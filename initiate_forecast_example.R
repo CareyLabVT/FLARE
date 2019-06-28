@@ -36,11 +36,11 @@ restart_file <- NA
 
 
 forecast_days <- 0
-spin_up_days <- 0
+spin_up_days <- 26
 sim_name <- "test1" 
 start_day_local <- "2018-10-05"
 start_time_local <- "00:00:00"
-forecast_start_day_local <-"2018-10-10" 
+forecast_start_day_local <-"2018-10-30" 
 hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day_local, tz = local_tzone),
                                  as.POSIXct(start_day_local, tz = local_tzone)))
 

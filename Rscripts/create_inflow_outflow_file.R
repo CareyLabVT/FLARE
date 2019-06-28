@@ -53,6 +53,7 @@ create_inflow_outflow_file <- function(full_time_day_local,
   wetland_2013 =  wetland[which(wetland_time_tmp %in% full_time_day_2015),]
   wetland_new = wetland_2017
   
+  
   for(i in 1:length(full_time_day_local)){
     curr_day <- day(full_time_day_local[i])
     curr_month <- month(full_time_day_local[i])
@@ -65,13 +66,13 @@ create_inflow_outflow_file <- function(full_time_day_local,
       hist_index3 <- index3
     }
     if(i < (start_forecast_step+1) & hold_inflow_outflow_constant){
-      for(j in 2:16){
+      for(j in 2:ncol(inflow)){
         inflow_new[i,j] <- mean(inflow[index1,j], na.rm = TRUE)
         wetland_new[i,j] <- mean(wetland[index3,j], na.rm = TRUE)
       }
       spillway_new[i,2] <- mean(spillway[index2,2], na.rm = TRUE)
     }else{
-      for(j in 2:16){
+      for(j in 2:ncol(inflow)){
         inflow_new[i,j] <- mean(inflow[hist_index1,j], na.rm = TRUE)
         wetland_new[i,j] <- mean(wetland[hist_index3,j], na.rm = TRUE)
       }

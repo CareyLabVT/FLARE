@@ -15,6 +15,8 @@ write_forecast_netcdf <- function(x,
                                   par2,
                                   par3,
                                   par4,
+                                  par5,
+                                  par6,
                                   z,
                                   nstates,
                                   npars,
@@ -78,8 +80,12 @@ write_forecast_netcdf <- function(x,
   par2_def <- ncvar_def("zone2temp","deg_C",list(timedim,ensdim),fillvalue,dlname,prec="single")
   dlname <- 'SW/LW factor parameter'
   par3_def <- ncvar_def("SW_LW_factor","proportion",list(timedim,ensdim),fillvalue,dlname,prec="single")
-  dlname <- 'Kw'
-  par4_def <- ncvar_def("Kw","unitless",list(timedim,ensdim),fillvalue,dlname,prec="single")
+  dlname <- 'Fsed_oxy'
+  par4_def <- ncvar_def("Fsed_oxy","unitless",list(timedim,ensdim),fillvalue,dlname,prec="single")
+  dlname <- 'Rdom_minerl'
+  par5_def <- ncvar_def("Rdom_minerl","unitless",list(timedim,ensdim),fillvalue,dlname,prec="single")
+  dlname <- 'R_growth'
+  par6_def <- ncvar_def("R_growth","unitless",list(timedim,ensdim),fillvalue,dlname,prec="single")
   dlname <- 'restart covariance matrix'
   qt_restart_def <- ncvar_def("qt_restart","-",list(statedim,statedim),fillvalue,dlname,prec="float")
   dlname <- 'matrix for restarting EnKF'
@@ -141,13 +147,13 @@ write_forecast_netcdf <- function(x,
     #dlname <- 'ZOO_COPEPODS1'
     #wq_def21 <- ncvar_def("ZOO_DAPHNIASMALL3","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
     
-    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def,qt_restart_def,resid30day_def,
+    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,par5_def,par6_def,x_prior_def,obs_def,qt_restart_def,resid30day_def,
                                     wq_def1,wq_def2,wq_def3,wq_def4,wq_def5,wq_def6,wq_def7,wq_def8,wq_def9,wq_def10,wq_def11,wq_def12, wq_def13,wq_def14,wq_def15
                                     #,,wq_def19,wq_def20,wq_def21 #Removing zooplankton
                                     ),force_v4=T)
     
   }else{
-    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,x_prior_def,obs_def,qt_restart_def,resid30day_def),force_v4=T)
+    ncout <- nc_create(ncfname,list(tmp_def,forecast_def,tmp_mean_def,tmp_upper_def,tmp_lower_def,x_def,par1_def,par2_def,par3_def,par4_def,par5_def,par6_def,x_prior_def,obs_def,qt_restart_def,resid30day_def),force_v4=T)
   }
   
   # create netCDF file and put arrays
@@ -165,6 +171,8 @@ write_forecast_netcdf <- function(x,
   
   ncvar_put(ncout,par3_def,array(x[,,par3]))
   ncvar_put(ncout,par4_def,array(x[,,par4]))
+  ncvar_put(ncout,par5_def,array(x[,,par5]))
+  ncvar_put(ncout,par6_def,array(x[,,par6]))
   
   ncvar_put(ncout,forecast_def,as.array(forecasted))
   

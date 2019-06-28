@@ -136,6 +136,9 @@ run_flare<-function(start_day,
   
   # SET UP NUMBER OF ENSEMBLE MEMBERS
   n_met_members <- 21
+  if(single_run){
+    n_met_members <- 1
+  }
   
   ### METEROLOGY DOWNSCALING OPTIONS
   if(is.na(downscaling_coeff)){
@@ -282,7 +285,18 @@ run_flare<-function(start_day,
     obs_error_temperature <- 0.000001
   }
   
-  #use_obs_constraint <- TRUE
+  if(single_run){
+    #No sources of uncertainty and no data used to constrain 
+    use_obs_constraint <- TRUE
+    #SOURCES OF uncertainty
+    observation_uncertainty <- FALSE
+    process_uncertainty <- FALSE
+    weather_uncertainty <- FALSE
+    initial_condition_uncertainty <- FALSE
+    parameter_uncertainty <- FALSE
+    met_downscale_uncertainty <- FALSE
+    spin_up_days <- hist_days + 1
+  }
   
   ####################################################
   #### STEP 2: DETECT PLATFORM  
@@ -499,7 +513,7 @@ run_flare<-function(start_day,
   }
   
   if(weather_uncertainty == FALSE){
-    n_met_members <- 4
+    n_met_members <- 1
   }
   
   ###MOVE DATA FILES AROUND
@@ -533,7 +547,7 @@ run_flare<-function(start_day,
   ##CREATE INFLOW AND OUTFILE FILES
   if(!pre_scc){
     create_inflow_outflow_file(full_time_day_local,
-                               working_glm = working_glm, 
+                               working_glm, 
                                input_file_tz = "EST5EDT",
                                start_forecast_step,
                                hold_inflow_outflow_constant,
@@ -684,11 +698,15 @@ run_flare<-function(start_day,
         par2 <- par1 + 1
         par3 <-  par2 + 1
         par4 <-  par3 + 1
+        par5 <-  par4 + 1
+        par6 <-  par5 + 1
       }else{
         par1 <- wq_end[num_wq_vars]
         par2 <- wq_end[num_wq_vars]
         par3 <- wq_end[num_wq_vars]
         par4 <- wq_end[num_wq_vars]
+        par5 <- wq_end[num_wq_vars]
+        par6 <- wq_end[num_wq_vars]
       }
       
     }
@@ -700,11 +718,15 @@ run_flare<-function(start_day,
       par2 <- par1 + 1
       par3 <-  par2 + 1
       par4 <-  par3 + 1
+      par5 <-  par4 + 1
+      par6 <-  par5 + 1
     }else{
       par1 <- temp_end
       par2 <- temp_end
       par3 <- temp_end
       par4 <- temp_end
+      par5 <- temp_end
+      par6 <- temp_end
     }
   }
   
@@ -719,9 +741,9 @@ run_flare<-function(start_day,
   CAR_dic_init <- 59.1
   CAR_ch4_init <- 0.58
   SIL_rsi_init <- 300
-  NIT_amm_init <- 0.69
-  NIT_nit_init <- 0.05
-  PHS_frp_init <- 0.07
+  NIT_amm_init <- 0.69*10
+  NIT_nit_init <- 0.05*10
+  PHS_frp_init <- 0.07*10
   OGM_doc_init <- 47.4
   OGM_poc_init <- 78.5
   OGM_don_init <- 1.3
@@ -791,12 +813,12 @@ run_flare<-function(start_day,
   OGM_pop_init_depth <- rep(OGM_pop_init, ndepths_modeled)
   #PHY_TCHLA_init_depth <- rep(PHY_TCHLA_init, ndepths_modeled)
   
-  phyto_proportions <- c(0.25, 0.25, 0.25, 0.25)
+  #phyto_proportions <- c(0.25, 0.25, 0.25, 0.25)
   
-  PHY_CYANOPCH1_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[1]
-  PHY_CYANONPCH2_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[2]
-  PHY_CHLOROPCH3_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[3]
-  PHY_DIATOMPCH4_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[4] 
+  PHY_CYANOPCH1_init_depth <- PHY_TCHLA_init_depth/biomass_to_chla[1]
+  #PHY_CYANONPCH2_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[2]
+  #PHY_CHLOROPCH3_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[3]
+  #PHY_DIATOMPCH4_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[4] 
   
   if(full_time_day_local[1] == 
      strftime("2018-07-09",format="%Y-%m-%d",tz = "EST5EDT") &
@@ -884,23 +906,20 @@ run_flare<-function(start_day,
                              OGM_pon_init_depth,
                              OGM_dop_init_depth,
                              OGM_pop_init_depth,
-                             PHY_CYANOPCH1_init_depth,
-                             PHY_CYANONPCH2_init_depth,
-                             PHY_CHLOROPCH3_init_depth,
-                             PHY_DIATOMPCH4_init_depth)
+                             PHY_CYANOPCH1_init_depth)
   
   
   #UPDATE NML WITH PARAMETERS AND INITIAL CONDITIONS
   if(include_wq){
-    update_var(wq_init_vals_w_phytos, "wq_init_vals", working_glm)
-    update_var(length(wq_init_vals_w_phytos)/length(OXY_oxy_init_depth), "num_wq_vars", working_glm)
+    update_var(wq_init_vals_w_phytos, "wq_init_vals", working_glm, "glm3.nml")
+    update_var(length(wq_init_vals_w_phytos)/length(OXY_oxy_init_depth), "num_wq_vars", working_glm, "glm3.nml")
   }else{
-    update_var(" ", "wq_init_vals", working_glm)
-    update_var(0, "num_wq_vars", working_glm)
+    update_var(" ", "wq_init_vals", working_glm, "glm3.nml")
+    update_var(0, "num_wq_vars", working_glm, "glm3.nml")
   }
-  update_var(ndepths_modeled, "num_depths", working_glm)
-  update_var(modeled_depths, "the_depths", working_glm)
-  update_var(rep(the_sals_init, ndepths_modeled), "the_sals", working_glm)
+  update_var(ndepths_modeled, "num_depths", working_glm, "glm3.nml")
+  update_var(modeled_depths, "the_depths", working_glm, "glm3.nml")
+  update_var(rep(the_sals_init, ndepths_modeled), "the_sals", working_glm, "glm3.nml")
   
   #Create a copy of the NML to record starting parameters
   file.copy(from = paste0(working_glm, "/", "glm3.nml"), 
@@ -1041,7 +1060,7 @@ run_flare<-function(start_day,
   #Covariance matrix for parameters
   if(npars > 0){
     qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
-    diag(qt_pars) <- c(zone1temp_init_qt, zone2temp_init_qt, swf_init_qt,kw_init_qt)
+    diag(qt_pars) <- c(zone1temp_init_qt, zone2temp_init_qt, swf_init_qt,Fsed_oxy_init_qt,Rdom_minerl_init_qt,Rdom_minerl_init_qt)
   }else{
     qt_pars <- NA
   }
@@ -1067,7 +1086,9 @@ run_flare<-function(start_day,
         x[1, ,(nstates+1)] <- runif(n=nmembers,zone1_temp_init_lowerbound, zone1_temp_init_upperbound)
         x[1, ,(nstates+2)] <- runif(n=nmembers,zone2_temp_init_lowerbound, zone2_temp_init_upperbound)
         x[1, ,(nstates+3)] <- runif(n=nmembers,swf_init_lowerbound, swf_init_upperbound)
-        x[1, ,(nstates+4)] <- rep(kw_init, nmembers) #runif(n=nmembers,0.5, 1.5)
+        x[1, ,(nstates+4)] <- runif(n=nmembers,Fsed_oxy_init_lowerbound, Fsed_oxy_init_upperbound)
+        x[1, ,(nstates+5)] <- runif(n=nmembers,Rdom_minerl_init_lowerbound, Rdom_minerl_init_upperbound)
+        x[1, ,(nstates+6)] <- runif(n=nmembers,R_growth_init_lowerbound, R_growth_init_upperbound)
         if(initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
             x[1,m, ] <- c(the_temps_init,
@@ -1075,7 +1096,9 @@ run_flare<-function(start_day,
                           zone1_temp_init_mean,
                           zone2_temp_init_mean,
                           swf_init_mean,
-                          kw_init)
+                          Fsed_oxy_init_mean,
+                          Rdom_minerl_init_mean,
+                          R_growth_init_mean)
           }
         }
       }else{
@@ -1098,10 +1121,9 @@ run_flare<-function(start_day,
         x[1, ,(nstates+1)] <- runif(n=nmembers,zone1_temp_init_lowerbound, zone1_temp_init_upperbound)
         x[1, ,(nstates+2)] <- runif(n=nmembers,zone2_temp_init_lowerbound, zone2_temp_init_upperbound)
         x[1, ,(nstates+3)] <- runif(n=nmembers,swf_init_lowerbound, swf_init_upperbound)
-        x[1, ,(nstates+4)] <- rep(kw_init, nmembers) #runif(n=nmembers,0.5, 1.5)
         if(initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
-            x[1, m, ] <- c(the_temps_init, zone1_temp_init_mean, zone2_temp_init_mean, swf_init_mean, kw_init)
+            x[1, m, ] <- c(the_temps_init, zone1_temp_init_mean, zone2_temp_init_mean, swf_init_mean)
           }
         }
       }else{
@@ -1121,7 +1143,7 @@ run_flare<-function(start_day,
     if(include_wq){
       for(m in 1:nmembers){
         for(wq in 1:num_wq_vars){
-          index <- which(x[1, m, ] < 0.0)
+          index <- which(x[1, m, 1:par1] < 0.0)
           index <- index[which(index > wq_start[1])]
           x[1, m, index] <- 0.0
         }
@@ -1192,10 +1214,7 @@ run_flare<-function(start_day,
   if(include_wq){
     x_phyto_groups <- array(NA, dim=c(nsteps, nmembers, length(tchla_components_vars)*length(modeled_depths)))
     for(m in 1:nmembers){
-      phyto_biomass <- matrix(c(PHY_CYANOPCH1_init_depth,
-                                PHY_CYANONPCH2_init_depth,
-                                PHY_CHLOROPCH3_init_depth,
-                                PHY_DIATOMPCH4_init_depth), 
+      phyto_biomass <- matrix(c(PHY_CYANOPCH1_init_depth), 
                               nrow = length(modeled_depths),
                               ncol = length(tchla_components_vars))
       phyto_proportions <- phyto_biomass
@@ -1314,6 +1333,8 @@ run_flare<-function(start_day,
                         par2,
                         par3,
                         par4,
+                        par5,
+                        par6,
                         z,
                         nstates,
                         npars,

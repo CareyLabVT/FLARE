@@ -44,6 +44,8 @@ FLAREversion <<- "v1.0_beta.1"
 uncert_mode <<- 1
 cov_matrix <<- "Qt_cov_matrix_init_AED.csv"
 
+single_run <<- TRUE
+
 #Depths used in the EnKF
 #This are the depths that are saved between days
 if(!include_wq){
@@ -65,7 +67,7 @@ if(!include_wq){
 # 1) the number of NOAA ensembles (21)
 # 2) the number of downscaling essembles (50 is current)
 # get to the total number of essembles
-n_enkf_members <<- 3
+n_enkf_members <<- 1
 n_ds_members <<- 1
 
 
@@ -92,10 +94,26 @@ swf_init_upperbound <<- 1.0
 #daily perturbance of parameter value
 swf_init_qt <<- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
 
-#Initial KW
-#Note: KW is not current fit
-kw_init <<- 0.87  #use 0.15 if running AED
-kw_init_qt <<- 0.000000001^2
+#Fsed_oxy
+Fsed_oxy_init_mean <<- -24.219
+Fsed_oxy_init_lowerbound <<- -30
+Fsed_oxy_init_upperbound <<- -10
+#daily perturbance of parameter value
+Fsed_oxy_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
+
+#Fsed_oxy
+Rdom_minerl_init_mean <<- 0.0005
+Rdom_minerl_init_lowerbound <<- 0.0001
+Rdom_minerl_init_upperbound <<- 0.001
+#daily perturbance of parameter value
+Rdom_minerl_init_qt <<- 0.00000001^2 #THIS IS THE VARIANCE, NOT THE SD
+
+#R_growth
+R_growth_init_mean <<- 1
+R_growth_init_lowerbound <<- 1.00001 #0.2
+R_growth_init_upperbound <<- 1.5
+#daily perturbance of parameter value
+Rdom_minerl_init_qt <<- 0.000000001^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Depths with temperature observations
 observed_depths_temp <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9)
@@ -112,9 +130,9 @@ temp_obs_fname <<- "Catwalk.csv"
 met_obs_fname <<- "FCRmet.csv"
 
 #Name of the historical inflow and outflow files
-inflow_file1 <<- "FCR_weir_inflow_newEDI_2013_2017_20190128_allfractions.csv"
+inflow_file1 <<- "FCR_weir_inflow_newEDI_2013_2017_20190128_oneDOC.csv"
 outflow_file1 <<- "FCR_spillway_outflow_newEDI_SUMMED_WeirWetland_2013_2017_20190128.csv"
-inflow_file2 <<- "FCR_wetland_inflow_newEDI_2013_2017_20190305_allfractions.csv"
+inflow_file2 <<- "FCR_wetland_inflow_newEDI_2013_2017_20190305_oneDOC.csv"
 
 #define water quality variables modeled.  Not used if include_wq == FALSE
 wq_names <<- c("OXY_oxy",
@@ -136,14 +154,12 @@ wq_names <<- c("OXY_oxy",
 
 #The names of the phytoplankton groups that contribute to
 #total chl-a in GLM
-tchla_components_vars <<- c("PHY_CYANOPCH1",
-                      "PHY_CYANONPCH2",
-                      "PHY_CHLOROPCH3",
-                      "PHY_DIATOMPCH4") 
+tchla_components_vars <<- c("PHY_CYANOPCH1")
+
 #carbon to chlorophyll ratio (mg C/mg chla)
 #12 g/ mole of C vs. X g/ mole of chla
 #Initial concentration of phytoplankton (mmol C/m3)
-biomass_to_chla <<- c(70/12,70/12,50/12,50/12)
+biomass_to_chla <<- c(200/12)
 
 #uncertainy in temperature measurement
 obs_error_temperature <<- 0.0001 #NEED TO DOUBLE CHECK
@@ -174,7 +190,7 @@ turnover_index_1 <<- 2
 turnover_index_2 <<- 9
 
 #Options that you will not adjust but are needed as global variables
-npars <<- 4 
+npars <<- 6 
 pre_scc <<- FALSE
 hold_inflow_outflow_constant <<- FALSE
 print_glm2screen <<- FALSE

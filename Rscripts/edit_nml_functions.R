@@ -32,8 +32,8 @@ update_temps <- function(curr_temps,curr_depths,working_glm){
 }
 
 
-update_var <- function(var_value,var_name,working_glm, working_glm_docker){
-  orig_nml = read_nml(paste0(working_glm,'/','glm3.nml'))
+update_var <- function(var_value,var_name,working_glm, nml){
+  orig_nml = read_nml(paste0(working_glm,'/',nml))
   index1 = NA; index2 = NA
   for (g in 1:length(orig_nml)) {
     for (q in 1:length(orig_nml[[g]])) {
@@ -46,7 +46,7 @@ update_var <- function(var_value,var_name,working_glm, working_glm_docker){
   holder2[1:length(var_value)] = var_value
   holder2 = list(holder2[1:length(var_value)])
   orig_nml[[index1]][index2] = holder2
-  write_nml(orig_nml, paste0(working_glm,'/','glm3.nml'))
+  write_nml(orig_nml, paste0(working_glm,'/',nml))
 }
 
 update_time <- function(start_value,stop_value,working_glm){

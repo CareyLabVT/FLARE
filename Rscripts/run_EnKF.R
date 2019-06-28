@@ -64,7 +64,7 @@ run_EnKF <- function(x,
       tmp <- update_temps(curr_temps = round(x[i - 1, m, 1:length(modeled_depths)], 3),
                           curr_depths = modeled_depths,
                           working_glm)
-      update_var(surface_height[i - 1, m], "lake_depth", working_glm)
+      update_var(surface_height[i - 1, m], "lake_depth", working_glm, "glm3.nml")
       if(npars > 0){
         if(i > (hist_days + 1)){
           new_pars <- x[i - 1, m, (nstates + 1):(nstates+npars)]
@@ -77,15 +77,19 @@ run_EnKF <- function(x,
                               sigma=as.matrix(qt_pars))
         }
         
-        #new_pars[2] <- 17
         
-        update_var(c(round(max(c(4,new_pars[1])) ,3) ,round(max(c(4,new_pars[2])),3)),
-                   "sed_temp_mean",
-                   working_glm)
+        #update_var(c(round(max(c(4,new_pars[1])) ,3) ,round(max(c(4,new_pars[2])),3)),
+        #           "sed_temp_mean",
+        #           working_glm, "glm3.nml")
         
-        update_var(round(new_pars[3], 3), "sw_factor", working_glm)
-        #update_var(round(new_pars[3], 3), "lw_factor", working_glm)
-        #update_var(round(new_pars[4], 4), "Kw", working_glm)
+        #update_var(round(new_pars[3], 3), "sw_factor", working_glm, "glm3.nml")
+        
+        if(include_wq){
+          #update_var(round(new_pars[4],3), "Fsed_oxy", working_glm, "aed2.nml")
+          #update_var(round(new_pars[5],3), "Rdom_minerl", working_glm, "aed2.nml")
+          #update_var(round(c(new_pars[6],0.5,1,1.5),3), "pd%R_growth", working_glm, "aed2_phyto_pars.nml")          
+        }
+        new_pars <- x[i - 1, m, (nstates + 1):(nstates+npars)]
         pars_corr[m, ] <- new_pars
       }
       
@@ -93,7 +97,7 @@ run_EnKF <- function(x,
         non_phytos <- round(c(x[i - 1, m, wq_start[1]:wq_end[num_wq_vars-1]]), 3)
         phytos <- round(x_phyto_groups[i-1, m, ],3)
         wq_init_vals_w_phytos <- c(non_phytos, phytos)
-        update_var(wq_init_vals_w_phytos, "wq_init_vals" ,working_glm)
+        update_var(wq_init_vals_w_phytos, "wq_init_vals" ,working_glm, "glm3.nml")
       }
       
       
@@ -101,12 +105,12 @@ run_EnKF <- function(x,
       
       working_glm_docker <- "/GLM/TestLake"
       if(i > (hist_days + 1)){
-        update_var(met_file_names[1 + met_index], "meteo_fl", working_glm)
+        update_var(met_file_names[1 + met_index], "meteo_fl", working_glm, "glm3.nml")
         #update_var(paste0("FCR_inflow.csv"), "inflow_fl", working_glm)
         #update_var(paste0("FCR_spillway_outflow.csv"), "outflow_fl", working_glm)
       }else{
-        update_var(met_file_names[1], "meteo_fl", working_glm)
-        update_var("GLM_met.csv", "meteo_fl", working_glm)
+        update_var(met_file_names[1], "meteo_fl", working_glm, "glm3.nml")
+        update_var("GLM_met.csv", "meteo_fl", working_glm, "glm3.nml")
         #update_var(paste0("FCR_weir_inflow.csv"), "inflow_fl", working_glm)
         #update_var(paste0("FCR_spillway_outflow.csv"), "outflow_fl", working_glm)
       }
@@ -237,11 +241,8 @@ run_EnKF <- function(x,
     
     if(include_wq){
       for(m in 1:nmembers){
-        for(wq in 1:num_wq_vars){
-          index <- which(x_corr[m, ] < 0.0)
-          index <- index[which(index > wq_start[1])]
-          x_corr[m, index] <- 0.0
-        }
+        index <- which(x_corr[m,] < 0.0)
+        x_corr[m, index[which(index < wq_end[num_wq_vars])]] <- 0.0
       }
     }
     
@@ -378,11 +379,8 @@ run_EnKF <- function(x,
         
         if(include_wq){
           for(m in 1:nmembers){
-            for(wq in 1:num_wq_vars){
-              index <- which(x[i, m, ] < 0.0)
-              index <- index[which(index > wq_start[1])]
-              x[i, m, index] <- 0.0
-            }
+              index <- which(x[i,m,] < 0.0)
+              x[i, m, index[which(index < wq_end[num_wq_vars])]] <- 0.0
           }
         }
         
