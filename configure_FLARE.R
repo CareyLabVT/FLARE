@@ -1,20 +1,20 @@
 #################################################
 #Pull data from github?
 #Push results to github?
-pull_from_git <<- FALSE
-push_to_git <<- FALSE
+pull_from_git <<- TRUE
+push_to_git <<- TRUE
 
 #Time zone that GLM is run in
 #Currently needed to be GMT so that it interfaces with the NOAA forecast
 reference_tzone <<- "GMT"
 #Local time zone of the lake
 local_tzone <<- "EST5EDT"
-#local_tzone <<- "GMT"
+
 
 #Use GLM-AED?
 include_wq <<- TRUE
 #Use CTD data in place of the sensor string
-use_ctd <<- FALSE
+use_ctd <<- TRUE
 
 #Downscale the coarse resolutoin NOAA data to the local
 #site using the meterology station at the lake
@@ -67,7 +67,7 @@ if(!include_wq){
 # 1) the number of NOAA ensembles (21)
 # 2) the number of downscaling essembles (50 is current)
 # get to the total number of essembles
-n_enkf_members <<- 3
+n_enkf_members <<- 10
 n_ds_members <<- 1
 
 
@@ -84,22 +84,22 @@ zone1_temp_init_mean <<- 11
 zone1_temp_init_lowerbound <<- 5
 zone1_temp_init_upperbound <<- 20
 #daily perturbance of parameter value
-zone1temp_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
-zone2temp_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
+zone1temp_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
+zone2temp_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Shortwave factor
 swf_init_mean <<- 0.75
 swf_init_lowerbound <<- 0.50
-swf_init_upperbound <<- 1.0
+swf_init_upperbound <<- 1.5
 #daily perturbance of parameter value
-swf_init_qt <<- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
+swf_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Fsed_oxy
 Fsed_oxy_init_mean <<- -24.219
 Fsed_oxy_init_lowerbound <<- -30
 Fsed_oxy_init_upperbound <<- -10
 #daily perturbance of parameter value
-Fsed_oxy_init_qt <<- 1^2 #THIS IS THE VARIANCE, NOT THE SD
+Fsed_oxy_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Fsed_oxy
 Rdom_minerl_init_mean <<- 0.0005
@@ -110,10 +110,10 @@ Rdom_minerl_init_qt <<- 0.0001^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #R_growth
 R_growth_init_mean <<- 1
-R_growth_init_lowerbound <<- 1.00001 #0.2
+R_growth_init_lowerbound <<- 0.2
 R_growth_init_upperbound <<- 1.5
 #daily perturbance of parameter value
-Rdom_minerl_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
+Rdom_minerl_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Depths with temperature observations
 observed_depths_temp <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9)

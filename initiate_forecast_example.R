@@ -40,7 +40,7 @@ spin_up_days <- 0
 sim_name <- "test1" 
 start_day_local <- "2018-10-05"
 start_time_local <- "14:00:00"
-forecast_start_day_local <-"2018-10-08" 
+forecast_start_day_local <-"2018-10-30" 
 hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day_local, tz = local_tzone),
                                  as.POSIXct(start_day_local, tz = local_tzone)))
 

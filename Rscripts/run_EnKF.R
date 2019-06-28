@@ -24,7 +24,6 @@ run_EnKF <- function(x,
                      print_glm2screen,
                      x_phyto_groups){
   
-  #npars <- 4 
   nsteps <- length(full_time_local)
   nmembers <- dim(x)[2]
   n_met_members <- length(met_file_names) - 1
