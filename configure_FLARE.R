@@ -116,7 +116,7 @@ R_growth_init_mean <<- 1
 R_growth_init_lowerbound <<-  0.2 #0.99
 R_growth_init_upperbound <<-  1.5 #1.01
 #daily perturbance of parameter value
-Rdom_minerl_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
+R_growth_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Depths with temperature observations
 observed_depths_temp <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9)

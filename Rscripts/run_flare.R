@@ -6,7 +6,9 @@
 #          observations                                    #
 # ---------------------------------------------------------#
 
-run_flare<-function(start_day,
+run_flare<-function(start_day_local,
+                    start_time_local,
+                    forecast_start_day_local,
                     sim_name = NA, 
                     hist_days = 1,
                     forecast_days = 16,  
@@ -982,7 +984,7 @@ run_flare<-function(start_day,
   #Covariance matrix for parameters
   if(npars > 0){
     qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
-    diag(qt_pars) <- c(zone1temp_init_qt, zone2temp_init_qt, swf_init_qt,Fsed_oxy_init_qt,Rdom_minerl_init_qt,Rdom_minerl_init_qt)
+    diag(qt_pars) <- c(zone1temp_init_qt, zone2temp_init_qt, swf_init_qt,Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
   }else{
     qt_pars <- NA
   }

@@ -76,7 +76,7 @@ run_EnKF <- function(x,
             new_pars <- rmvnorm(n = 1, 
                                 mean = c(x[i - 1, m, (nstates+1):(nstates + npars)]),
                                 sigma=as.matrix(qt_pars))
-            new_pars <- x[i - 1, m, (nstates + 1):(nstates+npars)]
+            #new_pars <- x[i - 1, m, (nstates + 1):(nstates+npars)]
           #  if(length(which(new_pars[c(1,2,3,5,6)] <= 0)) == 0){
           #    pass <- TRUE
           #  }
@@ -99,7 +99,7 @@ run_EnKF <- function(x,
           new_pars[6] <- round(new_pars[6],3)
           update_var(new_pars[4], "Fsed_oxy", working_glm, "aed2.nml")
           update_var(new_pars[5], "Rdom_minerl", working_glm, "aed2.nml")
-          update_var(new_pars[6], "pd%R_growth", working_glm, "aed2_phyto_pars.nml")          
+          update_var(c(new_pars[6], 0.5, 1.1, 1.5), "pd%R_growth", working_glm, "aed2_phyto_pars.nml")          
         }
         #new_pars <- x[i - 1, m, (nstates + 1):(nstates+npars)]
         pars_corr[m, ] <- new_pars
@@ -327,8 +327,8 @@ run_EnKF <- function(x,
           resid30day[1:29, ] <- resid30day[2:30, ]
           resid30day[30, z_index] <- ens_mean[z_index] - zt
           if(!is.na(resid30day[1, z_index[1]])){
-            #qt <- update_qt(resid30day, modeled_depths, qt, include_wq)
-            qt <- qt
+            qt <- update_qt(resid30day, modeled_depths, qt, include_wq)
+            #qt <- qt
           }
         }
         

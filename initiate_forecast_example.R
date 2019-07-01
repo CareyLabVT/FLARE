@@ -40,35 +40,37 @@ spin_up_days <- 0
 sim_name <- "test1" 
 start_day_local <- "2018-07-16"  #Note: 2018-07-16 is the first day with CTD observations for initial conditions
 start_time_local <- "01:00:00"
-forecast_start_day_local <-"2018-10-30" 
+forecast_start_day_local <- "2019-06-15" 
 hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day_local, tz = local_tzone),
                                  as.POSIXct(start_day_local, tz = local_tzone)))
 
-out <- run_flare(start_day= start_day,
-                         sim_name = sim_name,
-                         hist_days = hist_days,
-                         forecast_days = forecast_days,
-                         spin_up_days = spin_up_days,
-                         restart_file = restart_file,
-                         folder = folder,
-                         forecast_location = forecast_location,
-                         push_to_git = push_to_git,
-                         pull_from_git = pull_from_git,
-                         data_location = data_location,
-                         n_enkf_members = n_enkf_members,
-                         n_ds_members = n_ds_members,
-                         include_wq = include_wq,
-                         use_ctd = use_ctd,
-                         uncert_mode = uncert_mode,
-                         reference_tzone = reference_tzone,
-                         cov_matrix = cov_matrix,
-                         downscaling_coeff = downscaling_coeff,
-                         GLMversion = GLMversion,
-                         DOWNSCALE_MET = DOWNSCALE_MET,
-                         FLAREversion = FLAREversion,
-                         met_ds_obs_start = met_ds_obs_start,
-                         met_ds_obs_end = met_ds_obs_end,
-                         modeled_depths = modeled_depths)
+out <- run_flare(start_day_local,
+                 start_time_local,
+                 forecast_start_day_local,
+                 sim_name = sim_name,
+                 hist_days = hist_days,
+                 forecast_days = forecast_days,
+                 spin_up_days = spin_up_days,
+                 restart_file = restart_file,
+                 folder = folder,
+                 forecast_location = forecast_location,
+                 push_to_git = push_to_git,
+                 pull_from_git = pull_from_git,
+                 data_location = data_location,
+                 n_enkf_members = n_enkf_members,
+                 n_ds_members = n_ds_members,
+                 include_wq = include_wq,
+                 use_ctd = use_ctd,
+                 uncert_mode = uncert_mode,
+                 reference_tzone = reference_tzone,
+                 cov_matrix = cov_matrix,
+                 downscaling_coeff = downscaling_coeff,
+                 GLMversion = GLMversion,
+                 DOWNSCALE_MET = DOWNSCALE_MET,
+                 FLAREversion = FLAREversion,
+                 met_ds_obs_start = met_ds_obs_start,
+                 met_ds_obs_end = met_ds_obs_end,
+                 modeled_depths = modeled_depths)
 
 
 plot_forecast(pdf_file_name = unlist(out)[2],
