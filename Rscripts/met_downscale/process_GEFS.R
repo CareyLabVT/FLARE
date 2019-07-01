@@ -43,14 +43,16 @@ process_GEFS <- function(file_name,
   #end_step <- as_datetime(tail(d$forecast.date,1), tz = local_tzone)
   
   # adjust for different timezones in saved GEFS forecasts 
-  if(date(full_time_local[1])>as_date("2018-12-07")){ 
-    for.input_tz = "GMT"
-  }else{
-    for.input_tz = "US/Eastern"
-  }
+  #if(date(full_time_local[1])>as_date("2018-12-07")){ 
+  #  for.input_tz = "GMT"
+  #}else{
+  #  for.input_tz = "US/Eastern"
+  #}
+  
+  for.input_tz = "GMT"
   
   #full_time_local <- seq(begin_step, end_step, by = "1 hour", tz = local_tzone) # grid
-  forecasts <- prep_for(d, input_tz = for.input_tz, local_tzone)
+  forecasts <- prep_for(d, input_tz = for.input_tz, for.input_tz)
   time0 = min(forecasts$timestamp)
   time_end = max(forecasts$timestamp)
   
@@ -70,7 +72,7 @@ process_GEFS <- function(file_name,
                        debiased.coefficients,
                        VarInfo,
                        PLOT = FALSE,
-                       local_tzone)
+                       local_tzone = "GMT")
     ds <- ds %>% mutate(AirTemp = AirTemp - 273.15) # from Kelvin to Celsius 
     if(met_downscale_uncertainty == TRUE){
       ## Downscaling + noise addition option
@@ -136,6 +138,8 @@ process_GEFS <- function(file_name,
            RelHum = ifelse(is.na(RelHum.splined), RelHum, RelHum.splined)) %>%
     select(-AirTemp.splined, WindSpeed.splined, RelHum.splined)
   output <- output %>% filter(timestamp < time_end)
+  
+  output$timestamp <- with_tz(output$timestamp, local_tzone)
 
   # -----------------------------------
   # 3. Produce output files

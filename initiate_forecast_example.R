@@ -38,8 +38,8 @@ restart_file <- NA
 forecast_days <- 16
 spin_up_days <- 0
 sim_name <- "test1" 
-start_day_local <- "2018-10-05"
-start_time_local <- "14:00:00"
+start_day_local <- "2018-07-16"  #Note: 2018-07-16 is the first day with CTD observations for initial conditions
+start_time_local <- "01:00:00"
 forecast_start_day_local <-"2018-10-30" 
 hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day_local, tz = local_tzone),
                                  as.POSIXct(start_day_local, tz = local_tzone)))

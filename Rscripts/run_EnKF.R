@@ -59,7 +59,7 @@ run_EnKF <- function(x,
     }
     
     for(m in 1:nmembers){
-
+      
       tmp <- update_temps(curr_temps = round(x[i - 1, m, 1:length(modeled_depths)], 3),
                           curr_depths = modeled_depths,
                           working_glm)
@@ -71,24 +71,37 @@ run_EnKF <- function(x,
             new_pars <- colMeans(x[i - 1, , (nstates+1):(nstates+npars)])
           }
         }else{
-          new_pars <- rmvnorm(n = 1, 
-                              mean = c(x[i - 1, m, (nstates+1):(nstates + npars)]),
-                              sigma=as.matrix(qt_pars))
+          #pass <- FALSE
+          #while(!pass){
+            new_pars <- rmvnorm(n = 1, 
+                                mean = c(x[i - 1, m, (nstates+1):(nstates + npars)]),
+                                sigma=as.matrix(qt_pars))
+            new_pars <- x[i - 1, m, (nstates + 1):(nstates+npars)]
+          #  if(length(which(new_pars[c(1,2,3,5,6)] <= 0)) == 0){
+          #    pass <- TRUE
+          #  }
+          #}
         }
         
+        new_pars[1] <- round(max(c(4,new_pars[1])), 3)
+        new_pars[2] <- round(max(c(4,new_pars[2])), 3)
+        new_pars[3] <- round(new_pars[3], 3)
         
-        update_var(c(round(max(c(4,new_pars[1])) ,3) ,round(max(c(4,new_pars[2])),3)),
+        update_var(c(new_pars[1] ,new_pars[2]),
                    "sed_temp_mean",
                    working_glm, "glm3.nml")
         
-        update_var(round(new_pars[3], 3), "sw_factor", working_glm, "glm3.nml")
+        update_var(new_pars[3], "sw_factor", working_glm, "glm3.nml")
         
         if(include_wq){
-          update_var(round(new_pars[4],3), "Fsed_oxy", working_glm, "aed2.nml")
-          update_var(round(new_pars[5],3), "Rdom_minerl", working_glm, "aed2.nml")
-          update_var(round(c(new_pars[6],0.5,1,1.5),3), "pd%R_growth", working_glm, "aed2_phyto_pars.nml")          
+          new_pars[4] <- round(new_pars[4],3)
+          new_pars[5] <- round(new_pars[5],6)
+          new_pars[6] <- round(new_pars[6],3)
+          update_var(new_pars[4], "Fsed_oxy", working_glm, "aed2.nml")
+          update_var(new_pars[5], "Rdom_minerl", working_glm, "aed2.nml")
+          update_var(new_pars[6], "pd%R_growth", working_glm, "aed2_phyto_pars.nml")          
         }
-        new_pars <- x[i - 1, m, (nstates + 1):(nstates+npars)]
+        #new_pars <- x[i - 1, m, (nstates + 1):(nstates+npars)]
         pars_corr[m, ] <- new_pars
       }
       
@@ -129,17 +142,17 @@ run_EnKF <- function(x,
         #if(!print_glm2screen){
         #  system(paste0('docker run -it -d -v ',working_glm,':/GLM/TestLake hydrobert/glm-aed2 /bin/bash -c \"cd TestLake; /GLM/glm\"'))
         #}else{
-          # start docker as background process (detached)
+        # start docker as background process (detached)
         #  system(paste0('docker run -it -d -v ',working_glm,':/GLM/TestLake hydrobert/glm-aed2 /bin/bash'))
-          # get the id of your running container
+        # get the id of your running container
         #  dockerps <- system('docker ps',intern = TRUE)
         #  dockerid <- strsplit(dockerps, split = "/t")
         #  dockerid <- strsplit(dockerid[[2]], split = " ")
         #  dockerid <- dockerid[[1]][1]
-          # start the simulation (i - interactive, t - tty (user input))
+        # start the simulation (i - interactive, t - tty (user input))
         #  system(paste('docker exec -t',dockerid,'/bin/bash -c \"cd TestLake; /GLM/glm\"'))
-          
-          # stops and removes all running dockers
+        
+        # stops and removes all running dockers
         #  system('docker kill $(docker ps -q)')
         #  system('docker rm $(docker ps -a -q)')
         #}
@@ -164,10 +177,10 @@ run_EnKF <- function(x,
           print("Machine not identified")
           stop()
         }
-
+        
         if(file.exists(paste0(working_glm, "/output.nc")) & 
            !has_error(nc <- nc_open(paste0(working_glm, "/output.nc")))){
-
+          
           if(length(ncvar_get(nc, "time")) > 1){
             nc_close(nc)
             if(include_wq){
@@ -199,7 +212,7 @@ run_EnKF <- function(x,
         }else{
           num_reruns <- num_reruns + 1
         }
-        if(num_reruns > 5000){
+        if(num_reruns > 1000){
           stop(paste0("Too many re-runs (> 1000) due to NaN values in output"))
         }
       }
@@ -371,15 +384,26 @@ run_EnKF <- function(x,
         if(npars > 0){
           x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + 
                                                      k_t_pars %*% (d_mat - h %*% t(x_corr)))
-          x[i,which(x[i, , (nstates+2)] < 4), (nstates+2)] <- 4
+          #x[i, ,which(x[i, , nstates+1] < zone1_temp_init_lowerbound)] <- zone1_temp_init_lowerbound
+          #x[i, ,which(x[i, , nstates+1] > zone1_temp_init_upperbound)] <- zone1_temp_init_upperbound
+          #x[i, ,which(x[i, , nstates+2] < zone2_temp_init_lowerbound)] <- zone2_temp_init_lowerbound
+          #x[i, ,which(x[i, , nstates+2] > zone2_temp_init_upperbound)] <- zone2_temp_init_upperbound
+          #x[i, ,which(x[i, , nstates+3] < swf_init_lowerbound)] <- swf_init_lowerbound
+          #x[i, ,which(x[i, , nstates+3] > swf_init_upperbound)] <- swf_init_upperbound
+          #x[i, ,which(x[i, , nstates+4] < Fsed_oxy_init_lowerbound)] <- Fsed_oxy_init_lowerbound
+          #x[i, ,which(x[i, , nstates+4] > Fsed_oxy_init_upperbound)] <- Fsed_oxy_init_upperbound
+          #x[i, ,which(x[i, , nstates+5] < Rdom_minerl_init_lowerbound)] <- Rdom_minerl_init_lowerbound
+          #x[i, ,which(x[i, , nstates+5] > Rdom_minerl_init_upperbound)] <- Rdom_minerl_init_upperbound
+          #x[i, ,which(x[i, , nstates+6] < R_growth_init_lowerbound)] <- R_growth_init_lowerbound
+          #x[i, ,which(x[i, , nstates+6] > R_growth_init_upperbound)] <- R_growth_init_upperbound
         }
         
         
         
         if(include_wq){
           for(m in 1:nmembers){
-              index <- which(x[i,m,] < 0.0)
-              x[i, m, index[which(index < wq_end[num_wq_vars])]] <- 0.0
+            index <- which(x[i,m,] < 0.0)
+            x[i, m, index[which(index < wq_end[num_wq_vars])]] <- 0.0
           }
         }
         

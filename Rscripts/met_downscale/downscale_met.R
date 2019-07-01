@@ -57,8 +57,8 @@ downscale_met <- function(forecasts, debiased.coefficients, VarInfo, PLOT, local
     repeat_6hr_to_hrly()
   
   ## downscale shortwave to hourly
-  lake_latitude <- 37.307
-  lake_longitude <- 79.837
+  #lake_latitude <- 37.307
+  #lake_longitude <- 79.837
   ShortWave.ds = ShortWave_to_hrly(debiased, time0, lat = lake_latitude, lon = 360 - lake_longitude, local_tzone)
   
   # -----------------------------------

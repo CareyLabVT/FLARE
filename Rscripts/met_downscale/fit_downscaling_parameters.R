@@ -19,7 +19,7 @@ fit_downscaling_parameters <- function(observations,
                                        last_obs_date){
   
   # process and read in saved forecast data
-  process_saved_forecasts(for.file.path,
+  process_saved_forecasts(data.path = for.file.path,
                           working_glm,
                           local_tzone) # geneartes flux.forecasts and state.forecasts dataframes
   NOAA.flux <- readRDS(paste(working_glm,"/NOAA.flux.forecasts", sep = ""))

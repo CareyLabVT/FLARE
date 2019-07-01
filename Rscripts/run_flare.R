@@ -556,6 +556,8 @@ run_flare<-function(start_day,
   init_doc_obs <- obs_chla_fdom$fDOM_obs[1, which(!is.na(obs_chla_fdom$fDOM_obs[1, ]))]
   init_doc_obs_depths <- modeled_depths[which(!is.na(obs_chla_fdom$fDOM_obs[1, ]))]
   
+  OGM_doc_init_depth <- NA
+  PHY_TCHLA_init_depth <- NA
   
   #NEED AN ERROR CHECK FOR WHETHER THERE ARE OBSERVED DATA
   if(is.na(restart_file)){
@@ -719,18 +721,22 @@ run_flare<-function(start_day,
   NIT_amm_init_depth <- rep(NIT_amm_init, ndepths_modeled)
   NIT_nit_init_depth <- rep(NIT_nit_init, ndepths_modeled)
   PHS_frp_init_depth <- rep(PHS_frp_init, ndepths_modeled)
-  #OGM_doc_init_depth <- rep(OGM_doc_init, ndepths_modeled)
   OGM_poc_init_depth <- rep(OGM_poc_init, ndepths_modeled)
+  if(is.na(OGM_doc_init_depth[1])){
+    OGM_doc_init_depth <- rep(OGM_doc_init, ndepths_modeled)
+  }
   OGM_don_init_depth <- OGM_doc_init_depth * init_donc
+
   #OGM_don_init_depth <- rep(OGM_don_init, ndepths_modeled)
   OGM_pon_init_depth <- rep(OGM_pon_init, ndepths_modeled)
   OGM_dop_init_depth <- OGM_doc_init_depth * init_dopc
   #OGM_dop_init_depth <- rep(OGM_dop_init, ndepths_modeled)
   OGM_pop_init_depth <- rep(OGM_pop_init, ndepths_modeled)
   #PHY_TCHLA_init_depth <- rep(PHY_TCHLA_init, ndepths_modeled)
-  
+  if(is.na(PHY_TCHLA_init_depth[1])){
+    PHY_TCHLA_init_depth <- rep(PHY_TCHLA_init, ndepths_modeled)
+  }
   #phyto_proportions <- c(0.25, 0.25, 0.25, 0.25)
-  
   PHY_CYANOPCH1_init_depth <- PHY_TCHLA_init_depth/biomass_to_chla[1]
   #PHY_CYANONPCH2_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[2]
   #PHY_CHLOROPCH3_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[3]

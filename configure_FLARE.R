@@ -2,13 +2,13 @@
 #Pull data from github?
 #Push results to github?
 pull_from_git <<- TRUE
-push_to_git <<- TRUE
+push_to_git <<- FALSE
 
 #Time zone that GLM is run in
 #Currently needed to be GMT so that it interfaces with the NOAA forecast
 reference_tzone <<- "GMT"
 #Local time zone of the lake
-local_tzone <<- "EST5EDT"
+local_tzone <<- "EST"
 
 
 #Use GLM-AED?
@@ -18,7 +18,7 @@ use_ctd <<- TRUE
 
 #Downscale the coarse resolutoin NOAA data to the local
 #site using the meterology station at the lake
-DOWNSCALE_MET <<- FALSE
+DOWNSCALE_MET <<- TRUE
 #file name of previous downscaling coefficients
 #use NA if not using an existing file
 downscaling_coeff <<- NA
@@ -46,6 +46,9 @@ cov_matrix <<- "Qt_cov_matrix_init_AED.csv"
 
 single_run <<- FALSE
 
+lake_latitude <<- 37.307   #Degrees North 
+lake_longitude <<- 79.837  #Degrees West
+
 #Depths used in the EnKF
 #This are the depths that are saved between days
 if(!include_wq){
@@ -67,7 +70,7 @@ if(!include_wq){
 # 1) the number of NOAA ensembles (21)
 # 2) the number of downscaling essembles (50 is current)
 # get to the total number of essembles
-n_enkf_members <<- 10
+n_enkf_members <<- 5
 n_ds_members <<- 1
 
 
@@ -96,22 +99,22 @@ swf_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Fsed_oxy
 Fsed_oxy_init_mean <<- -24.219
-Fsed_oxy_init_lowerbound <<- -30
-Fsed_oxy_init_upperbound <<- -10
+Fsed_oxy_init_lowerbound <<-  -30 #-24.220
+Fsed_oxy_init_upperbound <<-  -10 #-24.218
 #daily perturbance of parameter value
-Fsed_oxy_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
+Fsed_oxy_init_qt <<- 1^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Fsed_oxy
 Rdom_minerl_init_mean <<- 0.0005
-Rdom_minerl_init_lowerbound <<- 0.0001
-Rdom_minerl_init_upperbound <<- 0.001
+Rdom_minerl_init_lowerbound <<-  0.0001 #0.00049
+Rdom_minerl_init_upperbound <<-  0.001 #0.00051
 #daily perturbance of parameter value
-Rdom_minerl_init_qt <<- 0.0001^2 #THIS IS THE VARIANCE, NOT THE SD
+Rdom_minerl_init_qt <<- 0.00001^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #R_growth
 R_growth_init_mean <<- 1
-R_growth_init_lowerbound <<- 0.2
-R_growth_init_upperbound <<- 1.5
+R_growth_init_lowerbound <<-  0.2 #0.99
+R_growth_init_upperbound <<-  1.5 #1.01
 #daily perturbance of parameter value
 Rdom_minerl_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
 
@@ -164,7 +167,7 @@ biomass_to_chla <<- c(200/12)
 #uncertainy in temperature measurement
 obs_error_temperature <<- 0.0001 #NEED TO DOUBLE CHECK
 #Observational uncertainty for each variable
-obs_error_wq <<- c(0.001, #OXY_oxy
+obs_error_wq <<- c(10, #OXY_oxy
                NA, #CAR_pH
                NA, #CAR_dic
                NA, #CAR_ch4
@@ -172,13 +175,13 @@ obs_error_wq <<- c(0.001, #OXY_oxy
                NA, #NIT_amm
                NA, #NIT_nit
                NA, #PHS_frp
-               0.001, #OGM_doc
+               10, #OGM_doc
                NA, #OGM_poc
                NA, #OGM_don
                NA, #OGM_pon
                NA, #OGM_dop
                NA, #OGM_pop
-               0.001) #PHY_TCHLA
+               0.1) #PHY_TCHLA
               
 # Options for printing function
 # Depths that the water quality variables are plotted
