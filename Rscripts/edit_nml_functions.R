@@ -1,6 +1,17 @@
 #FUNCTIONS Shared between the MCMC and EnKF
 
+
+
 #Set GLM Initial conditions for temperature at each layer from first observations
+#' Add together two numbers.
+#'
+#' @param x A number.
+#' @param y A number.
+#' @return The sum of \code{x} and \code{y}.
+#' @export
+#' @examples
+#' add(1, 1)
+#' add(10, 1)
 update_temps <- function(curr_temps,curr_depths,working_glm){
   orig_nml = read_nml(paste0(working_glm,'/','glm3.nml'))
   index1 = NA; index2 = NA;index3 = NA; index4 = NA
@@ -31,7 +42,15 @@ update_temps <- function(curr_temps,curr_depths,working_glm){
   return(list(depths,init_temps))
 }
 
-
+#' Add together two numbers.
+#'
+#' @param x A number.
+#' @param y A number.
+#' @return The sum of \code{x} and \code{y}.
+#' @export
+#' @examples
+#' add(1, 1)
+#' add(10, 1)
 update_var <- function(var_value,var_name,working_glm, nml){
   orig_nml = read_nml(paste0(working_glm,'/',nml))
   index1 = NA; index2 = NA
@@ -49,6 +68,15 @@ update_var <- function(var_value,var_name,working_glm, nml){
   write_nml(orig_nml, paste0(working_glm,'/',nml))
 }
 
+#' Add together two numbers.
+#'
+#' @param x A number.
+#' @param y A number.
+#' @return The sum of \code{x} and \code{y}.
+#' @export
+#' @examples
+#' add(1, 1)
+#' add(10, 1)
 update_time <- function(start_value,stop_value,working_glm){
   orig_nml = read_nml(paste0(working_glm,'/','glm3.nml'))
   index1 = NA; index2 = NA; index3 = NA; index4 = NA
@@ -68,6 +96,15 @@ update_time <- function(start_value,stop_value,working_glm){
   write_nml(orig_nml, paste0(working_glm,'/','glm3.nml'))
 }
 
+#' Add together two numbers.
+#'
+#' @param x A number.
+#' @param y A number.
+#' @return The sum of \code{x} and \code{y}.
+#' @export
+#' @examples
+#' add(1, 1)
+#' add(10, 1)
 get_glm_nc_var <- function(ncFile,working_dir, z_out,var = 'temp'){
   glm_nc <- nc_open(paste0(working_dir,ncFile))
   tallest_layer <- ncvar_get(glm_nc, "NS")
@@ -99,6 +136,15 @@ get_glm_nc_var <- function(ncFile,working_dir, z_out,var = 'temp'){
   return(temps)
 }
 
+#' Add together two numbers.
+#'
+#' @param x A number.
+#' @param y A number.
+#' @return The sum of \code{x} and \code{y}.
+#' @export
+#' @examples
+#' add(1, 1)
+#' add(10, 1)
 update_phyto <- function(p_initial,nml_name = 'aed2_phyto_pars.nml'){
   
   if(length(p_initial)<6){
@@ -132,6 +178,15 @@ update_phyto <- function(p_initial,nml_name = 'aed2_phyto_pars.nml'){
   sink()
 }
 
+#' Add together two numbers.
+#'
+#' @param x A number.
+#' @param y A number.
+#' @return The sum of \code{x} and \code{y}.
+#' @export
+#' @examples
+#' add(1, 1)
+#' add(10, 1)
 get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars){
   glm_nc <- nc_open(paste0(working_dir,ncFile))
   tallest_layer <- ncvar_get(glm_nc, "NS")

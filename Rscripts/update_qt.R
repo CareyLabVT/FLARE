@@ -1,4 +1,4 @@
-update_qt <- function(resid30day, modeled_depths, qt, include_wq){
+update_qt <- function(resid30day, modeled_depths, qt, include_wq, num_wq_vars){
   
   old_qt <- qt
   
@@ -37,7 +37,7 @@ update_qt <- function(resid30day, modeled_depths, qt, include_wq){
   
   if(include_wq){
     for(i in 1:num_wq_vars){
-      for(j in 1:ndepths_modeled){
+      for(j in 1:length(modeled_depths)){
         qt <- rbind(qt, rep(0.0, ncol(qt)))
         qt <- cbind(qt, rep(0.0, nrow(qt)))
         qt[ncol(qt),nrow(qt)] <- old_qt[i*j,i*j]

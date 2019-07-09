@@ -3,7 +3,7 @@ plot_forecast <- function(pdf_file_name,
                           catwalk_fname,
                           include_wq,
                           forecast_days,
-                          code_location,
+                          code_folder,
                           save_location,
                           data_location,
                           plot_summaries,
@@ -13,9 +13,10 @@ plot_forecast <- function(pdf_file_name,
                           use_ctd,
                           modeled_depths){
   
-  source(paste0(code_location,'/extract_temp_chain.R'))
-  source(paste0(code_location,'/extract_temp_CTD.R'))
+  source(paste0(code_folder,'/Rscripts/extract_temp_chain.R'))
+  source(paste0(code_folder,'/Rscripts/extract_temp_CTD.R'))
   
+  npars <- length(par_names)
   
   nMETmembers <- 21
   
@@ -39,10 +40,11 @@ plot_forecast <- function(pdf_file_name,
   temp_upper <- ncvar_get(nc,'temp_upperCI')
   temp_lower  <- ncvar_get(nc,'temp_lowerCI')
   depths <- ncvar_get(nc,'z')
-  SW_LW_factor <- ncvar_get(nc,'SW_LW_factor')
-  zone1temp <- ncvar_get(nc,'zone1temp')
-  zone2temp <- ncvar_get(nc,'zone2temp')
   forecasted <- ncvar_get(nc,'forecasted')
+  par_list <- list()
+  for(par in 1:npars){
+  par_list[[par]] <- ncvar_get(nc,par_names_save[par])
+  }
   
   if(include_wq){
     wq_output <- array(NA,dim = c(length(wq_names),dim(temp)[1],dim(temp)[2],dim(temp)[3]))
@@ -53,9 +55,6 @@ plot_forecast <- function(pdf_file_name,
     OXY_oxy <- wq_output[which(wq_names == 'OXY_oxy'),,,]
     PHY_TCHLA <- wq_output[which(wq_names == 'PHY_TCHLA'),,,]
     OGM_doc <- wq_output[which(wq_names == 'OGM_doc'),,,]
-    Fsed_oxy <- ncvar_get(nc,'Fsed_oxy')
-    Rdom_minerl <- ncvar_get(nc,'Rdom_minerl')
-    R_growth <- ncvar_get(nc,'R_growth')
   }
   
   nc_close(nc)
@@ -97,7 +96,7 @@ plot_forecast <- function(pdf_file_name,
                                       local_tzone)
   #DIRRRRTY qsu -> mg/L ->  mmol/m3
   #Need to fix
-  obs_chla_fdom$fDOM_obs <- obs_chla_fdom$fDOM_obs*1000/(45*12)  
+  obs_chla_fdom$fDOM_obs <- obs_chla_fdom$fDOM_obs*1000/(12*6)  
   
   #Use the CTD observation rather than the sensor string when CTD data is avialable
   if(use_ctd){
@@ -163,30 +162,10 @@ plot_forecast <- function(pdf_file_name,
         wq_start[wq] <- wq_end[wq-1]+1
         wq_end[wq] <- wq_end[wq-1] + (length(modeled_depths))
       }
-      
-      if(npars > 0){
-        par1 <- wq_end[num_wq_vars] + 1
-        par2 <- par1 + 1
-        par3 <-  par2 + 1
-      }else{
-        par1 <- wq_end[num_wq_vars]
-        par2 <- wq_end[num_wq_vars]
-        par3 <- wq_end[num_wq_vars]
-      }
-      
     }
   }else{
     temp_start <- 1
     temp_end <- length(modeled_depths)
-    if(npars > 0){
-      par1 <- temp_end + 1
-      par2 <- par1 + 1
-      par3 <-  par2 + 1
-    }else{
-      par1 <- temp_end
-      par2 <- temp_end
-      par3 <- temp_end
-    }
   }
   
   #FIGURE OUT WHICH DEPTHS HAVE OBSERVATIONS
@@ -240,48 +219,18 @@ plot_forecast <- function(pdf_file_name,
   }
   
   ###PLOT OF PARAMETERS IF FIT
-  plot.new()
+  par(mfrow=c(4,3))
   if(npars > 0){
-    plot(full_time_local,rowMeans(zone1temp[,]),xlab ='Day',ylab = 'Zone 1 sediment temp',type='l',ylim = range(c(zone1temp),na.rm=TRUE))
-    if(length(zone1temp[1,]) > 1){
-      for(m in 1:length(zone1temp[1,])){
-        points(full_time_local,zone1temp[,m],type='l')
+    for(par in 1:npars){
+    plot(full_time_local,rowMeans(par_list[[par]][,]),xlab ='Day',ylab = par_names_save[par],type='l',ylim = range(c(par_list[[par]][,]),na.rm=TRUE))
+    if(length(par_list[[par]][1,]) > 1){
+      for(m in 1:length(par_list[[par]][1,])){
+        points(full_time_local,par_list[[par]][,m],type='l')
       }
     }
-    plot(full_time_local,rowMeans(zone2temp[,]),xlab ='Day',ylab = 'Zone 2 sediment temp',type='l',ylim = range(c(zone2temp),na.rm=TRUE))
-    if(length(zone2temp[1,]) > 1){
-      for(m in 1:length(zone2temp[1,])){
-        points(full_time_local,zone2temp[,m],type='l')
-      }
-    }
-    plot(full_time_local,rowMeans(SW_LW_factor[,]),xlab ='Day',ylab = 'SW_LW_factor',type='l',ylim = range(c(SW_LW_factor),na.rm=TRUE))
-    if(length(SW_LW_factor[1,]) > 1){
-      for(m in 1:length(SW_LW_factor[1,])){
-        points(full_time_local,SW_LW_factor[,m],type='l')
-      }
-    }
-    if(include_wq){
-      plot(full_time_local,rowMeans(Fsed_oxy[,]),xlab ='Day',ylab = 'Fsed_oxy',type='l',ylim = range(c(Fsed_oxy),na.rm=TRUE))
-      if(length(Fsed_oxy[1,]) > 1){
-        for(m in 1:length(Fsed_oxy[1,])){
-          points(full_time_local,Fsed_oxy[,m],type='l')
-        }
-      }
-      plot(full_time_local,rowMeans(Rdom_minerl[,]),xlab ='Day',ylab = 'Rdom_minerl',type='l',ylim = range(c(Rdom_minerl),na.rm=TRUE))
-      if(length(Rdom_minerl[1,]) > 1){
-        for(m in 1:length(Rdom_minerl[1,])){
-          points(full_time_local,Rdom_minerl[,m],type='l')
-        }
-      }
-      plot(full_time_local,rowMeans(R_growth[,]),xlab ='Day',ylab = 'R_growth',type='l',ylim = range(c(R_growth),na.rm=TRUE))
-      if(length(R_growth[1,]) > 1){
-        for(m in 1:length(R_growth[1,])){
-          points(full_time_local,R_growth[,m],type='l')
-        }
-      }
     }
   }
-  
+   
   if(include_wq){
     par(mfrow=c(4,3))
     
@@ -366,37 +315,6 @@ plot_forecast <- function(pdf_file_name,
     
   }
   
-  
-  
-  
-  
-  
-  ###PLOT HISTOGRAMS OF FORECAST
-  par(mfrow=c(4,3))
-  if(!is.na(forecast_index)){
-    if(length(which(forecast_index == 1)) > 6){
-      xlim<- range(c(temp[forecast_index+7,,obs_index[1]],z[forecast_index,1]),na.rm = TRUE)
-      hist(temp[forecast_index+7,,obs_index[1]],main='0.1m temp. 7 days forecast',xlab='Temperature',xlim=xlim)
-      abline(v= z[forecast_index+7,1],col='red')
-      xlim<- range(c(temp[forecast_index+7,,obs_index[5]],z[forecast_index+7,5]),na.rm = TRUE)
-      hist(temp[forecast_index+7,,obs_index[5]],main='4m temp. 7 days forecast',xlab='Temperature',xlim=xlim)
-      abline(v= z[forecast_index+7,5],col='red')
-      xlim<- range(c(temp[forecast_index+7,,obs_index[10]],z[forecast_index+7,10]),na.rm = TRUE)
-      hist(temp[forecast_index+7,,obs_index[10]],main='9m temp. 7 days forecast',xlab='Temperature',xlim=xlim)
-      abline(v= z[forecast_index+7,10],col='red')
-    }
-    if(length(which(forecast_index == 1)) > 13){
-      xlim<- range(c(temp[forecast_index+14,,obs_index[1]],z[forecast_index+14,1]),na.rm = TRUE)
-      hist(temp[forecast_index+14,,obs_index[1]],main='0.1m temp. 14 days forecast',xlab='Temperature',xlim=xlim)
-      abline(v= z[forecast_index+14,1],col='red')
-      xlim<- range(c(temp[forecast_index+14,,obs_index[5]],z[forecast_index+14,5]),na.rm = TRUE)
-      hist(temp[forecast_index+14,,obs_index[5]],main='4m temp. 14 days forecast',xlab='Temperature',xlim=xlim)
-      abline(v= temp[forecast_index+14,5],col='red')
-      xlim<- range(c(temp[forecast_index+14,,obs_index[10]],z[forecast_index+14,10]),na.rm = TRUE)
-      hist(temp[forecast_index+14,,obs_index[10]],main='9m temp. 14 days forecast',xlab='Temperature',xlim=xlim)
-      abline(v= z[forecast_index+14,10],col='red')
-    }
-  }
   dev.off()
   
   if(forecast_days == 16){

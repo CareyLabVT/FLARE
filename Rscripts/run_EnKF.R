@@ -60,9 +60,7 @@ run_EnKF <- function(x,
     
     for(m in 1:nmembers){
       
-      tmp <- update_temps(curr_temps = round(x[i - 1, m, 1:length(modeled_depths)], 3),
-                          curr_depths = modeled_depths,
-                          working_glm)
+      update_var(round(x[i - 1, m, 1:length(modeled_depths)], 3), "the_temps", working_glm, "glm3.nml")
       update_var(surface_height[i - 1, m], "lake_depth", working_glm, "glm3.nml")
       if(npars > 0){
         if(i > (hist_days + 1)){
@@ -73,35 +71,41 @@ run_EnKF <- function(x,
         }else{
           #pass <- FALSE
           #while(!pass){
-            new_pars <- rmvnorm(n = 1, 
-                                mean = c(x[i - 1, m, (nstates+1):(nstates + npars)]),
-                                sigma=as.matrix(qt_pars))
-            #new_pars <- x[i - 1, m, (nstates + 1):(nstates+npars)]
+          new_pars <- rmvnorm(n = 1, 
+                              mean = c(x[i - 1, m, (nstates+1):(nstates + npars)]),
+                              sigma=as.matrix(qt_pars))
+          #new_pars <- x[i - 1, m, (nstates + 1):(nstates+npars)]
           #  if(length(which(new_pars[c(1,2,3,5,6)] <= 0)) == 0){
           #    pass <- TRUE
           #  }
           #}
         }
         
-        new_pars[1] <- round(max(c(4,new_pars[1])), 3)
-        new_pars[2] <- round(max(c(4,new_pars[2])), 3)
-        new_pars[3] <- round(new_pars[3], 3)
-        
-        update_var(c(new_pars[1] ,new_pars[2]),
-                   "sed_temp_mean",
-                   working_glm, "glm3.nml")
-        
-        update_var(new_pars[3], "sw_factor", working_glm, "glm3.nml")
-        
-        if(include_wq){
-          new_pars[4] <- round(new_pars[4],3)
-          new_pars[5] <- round(new_pars[5],6)
-          new_pars[6] <- round(new_pars[6],3)
-          update_var(new_pars[4], "Fsed_oxy", working_glm, "aed2.nml")
-          update_var(new_pars[5], "Rdom_minerl", working_glm, "aed2.nml")
-          update_var(c(new_pars[6], 0.5, 1.1, 1.5), "pd%R_growth", working_glm, "aed2_phyto_pars.nml")          
+        for(par in 1:npars){
+          new_pars[par] <- round(max(c(par_init_lowerbound[par],new_pars[par])), 3)
         }
-        #new_pars <- x[i - 1, m, (nstates + 1):(nstates+npars)]
+        
+        sed_temp_mean_index <- which(par_names == "sed_temp_mean")
+        non_sed_temp_mean_index <- which(par_names != "sed_temp_mean")
+        if(length(sed_temp_mean_index) > 1){
+          update_var(c(new_pars[sed_temp_mean_index[1]] ,new_pars[sed_temp_mean_index[2]]),
+                     par_names[sed_temp_mean_index[1]],
+                     working_glm, par_nml[sed_temp_mean_index[1]])
+        }
+        
+        
+        #update_var(c(new_pars[1] ,new_pars[2]),
+        #           "sed_temp_mean",
+        #           working_glm, "glm3.nml")
+        if(length(non_sed_temp_mean_index) > 0){
+          for(par in non_sed_temp_mean_index){
+            if(par_names[par] == "pd%R_growth"){
+              update_var(c(new_pars[par], 0.5, 1.1, 1.5), par_names[par], working_glm, par_nml[par])
+            }else{
+              update_var(new_pars[par], par_names[par], working_glm, par_nml[par])
+            }
+          }
+        }
         pars_corr[m, ] <- new_pars
       }
       
@@ -200,7 +204,7 @@ run_EnKF <- function(x,
               x_star[m, 1:length(modeled_depths)] <- c(GLM_temp_wq_out$output)
             }
             
-            surface_height[i, m] <- GLM_temp_wq_out$surface_height 
+            surface_height[i, m] <- round(GLM_temp_wq_out$surface_height, 3) 
             if(length(which(is.na(x_star[m, ]))) == 0){
               pass = TRUE
             }else{
@@ -327,7 +331,7 @@ run_EnKF <- function(x,
           resid30day[1:29, ] <- resid30day[2:30, ]
           resid30day[30, z_index] <- ens_mean[z_index] - zt
           if(!is.na(resid30day[1, z_index[1]])){
-            qt <- update_qt(resid30day, modeled_depths, qt, include_wq)
+            qt <- update_qt(resid30day, modeled_depths, qt, include_wq, num_wq_vars)
             #qt <- qt
           }
         }
@@ -338,6 +342,10 @@ run_EnKF <- function(x,
         }
         
         n_psi = t(rmvnorm(n = 1, mean = zt, sigma=as.matrix(psi_t)))
+        
+        #Set any negative observations of water quality variables to zero
+        n_psi[which(z_index > length(modeled_depths) & n_psi < 0.0)] <- 0.0 
+        
         d_mat <- t(matrix(rep(n_psi, each = nmembers), 
                           nrow = nmembers, 
                           ncol = length(n_psi)))
@@ -384,18 +392,11 @@ run_EnKF <- function(x,
         if(npars > 0){
           x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + 
                                                      k_t_pars %*% (d_mat - h %*% t(x_corr)))
-          #x[i, ,which(x[i, , nstates+1] < zone1_temp_init_lowerbound)] <- zone1_temp_init_lowerbound
-          #x[i, ,which(x[i, , nstates+1] > zone1_temp_init_upperbound)] <- zone1_temp_init_upperbound
-          #x[i, ,which(x[i, , nstates+2] < zone2_temp_init_lowerbound)] <- zone2_temp_init_lowerbound
-          #x[i, ,which(x[i, , nstates+2] > zone2_temp_init_upperbound)] <- zone2_temp_init_upperbound
-          #x[i, ,which(x[i, , nstates+3] < swf_init_lowerbound)] <- swf_init_lowerbound
-          #x[i, ,which(x[i, , nstates+3] > swf_init_upperbound)] <- swf_init_upperbound
-          #x[i, ,which(x[i, , nstates+4] < Fsed_oxy_init_lowerbound)] <- Fsed_oxy_init_lowerbound
-          #x[i, ,which(x[i, , nstates+4] > Fsed_oxy_init_upperbound)] <- Fsed_oxy_init_upperbound
-          #x[i, ,which(x[i, , nstates+5] < Rdom_minerl_init_lowerbound)] <- Rdom_minerl_init_lowerbound
-          #x[i, ,which(x[i, , nstates+5] > Rdom_minerl_init_upperbound)] <- Rdom_minerl_init_upperbound
-          #x[i, ,which(x[i, , nstates+6] < R_growth_init_lowerbound)] <- R_growth_init_lowerbound
-          #x[i, ,which(x[i, , nstates+6] > R_growth_init_upperbound)] <- R_growth_init_upperbound
+          
+          for(par in 1:npars){
+            x[i,which(x[i, , nstates+par] < par_init_lowerbound[par]), nstates+par]<- par_init_lowerbound[par]
+            x[i,which(x[i, , nstates+par] > par_init_upperbound), nstates+par]<- par_init_upperbound[par]
+          }
         }
         
         

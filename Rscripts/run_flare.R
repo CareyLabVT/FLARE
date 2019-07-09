@@ -6,6 +6,16 @@
 #          observations                                    #
 # ---------------------------------------------------------#
 
+#' Short Description.
+#'
+#' @param x A number.
+#' @param y A number.
+#' @return The sum of \code{x} and \code{y}.
+#' @export
+#' @examples
+#' add(1, 1)
+#' add(10, 1)
+
 run_flare<-function(start_day_local,
                     start_time_local,
                     forecast_start_day_local,
@@ -14,7 +24,7 @@ run_flare<-function(start_day_local,
                     forecast_days = 16,  
                     spin_up_days = 0,
                     restart_file = NA,
-                    folder, 
+                    code_folder, 
                     forecast_location = NA,
                     push_to_git = FALSE,
                     pull_from_git = TRUE, 
@@ -38,19 +48,20 @@ run_flare<-function(start_day_local,
   ### LOAD R FUNCTIONS
   #################################################
   
-  source(paste0(folder,"/","Rscripts/edit_nml_functions.R"))
-  source(paste0(folder,"/","Rscripts/create_obs_met_input.R"))
-  source(paste0(folder,"/","Rscripts/extract_temp_chain.R"))
-  source(paste0(folder,"/","Rscripts/process_GEFS2GLM.R"))
-  source(paste0(folder,"/","Rscripts/extract_temp_CTD.R"))
-  source(paste0(folder,"/","Rscripts/create_inflow_outflow_file.R"))
-  source(paste0(folder,"/","Rscripts/archive_forecast.R"))
-  source(paste0(folder,"/","Rscripts/write_forecast_netcdf.R")) 
-  source(paste0(folder,"/","Rscripts/run_EnKF.R")) 
-  source(paste0(folder,"/","Rscripts/met_downscale/process_downscale_GEFS.R")) 
-  source(paste0(folder,"/","Rscripts/update_qt.R"))
-  source(paste0(folder,"/","Rscripts/glmtools.R"))
+  source(paste0(code_folder,"/","Rscripts/edit_nml_functions.R"))
+  source(paste0(code_folder,"/","Rscripts/create_obs_met_input.R"))
+  source(paste0(code_folder,"/","Rscripts/extract_temp_chain.R"))
+  source(paste0(code_folder,"/","Rscripts/process_GEFS2GLM.R"))
+  source(paste0(code_folder,"/","Rscripts/extract_temp_CTD.R"))
+  source(paste0(code_folder,"/","Rscripts/create_inflow_outflow_file.R"))
+  source(paste0(code_folder,"/","Rscripts/archive_forecast.R"))
+  source(paste0(code_folder,"/","Rscripts/write_forecast_netcdf.R")) 
+  source(paste0(code_folder,"/","Rscripts/run_EnKF.R")) 
+  source(paste0(code_folder,"/","Rscripts/met_downscale/process_downscale_GEFS.R")) 
+  source(paste0(code_folder,"/","Rscripts/update_qt.R"))
+  source(paste0(code_folder,"/","Rscripts/glmtools.R"))
   
+  npars <- length(par_names)
   
   # SET UP NUMBER OF ENSEMBLE MEMBERS
   n_met_members <- 21
@@ -301,7 +312,7 @@ run_flare<-function(start_day_local,
                                          tz = local_tzone),
                               by = "1 hour")
   
-
+  
   ####################################################
   #### STEP 4: SET ARRAY LENGTHS
   ####################################################
@@ -316,7 +327,10 @@ run_flare<-function(start_day_local,
   ####################################################
   
   ###CREATE DIRECTORY PATHS AND STRUCTURE
-  working_glm <- paste0(folder, "/", "GLM_working")  
+  working_glm <- paste0(forecast_location, "/", "GLM_working")
+  if(!dir.exists(working_glm)){
+    dir.create(working_glm, showWarnings = FALSE)
+  }
   ####Clear out temp GLM working directory
   unlink(paste0(working_glm, "/*"), recursive = FALSE)   
   
@@ -401,11 +415,11 @@ run_flare<-function(start_day_local,
                          "IR01UpCo_Avg" = "LongWave",
                          "Rain_mm_Tot" = "Rain")
     
-    met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder,
+    met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(code_folder,
                                                                                  noaa_location,
                                                                                  met_station_location,
                                                                                  working_glm,
-                                                                                 sim_files_folder = paste0(folder, "/", "sim_files"),
+                                                                                 sim_files_folder = paste0(code_folder, "/", "sim_files"),
                                                                                  n_ds_members,
                                                                                  n_met_members,
                                                                                  file_name,
@@ -435,8 +449,8 @@ run_flare<-function(start_day_local,
   }
   
   ###MOVE DATA FILES AROUND
-  sim_files_folder <- paste0(folder, "/", "sim_files")
-  GLM_folder <- paste0(folder, "/", "glm", "/", machine) 
+  sim_files_folder <- paste0(code_folder, "/", "sim_files")
+  GLM_folder <- paste0(code_folder, "/", "glm", "/", machine) 
   fl <- c(list.files(sim_files_folder, full.names = TRUE))
   tmp <- file.copy(from = fl, to = working_glm, overwrite = TRUE)
   fl <- c(list.files(GLM_folder, full.names = TRUE))
@@ -515,8 +529,8 @@ run_flare<-function(start_day_local,
   
   #DIRRRRTY qsu -> mg/L ->  mmol/m3
   #Need to fix
-  obs_chla_fdom$fDOM_obs <- obs_chla_fdom$fDOM_obs*1000/(45*12)   
-
+  obs_chla_fdom$fDOM_obs <- obs_chla_fdom$fDOM_obs*1000/(12*6)   
+  
   #Use the CTD observation rather than the sensor string when CTD data is avialable
   if(use_ctd){
     ## LOOK AT CTD DATA
@@ -576,8 +590,8 @@ run_flare<-function(start_day_local,
       OXY_oxy_init_depth <- do_inter(modeled_depths)
       #if(use_ctd){
       #  if(length(which(!is.na(init_pH_obs))) > 0){
-          #pH_inter <- approxfun(init_obs_pH_depths, init_pH_obs, rule=2)
-          #CAR_pH_init_depth <- pH_inter(modeled_depths)
+      #pH_inter <- approxfun(init_obs_pH_depths, init_pH_obs, rule=2)
+      #CAR_pH_init_depth <- pH_inter(modeled_depths)
       #  }
       #}
       if(length(init_chla_obs) == 1){
@@ -612,239 +626,173 @@ run_flare<-function(start_day_local,
         wq_start[wq] <- wq_end[wq-1]+1
         wq_end[wq] <- wq_end[wq-1] + (length(modeled_depths))
       }
-      
-      if(npars > 0){ #NEED TO GENERALIZE
-        par1 <- wq_end[num_wq_vars] + 1
-        par2 <- par1 + 1
-        par3 <-  par2 + 1
-        par4 <-  par3 + 1
-        par5 <-  par4 + 1
-        par6 <-  par5 + 1
-      }else{
-        par1 <- wq_end[num_wq_vars]
-        par2 <- wq_end[num_wq_vars]
-        par3 <- wq_end[num_wq_vars]
-        par4 <- wq_end[num_wq_vars]
-        par5 <- wq_end[num_wq_vars]
-        par6 <- wq_end[num_wq_vars]
-      }
-      
     }
   }else{
     temp_start <- 1
     temp_end <- length(modeled_depths)
-    if(npars > 0){
-      par1 <- temp_end + 1
-      par2 <- par1 + 1
-      par3 <-  par2 + 1
-      par4 <-  par3 + 1
-      par5 <-  par4 + 1
-      par6 <-  par5 + 1
-    }else{
-      par1 <- temp_end
-      par2 <- temp_end
-      par3 <- temp_end
-      par4 <- temp_end
-      par5 <- temp_end
-      par6 <- temp_end
-    }
   }
   
-  #UPDATE NML WITH PARAMETERS AND INITIAL CONDITIONS
-  init_donc <- 1.3/47.4
-  init_dopc <-1.5/47.4
-  
-  #Initial States
   the_sals_init <- 0.0
-  OXY_oxy_init <- 300.62
-  CAR_pH_init <- 6.5
-  CAR_dic_init <- 59.1
-  CAR_ch4_init <- 0.58
-  SIL_rsi_init <- 300
-  NIT_amm_init <- 0.69
-  NIT_nit_init <- 0.05
-  PHS_frp_init <- 0.07
-  OGM_doc_init <- 47.4
-  OGM_poc_init <- 78.5
-  OGM_don_init <- 1.3
-  OGM_pon_init <- 8.3
-  OGM_dop_init <- 1.5
-  OGM_pop_init <- 8.3
-  PHY_TCHLA_init <- 2.0
   
-  OXY_oxy_error <- OXY_oxy_init*0.1
-  CAR_pH_error <- CAR_pH_init*0.1
-  CAR_dic_error <- CAR_dic_init*0.1
-  CAR_ch4_error <- CAR_ch4_init*0.1
-  SIL_rsi_error <- SIL_rsi_init*0.1
-  NIT_amm_error <- NIT_amm_init*0.1
-  NIT_nit_error <- NIT_nit_init*0.1
-  PHS_frp_error <- PHS_frp_init*0.1
-  OGM_doc_error <- OGM_doc_init*0.1
-  OGM_poc_error <- OGM_poc_init*0.1
-  OGM_don_error <- OGM_don_init*0.1
-  OGM_pon_error <- OGM_pon_init*0.1
-  OGM_dop_error <- OGM_dop_init*0.1
-  OGM_pop_error <- OGM_pop_init*0.1
-  PHY_TCHLA_error <- PHY_TCHLA_init*0.1
-  
-  wq_var_error <- c(OXY_oxy_error,
-                    CAR_pH_error,
-                    CAR_dic_error,
-                    CAR_ch4_error,
-                    SIL_rsi_error,
-                    NIT_amm_error,
-                    NIT_nit_error,
-                    PHS_frp_error,
-                    OGM_doc_error,
-                    OGM_poc_error, 
-                    OGM_don_error,
-                    OGM_pon_error,
-                    OGM_dop_error,
-                    OGM_pop_error,
-                    PHY_TCHLA_error)
-  
-  
-  #if(include_wq & use_ctd){
-    #OXY_oxy_init_depth <- do_init
-  #}else{
-  #  OXY_oxy_init_depth <- rep(OXY_oxy_init, ndepths_modeled)  
-  #  OXY_oxy_init_depth[1] <- 400
-  #}
-  #if(include_wq & use_ctd){
-  #  CAR_pH_init_depth <- pH_init
-  #}else{
-    CAR_pH_init_depth <- rep(CAR_pH_init, ndepths_modeled) 
-  #}
-  
-  CAR_dic_init_depth <- rep(CAR_dic_init, ndepths_modeled)
-  CAR_ch4_init_depth <- rep(CAR_ch4_init, ndepths_modeled)
-  SIL_rsi_init_depth <- rep(SIL_rsi_init, ndepths_modeled)
-  NIT_amm_init_depth <- rep(NIT_amm_init, ndepths_modeled)
-  NIT_nit_init_depth <- rep(NIT_nit_init, ndepths_modeled)
-  PHS_frp_init_depth <- rep(PHS_frp_init, ndepths_modeled)
-  OGM_poc_init_depth <- rep(OGM_poc_init, ndepths_modeled)
-  if(is.na(OGM_doc_init_depth[1])){
-    OGM_doc_init_depth <- rep(OGM_doc_init, ndepths_modeled)
-  }
-  OGM_don_init_depth <- OGM_doc_init_depth * init_donc
-
-  #OGM_don_init_depth <- rep(OGM_don_init, ndepths_modeled)
-  OGM_pon_init_depth <- rep(OGM_pon_init, ndepths_modeled)
-  OGM_dop_init_depth <- OGM_doc_init_depth * init_dopc
-  #OGM_dop_init_depth <- rep(OGM_dop_init, ndepths_modeled)
-  OGM_pop_init_depth <- rep(OGM_pop_init, ndepths_modeled)
-  #PHY_TCHLA_init_depth <- rep(PHY_TCHLA_init, ndepths_modeled)
-  if(is.na(PHY_TCHLA_init_depth[1])){
-    PHY_TCHLA_init_depth <- rep(PHY_TCHLA_init, ndepths_modeled)
-  }
-  #phyto_proportions <- c(0.25, 0.25, 0.25, 0.25)
-  PHY_CYANOPCH1_init_depth <- PHY_TCHLA_init_depth/biomass_to_chla[1]
-  #PHY_CYANONPCH2_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[2]
-  #PHY_CHLOROPCH3_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[3]
-  #PHY_DIATOMPCH4_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[4] 
-  
-  if(full_time_day_local[1] == 
-     strftime("2018-07-09",format="%Y-%m-%d",tz = "EST5EDT") &
-     include_wq){
-    curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9,10)
-    #mg/L
-    curr_values <- c(3.764, 3.781, 3.578, 5.156, 5.2735, 5.5165, 5.222, 5.368)
-    curr_values <- (curr_values*1000)/(10*12)
-    inter <- approxfun(curr_depths,curr_values,rule=2)
-    CAR_dic_init_depth <- inter(modeled_depths)
-    
-    curr_depths <- c(0.1,1.6,3.8,5,6.2,8,9,9.5)
-    #umol CH4/L
-    curr_values <- c(3.91E-04,0.370572728,0.107597836,0.126096596,
-                     0.088502664,0.086276629,0.07256043,0.07249431)
-    curr_values <- curr_values#*1000
-    inter <- approxfun(curr_depths,curr_values,rule=2)
-    CAR_ch4_init_depth <- inter(modeled_depths)
-    
-    curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
-    #ug/L
-    curr_values <- c(12.65291714,4.213596723,10.5935375,13.43611258,
-                     11.34765394,11.95676704,11.98577285,12.82695814)
-    curr_values <- (curr_values*1000)/14
-    inter <- approxfun(curr_depths,curr_values,rule=2)
-    NIT_amm_init_depth <- inter(modeled_depths)
-    
-    curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
-    curr_values <-c(5.68,3.82,4.46,3.71,4.18,5.08,3.01,7.72)
-    curr_values <- (curr_values*1000)/14
-    #ug/L
-    inter <- approxfun(curr_depths,curr_values,rule=2)
-    NIT_nit_init_depth <- inter(modeled_depths)
-    
-    curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
-    #ug/L
-    curr_values <- c(8.96,7.66,6.26,6.22,7.72,9.69,7.95,10.5)
-    curr_values <- (curr_values*1000)/18
-    inter <- approxfun(curr_depths,curr_values,rule=2)
-    PHS_frp_init_depth <- inter(modeled_depths)
-    
-    curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
-    ##mg/L
-    curr_values <- c(4.2315,4.374, 3.2655,2.9705,2.938,2.922,2.773,2.9525)
-    curr_values <- (curr_values*1000)/(10*12)
-    inter <- approxfun(curr_depths,curr_values,rule=2)
-    OGM_doc_init_depth <- inter(modeled_depths)
-    
-    curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
-    ##mg/L
-    curr_values <- c(0.2855,0.261,0.218,0.2135,0.2185,0.223,0.2025,0.2065)
-    curr_values <- (curr_values*1000)/(10*14)
-    inter <- approxfun(curr_depths,curr_values,rule=2)
-    DN_init_depth <- inter(modeled_depths)
-    OGM_don_init_depth <- DN_init_depth - NIT_amm_init_depth - NIT_nit_init_depth
-  }
-  
-  wq_init_vals_w_tchla <- c(OXY_oxy_init_depth,
-                            CAR_pH_init_depth,
-                            CAR_dic_init_depth,
-                            CAR_ch4_init_depth,
-                            SIL_rsi_init_depth,
-                            NIT_amm_init_depth,
-                            NIT_nit_init_depth,
-                            PHS_frp_init_depth,
-                            OGM_doc_init_depth,
-                            OGM_poc_init_depth,
-                            OGM_don_init_depth,
-                            OGM_pon_init_depth,
-                            OGM_dop_init_depth,
-                            OGM_pop_init_depth,
-                            PHY_TCHLA_init_depth)
-  
-  wq_init_vals_w_phytos <- c(OXY_oxy_init_depth,
-                             CAR_pH_init_depth,
-                             CAR_dic_init_depth,
-                             CAR_ch4_init_depth,
-                             SIL_rsi_init_depth,
-                             NIT_amm_init_depth,
-                             NIT_nit_init_depth,
-                             PHS_frp_init_depth,
-                             OGM_doc_init_depth,
-                             OGM_poc_init_depth,
-                             OGM_don_init_depth,
-                             OGM_pon_init_depth,
-                             OGM_dop_init_depth,
-                             OGM_pop_init_depth,
-                             PHY_CYANOPCH1_init_depth)
-  
-  
-  #UPDATE NML WITH PARAMETERS AND INITIAL CONDITIONS
   if(include_wq){
+    wq_var_error <- c(OXY_oxy_process_error,
+                      CAR_pH_process_error,
+                      CAR_dic_process_error,
+                      CAR_ch4_process_error,
+                      SIL_rsi_process_error,
+                      NIT_amm_process_error,
+                      NIT_nit_process_error,
+                      PHS_frp_process_error,
+                      OGM_doc_process_error,
+                      OGM_poc_process_error, 
+                      OGM_don_process_error,
+                      OGM_pon_process_error,
+                      OGM_dop_process_error,
+                      OGM_pop_process_error,
+                      PHY_TCHLA_process_error)
+    
+    
+    #if(include_wq & use_ctd){
+    #OXY_oxy_init_depth <- do_init
+    #}else{
+    #  OXY_oxy_init_depth <- rep(OXY_oxy_init, ndepths_modeled)  
+    #  OXY_oxy_init_depth[1] <- 400
+    #}
+    #if(include_wq & use_ctd){
+    #  CAR_pH_init_depth <- pH_init
+    #}else{
+    CAR_pH_init_depth <- rep(CAR_pH_init, ndepths_modeled) 
+    #}
+    
+    CAR_dic_init_depth <- rep(CAR_dic_init, ndepths_modeled)
+    CAR_ch4_init_depth <- rep(CAR_ch4_init, ndepths_modeled)
+    SIL_rsi_init_depth <- rep(SIL_rsi_init, ndepths_modeled)
+    NIT_amm_init_depth <- rep(NIT_amm_init, ndepths_modeled)
+    NIT_nit_init_depth <- rep(NIT_nit_init, ndepths_modeled)
+    PHS_frp_init_depth <- rep(PHS_frp_init, ndepths_modeled)
+    OGM_poc_init_depth <- rep(OGM_poc_init, ndepths_modeled)
+    if(is.na(OGM_doc_init_depth[1])){
+      OGM_doc_init_depth <- rep(OGM_doc_init, ndepths_modeled)
+    }
+    OGM_don_init_depth <- OGM_doc_init_depth * init_donc
+    
+    #OGM_don_init_depth <- rep(OGM_don_init, ndepths_modeled)
+    OGM_pon_init_depth <- rep(OGM_pon_init, ndepths_modeled)
+    OGM_dop_init_depth <- OGM_doc_init_depth * init_dopc
+    #OGM_dop_init_depth <- rep(OGM_dop_init, ndepths_modeled)
+    OGM_pop_init_depth <- rep(OGM_pop_init, ndepths_modeled)
+    #PHY_TCHLA_init_depth <- rep(PHY_TCHLA_init, ndepths_modeled)
+    if(is.na(PHY_TCHLA_init_depth[1])){
+      PHY_TCHLA_init_depth <- rep(PHY_TCHLA_init, ndepths_modeled)
+    }
+    #phyto_proportions <- c(0.25, 0.25, 0.25, 0.25)
+    PHY_CYANOPCH1_init_depth <- PHY_TCHLA_init_depth/biomass_to_chla[1]
+    #PHY_CYANONPCH2_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[2]
+    #PHY_CHLOROPCH3_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[3]
+    #PHY_DIATOMPCH4_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[4] 
+    
+    if(full_time_day_local[1] == 
+       strftime("2018-07-09",format="%Y-%m-%d",tz = "EST5EDT") &
+       include_wq){
+      curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9,10)
+      #mg/L
+      curr_values <- c(3.764, 3.781, 3.578, 5.156, 5.2735, 5.5165, 5.222, 5.368)
+      curr_values <- (curr_values*1000)/(10*12)
+      inter <- approxfun(curr_depths,curr_values,rule=2)
+      CAR_dic_init_depth <- inter(modeled_depths)
+      
+      curr_depths <- c(0.1,1.6,3.8,5,6.2,8,9,9.5)
+      #umol CH4/L
+      curr_values <- c(3.91E-04,0.370572728,0.107597836,0.126096596,
+                       0.088502664,0.086276629,0.07256043,0.07249431)
+      curr_values <- curr_values#*1000
+      inter <- approxfun(curr_depths,curr_values,rule=2)
+      CAR_ch4_init_depth <- inter(modeled_depths)
+      
+      curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
+      #ug/L
+      curr_values <- c(12.65291714,4.213596723,10.5935375,13.43611258,
+                       11.34765394,11.95676704,11.98577285,12.82695814)
+      curr_values <- (curr_values*1000)/14
+      inter <- approxfun(curr_depths,curr_values,rule=2)
+      NIT_amm_init_depth <- inter(modeled_depths)
+      
+      curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
+      curr_values <-c(5.68,3.82,4.46,3.71,4.18,5.08,3.01,7.72)
+      curr_values <- (curr_values*1000)/14
+      #ug/L
+      inter <- approxfun(curr_depths,curr_values,rule=2)
+      NIT_nit_init_depth <- inter(modeled_depths)
+      
+      curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
+      #ug/L
+      curr_values <- c(8.96,7.66,6.26,6.22,7.72,9.69,7.95,10.5)
+      curr_values <- (curr_values*1000)/18
+      inter <- approxfun(curr_depths,curr_values,rule=2)
+      PHS_frp_init_depth <- inter(modeled_depths)
+      
+      curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
+      ##mg/L
+      curr_values <- c(4.2315,4.374, 3.2655,2.9705,2.938,2.922,2.773,2.9525)
+      curr_values <- (curr_values*1000)/(10*12)
+      inter <- approxfun(curr_depths,curr_values,rule=2)
+      OGM_doc_init_depth <- inter(modeled_depths)
+      
+      curr_depths <- c(0.1,1.6,3.8,5,6.2,8, 9, 10)
+      ##mg/L
+      curr_values <- c(0.2855,0.261,0.218,0.2135,0.2185,0.223,0.2025,0.2065)
+      curr_values <- (curr_values*1000)/(10*14)
+      inter <- approxfun(curr_depths,curr_values,rule=2)
+      DN_init_depth <- inter(modeled_depths)
+      OGM_don_init_depth <- DN_init_depth - NIT_amm_init_depth - NIT_nit_init_depth
+    }
+    
+    wq_init_vals_w_tchla <- c(OXY_oxy_init_depth,
+                              CAR_pH_init_depth,
+                              CAR_dic_init_depth,
+                              CAR_ch4_init_depth,
+                              SIL_rsi_init_depth,
+                              NIT_amm_init_depth,
+                              NIT_nit_init_depth,
+                              PHS_frp_init_depth,
+                              OGM_doc_init_depth,
+                              OGM_poc_init_depth,
+                              OGM_don_init_depth,
+                              OGM_pon_init_depth,
+                              OGM_dop_init_depth,
+                              OGM_pop_init_depth,
+                              PHY_TCHLA_init_depth)
+    
+    wq_init_vals_w_phytos <- c(OXY_oxy_init_depth,
+                               CAR_pH_init_depth,
+                               CAR_dic_init_depth,
+                               CAR_ch4_init_depth,
+                               SIL_rsi_init_depth,
+                               NIT_amm_init_depth,
+                               NIT_nit_init_depth,
+                               PHS_frp_init_depth,
+                               OGM_doc_init_depth,
+                               OGM_poc_init_depth,
+                               OGM_don_init_depth,
+                               OGM_pon_init_depth,
+                               OGM_dop_init_depth,
+                               OGM_pop_init_depth,
+                               PHY_CYANOPCH1_init_depth)
+    
+    
+    #UPDATE NML WITH PARAMETERS AND INITIAL CONDITIONS
     update_var(wq_init_vals_w_phytos, "wq_init_vals", working_glm, "glm3.nml")
     update_var(length(wq_init_vals_w_phytos)/length(OXY_oxy_init_depth), "num_wq_vars", working_glm, "glm3.nml")
   }else{
+    #UPDATE NML WITH PARAMETERS AND INITIAL CONDITIONS
     update_var(" ", "wq_init_vals", working_glm, "glm3.nml")
     update_var(0, "num_wq_vars", working_glm, "glm3.nml")
+    
   }
   update_var(ndepths_modeled, "num_depths", working_glm, "glm3.nml")
   update_var(modeled_depths, "the_depths", working_glm, "glm3.nml")
   update_var(rep(the_sals_init, ndepths_modeled), "the_sals", working_glm, "glm3.nml")
-  
+
   #Create a copy of the NML to record starting parameters
   file.copy(from = paste0(working_glm, "/", "glm3.nml"), 
             to = paste0(working_glm, "/", "glm3_initial.nml"), overwrite = TRUE)
@@ -984,7 +932,7 @@ run_flare<-function(start_day_local,
   #Covariance matrix for parameters
   if(npars > 0){
     qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
-    diag(qt_pars) <- c(zone1temp_init_qt, zone2temp_init_qt, swf_init_qt,Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
+    diag(qt_pars) <- par_init_qt
   }else{
     qt_pars <- NA
   }
@@ -1007,22 +955,15 @@ run_flare<-function(start_day_local,
                                     mean=c(the_temps_init, 
                                            wq_init_vals_w_tchla), 
                                     sigma=as.matrix(qt))
-        x[1, ,(nstates+1)] <- runif(n=nmembers,zone1_temp_init_lowerbound, zone1_temp_init_upperbound)
-        x[1, ,(nstates+2)] <- runif(n=nmembers,zone2_temp_init_lowerbound, zone2_temp_init_upperbound)
-        x[1, ,(nstates+3)] <- runif(n=nmembers,swf_init_lowerbound, swf_init_upperbound)
-        x[1, ,(nstates+4)] <- runif(n=nmembers,Fsed_oxy_init_lowerbound, Fsed_oxy_init_upperbound)
-        x[1, ,(nstates+5)] <- runif(n=nmembers,Rdom_minerl_init_lowerbound, Rdom_minerl_init_upperbound)
-        x[1, ,(nstates+6)] <- runif(n=nmembers,R_growth_init_lowerbound, R_growth_init_upperbound)
+        for(par in 1:npars){
+        x[1, ,(nstates+par)] <- runif(n=nmembers,par_init_lowerbound[par], par_init_upperbound[par])
+        }
+        
         if(initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
             x[1,m, ] <- c(the_temps_init,
                           wq_init_vals_w_tchla,
-                          zone1_temp_init_mean,
-                          zone2_temp_init_mean,
-                          swf_init_mean,
-                          Fsed_oxy_init_mean,
-                          Rdom_minerl_init_mean,
-                          R_growth_init_mean)
+                          par_init_mean)
           }
         }
       }else{
@@ -1042,12 +983,13 @@ run_flare<-function(start_day_local,
                                     sigma=as.matrix(qt))
         
         
-        x[1, ,(nstates+1)] <- runif(n=nmembers,zone1_temp_init_lowerbound, zone1_temp_init_upperbound)
-        x[1, ,(nstates+2)] <- runif(n=nmembers,zone2_temp_init_lowerbound, zone2_temp_init_upperbound)
-        x[1, ,(nstates+3)] <- runif(n=nmembers,swf_init_lowerbound, swf_init_upperbound)
+        for(par in 1:npars){
+          x[1, ,(nstates+par)] <- runif(n=nmembers,par_init_lowerbound[par], par_init_upperbound[par])
+        }
+        
         if(initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
-            x[1, m, ] <- c(the_temps_init, zone1_temp_init_mean, zone2_temp_init_mean, swf_init_mean)
+            x[1, m, ] <- c(the_temps_init, par_init_mean)
           }
         }
       }else{
@@ -1067,7 +1009,7 @@ run_flare<-function(start_day_local,
     if(include_wq){
       for(m in 1:nmembers){
         for(wq in 1:num_wq_vars){
-          index <- which(x[1, m, 1:par1] < 0.0)
+          index <- which(x[1, m, 1:wq_end[num_wq_vars]] < 0.0)
           index <- index[which(index > wq_start[1])]
           x[1, m, index] <- 0.0
         }
@@ -1132,7 +1074,7 @@ run_flare<-function(start_day_local,
   
   #Matrix to store essemble specific surface height
   surface_height <- array(NA, dim=c(nsteps, nmembers))
-  surface_height[1, ] <- lake_depth_init
+  surface_height[1, ] <- round(lake_depth_init, 3)
   
   #
   if(include_wq){
@@ -1253,12 +1195,6 @@ run_flare<-function(start_day_local,
                         include_wq,
                         wq_start,
                         wq_end,
-                        par1,
-                        par2,
-                        par3,
-                        par4,
-                        par5,
-                        par6,
                         z,
                         nstates,
                         npars,
@@ -1269,7 +1205,7 @@ run_flare<-function(start_day_local,
   
   ##ARCHIVE FORECAST
   restart_file_name <- archive_forecast(working_glm = working_glm,
-                                        folder = folder, 
+                                        folder = code_folder, 
                                         forecast_base_name = forecast_base_name, 
                                         forecast_location = forecast_location,
                                         push_to_git = push_to_git,
