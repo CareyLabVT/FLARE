@@ -1,5 +1,5 @@
 create_inflow_outflow_file <- function(full_time_day_local,
-                                       working_glm,
+                                       working_directory,
                                        input_file_tz = 'EST5EDT', 
                                        start_forecast_step,
                                        hold_inflow_outflow_constant,
@@ -19,9 +19,9 @@ create_inflow_outflow_file <- function(full_time_day_local,
   full_time_day_2015 <- as.POSIXct(full_time_day_local, 
                                    tz = local_tzone) - 5*365*24*60*60
   
-  inflow = read.csv(paste0(working_glm,'/', inflow_file1))
-  spillway = read.csv(paste0(working_glm,'/', outflow_file1))
-  wetland = read.csv(paste0(working_glm,'/', inflow_file2))
+  inflow = read.csv(paste0(working_directory,'/', inflow_file1))
+  spillway = read.csv(paste0(working_directory,'/', outflow_file1))
+  wetland = read.csv(paste0(working_directory,'/', inflow_file2))
   
   inflow_time_local <- as.POSIXct(inflow$time, tz = input_file_tz)
   inflow_time_tmp <- with_tz(inflow_time_local,local_tzone)
@@ -85,15 +85,15 @@ create_inflow_outflow_file <- function(full_time_day_local,
   wetland_new$time =  full_time_day_local
   
   write.csv(inflow_new,
-            file = paste0(working_glm,'/','inflow_file1.csv'),
+            file = paste0(working_directory,'/','inflow_file1.csv'),
             row.names = FALSE,
             quote = FALSE)
   write.csv(spillway_new,
-            file = paste0(working_glm,'/','outflow_file1.csv'),
+            file = paste0(working_directory,'/','outflow_file1.csv'),
             row.names = FALSE,
             quote = FALSE)
   write.csv(wetland_new,
-            file = paste0(working_glm,'/','inflow_file2.csv'),
+            file = paste0(working_directory,'/','inflow_file2.csv'),
             row.names = FALSE,
             quote = FALSE)
 }

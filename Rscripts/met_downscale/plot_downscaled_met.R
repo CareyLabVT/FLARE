@@ -1,4 +1,4 @@
-plot_downscaled_met <- function(met_file_names, VarNames, working_glm){
+plot_downscaled_met <- function(met_file_names, VarNames, working_directory){
 
   full.data = NULL
   
@@ -7,7 +7,7 @@ plot_downscaled_met <- function(met_file_names, VarNames, working_glm){
       dplyr::mutate(ens = i - 1)
     full.data = rbind(full.data, tmp.data)
   }
-  pdf(paste0(working_glm, "/downscaled_met_plots.pdf"))
+  pdf(paste0(working_directory, "/downscaled_met_plots.pdf"))
   for(i in 1:length(VarNames)){
    print(ggplot(data = full.data, aes(x = time)) +
             geom_line(aes(y = get(paste(VarNames[i])), color = "Downscaled", group = ens), alpha = 0.3) +

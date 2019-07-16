@@ -13,7 +13,7 @@
 # -----------------------------------
 # @param data.path: path to SCCData-noaa-data folder, which contains 16-day NOAA forecasts (.csv) saved on many days
 # -----------------------------------
-process_saved_forecasts <- function(data.path,working_glm, local_tzone){
+process_saved_forecasts <- function(data.path,working_directory, local_tzone){
   
   # -----------------------------------
   # 0. Load data, initialize variables
@@ -40,7 +40,7 @@ process_saved_forecasts <- function(data.path,working_glm, local_tzone){
     flux.forecasts = rbind(flux.forecasts, tmp.flux)
     state.forecasts = rbind(state.forecasts, tmp.state)
   }
-  saveRDS(flux.forecasts, file = paste(working_glm,"/NOAA.flux.forecasts", sep = ""))
-  saveRDS(state.forecasts, file = paste(working_glm,"/NOAA.state.forecasts", sep = ""))
+  saveRDS(flux.forecasts, file = paste(working_directory,"/NOAA.flux.forecasts", sep = ""))
+  saveRDS(state.forecasts, file = paste(working_directory,"/NOAA.state.forecasts", sep = ""))
 }
 

@@ -37,8 +37,6 @@ write_forecast_netcdf <- function(x,
   forecasted <- rep(1,length(t))
   forecasted[1:(hist_days+1)] <- 0
   
-  
-  
   #Create summary output
   mean_temp <- array(NA,dim=c(length(t),length(depths)))
   upper95_temp <- array(NA,dim=c(length(t),length(depths)))
@@ -68,15 +66,17 @@ write_forecast_netcdf <- function(x,
   def_list[[2]] <- ncvar_def("temp_mean","deg_C",list(timedim,depthdim),fillvalue,'temperature_mean',prec="single")
   def_list[[3]] <- ncvar_def("temp_upperCI","deg_C",list(timedim,depthdim),fillvalue,'temperature_upperCI',prec="single")
   def_list[[4]] <- ncvar_def("temp_lowerCI","deg_C",list(timedim,depthdim),fillvalue,'temperature_lowerCI',prec="single")
-  def_list[[5]] <- ncvar_def("qt_restart","-",list(statedim,statedim),fillvalue,'restart covariance matrix',prec="float")
+  def_list[[5]] <- ncvar_def("qt_restart","-",list(stateagudim,stateagudim),fillvalue,'restart covariance matrix',prec="float")
   def_list[[6]]  <- ncvar_def("x_restart","-",list(ensdim,stateagudim),fillvalue,'matrix for restarting EnKF',prec="float")
   def_list[[7]] <- ncvar_def("x_prior","-",list(timedim,ensdim,stateagudim),fillvalue,'Predicted states prior to Kalman correction',prec="float")
   def_list[[8]] <- ncvar_def("obs","various",list(timedim,obsdim),fillvalue,'temperature observations',prec="single")
   def_list[[9]]<- ncvar_def("resid30day","various",list(qt_update_days_dim,statedim),fillvalue,'running residual of water temperature for updating qt',prec="single")
   def_list[[10]] <- ncvar_def("forecasted","-",list(timedim),missval = -99,longname = dlname <- '0 = historical; 1 = forecasted',prec="integer")
   
-  for(par in 1:npars){
-    def_list[[10+par]] <-ncvar_def(par_names_save[par],par_units[par],list(timedim,ensdim),fillvalue,par_names_save[par],prec="single")
+  if(npars > 0){
+    for(par in 1:npars){
+      def_list[[10+par]] <-ncvar_def(par_names_save[par],par_units[par],list(timedim,ensdim),fillvalue,par_names_save[par],prec="single")
+    }
   }
   
   if(include_wq){
@@ -109,8 +109,6 @@ write_forecast_netcdf <- function(x,
     #wq_def21 <- ncvar_def("ZOO_DAPHNIASMALL3","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
   }
   
-
-    
   ncout <- nc_create(ncfname,def_list,force_v4=T)
   
   # create netCDF file and put arrays
@@ -125,10 +123,12 @@ write_forecast_netcdf <- function(x,
   ncvar_put(ncout,def_list[[9]] ,resid30day)
   ncvar_put(ncout,def_list[[10]] ,as.array(forecasted))
   
-  for(par in 1:npars){
-    ncvar_put(ncout,def_list[[10 + par]] ,x[,,wq_end[num_wq_vars] + par])
+  if(npars > 0){
+    for(par in 1:npars){
+      ncvar_put(ncout,def_list[[10 + par]] ,x[,,nstates + par])
+    }
   }
-
+  
   if(include_wq){
     ncvar_put(ncout,def_list[[10+npars+1]],x[,,wq_start[1]:wq_end[1]])
     ncvar_put(ncout,def_list[[10+npars+2]],x[,,wq_start[2]:wq_end[2]])

@@ -1,10 +1,10 @@
-get_daily_debias_coeff <- function(joined.data, VarInfo, PLOT, working_glm){
+get_daily_debias_coeff <- function(joined.data, VarInfo, PLOT, working_directory){
   # --------------------------------------
   # purpose: save coefficients for linear debiasing (slope, intercept, standard deviation of residuals, r2 of linear regression), for comparison of total values over time (precip), and the covariance matrix between variables
   # Creator: Laura Puckett, December 14 2018
   # --------------------------------------
   
-  get_coeff <- function(col.obs, col.for, method, PLOT, VarName, working_glm){
+  get_coeff <- function(col.obs, col.for, method, PLOT, VarName, working_directory){
     if(method == "lm"){
       model <- lm(unlist(col.obs) ~ unlist(col.for))
       intercept <- model$coefficients[1]
@@ -22,7 +22,7 @@ get_daily_debias_coeff <- function(joined.data, VarInfo, PLOT, working_glm){
     
     tibble(Forecast = unlist(col.for),
            Observed = unlist(col.obs)) %>% 
-      write_csv(paste0(working_glm, "/", VarName,"_daily_downscale_data.csv"))
+      write_csv(paste0(working_directory, "/", VarName,"_daily_downscale_data.csv"))
       
     if(PLOT){
       lims <- range(c(unlist(col.for),unlist(col.obs)))
@@ -36,7 +36,7 @@ get_daily_debias_coeff <- function(joined.data, VarInfo, PLOT, working_glm){
         ylim(lims) +
         xlim(lims) +
         theme_bw()
-      ggsave(filename = paste0(working_glm, "/", VarName,"_daily_downscale.pdf"), device = "pdf", plot = p, width = 5, height = 5, units = "in")
+      ggsave(filename = paste0(working_directory, "/", VarName,"_daily_downscale.pdf"), device = "pdf", plot = p, width = 5, height = 5, units = "in")
     }
     
     res.sd <- sd(unlist(res))
@@ -58,7 +58,7 @@ get_daily_debias_coeff <- function(joined.data, VarInfo, PLOT, working_glm){
                                       method = method,
                                       PLOT,
                                       VarName,
-                                      working_glm)[[rowNum]]
+                                      working_directory)[[rowNum]]
     }
   }
   
@@ -76,7 +76,7 @@ get_daily_debias_coeff <- function(joined.data, VarInfo, PLOT, working_glm){
                                        method = method,
                                        PLOT = FALSE,
                                        VarName,
-                                       working_glm)[5]))
+                                       working_directory)[5]))
     df2 = cbind(df2, tmp)
   }
   

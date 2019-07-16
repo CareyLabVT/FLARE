@@ -1,3 +1,8 @@
+#All functions are from GLMtools package
+#We moved them here because GLMtools package 
+#was not keeping up with R updates
+
+
 #'@title read in a GLM simulation *.nml file
 #'@description 
 #'read in a GLM simulation *.nml file and create a list.  \cr

@@ -12,8 +12,8 @@
 #' @examples
 #' add(1, 1)
 #' add(10, 1)
-update_temps <- function(curr_temps,curr_depths,working_glm){
-  orig_nml = read_nml(paste0(working_glm,'/','glm3.nml'))
+update_temps <- function(curr_temps,curr_depths,working_directory){
+  orig_nml = read_nml(paste0(working_directory,'/','glm3.nml'))
   index1 = NA; index2 = NA;index3 = NA; index4 = NA
   for (g in 1:length(orig_nml)) {
     for (q in 1:length(orig_nml[[g]])) {
@@ -38,7 +38,7 @@ update_temps <- function(curr_temps,curr_depths,working_glm){
   holder3 = list(holder3)
   orig_nml[[index1]][index2] = holder2
   orig_nml[[index3]][index4] = holder3
-  write_nml(orig_nml, paste0(working_glm,'/','glm3.nml'))
+  write_nml(orig_nml, paste0(working_directory,'/','glm3.nml'))
   return(list(depths,init_temps))
 }
 
@@ -51,8 +51,8 @@ update_temps <- function(curr_temps,curr_depths,working_glm){
 #' @examples
 #' add(1, 1)
 #' add(10, 1)
-update_var <- function(var_value,var_name,working_glm, nml){
-  orig_nml = read_nml(paste0(working_glm,'/',nml))
+update_var <- function(var_value,var_name,working_directory, nml){
+  orig_nml = read_nml(paste0(working_directory,'/',nml))
   index1 = NA; index2 = NA
   for (g in 1:length(orig_nml)) {
     for (q in 1:length(orig_nml[[g]])) {
@@ -65,7 +65,7 @@ update_var <- function(var_value,var_name,working_glm, nml){
   holder2[1:length(var_value)] = var_value
   holder2 = list(holder2[1:length(var_value)])
   orig_nml[[index1]][index2] = holder2
-  write_nml(orig_nml, paste0(working_glm,'/',nml))
+  write_nml(orig_nml, paste0(working_directory,'/',nml))
 }
 
 #' Add together two numbers.
@@ -77,8 +77,8 @@ update_var <- function(var_value,var_name,working_glm, nml){
 #' @examples
 #' add(1, 1)
 #' add(10, 1)
-update_time <- function(start_value,stop_value,working_glm){
-  orig_nml = read_nml(paste0(working_glm,'/','glm3.nml'))
+update_time <- function(start_value,stop_value,working_directory){
+  orig_nml = read_nml(paste0(working_directory,'/','glm3.nml'))
   index1 = NA; index2 = NA; index3 = NA; index4 = NA
   for (g in 1:length(orig_nml)) {
     for (q in 1:length(orig_nml[[g]])) {
@@ -93,7 +93,7 @@ update_time <- function(start_value,stop_value,working_glm){
   orig_nml[[index1]][index2] = as.character(start_value)
   orig_nml[[index1]][index2] = as.character(start_value)
   orig_nml[[index3]][index4] = stop_value
-  write_nml(orig_nml, paste0(working_glm,'/','glm3.nml'))
+  write_nml(orig_nml, paste0(working_directory,'/','glm3.nml'))
 }
 
 #' Add together two numbers.
@@ -150,7 +150,7 @@ update_phyto <- function(p_initial,nml_name = 'aed2_phyto_pars.nml'){
   if(length(p_initial)<6){
     print('number of phyto group does not equal 6')
   }   
-  nml_file <- paste0(working_glm,'/',nml_name)
+  nml_file <- paste0(working_directory,'/',nml_name)
   c <- file(nml_file, "r")
   fileLines <- readLines(c)
   close(c)

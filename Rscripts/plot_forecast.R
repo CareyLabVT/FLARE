@@ -42,8 +42,10 @@ plot_forecast <- function(pdf_file_name,
   depths <- ncvar_get(nc,'z')
   forecasted <- ncvar_get(nc,'forecasted')
   par_list <- list()
-  for(par in 1:npars){
-  par_list[[par]] <- ncvar_get(nc,par_names_save[par])
+  if(npars > 0){
+    for(par in 1:npars){
+      par_list[[par]] <- ncvar_get(nc,par_names_save[par])
+    }
   }
   
   if(include_wq){
@@ -94,6 +96,8 @@ plot_forecast <- function(pdf_file_name,
                                       observed_depths_chla_fdom,
                                       input_file_tz = "EST5EDT", 
                                       local_tzone)
+  
+  obs_chla_fdom$Chla_obs <- exo_2_ctd_chla[1] + obs_chla_fdom$Chla_obs*exo_2_ctd_chla[2]
   #DIRRRRTY qsu -> mg/L ->  mmol/m3
   #Need to fix
   obs_chla_fdom$fDOM_obs <- obs_chla_fdom$fDOM_obs*1000/(12*6)  
@@ -110,11 +114,12 @@ plot_forecast <- function(pdf_file_name,
                                 local_tzone)
     
     obs_ctd$obs_do <- obs_ctd$obs_do*1000/32
+    
     for(i in 1:length(full_time_day_local)){
       if(!is.na(obs_ctd$obs_temp[i, 1])){
-        obs_temp$obs[i,] <- obs_ctd$obs_temp[i, ]
-        obs_do$obs[i,] <- obs_ctd$obs_do[i, ]
-        obs_chla_fdom$Chla_obs[i,] <- obs_ctd$obs_chla[i, ]
+        obs_temp$obs[i,which(is.na(obs_temp$obs[i,]))] <- obs_ctd$obs_temp[i,which(is.na(obs_temp$obs[i,]))]
+        obs_do$obs[i,which(is.na(obs_do$obs[i,]))] <- obs_ctd$obs_do[i,which(is.na(obs_do$obs[i,])) ]
+        obs_chla_fdom$Chla_obs[i,which(is.na(obs_chla_fdom$Chla_obs[i,]))] <- obs_ctd$obs_chla[i, which(is.na(obs_chla_fdom$Chla_obs[i,])) ]
       }
     }
   }
@@ -222,15 +227,15 @@ plot_forecast <- function(pdf_file_name,
   par(mfrow=c(4,3))
   if(npars > 0){
     for(par in 1:npars){
-    plot(full_time_local,rowMeans(par_list[[par]][,]),xlab ='Day',ylab = par_names_save[par],type='l',ylim = range(c(par_list[[par]][,]),na.rm=TRUE))
-    if(length(par_list[[par]][1,]) > 1){
-      for(m in 1:length(par_list[[par]][1,])){
-        points(full_time_local,par_list[[par]][,m],type='l')
+      plot(full_time_local,rowMeans(par_list[[par]][,]),xlab ='Day',ylab = par_names_save[par],type='l',ylim = range(c(par_list[[par]][,]),na.rm=TRUE))
+      if(length(par_list[[par]][1,]) > 1){
+        for(m in 1:length(par_list[[par]][1,])){
+          points(full_time_local,par_list[[par]][,m],type='l')
+        }
       }
     }
-    }
   }
-   
+  
   if(include_wq){
     par(mfrow=c(4,3))
     

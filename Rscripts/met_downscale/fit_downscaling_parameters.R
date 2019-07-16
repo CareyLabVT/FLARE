@@ -8,7 +8,7 @@
 
 fit_downscaling_parameters <- function(observations,
                                        for.file.path,
-                                       working_glm,
+                                       working_directory,
                                        VarNames,
                                        VarNamesStates,
                                        replaceObsNames,
@@ -20,10 +20,10 @@ fit_downscaling_parameters <- function(observations,
   
   # process and read in saved forecast data
   process_saved_forecasts(data.path = for.file.path,
-                          working_glm,
+                          working_directory,
                           local_tzone) # geneartes flux.forecasts and state.forecasts dataframes
-  NOAA.flux <- readRDS(paste(working_glm,"/NOAA.flux.forecasts", sep = ""))
-  NOAA.state <- readRDS(paste(working_glm,"/NOAA.state.forecasts", sep = ""))
+  NOAA.flux <- readRDS(paste(working_directory,"/NOAA.flux.forecasts", sep = ""))
+  NOAA.state <- readRDS(paste(working_directory,"/NOAA.state.forecasts", sep = ""))
   NOAA.data <- inner_join(NOAA.flux, NOAA.state, by = c("forecast.date","ensembles"))
   NOAA_input_tz <- attributes(NOAA.data$forecast.date)$tzone
   
@@ -54,7 +54,7 @@ fit_downscaling_parameters <- function(observations,
   # -----------------------------------
   # 4. save linearly debias coefficients and do linear debiasing at daily resolution
   # -----------------------------------
-  out <- get_daily_debias_coeff(joined.data = joined.data.daily, VarInfo = VarInfo, PLOT, working_glm)
+  out <- get_daily_debias_coeff(joined.data = joined.data.daily, VarInfo = VarInfo, PLOT, working_directory)
   debiased.coefficients <-  out[[1]]
   debiased.covar <-  out[[2]]
   
@@ -139,7 +139,7 @@ fit_downscaling_parameters <- function(observations,
   model <- lm(joined.hrly.obs.and.ds$LongWave.obs ~ joined.hrly.obs.and.ds$LongWave.ds)
   debiased.coefficients[5,5] <- sd(residuals(model))
   debiased.coefficients[6,5] <- summary(model)$r.squared
-  save(debiased.coefficients,debiased.covar, file = paste(working_glm,"/debiased.coefficients.RData", sep = ""))
+  save(debiased.coefficients,debiased.covar, file = paste(working_directory,"/debiased.coefficients.RData", sep = ""))
   
   print(debiased.coefficients)
   # -----------------------------------

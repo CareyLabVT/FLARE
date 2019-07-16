@@ -1,4 +1,8 @@
-extract_temp_CTD <- function(fname,full_time_day_local,modeled_depths,input_file_tz = 'EST5EDT', local_tzone){
+extract_temp_CTD <- function(fname,
+                             full_time_day_local,
+                             modeled_depths,
+                             input_file_tz,
+                             local_tzone){
   
   d <- read.csv(fname)
   if(length(d[which(d$Reservoir == 'FCR' & d$Site == '50'),1])>0){

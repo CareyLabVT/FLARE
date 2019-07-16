@@ -36,14 +36,67 @@ update_qt <- function(resid30day, modeled_depths, qt, include_wq, num_wq_vars){
   qt <- full_Qt
   
   if(include_wq){
-    for(i in 1:num_wq_vars){
-      for(j in 1:length(modeled_depths)){
+    for(i in (length(modeled_depths)+1):nrows(old_qt)){
         qt <- rbind(qt, rep(0.0, ncol(qt)))
         qt <- cbind(qt, rep(0.0, nrow(qt)))
-        qt[ncol(qt),nrow(qt)] <- old_qt[i*j,i*j]
-      }
+        qt[ncol(qt),nrow(qt)] <- old_qt[i,i]
     }
   }
   
+  return(qt)
+}
+
+update_sigma <- function(qt, p_t, h, x_star, pars_star, x_corr, pars_corr, psi_t, zt){
+  
+  #From:
+  #Rastetter, E. B., M. Williams, K. L. Griffin, B. L. Kwiatkowski, 
+  #G. Tomasky, M. J. Potosnak, P. C. Stoy, G. R. Shaver, M. Stieglitz, 
+  #J. E. Hobbie, and G. W. Kling. 2010. Processing arctic eddy-flux 
+  #data using a simple carbon-exchange model embedded in the ensemble 
+  #Kalman filter. Ecological Applications 20:1285-1301.
+  
+  x_par_star <- cbind(x_star,pars_star)
+  x_par_corr <- cbind(x_corr,pars_corr)
+
+  gamma <- t((1 - qt_beta) *  solve(h %*% p_t %*% t(h)) %*% h %*% p_t %*% (diag(1 , nrow = dim(h)[2], ncol = dim(h)[2]) - t(h) %*% h) + qt_beta * h)
+  
+  ens_mean_star <- colMeans(x_par_star)
+  
+  nmembers <- nrow(x_par_star)
+  nstates <- ncol(x_par_star)
+  
+  dit_star <- matrix(NA, nrow = nmembers, ncol = nstates)
+  #Loop through ensemble members
+  for(m in 1:nmembers){  
+    #Ensemble specific deviation
+    dit_star[m, ] <- x_par_star[m, ] - ens_mean_star
+    
+    #if the first ensemble then create the matrix that is then averaged
+    if(m == 1){
+      p_it_star <- dit_star[m, ] %*% t(dit_star[m, ]) 
+    }else{
+      #if not the first ensemble then add the matrix to the previous matrix
+      p_it_star <- dit_star[m, ] %*% t(dit_star[m, ]) +  p_it_star 
+    }
+  }
+  
+  p_t_star <- p_it_star / (nmembers - 1)
+  
+  y_corr <- matrix(NA, nrow =  nmembers, ncol = length(zt))
+  for(m in 1:nmembers){
+    y_corr[m, ] <- zt + t(rmvnorm(n = 1, mean = rep(0,dim(psi_t)[1]), sigma = psi_t))
+    y_tmp <- y_corr[m,] - h %*% x_par_corr[m, ]
+    if(m == 1){
+      y_it <- y_tmp %*% t(y_tmp)
+    }else{
+      y_it <- y_tmp %*% t(y_tmp) + y_it
+    }
+  }
+  
+  St <-  y_it / (nmembers - 1)
+  
+  q_star <- gamma %*% (St - h %*% p_t_star %*% t(h) - psi_t) %*% t(gamma)
+
+  qt <- (qt_alpha * qt) + ((1 - qt_alpha) *  q_star)
   return(qt)
 }
