@@ -60,7 +60,7 @@ create_obs_met_input <- function(fname,
     #full_time_hour_obs <- strftime(full_time_hour_obs, 
     #                              format="%Y-%m-%d %H:%M",
     #                              tz = output_tz)
-    GLM_climate <- data.frame(full_time_hour_local,
+    historical_met <- data.frame(full_time_hour_local,
                              ShortWave,
                              LongWave,
                              AirTemp,
@@ -76,7 +76,7 @@ create_obs_met_input <- function(fname,
                  "WindSpeed",
                  "Rain",
                  "Snow"))
-    colnames(GLM_climate) <- noquote(c("time",
+    colnames(historical_met) <- noquote(c("time",
                                       "ShortWave",
                                       "LongWave",
                                       "AirTemp",
@@ -84,6 +84,6 @@ create_obs_met_input <- function(fname,
                                       "WindSpeed",
                                       "Rain",
                                       "Snow"))
-    write.csv(GLM_climate, file = outfile, row.names = FALSE, quote = FALSE)
+    write.csv(historical_met, file = outfile, row.names = FALSE, quote = FALSE)
   }
 }

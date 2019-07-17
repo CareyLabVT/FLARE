@@ -470,7 +470,7 @@ run_flare<-function(start_day_local,
   }
   
   ##CREATE INFLOW AND OUTFILE FILES
-  create_inflow_outflow_file(full_time_day_local,
+  inflow_outflow_files <- create_inflow_outflow_file(full_time_day_local,
                                working_directory, 
                                input_file_tz = "EST5EDT",
                                start_forecast_step,
@@ -479,6 +479,10 @@ run_flare<-function(start_day_local,
                                inflow_file2,
                                outflow_file1,
                                local_tzone)
+  
+  inflow_file_names <- cbind(inflow1 = inflow_outflow_files$inflow_file_names,
+                            inflow2 = inflow_outflow_files$wetland_file_names)
+  outflow_file_names <- cbind(inflow_outflow_files$spillway_file_names)
 
   ####################################################
   #### STEP 6: PROCESS AND ORGANIZE STATE DATA
@@ -1044,7 +1048,9 @@ run_flare<-function(start_day_local,
                           resid30day,
                           hist_days,
                           print_glm2screen,
-                          x_phyto_groups)
+                          x_phyto_groups,
+                          inflow_file_names,
+                          outflow_file_names)
   
   x <- enkf_output$x
   x_restart <- enkf_output$x_restart

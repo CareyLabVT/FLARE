@@ -12,7 +12,7 @@ local_tzone <<- "EST"
 
 
 #Use GLM-AED?
-include_wq <<- TRUE
+include_wq <<- FALSE
 #Use CTD data in place of the sensor string
 use_ctd <<- TRUE
 
@@ -46,6 +46,7 @@ uncert_mode <<- 1
 cov_matrix <<- "Qt_cov_matrix_init_AED.csv"
 
 single_run <<- FALSE
+use_future_met <<- FALSE
 
 lake_latitude <<- 37.307   #Degrees North 
 lake_longitude <<- 79.837  #Degrees West
@@ -74,6 +75,7 @@ if(!include_wq){
 # get to the total number of essembles
 n_enkf_members <<- 1
 n_ds_members <<- 21
+n_inflow_outflow_members <<- 1
 
 #Init depth of lake
 lake_depth_init <<- 9.4  #not a modeled state
@@ -147,14 +149,14 @@ if(include_wq){
   #par_init_upperbound <<- c(swf_init_upperbound)
   #par_init_qt <<- c(swf_init_qt)
   #par_units <<- c("-")
-  par_names <<- c("sed_temp_mean","sed_temp_mean") #"Fsed_oxy","Rdom_minerl","pd%R_growth")
-  par_names_save <<- c("zone1temp","zone2temp")
-  par_nml <<- c("glm3.nml","glm3.nml") #"aed2.nml","aed2.nml","aed2_phyto_pars.nml")
-  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean)#Fsed_oxy_init_mean,Rdom_minerl_init_mean,Rdom_minerl_init_mean,R_growth_init_mean)
-  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound)#Fsed_oxy_init_lowerbound,Rdom_minerl_init_lowerbound,R_growth_init_lowerbound)
-  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound)#Fsed_oxy_init_upperbound,Rdom_minerl_init_upperbound,R_growth_init_upperbound)
-  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
-  par_units <<- c("deg_C","deg_C") #
+  par_names <<- c("sed_temp_mean","sed_temp_mean","swf_init_qt") #"Fsed_oxy","Rdom_minerl","pd%R_growth")
+  par_names_save <<- c("zone1temp","zone2temp","swf_init_qt")
+  par_nml <<- c("glm3.nml","glm3.nml","glm3.nml") #"aed2.nml","aed2.nml","aed2_phyto_pars.nml")
+  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean,swf_init_mean)#Fsed_oxy_init_mean,Rdom_minerl_init_mean,Rdom_minerl_init_mean,R_growth_init_mean)
+  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound,swf_init_lowerbound)#Fsed_oxy_init_lowerbound,Rdom_minerl_init_lowerbound,R_growth_init_lowerbound)
+  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound,swf_init_upperbound)#Fsed_oxy_init_upperbound,Rdom_minerl_init_upperbound,R_growth_init_upperbound)
+  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt,swf_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
+  par_units <<- c("deg_C","deg_C","-") #
 }
 
 #Depths with temperature observations
@@ -255,7 +257,7 @@ OGM_don_process_error <<- 0.001
 OGM_pon_process_error <<- 0.001
 OGM_dop_process_error <<- 0.001
 OGM_pop_process_error <<- 0.001
-PHY_TCHLA_process_error <<- 0.5
+PHY_TCHLA_process_error <<- 0.3
 
 qt_alpha <<- 0.9  #0 - all weight on the new Qt, 1 - all weight on the current Qt
 qt_beta <<- 0.75 # 

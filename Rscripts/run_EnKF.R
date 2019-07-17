@@ -22,14 +22,15 @@ run_EnKF <- function(x,
                      resid30day,
                      hist_days,
                      print_glm2screen,
-                     x_phyto_groups){
+                     x_phyto_groups,
+                     inflow_file_names,
+                     outflow_file_names){
   
   nsteps <- length(full_time_local)
   nmembers <- dim(x)[2]
   n_met_members <- length(met_file_names) - 1
   nstates <- dim(x)[3] - npars
   num_wq_vars <- length(wq_start)
-  
   
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
   
@@ -38,6 +39,7 @@ run_EnKF <- function(x,
   for(i in 2:nsteps){
     print(paste0("Running time step ", i, " : ", full_time_local[i - 1], " - ", full_time_local[i]))
     met_index <- 1
+    inflow_outflow_index <- 1
     #1) Update GLM NML files to match the current day of the simulation
     curr_start <- (full_time_local[i - 1])
     curr_stop <- (full_time_local[i])
@@ -113,20 +115,30 @@ run_EnKF <- function(x,
       #ALLOWS ThE LOOPING ThROUGh NOAA ENSEMBLES
       
       working_directory_docker <- "/GLM/TestLake"
-      if(i > (hist_days + 1)){
+      if(i > (hist_days + 1) & use_future_met == TRUE){
         update_var(met_file_names[1 + met_index], "meteo_fl", working_directory, "glm3.nml")
-        #update_var(paste0("FCR_inflow.csv"), "inflow_fl", working_directory)
-        #update_var(paste0("FCR_spillway_outflow.csv"), "outflow_fl", working_directory)
       }else{
         update_var(met_file_names[1], "meteo_fl", working_directory, "glm3.nml")
-        update_var("GLM_met.csv", "meteo_fl", working_directory, "glm3.nml")
-        #update_var(paste0("FCR_weir_inflow.csv"), "inflow_fl", working_directory)
-        #update_var(paste0("FCR_spillway_outflow.csv"), "outflow_fl", working_directory)
       }
       
+      if(n_inflow_outflow_members == 1){
+        tmp <- file.copy(from = inflow_file_names[1], to = "inflow_file1.csv", overwrite = TRUE)
+        tmp <- file.copy(from = inflow_file_names[2], to = "inflow_file2.csv", overwrite = TRUE)
+        tmp <- file.copy(from = outflow_file_names, to = "outflow_file1.csv", overwrite = TRUE)
+      }else{
+        tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 1], to = "inflow_file1.csv", overwrite = TRUE)
+        tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 2], to = "inflow_file2.csv", overwrite = TRUE)
+        tmp <- file.copy(from = outflow_file_names[inflow_outflow_index], to = "outflow_file1.csv", overwrite = TRUE)      
+      }
       
+      #update_var(c("inflow_file1.csv","inflow_file2.csv"), var_name = "inflow_fl", working_directory, nml = "glm3.nml")
+      #update_var("outflow_file1_mean.csv", var_name = "outflow_fl", working_directory, nml = "glm3.nml")
+      
+      #update_var(c(as.character(inflow_file_names[inflow_outflow_index, 1]),as.character(c(inflow_file_names[inflow_outflow_index, ]))), var_name = "inflow_fl", working_directory, nml = "glm3.nml")
+      #update_var(as.character(c(outflow_file_names[inflow_outflow_index, ])), "outflow_fl", working_directory, "glm3.nml")
       
       update_time(start_value  = curr_start, stop_value = curr_stop, working_directory)
+      
       #Use GLM NML files to run GLM for a day
       # Only allow simulations without NaN values in the output to proceed. 
       #Necessary due to random Nan in AED output
@@ -220,6 +232,11 @@ run_EnKF <- function(x,
         met_index <- 1
       }
       
+      inflow_outflow_index <- inflow_outflow_index + 1
+      if(inflow_outflow_index > n_inflow_outflow_members){
+        inflow_outflow_index <- 1
+      }
+      
     }
     
     
@@ -246,12 +263,12 @@ run_EnKF <- function(x,
     
     #Corruption [nmembers x nstates] 
     x_corr <- x_star + nqt[, 1:nstates]
-
+    
     if(npars > 0){
       pars_corr <- x[i - 1, , (nstates+1):(nstates+npars)] + pqt
       pars_star <- x[i - 1, , (nstates+1):(nstates+npars)]
       for(par in 1:npars){
-      print(c(mean(pars_corr[,par]), sd(pars_corr[,par])))
+        print(c(mean(pars_corr[,par]), sd(pars_corr[,par])))
       }
     }
     
@@ -400,7 +417,7 @@ run_EnKF <- function(x,
         #between the dims here and the dims in the EnKF formulations)
         x[i, , 1:nstates] <- t(t(x_corr) + k_t %*% (d_mat - h %*% t(x_corr)))
         #x[i, , ] <- t(t(x_prior[i, , ]) + k_t_combined %*% (d_mat - h_combined %*% t(x_prior[i, , ])))
-        write.csv(k_t,paste0(working_directory,"/iter_",i,"_kalman_gain.csv"),row.names = FALSE)
+        #write.csv(k_t,paste0(working_directory,"/iter_",i,"_kalman_gain.csv"),row.names = FALSE)
         if(npars > 0){
           x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + 
                                                      k_t_pars %*% (d_mat - h %*% t(x_corr)))
@@ -411,7 +428,7 @@ run_EnKF <- function(x,
         }else{
           qt <- update_sigma(qt, p_t, h, x_star, pars_star, x_corr, pars_corr, psi_t, zt) 
         }
-
+        
         if(include_wq){
           for(m in 1:nmembers){
             index <- which(x[i,m,] < 0.0)

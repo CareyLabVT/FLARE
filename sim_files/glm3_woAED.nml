@@ -76,16 +76,16 @@
    time_fmt = 'YYYY-MM-DD hh:mm:ss'
 /
 &inflow
-   num_inflows = 1
-   names_of_strms = 'weir'
-   subm_flag = .false.
-   strm_hf_angle = 55 !55
-   strmbd_slope = 0.05
-   strmbd_drag = 0.03 !0.03
-   inflow_factor = 1
-   inflow_fl = 'inflow_file1.csv'
-   inflow_varnum = 13
-   inflow_vars = 'FLOW','TEMP','SALT','OGM_doc','NIT_amm','OXY_oxy','NIT_nit','PHS_frp','PHS_dop','PHS_pop','NIT_don','NIT_pon','CAR_ch4'
+   num_inflows = 2
+   names_of_strms = 'weir','wetland'
+   subm_flag = .false., .false.
+   strm_hf_angle = 55, 55
+   strmbd_slope = 0.05, 0.05
+   strmbd_drag = 0.03, 0.016
+   inflow_factor = 1, 1
+   inflow_fl = 'inflow_file1.csv','inflow_file2.csv'
+   inflow_varnum = 14 
+   inflow_vars = 'FLOW','TEMP','SALT','OXY_oxy','NIT_amm','NIT_nit','PHS_frp','OGM_doc','OGM_poc','OGM_don','OGM_dop','OGM_pop','PHS_frp_ads','OGM_pon'
 /
 &outflow
    num_outlet = 1
