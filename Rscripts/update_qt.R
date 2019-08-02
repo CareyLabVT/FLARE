@@ -46,7 +46,7 @@ update_qt <- function(resid30day, modeled_depths, qt, include_wq, num_wq_vars){
   return(qt)
 }
 
-update_sigma <- function(qt, p_t, h, x_star, pars_star, x_corr, pars_corr, psi_t, zt){
+update_sigma <- function(qt, p_t, h, x_star, pars_star, x_corr, pars_corr, psi_t, zt, npars){
   
   #From:
   #Rastetter, E. B., M. Williams, K. L. Griffin, B. L. Kwiatkowski, 
@@ -55,8 +55,13 @@ update_sigma <- function(qt, p_t, h, x_star, pars_star, x_corr, pars_corr, psi_t
   #data using a simple carbon-exchange model embedded in the ensemble 
   #Kalman filter. Ecological Applications 20:1285-1301.
   
+  if(npars > 0){
   x_par_star <- cbind(x_star,pars_star)
   x_par_corr <- cbind(x_corr,pars_corr)
+  }else{
+    x_par_star <- x_star
+    x_par_corr <- x_corr
+  }
 
   gamma <- t((1 - qt_beta) *  solve(h %*% p_t %*% t(h)) %*% h %*% p_t %*% (diag(1 , nrow = dim(h)[2], ncol = dim(h)[2]) - t(h) %*% h) + qt_beta * h)
   

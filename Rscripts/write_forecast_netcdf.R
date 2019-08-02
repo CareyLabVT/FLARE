@@ -94,7 +94,9 @@ write_forecast_netcdf <- function(x,
     def_list[[10+npars+12]] <- ncvar_def("OGM_pon","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OGM_pon',prec="single")
     def_list[[10+npars+13]] <- ncvar_def("OGM_dop","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OGM_dop',prec="single")
     def_list[[10+npars+14]] <- ncvar_def("OGM_pop","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OGM_pop',prec="single")
-    def_list[[10+npars+15]] <- ncvar_def("PHY_TCHLA","mg/L",list(timedim,ensdim,depthdim),fillvalue,'PHY_TCHLA',prec="single")
+    def_list[[10+npars+15]] <- ncvar_def("NCS_ss1","",list(timedim,ensdim,depthdim),fillvalue,'NCS_ss1',prec="single")
+    def_list[[10+npars+16]] <- ncvar_def("PHS_frp_ads","umol/L",list(timedim,ensdim,depthdim),fillvalue,'PHS_frp_ads',prec="single")
+    def_list[[10+npars+17]] <- ncvar_def("PHY_TCHLA","mg/L",list(timedim,ensdim,depthdim),fillvalue,'PHY_TCHLA',prec="single")
     #dlname <- 'PHY_CYANONPCH2'
     #wq_def16 <- ncvar_def("PHY_CYANONPCH2","umol/L",list(timedim,ensdim,depthdim),fillvalue,dlname,prec="single")
     #dlname <- 'PHY_CHLOROPCH3'
@@ -145,6 +147,8 @@ write_forecast_netcdf <- function(x,
     ncvar_put(ncout,def_list[[10+npars+13]],x[,,wq_start[13]:wq_end[13]])
     ncvar_put(ncout,def_list[[10+npars+14]],x[,,wq_start[14]:wq_end[14]])
     ncvar_put(ncout,def_list[[10+npars+15]],x[,,wq_start[15]:wq_end[15]])
+    ncvar_put(ncout,def_list[[10+npars+16]],x[,,wq_start[16]:wq_end[16]])
+    ncvar_put(ncout,def_list[[10+npars+17]],x[,,wq_start[17]:wq_end[17]])
     #ncvar_put(ncout,wq_def16,x[,,wq_start[16]:wq_end[16]])
     #ncvar_put(ncout,wq_def17,x[,,wq_start[17]:wq_end[17]])
     #ncvar_put(ncout,wq_def18,x[,,wq_start[18]:wq_end[18]])

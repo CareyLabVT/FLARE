@@ -53,7 +53,11 @@ create_inflow_outflow_file <- function(full_time_day_local,
   wetland_2013 =  wetland[which(wetland_time_tmp %in% full_time_day_2015),]
   wetland_new = wetland_2017
   
+  inflow_file_names <- rep(NA, n_inflow_outflow_members)
+  spillway_file_names <- rep(NA, n_inflow_outflow_members)
+  wetland_file_names <- rep(NA, n_inflow_outflow_members)
   
+  for(m in 1:(n_inflow_outflow_members)){
   for(i in 1:length(full_time_day_local)){
     curr_day <- day(full_time_day_local[i])
     curr_month <- month(full_time_day_local[i])
@@ -67,16 +71,23 @@ create_inflow_outflow_file <- function(full_time_day_local,
     }
     if(i < (start_forecast_step+1) & hold_inflow_outflow_constant){
       for(j in 2:ncol(inflow)){
-        inflow_new[i,j] <- mean(inflow[index1,j], na.rm = TRUE)
-        wetland_new[i,j] <- mean(wetland[index3,j], na.rm = TRUE)
+        if(n_inflow_outflow_members == 1){
+          inflow_new[i,j] <- mean(inflow[index1,j], na.rm = TRUE)
+          wetland_new[i,j] <- mean(wetland[index3,j], na.rm = TRUE)
+        }else{
+          inflow_new[i,j] <- rnorm(1, mean(inflow[index1,j], na.rm = TRUE), sd(inflow[index1,j], na.rm = TRUE))
+          wetland_new[i,j] <- rnorm(1, mean(wetland[index3,j], na.rm = TRUE), sd(wetland[index3,j], na.rm = TRUE))
+        }
       }
-      spillway_new[i,2] <- mean(spillway[index2,2], na.rm = TRUE)
+
+     spillway_new[i,2] <- inflow_new[i,2] +  wetland_new[i,2] 
+
     }else{
       for(j in 2:ncol(inflow)){
         inflow_new[i,j] <- mean(inflow[hist_index1,j], na.rm = TRUE)
         wetland_new[i,j] <- mean(wetland[hist_index3,j], na.rm = TRUE)
       }
-      spillway_new[i,2] <- mean(spillway[hist_index2,2], na.rm = TRUE) 
+      spillway_new[i,2] <- inflow_new[i,2] + wetland_new[i,2] 
     }
   }
   
@@ -84,16 +95,30 @@ create_inflow_outflow_file <- function(full_time_day_local,
   spillway_new$time =  full_time_day_local
   wetland_new$time =  full_time_day_local
   
+  if(n_inflow_outflow_members == 1){
+    inflow_file_names[m] <-   paste0(working_directory,'/','inflow_file1_mean.csv')
+    spillway_file_names[m] <- paste0(working_directory,'/','outflow_file1_mean.csv')
+    wetland_file_names[m] <- paste0(working_directory,'/','inflow_file2_mean.csv')
+  }else{
+    inflow_file_names[m] <-   paste0(working_directory,'/','inflow_file1_ens',m,'.csv')
+    spillway_file_names[m] <- paste0(working_directory,'/','outflow_file1_ens',m,'.csv')
+    wetland_file_names[m] <- paste0(working_directory,'/','inflow_file2_ens',m,'.csv')
+  }
+  
   write.csv(inflow_new,
-            file = paste0(working_directory,'/','inflow_file1.csv'),
+            file = inflow_file_names[m],
             row.names = FALSE,
             quote = FALSE)
   write.csv(spillway_new,
-            file = paste0(working_directory,'/','outflow_file1.csv'),
+            file = spillway_file_names[m],
             row.names = FALSE,
             quote = FALSE)
   write.csv(wetland_new,
-            file = paste0(working_directory,'/','inflow_file2.csv'),
+            file = wetland_file_names[m],
             row.names = FALSE,
             quote = FALSE)
+  }
+  return(list(inflow_file_names = as.character(inflow_file_names),
+              spillway_file_names = as.character(spillway_file_names),
+              wetland_file_names = as.character(wetland_file_names)))
 }

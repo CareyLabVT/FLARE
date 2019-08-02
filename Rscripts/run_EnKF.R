@@ -424,9 +424,9 @@ run_EnKF <- function(x,
         }
         
         if(npars > 0){
-          qt <- update_sigma(qt, p_t_combined, h_combined, x_star, pars_star, x_corr, pars_corr, psi_t, zt)
+          qt <- update_sigma(qt, p_t_combined, h_combined, x_star, pars_star, x_corr, pars_corr, psi_t, zt, npars)
         }else{
-          qt <- update_sigma(qt, p_t, h, x_star, pars_star, x_corr, pars_corr, psi_t, zt) 
+          qt <- update_sigma(qt, p_t, h, x_star, pars_star = NA, x_corr, pars_corr = NA, psi_t, zt, npars) 
         }
         
         if(include_wq){
@@ -480,12 +480,20 @@ run_EnKF <- function(x,
           }
         }
         #Maintain the DOC/DON and DOC/DOP ratios after updating of DOC
-        x[i, m, wq_start[11]:wq_end[11]] <- x[i, m, wq_start[9]:wq_end[9]] * donc[m, ]
-        x[i, m, wq_start[13]:wq_end[13]] <- x[i, m, wq_start[9]:wq_end[9]] * dopc[m, ]
+        
+        for(wq in 1:length(wq_start[11]:wq_end[11])){
+          if(!is.nan(donc[m,wq]) & !is.nan(dopc[m,wq])){
+            x[i, m, wq_start[11]+wq-1] <- x[i, m, wq_start[9]+wq-1] * donc[m,wq ]
+            x[i, m, wq_start[11]+wq-1] <- x[i, m, wq_start[9]+wq-1] * dopc[m, wq]
+          }else{ #Deal with the case where the ratio is NaN (due to have 0.0 concentrations)
+            x[i, m, wq_start[11]+wq-1] <- x[i, m, wq_start[9]+wq-1] * mean(donc[,wq ], na.rm = TRUE)
+            x[i, m, wq_start[11]+wq-1] <- x[i, m, wq_start[9]+wq-1] * mean(dopc[, wq], na.rm = TRUE)    
+          }
+        }
       }
     }
     
-    if(i == (hist_days + 1)){
+    if(i == (hist_days + 1) | i == nsteps){
       x_restart <- x[i, , ]
       qt_restart <- qt
     }

@@ -582,6 +582,8 @@ run_flare<-function(start_day_local,
     OGM_pon_obs <- array(NA, dim = dim(obs_do$obs))
     OGM_dop_obs <- array(NA, dim = dim(obs_do$obs))
     OGM_pop_obs <- array(NA, dim = dim(obs_do$obs))
+    NCS_ss1_obs <- array(NA, dim = dim(obs_do$obs))
+    PHS_frp_ads_obs <- array(NA, dim = dim(obs_do$obs))
     PHY_TCHLA_obs <- obs_chla_fdom$Chla_obs
     
     z <- cbind(obs_temp$obs,
@@ -599,6 +601,8 @@ run_flare<-function(start_day_local,
                OGM_pon_obs,
                OGM_dop_obs,
                OGM_pop_obs,
+               NCS_ss1_obs,
+               PHS_frp_ads_obs,
                PHY_TCHLA_obs)
   }else{
     z <- cbind(obs_temp$obs) 
@@ -718,6 +722,8 @@ run_flare<-function(start_day_local,
       PHY_TCHLA_init_depth <- rep(PHY_TCHLA_init, ndepths_modeled)
     }
     #phyto_proportions <- c(0.25, 0.25, 0.25, 0.25)
+    NCS_ss1_init_depth <- rep(NCS_ss1_init, ndepths_modeled)
+    PHS_frp_ads_init_depth <- rep(PHS_frp_ads_init, ndepths_modeled)
     PHY_CYANOPCH1_init_depth <- PHY_TCHLA_init_depth/biomass_to_chla[1]
     #PHY_CYANONPCH2_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[2]
     #PHY_CHLOROPCH3_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[3]
@@ -737,6 +743,8 @@ run_flare<-function(start_day_local,
                               OGM_pon_init_depth,
                               OGM_dop_init_depth,
                               OGM_pop_init_depth,
+                              NCS_ss1_init_depth,
+                              PHS_frp_ads_init_depth,
                               PHY_TCHLA_init_depth)
     
     wq_init_vals_w_phytos <- c(OXY_oxy_init_depth,
@@ -753,6 +761,8 @@ run_flare<-function(start_day_local,
                                OGM_pon_init_depth,
                                OGM_dop_init_depth,
                                OGM_pop_init_depth,
+                               NCS_ss1_init_depth,
+                               PHS_frp_ads_init_depth,
                                PHY_CYANOPCH1_init_depth)
     
     
@@ -832,6 +842,8 @@ run_flare<-function(start_day_local,
                         OGM_pon_process_error,
                         OGM_dop_process_error,
                         OGM_pop_process_error,
+                        NCS_ss1_process_error,
+                        PHS_frp_ads_process_error,
                         PHY_TCHLA_process_error)
       for(i in 1:num_wq_vars){
         for(j in 1:ndepths_modeled){
@@ -884,11 +896,11 @@ run_flare<-function(start_day_local,
         }
       }else{
         x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
-                                    mean=c(the_temps_init,wq_init_vals_w_tchla, par_init_mean),
+                                    mean=c(the_temps_init,wq_init_vals_w_tchla),
                                     sigma=as.matrix(qt))
         if(initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
-            x[1, m,1:nstates] <- c(the_temps_init, do_init, wq_init_vals_w_tchla)
+            x[1, m,1:nstates] <- c(the_temps_init, wq_init_vals_w_tchla)
           }
         }
       }

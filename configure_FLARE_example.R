@@ -12,7 +12,7 @@ local_tzone <<- "EST"
 
 
 #Use GLM-AED?
-include_wq <<- FALSE
+include_wq <<- TRUE
 #Use CTD data in place of the sensor string
 use_ctd <<- TRUE
 
@@ -43,6 +43,7 @@ FLAREversion <<- "v1.0_beta.1"
 #9 = no sources of uncertainty and no state updating with EnKF
 uncert_mode <<- 1
 
+#cov_matrix <<- "Qt_cov_matrix_init_test_9m.csv"
 cov_matrix <<- "Qt_cov_matrix_init_AED.csv"
 
 single_run <<- FALSE
@@ -54,6 +55,19 @@ lake_longitude <<- 79.837  #Degrees West
 #Depths used in the EnKF
 #This are the depths that are saved between days
 if(!include_wq){
+  modeled_depths <<- c(0.1, 0.33, 0.66, 
+                       1.00, 1.33, 1.66,
+                       2.00, 2.33, 2.66,
+                       3.0, 3.33, 3.66,
+                       4.0, 4.33, 4.66,
+                       5.0, 5.33, 5.66,
+                       6.0, 6.33, 6.66,
+                       7.00, 7.33, 7.66,
+                       8.0, 8.33, 8.66,
+                       9.00)
+  #modeled_depths <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
+}else{
+  modeled_depths <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
   #modeled_depths <<- c(0.1, 0.33, 0.66, 
   #                     1.00, 1.33, 1.66,
   #                     2.00, 2.33, 2.66,
@@ -64,9 +78,6 @@ if(!include_wq){
   #                     7.00, 7.33, 7.66,
   #                     8.0, 8.33, 8.66,
   #                     9.00)
-  modeled_depths <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
-}else{
-  modeled_depths <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
 }
 
 #Note: this number is multiplied by 
@@ -124,22 +135,22 @@ R_growth_init_qt <<- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Parameter vectors
 if(include_wq){
-  #par_names <<- c()
-  #par_names_save <<- c()
-  #par_nml <<- c()
-  #par_init_mean <<- c()
-  #par_init_lowerbound <<- c()
-  #par_init_upperbound <<- c()
-  #par_init_qt <<- c()
-  #par_units <<- c() #
-  par_names <<- c("sed_temp_mean","sed_temp_mean","Fsed_oxy","pd%R_growth")
-  par_names_save <<- c("zone1temp","zone2temp","Fsed_oxy","pd%R_growth")
-  par_nml <<- c("glm3.nml","glm3.nml","aed2.nml","aed2_phyto_pars.nml")
-  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean, Fsed_oxy_init_mean,R_growth_init_mean)
-  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound, Fsed_oxy_init_lowerbound ,R_growth_init_lowerbound)
-  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound, Fsed_oxy_init_upperbound ,R_growth_init_upperbound)
-  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt, Fsed_oxy_init_qt,R_growth_init_qt)
-  par_units <<- c("deg_C","-","-","-") #
+  par_names <<- c()
+  par_names_save <<- c()
+  par_nml <<- c()
+  par_init_mean <<- c()
+  par_init_lowerbound <<- c()
+  par_init_upperbound <<- c()
+  par_init_qt <<- c()
+  par_units <<- c() #
+  #par_names <<- c("sed_temp_mean","sed_temp_mean","Fsed_oxy") #"Fsed_oxy","Rdom_minerl","pd%R_growth")
+  #par_names_save <<- c("zone1temp","zone2temp","sw_factor")
+  #par_nml <<- c("glm3.nml","glm3.nml","aed2.nml") #"aed2.nml","aed2.nml","aed2_phyto_pars.nml")
+  #par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean,Fsed_oxy_init_mean)#Fsed_oxy_init_mean,Rdom_minerl_init_mean,Rdom_minerl_init_mean,R_growth_init_mean)
+  #par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound,Fsed_oxy_init_lowerbound)#Fsed_oxy_init_lowerbound,Rdom_minerl_init_lowerbound,R_growth_init_lowerbound)
+  #par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound,Fsed_oxy_init_upperbound)#Fsed_oxy_init_upperbound,Rdom_minerl_init_upperbound,R_growth_init_upperbound)
+  #par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt,Fsed_oxy_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
+  #par_units <<- c("deg_C","deg_C","-") #
 }else{
   #par_names <<- c("sw_factor")
   #par_names_save <<- c("SW_factor")
@@ -149,13 +160,13 @@ if(include_wq){
   #par_init_upperbound <<- c(swf_init_upperbound)
   #par_init_qt <<- c(swf_init_qt)
   #par_units <<- c("-")
-  par_names <<- c("sed_temp_mean","sed_temp_mean","swf_init_qt") #"Fsed_oxy","Rdom_minerl","pd%R_growth")
-  par_names_save <<- c("zone1temp","zone2temp","swf_init_qt")
-  par_nml <<- c("glm3.nml","glm3.nml","glm3.nml") #"aed2.nml","aed2.nml","aed2_phyto_pars.nml")
-  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean,swf_init_mean)#Fsed_oxy_init_mean,Rdom_minerl_init_mean,Rdom_minerl_init_mean,R_growth_init_mean)
-  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound,swf_init_lowerbound)#Fsed_oxy_init_lowerbound,Rdom_minerl_init_lowerbound,R_growth_init_lowerbound)
-  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound,swf_init_upperbound)#Fsed_oxy_init_upperbound,Rdom_minerl_init_upperbound,R_growth_init_upperbound)
-  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt,swf_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
+  par_names <<- c("sed_temp_mean","sed_temp_mean","Fsed_oxy") #"Fsed_oxy","Rdom_minerl","pd%R_growth")
+  par_names_save <<- c("zone1temp","zone2temp","sw_factor")
+  par_nml <<- c("glm3.nml","glm3.nml","aed2.nml") #"aed2.nml","aed2.nml","aed2_phyto_pars.nml")
+  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean,Fsed_oxy_init_mean)#Fsed_oxy_init_mean,Rdom_minerl_init_mean,Rdom_minerl_init_mean,R_growth_init_mean)
+  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound,Fsed_oxy_init_lowerbound)#Fsed_oxy_init_lowerbound,Rdom_minerl_init_lowerbound,R_growth_init_lowerbound)
+  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound,Fsed_oxy_init_upperbound)#Fsed_oxy_init_upperbound,Rdom_minerl_init_upperbound,R_growth_init_upperbound)
+  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt,Fsed_oxy_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
   par_units <<- c("deg_C","deg_C","-") #
 }
 
@@ -193,6 +204,8 @@ wq_names <<- c("OXY_oxy",
                "OGM_pon",
                "OGM_dop",
                "OGM_pop",
+               "NCS_ss1",
+               "PHS_frp_ads",
                "PHY_TCHLA"
 )
 
@@ -205,12 +218,14 @@ CAR_dic_init <<- 59.1
 CAR_ch4_init <<- 0.58
 SIL_rsi_init <<- 300
 NIT_amm_init <<- 0.69
-NIT_nit_init <<- 0.05
+NIT_nit_init <<- 0.1
 PHS_frp_init <<- 0.07
 OGM_doc_init <<- 100
 OGM_poc_init <<- 78.5
 OGM_pon_init <<- 8.3
 OGM_pop_init <<- 8.3
+NCS_ss1_init <<- 1.0
+PHS_frp_ads_init <<- 0.0
 PHY_TCHLA_init <<- 2.0
 
 #The names of the phytoplankton groups that contribute to
@@ -239,27 +254,31 @@ obs_error_wq <<- c(0.25, #OXY_oxy #0.25
                    NA, #OGM_pon
                    NA, #OGM_dop
                    NA, #OGM_pop
+                   NA, #NCS_ss1
+                   NA, #PHS_frp_ads
                    0.25) #PHY_TCHLA
 
 exo_2_ctd_chla <- c(0.184, 0.525)
 
 OXY_oxy_process_error <<- 10
 CAR_pH_process_error <<- 0.001
-CAR_dic_process_error <<- 0.001
-CAR_ch4_process_error <<- 0.001
-SIL_rsi_process_error <<- 0.001
-NIT_amm_process_error <<- 0.001
-NIT_nit_process_error <<- 0.001
-PHS_frp_process_error <<- 0.001
-OGM_doc_process_error <<- 0.001
-OGM_poc_process_error <<- 0.001
-OGM_don_process_error <<- 0.001
-OGM_pon_process_error <<- 0.001
-OGM_dop_process_error <<- 0.001
-OGM_pop_process_error <<- 0.001
+CAR_dic_process_error <<- 10
+CAR_ch4_process_error <<- 10
+SIL_rsi_process_error <<- 10
+NIT_amm_process_error <<- 0.1
+NIT_nit_process_error <<- 0.01
+PHS_frp_process_error <<- 0.01
+OGM_doc_process_error <<- 10
+OGM_poc_process_error <<- 0.1
+OGM_don_process_error <<- 0.1
+OGM_pon_process_error <<- 0.1
+OGM_dop_process_error <<- 0.1
+OGM_pop_process_error <<- 0.1
+NCS_ss1_process_error <<- 0.01
+PHS_frp_ads_process_error <<- 0.0001
 PHY_TCHLA_process_error <<- 0.3
 
-qt_alpha <<- 0.9  #0 - all weight on the new Qt, 1 - all weight on the current Qt
+qt_alpha <<- 0.5  #0 - all weight on the new Qt, 1 - all weight on the current Qt
 qt_beta <<- 0.75 # 
 
 # Options for printing function

@@ -244,11 +244,27 @@ plot_forecast <- function(pdf_file_name,
       
       obs <- obs_do$obs[,i]
       ylim = range(c(OXY_oxy[,,]),na.rm = TRUE) 
-      
-      plot(full_time_local,OXY_oxy[,1,model],type='l',ylab='Oxygen (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
-      if(length(temp[1,,model]) > 1){
-        for(m in 2:length(temp[1,,model])){
-          points(full_time_local,OXY_oxy[,m,model],type='l')
+      if(plot_summaries){
+        mean_oxy <- array(NA,dim=c(length(t),length(depths)))
+        upper95_oxy <- array(NA,dim=c(length(t),length(depths)))
+        lower95_oxy <- array(NA,dim=c(length(t),length(depths)))
+        for(ii in 1:length(depths)){
+          for(j in 1:length(t)){
+            mean_oxy[j,ii] <- mean(OXY_oxy[j,,ii])
+            lower95_oxy[j,ii] <- quantile(OXY_oxy[j,,ii],0.025)
+            upper95_oxy[j,ii] <- quantile(OXY_oxy[j,,ii],0.975)
+          }
+        }
+        plot(full_time_local,mean_oxy[ ,model],type='l',ylab='Oxygen (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        points(full_time_local,lower95_oxy[ ,model],type='l',lty='dashed')
+        points(full_time_local,upper95_oxy[ ,model],type='l',lty='dashed')   
+        
+      }else{
+        plot(full_time_local,OXY_oxy[,1,model],type='l',ylab='Oxygen (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        if(length(temp[1,,model]) > 1){
+          for(m in 2:length(temp[1,,model])){
+            points(full_time_local,OXY_oxy[,m,model],type='l')
+          }
         }
       }
       
@@ -266,10 +282,26 @@ plot_forecast <- function(pdf_file_name,
       model = i
       obs <- obs_chla_fdom$Chla_obs[,i]
       ylim = range(c(PHY_TCHLA[,,]),na.rm = TRUE) 
-      plot(full_time_local,PHY_TCHLA[,1,model],type='l',ylab='PHY_TCHLA (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
-      if(length(temp[1,,model]) > 1){
-        for(m in 2:length(temp[1,,model])){
-          points(full_time_local,PHY_TCHLA[,m,model],type='l')
+      if(plot_summaries){
+        mean_TCHLA <- array(NA,dim=c(length(t),length(depths)))
+        upper95_TCHLA <- array(NA,dim=c(length(t),length(depths)))
+        lower95_TCHLA <- array(NA,dim=c(length(t),length(depths)))
+        for(ii in 1:length(depths)){
+          for(j in 1:length(t)){
+            mean_TCHLA[j,ii] <- mean(PHY_TCHLA[j,,ii])
+            lower95_TCHLA[j,ii] <- quantile(PHY_TCHLA[j,,ii],0.025)
+            upper95_TCHLA[j,ii] <- quantile(PHY_TCHLA[j,,ii],0.975)
+          }
+        }
+        plot(full_time_local,mean_TCHLA[,model],type='l',ylab='PHY_TCHLA (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        points(full_time_local,lower95_TCHLA[ ,model],type='l',lty='dashed')
+        points(full_time_local,upper95_TCHLA[ ,model],type='l',lty='dashed')   
+      }else{
+        plot(full_time_local,PHY_TCHLA[,1,model],type='l',ylab='PHY_TCHLA (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        if(length(temp[1,,model]) > 1){
+          for(m in 2:length(temp[1,,model])){
+            points(full_time_local,PHY_TCHLA[,m,model],type='l')
+          }
         }
       }
       obs[is.na(obs)] = -999
@@ -287,10 +319,28 @@ plot_forecast <- function(pdf_file_name,
       model = i
       obs <- obs_chla_fdom$fDOM_obs[,i]
       ylim = range(c(OGM_doc[,,]),na.rm = TRUE) 
-      plot(full_time_local,OGM_doc[,1,model],type='l',ylab='OGM_doc (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
-      if(length(temp[1,,model]) > 1){
-        for(m in 2:length(temp[1,,model])){
-          points(full_time_local,OGM_doc[,m,model],type='l')
+      
+      if(plot_summaries){
+        mean_doc <- array(NA,dim=c(length(t),length(depths)))
+        upper95_doc <- array(NA,dim=c(length(t),length(depths)))
+        lower95_doc <- array(NA,dim=c(length(t),length(depths)))
+        for(ii in 1:length(depths)){
+          for(j in 1:length(t)){
+            mean_doc[j,i] <- mean(OGM_doc[j,,ii])
+            lower95_doc[j,i] <- quantile(OGM_doc[j,,ii],0.025)
+            upper95_doc[j,i] <- quantile(OGM_doc[j,,ii],0.975)
+          }
+        }
+        plot(full_time_local,mean_doc[,model],type='l',ylab='OGM_doc (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        points(full_time_local,lower95_doc[ ,model],type='l',lty='dashed')
+        points(full_time_local,upper95_doc[ ,model],type='l',lty='dashed') 
+      }else{
+        
+        plot(full_time_local,OGM_doc[,1,model],type='l',ylab='OGM_doc (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        if(length(temp[1,,model]) > 1){
+          for(m in 2:length(temp[1,,model])){
+            points(full_time_local,OGM_doc[,m,model],type='l')
+          }
         }
       }
       obs[is.na(obs)] = -999

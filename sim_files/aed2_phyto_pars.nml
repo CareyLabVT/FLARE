@@ -26,7 +26,7 @@
    pd%simDINUptake = 1
    pd%simDONUptake = 0
    pd%simNFixation = 0
-   pd%simINDynamics = 2
+   pd%simINDynamics = 0
    pd%N_o = 0
    pd%K_N = 2.7
    pd%X_ncon = 0.035
@@ -36,7 +36,7 @@
    pd%k_nfix = 1
    pd%R_nfix = 0
    pd%simDIPUptake = 1
-   pd%simIPDynamics = 2
+   pd%simIPDynamics = 0
    pd%P_0 = 0
    pd%K_P = 0.7
    pd%X_pcon = 0.0017
