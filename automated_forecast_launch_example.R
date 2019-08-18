@@ -15,33 +15,31 @@ library(imputeTS)
 library(tidyverse)
 library(tools)
 
-data_location = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
-code_folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
-forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/testing_AED/"
+data_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
+code_folder <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
+forecast_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/test2/"
 
 source(paste0(forecast_location,"/","configure_FLARE.R"))
 source(paste0(code_folder, "/", "Rscripts/run_flare.R"))
 source(paste0(code_folder, "/", "Rscripts/plot_forecast.R"))
 
-sim_name <- "test_with_par_fixing" 
-start_day_local <- "2018-07-16"  #Note: 2018-07-16 is the first day with CTD observations for initial conditions
-start_time_local <- "13:00:00"
-forecast_start_day_local <- "2018-09-01" 
-spin_up_days <- 0
-days_between_forecasts <- 14
-forecast_days <- 16
-num_forecast_periods <- 4
+sim_name <- "beta_0.8"  
+start_day_local <- "2018-05-04"  #Note: 2018-07-16 is the first day with CTD observations for initial conditions  2018-05-04
+start_time_local <- "07:00:00"
+forecast_start_day_local <- "2018-11-04" 
+spin_up_days <- 15
+days_between_forecasts <- 7
+forecast_days <- 16 #16
+num_forecast_periods <- 1
 wait_time <- 60*60
 restart_file <- NA
-
-
 
 start_day_local <- as.POSIXct(start_day_local, format = "%Y-%m-%d")
 forecast_start_day_local <- as.POSIXct(forecast_start_day_local, format = "%Y-%m-%d")
 
 if(is.na(restart_file)){
   
-  hist_days <- as.numeric(difftime(forecast_start_day_local,start_day_local))
+  hist_days <- as.numeric(difftime(as_date(forecast_start_day_local),as_date(start_day_local)))
   
   out <- run_flare(start_day_local,
                    start_time_local,
@@ -61,7 +59,7 @@ if(is.na(restart_file)){
                    include_wq = include_wq,
                    use_ctd = use_ctd,
                    uncert_mode = uncert_mode,
-                   reference_tzone = reference_tzone,
+                   #reference_tzone = reference_tzone,
                    cov_matrix = cov_matrix,
                    downscaling_coeff = downscaling_coeff,
                    GLMversion = GLMversion,
@@ -79,8 +77,7 @@ if(is.na(restart_file)){
                 code_folder = code_folder,
                 save_location = forecast_location,
                 data_location = data_location,
-                plot_summaries = FALSE,
-                pre_scc = FALSE,
+                plot_summaries = TRUE,
                 push_to_git = push_to_git,
                 pull_from_git = pull_from_git,
                 use_ctd = use_ctd,
@@ -116,7 +113,7 @@ repeat{
     }else{
       forecast_month <- paste0(month(forecast_start_day_local))
     }
-    forecast_base_name <- paste0(year(forecast_start_day_local),forecast_month,forecast_day,'gep_all_18z.csv')
+    forecast_base_name <- paste0(year(forecast_start_day_local),forecast_month,forecast_day,'gep_all_12z.csv')
     
     noaa_location <- paste0(data_location,'/','noaa-data')
     setwd(noaa_location)
@@ -130,7 +127,7 @@ repeat{
     }
   }
   
-  
+  spin_up_days <- 0
   
   out <- run_flare(start_day_local,
                    start_time_local,
@@ -150,7 +147,7 @@ repeat{
                    include_wq = include_wq,
                    use_ctd = use_ctd,
                    uncert_mode = uncert_mode,
-                   reference_tzone = reference_tzone,
+                   #reference_tzone = reference_tzone,
                    cov_matrix = cov_matrix,
                    downscaling_coeff = downscaling_coeff,
                    GLMversion = GLMversion,
@@ -167,8 +164,7 @@ repeat{
                 code_folder = code_folder,
                 save_location = forecast_location,
                 data_location = data_location,
-                plot_summaries = FALSE,
-                pre_scc = FALSE,
+                plot_summaries = TRUE,
                 push_to_git = push_to_git,
                 pull_from_git = pull_from_git,
                 use_ctd = use_ctd,

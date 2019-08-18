@@ -462,7 +462,7 @@
      !dopr_initial =   1.0
      cpom_initial = 100.0
    !-- Breakdown and mineralisation (basic pool)
-     Rdom_minerl = 0.00001!0.001!Paul 0.04
+     Rdom_minerl = 0.00001 !0.001!Paul 0.04
      Rpom_hydrol = 0.03!Paul 0.03
      !Rpoc_hydrol  =   0.05 !manual 0.05 !Paul 0.01
      !Rdoc_minerl  =   0!0.01 !Manual 0.001; Paul 0.03 !doesnt work

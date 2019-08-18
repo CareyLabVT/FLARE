@@ -4,18 +4,14 @@ archive_forecast <- function(working_directory,
                              forecast_location,
                              push_to_git,
                              save_file_name,
-                             time_of_forecast){
+                             time_of_forecast_string){
   
   ###ARCHIVE AND CLEAN UP FORECAST
-  unlink(paste0(working_directory, "/", "FCRmet.csv"), recursive = FALSE)
-  unlink(paste0(working_directory, "/", "Catwalk.csv"), recursive = FALSE)
-  unlink(paste0(working_directory, "/", forecast_base_name, ".csv"), recursive = FALSE)
-  time_of_forecast <- paste0(year(time_of_forecast),
-                             month(time_of_forecast),
-                             day(time_of_forecast), "_",
-                             hour(time_of_forecast), "_",
-                             (minute(time_of_forecast)))
-  forecast_archive_dir_name <- paste0(save_file_name, "_", time_of_forecast)
+  #unlink(paste0(working_directory, "/", "FCRmet.csv"), recursive = FALSE)
+  #unlink(paste0(working_directory, "/", "Catwalk.csv"), recursive = FALSE)
+  #unlink(paste0(working_directory, "/", forecast_base_name, ".csv"), recursive = FALSE)
+
+  forecast_archive_dir_name <- paste0(save_file_name, "_", time_of_forecast_string)
 
 
 

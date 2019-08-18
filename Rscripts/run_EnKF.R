@@ -24,7 +24,8 @@ run_EnKF <- function(x,
                      print_glm2screen,
                      x_phyto_groups,
                      inflow_file_names,
-                     outflow_file_names){
+                     outflow_file_names,
+                     management_input){
   
   nsteps <- length(full_time_local)
   nmembers <- dim(x)[2]
@@ -32,15 +33,21 @@ run_EnKF <- function(x,
   nstates <- dim(x)[3] - npars
   num_wq_vars <- length(wq_start)
   
+  full_time_day_local <- strftime(full_time_local,
+                                  format="%Y-%m-%d",
+                                  tz = local_tzone)
+  
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
   
   ###START EnKF
   
   for(i in 2:nsteps){
-    print(paste0("Running time step ", i, " : ", full_time_local[i - 1], " - ", full_time_local[i]))
+    
+    print(paste0("Running time step ", i-1, " : ", full_time_local[i - 1], " - ", full_time_local[i]))
     met_index <- 1
     inflow_outflow_index <- 1
-    #1) Update GLM NML files to match the current day of the simulation
+    
+    #Update GLM NML files to match the current day of the simulation
     curr_start <- (full_time_local[i - 1])
     curr_stop <- (full_time_local[i])
     
@@ -49,9 +56,7 @@ run_EnKF <- function(x,
     #Create array to hold GLM predictions for each ensemble
     x_star <- array(NA, dim = c(nmembers, nstates))
     x_corr <- array(NA, dim = c(nmembers, nstates))
-    
-    donc <- array(NA, dim = c(nmembers, length(modeled_depths)))
-    dopc <- array(NA, dim = c(nmembers, length(modeled_depths)))
+  
     #Matrix to store calculated ensemble specific deviations and innovations
     dit <- array(NA, dim = c(nmembers, nstates))
     dit_combined <- array(NA, dim = c(nmembers, nstates + npars))
@@ -72,11 +77,7 @@ run_EnKF <- function(x,
       update_var(surface_height[i - 1, m], "lake_depth", working_directory, "glm3.nml")
       if(npars > 0){
         
-        if(i > (hist_days + 1)){
-          curr_pars <- x[i - 1, m , (nstates+1):(nstates+npars)]
-        }else{
-          curr_pars <- x[i - 1, m , (nstates+1):(nstates+npars)] + pqt[m, ]
-        }
+        curr_pars <- x[i - 1, m , (nstates+1):(nstates+npars)]
         
         if(parameter_uncertainty == FALSE){
           curr_pars <- colMeans(x[i - 1, , (nstates+1):(nstates+npars)])
@@ -84,13 +85,16 @@ run_EnKF <- function(x,
         
         sed_temp_mean_index <- which(par_names == "sed_temp_mean")
         non_sed_temp_mean_index <- which(par_names != "sed_temp_mean")
-        if(length(sed_temp_mean_index) >= 1){
+        if(length(sed_temp_mean_index) == 1){
+          update_var(c(curr_pars[sed_temp_mean_index],zone2_temp_init_mean),
+                     par_names[sed_temp_mean_index],
+                     working_directory, par_nml[sed_temp_mean_index])
+        }else if(length(sed_temp_mean_index) == 2){
           update_var(c(curr_pars[sed_temp_mean_index[1]],curr_pars[sed_temp_mean_index[2]]),
                      par_names[sed_temp_mean_index[1]],
                      working_directory, par_nml[sed_temp_mean_index[1]])
-          #update_var(c(curr_pars[sed_temp_mean_index[1]],curr_pars[sed_temp_mean_index[1]]),
-          #           par_names[sed_temp_mean_index[1]],
-          #           working_directory, par_nml[sed_temp_mean_index[1]])
+        }else if(length(sed_temp_mean_index) > 2){
+          stop(paste0("Too many sediment temperature zones"))
         }
         
         if(length(non_sed_temp_mean_index) > 0){
@@ -109,8 +113,13 @@ run_EnKF <- function(x,
         phytos <- round(x_phyto_groups[i-1, m, ],3)
         wq_init_vals_w_phytos <- c(non_phytos, phytos)
         update_var(wq_init_vals_w_phytos, "wq_init_vals" ,working_directory, "glm3.nml")
+        
+        if(simulate_SSS){
+          create_sss_input_output(x, i, m, full_time_day_local, working_directory, wq_start, management_input)
+        }
       }
       
+
       
       #ALLOWS ThE LOOPING ThROUGh NOAA ENSEMBLES
       
@@ -131,12 +140,6 @@ run_EnKF <- function(x,
         tmp <- file.copy(from = outflow_file_names[inflow_outflow_index], to = "outflow_file1.csv", overwrite = TRUE)      
       }
       
-      #update_var(c("inflow_file1.csv","inflow_file2.csv"), var_name = "inflow_fl", working_directory, nml = "glm3.nml")
-      #update_var("outflow_file1_mean.csv", var_name = "outflow_fl", working_directory, nml = "glm3.nml")
-      
-      #update_var(c(as.character(inflow_file_names[inflow_outflow_index, 1]),as.character(c(inflow_file_names[inflow_outflow_index, ]))), var_name = "inflow_fl", working_directory, nml = "glm3.nml")
-      #update_var(as.character(c(outflow_file_names[inflow_outflow_index, ])), "outflow_fl", working_directory, "glm3.nml")
-      
       update_time(start_value  = curr_start, stop_value = curr_stop, working_directory)
       
       #Use GLM NML files to run GLM for a day
@@ -147,36 +150,6 @@ run_EnKF <- function(x,
       
       while(!pass){
         unlink(paste0(working_directory, "/output.nc")) 
-        
-        #if(!print_glm2screen){
-        #  system(paste0('docker run -it -d -v ',working_directory,':/GLM/TestLake hydrobert/glm-aed2 /bin/bash -c \"cd TestLake; /GLM/glm\"'))
-        #}else{
-        # start docker as background process (detached)
-        #  system(paste0('docker run -it -d -v ',working_directory,':/GLM/TestLake hydrobert/glm-aed2 /bin/bash'))
-        # get the id of your running container
-        #  dockerps <- system('docker ps',intern = TRUE)
-        #  dockerid <- strsplit(dockerps, split = "/t")
-        #  dockerid <- strsplit(dockerid[[2]], split = " ")
-        #  dockerid <- dockerid[[1]][1]
-        # start the simulation (i - interactive, t - tty (user input))
-        #  system(paste('docker exec -t',dockerid,'/bin/bash -c \"cd TestLake; /GLM/glm\"'))
-        
-        # stops and removes all running dockers
-        #  system('docker kill $(docker ps -q)')
-        #  system('docker rm $(docker ps -a -q)')
-        #}
-        
-        
-        #ptm <- proc.time()
-        #system(paste0('docker run -it -d -v ',working_directory,':/GLM/TestLake hydrobert/glm-aed2 /bin/bash -c \"cd TestLake; /GLM/glm\"'))
-        #docker <- proc.time() - ptm
-        
-        #ptm <- proc.time()
-        #system2(paste0(working_directory, "/", "glm"), stdout = print_glm2screen, stderr = print_glm2screen)
-        #local <- proc.time() - ptm
-        
-        #((docker - local)/local)*100
-        
         
         if(machine == "unix" | machine == "mac"){
           system2(paste0(working_directory, "/", "glm"), stdout = print_glm2screen, stderr = print_glm2screen)
@@ -199,8 +172,7 @@ run_EnKF <- function(x,
                                                        vars = c(glm_output_vars,tchla_components_vars))
               x_star[m, 1:nstates] <- c(GLM_temp_wq_out$output[1:nstates])
               x_phyto_groups[i, m, ] <- GLM_temp_wq_out$output[(nstates+1):length(GLM_temp_wq_out$output)]
-              donc[m, ] <- GLM_temp_wq_out$output[wq_start[11]:wq_end[11]]/GLM_temp_wq_out$output[wq_start[9]:wq_end[9]]
-              dopc[m, ] <- GLM_temp_wq_out$output[wq_start[13]:wq_end[13]]/GLM_temp_wq_out$output[wq_start[9]:wq_end[9]]
+
             }else{
               GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "/output.nc",
                                                        working_dir = working_directory,
@@ -267,9 +239,6 @@ run_EnKF <- function(x,
     if(npars > 0){
       pars_corr <- x[i - 1, , (nstates+1):(nstates+npars)] + pqt
       pars_star <- x[i - 1, , (nstates+1):(nstates+npars)]
-      for(par in 1:npars){
-        print(c(mean(pars_corr[,par]), sd(pars_corr[,par])))
-      }
     }
     
     if(include_wq){
@@ -285,186 +254,164 @@ run_EnKF <- function(x,
       x_prior[i, , ] <- x_corr
     }
     
-    if(i >= spin_up_days + 1){
-      #Obs for time step
-      z_index <- which(!is.na(z[i, ]))
-      
-      #if no observations at a time step then just propogate model uncertainity
-      if(length(z_index) == 0 | i > (hist_days + 1)){
-        if(npars > 0){
-          if(i > (hist_days + 1)){
-            x[i, , ] <- cbind(x_corr, pars_star)
-          }else{
-            x[i, , ] <- x_prior[i, , ]
-          }
-          if(process_uncertainty == FALSE & i > (hist_days + 1)){
-            x[i, , ] <- cbind(x_star, pars_corr)
-          }
-          if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
-            for(m in 1:nmembers){
-              x[i, m, ] <- colMeans(cbind(x_star, pars_corr)) 
-            }
-          }
-        }else{
-          if(i > (hist_days + 1)){
-            x[i, , ] <- cbind(x_corr)
-          }else{
-            x[i, , ] <- x_prior[i, , ]
-          }
-          if(process_uncertainty == FALSE & i > (hist_days + 1)){
-            x[i, , ] <- cbind(x_star)
-          }
-          if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
-            for(m in 1:nmembers){
-              x[i, m, ] <- colMeans(cbind(x_star))
-            }
+    z_index <- which(!is.na(z[i, ]))
+    
+    #if no observations at a time step then just propogate model uncertainity
+
+    if(length(z_index) == 0 | i > (hist_days + 1) | i < (spin_up_days+1)){
+
+      if(npars > 0){
+        
+        x[i, , ] <- cbind(x_corr, pars_star)
+        
+        if(process_uncertainty == FALSE & i > (hist_days + 1)){
+          x[i, , ] <- cbind(x_star, pars_star)
+        }
+        if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
+          for(m in 1:nmembers){
+            x[i, m, ] <- colMeans(cbind(colMeans(x_star), pars_star[m, ])) 
           }
         }
       }else{
-        
-        #does previous day have an observation
-        previous_day_obs <- FALSE
-        if(length(which(!is.na(z[i-1, ]))) > 0){
-          previous_day_obs <- TRUE
-        }
-        
-        #if observation then calucate Kalman adjustment
-        zt <- z[i, z_index]
-        z_states_t <- z_states[i, z_index]
-        
-        #Assign which states have obs in the time step
-        h <- array(0, dim = c(length(zt) ,nstates))
-        h_combined <- array(0, dim = c(length(zt) ,nstates + npars))
-        for(j in 1:length(z_index)){
-          h[j, z_states_t[j]] <- 1
-          h_combined[j, z_states_t[j]] <- 1
-        }
-        
-        #Extract the data uncertainity for the data 
-        #types present during the time-step 
-        
-        if(length(z_index) > 1){
-          psi_t <- diag(psi[z_index])
+        if(i > (hist_days + 1)){
+          x[i, , ] <- cbind(x_corr)
         }else{
-          #Special case where there is only one data 
-          #type during the time-step
-          psi_t <- psi[z_index]
+          x[i, , ] <- x_prior[i, , ]
         }
-        
-        #Ensemble mean
-        ens_mean <- apply(x_corr[,], 2, mean)
-        
-        if(previous_day_obs){
-          resid30day[1:29, ] <- resid30day[2:30, ]
-          resid30day[30, z_index] <- ens_mean[z_index] - zt
-          if(!is.na(resid30day[1, z_index[1]])){
-            #qt <- update_qt(resid30day, modeled_depths, qt, include_wq, num_wq_vars)
-            qt <- qt
-          }
+        if(process_uncertainty == FALSE & i > (hist_days + 1)){
+          x[i, , ] <- cbind(x_star)
         }
-        
-        
-        if(npars > 0){
-          par_mean <- apply(pars_corr, 2, mean)
-        }
-        
-        n_psi = t(rmvnorm(n = 1, mean = zt, sigma=as.matrix(psi_t)))
-        
-        #Set any negative observations of water quality variables to zero
-        n_psi[which(z_index > length(modeled_depths) & n_psi < 0.0)] <- 0.0 
-        
-        d_mat <- t(matrix(rep(n_psi, each = nmembers), 
-                          nrow = nmembers, 
-                          ncol = length(n_psi)))
-        
-        #Loop through ensemble members
-        for(m in 1:nmembers){  
-          #  #Ensemble specific deviation
-          dit[m, ] <- x_corr[m, ] - ens_mean
-          if(npars > 0){
-            dit_pars[m, ] <- pars_corr[m, ] - par_mean
-            dit_combined[m, ] <- c(dit[m, ], dit_pars[m, ])
-          }
-          if(m == 1){
-            p_it <- dit[m, ] %*% t(dit[m, ]) 
-            if(npars > 0){
-              p_it_pars <- dit_pars[m, ] %*% t(dit[m, ])
-              p_it_combined <- dit_combined[m, ] %*% t(dit_combined[m, ]) 
-            }
-          }else{
-            p_it <- dit[m, ] %*% t(dit[m, ]) +  p_it 
-            if(npars > 0){
-              p_it_pars <- dit_pars[m, ] %*% t(dit[m, ]) + p_it_pars
-              p_it_combined <- dit_combined[m, ] %*% t(dit_combined[m, ]) + p_it_combined
-            }
-          }
-        }
-        
-        #estimate covariance
-        p_t <- p_it / (nmembers - 1)
-        if(npars > 0){
-          p_t_pars <- p_it_pars / (nmembers - 1)
-          p_t_combined <- p_it_combined/ (nmembers - 1)
-        }
-        #Kalman gain
-        k_t <- p_t %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t)
-        if(npars > 0){
-          k_t_pars <- p_t_pars %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t)
-          k_t_combined <- p_t_combined %*% t(h_combined) %*% solve(h_combined %*% p_t_combined %*% t(h_combined) + psi_t)
-        }
-        
-        #Update states array (transposes are necessary to convert 
-        #between the dims here and the dims in the EnKF formulations)
-        x[i, , 1:nstates] <- t(t(x_corr) + k_t %*% (d_mat - h %*% t(x_corr)))
-        #x[i, , ] <- t(t(x_prior[i, , ]) + k_t_combined %*% (d_mat - h_combined %*% t(x_prior[i, , ])))
-        #write.csv(k_t,paste0(working_directory,"/iter_",i,"_kalman_gain.csv"),row.names = FALSE)
-        if(npars > 0){
-          x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + 
-                                                     k_t_pars %*% (d_mat - h %*% t(x_corr)))
-        }
-        
-        if(npars > 0){
-          qt <- update_sigma(qt, p_t_combined, h_combined, x_star, pars_star, x_corr, pars_corr, psi_t, zt, npars)
-        }else{
-          qt <- update_sigma(qt, p_t, h, x_star, pars_star = NA, x_corr, pars_corr = NA, psi_t, zt, npars) 
-        }
-        
-        if(include_wq){
-          for(m in 1:nmembers){
-            index <- which(x[i,m,] < 0.0)
-            x[i, m, index[which(index < wq_end[num_wq_vars])]] <- 0.0
-          }
-        }
-        
-        #IF NO INITIAL CONDITION UNCERTAINITY ThEN SET EACh ENSEMBLE MEMBER TO ThE MEAN
-        #AT THE INITIATION OF ThE FUTURE FORECAST
         if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
-          if(npars > 0){
-            for(m in 1:nmembers){
-              if(parameter_uncertainty == FALSE){
-                x[i, m, ] <- colMeans(cbind(x_star, pars_corr)) 
-              }else{
-                x[i, m, ] <- c(colMeans(x_star),
-                               x[i, m, (nstates + 1):(nstates + npars)])
-              }
-            }
-          }else{
-            x[i, m, ] <- colMeans(x_star)
+          for(m in 1:nmembers){
+            x[i, m, ] <- colMeans(cbind(x_star))
           }
         }
       }
     }else{
-      if(npars > 0){
-        x[i, , ] <- cbind(x_star, pars_star)
+      
+      #does previous day have an observation
+      previous_day_obs <- FALSE
+      if(length(which(!is.na(z[i-1, ]))) > 0){
+        previous_day_obs <- TRUE
+      }
+      
+      #if observation then calucate Kalman adjustment
+      zt <- z[i, z_index]
+      z_states_t <- z_states[i, z_index]
+      
+      #Assign which states have obs in the time step
+      h <- array(0, dim = c(length(zt) ,nstates))
+      h_combined <- array(0, dim = c(length(zt) ,nstates + npars))
+      for(j in 1:length(z_index)){
+        h[j, z_states_t[j]] <- 1
+        h_combined[j, z_states_t[j]] <- 1
+      }
+      
+      #Extract the data uncertainity for the data 
+      #types present during the time-step 
+      if(length(z_index) > 1){
+        psi_t <- diag(psi[z_index])
       }else{
-        x[i, , ] <- x_star
+        #Special case where there is only one data 
+        #type during the time-step
+        psi_t <- psi[z_index]
+      }
+      
+      #Ensemble mean
+      ens_mean <- apply(x_corr[,], 2, mean)
+      
+      if(npars > 0){
+        par_mean <- apply(pars_corr, 2, mean)
+      }
+      
+      n_psi = t(rmvnorm(n = 1, mean = zt, sigma=as.matrix(psi_t)))
+      
+      #Set any negative observations of water quality variables to zero
+      #n_psi[which(z_index > length(modeled_depths) & n_psi < 0.0)] <- 0.0 
+      
+      d_mat <- t(matrix(rep(n_psi, each = nmembers), 
+                        nrow = nmembers, 
+                        ncol = length(n_psi)))
+      
+      #Loop through ensemble members
+      for(m in 1:nmembers){  
+        #  #Ensemble specific deviation
+        dit[m, ] <- x_corr[m, ] - ens_mean
+        if(npars > 0){
+          dit_pars[m, ] <- pars_corr[m, ] - par_mean
+          dit_combined[m, ] <- c(dit[m, ], dit_pars[m, ])
+        }
+        if(m == 1){
+          p_it <- dit[m, ] %*% t(dit[m, ]) 
+          if(npars > 0){
+            p_it_pars <- dit_pars[m, ] %*% t(dit[m, ])
+            p_it_combined <- dit_combined[m, ] %*% t(dit_combined[m, ]) 
+          }
+        }else{
+          p_it <- dit[m, ] %*% t(dit[m, ]) +  p_it 
+          if(npars > 0){
+            p_it_pars <- dit_pars[m, ] %*% t(dit[m, ]) + p_it_pars
+            p_it_combined <- dit_combined[m, ] %*% t(dit_combined[m, ]) + p_it_combined
+          }
+        }
+      }
+      
+      #estimate covariance
+      p_t <- p_it / (nmembers - 1)
+      if(npars > 0){
+        p_t_pars <- p_it_pars / (nmembers - 1)
+        p_t_combined <- p_it_combined/ (nmembers - 1)
+      }
+      #Kalman gain
+      k_t <- p_t %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t)
+      if(npars > 0){
+        k_t_pars <- p_t_pars %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t)
+        k_t_combined <- p_t_combined %*% t(h_combined) %*% solve(h_combined %*% p_t_combined %*% t(h_combined) + psi_t)
+      }
+      
+      #Update states array (transposes are necessary to convert 
+      #between the dims here and the dims in the EnKF formulations)
+      x[i, , 1:nstates] <- t(t(x_corr) + k_t %*% (d_mat - h %*% t(x_corr)))
+      x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + k_t_pars %*% (d_mat - h %*% t(x_corr)))
+      
+      
+      #if(i < spin_up_days[2]){
+      #  print("In process error spin-up mode")
+      #  curr_qt_alpha <- qt_alpha - (spin_up_days - i)*((qt_alpha -0.5)/spin_up_days)
+      #}else{
+        curr_qt_alpha <- qt_alpha
+      #}
+        
+      if(npars > 0){
+        qt <- update_sigma(qt, p_t_combined, h_combined, x_star, pars_star, x_corr, pars_corr, psi_t, zt, npars, qt_pars, include_pars_in_qt_update, nstates, curr_qt_alpha)
+      }else{
+        qt <- update_sigma(qt, p_t, h, x_star, pars_star = NA, x_corr, pars_corr = NA, psi_t, zt, npars, qt_pars, include_pars_in_qt_update, nstates, curr_qt_alpha) 
+      }
+      
+      if(include_wq){
+        for(m in 1:nmembers){
+          index <- which(x[i,m,] < 0.0)
+          x[i, m, index[which(index < wq_end[num_wq_vars])]] <- 0.0
+        }
+      }
+      
+      #IF NO INITIAL CONDITION UNCERTAINITY ThEN SET EACh ENSEMBLE MEMBER TO ThE MEAN
+      #AT THE INITIATION OF ThE FUTURE FORECAST
+      if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
+        if(npars > 0){
+          for(m in 1:nmembers){
+            if(parameter_uncertainty == FALSE){
+              x[i, m, ] <- colMeans(cbind(x_star, pars_corr)) 
+            }else{
+              x[i, m, ] <- c(colMeans(x_star),
+                             x[i, m, (nstates + 1):(nstates + npars)])
+            }
+          }
+        }else{
+          x[i, m, ] <- colMeans(x_star)
+        }
       }
     }
-    
-    #for(par in 1:npars){
-    #  x[i,which(x[i, , nstates+par] < par_init_lowerbound[par]), nstates + par] <- par_init_lowerbound[par]
-    #  x[i,which(x[i, , nstates+par] > par_init_upperbound[par]), nstates + par] <- par_init_upperbound[par]
-    #}
     
     if(include_wq){
       for(m in 1:nmembers){
@@ -479,25 +426,19 @@ run_EnKF <- function(x,
             x_phyto_groups[i, m, index] <- biomass_to_chla[pp] * phyto_proportions[d, pp] * x[i, m, wq_start[num_wq_vars] + (d-1)]
           }
         }
-        #Maintain the DOC/DON and DOC/DOP ratios after updating of DOC
-        
-        for(wq in 1:length(wq_start[11]:wq_end[11])){
-          if(!is.nan(donc[m,wq]) & !is.nan(dopc[m,wq])){
-            x[i, m, wq_start[11]+wq-1] <- x[i, m, wq_start[9]+wq-1] * donc[m,wq ]
-            x[i, m, wq_start[11]+wq-1] <- x[i, m, wq_start[9]+wq-1] * dopc[m, wq]
-          }else{ #Deal with the case where the ratio is NaN (due to have 0.0 concentrations)
-            x[i, m, wq_start[11]+wq-1] <- x[i, m, wq_start[9]+wq-1] * mean(donc[,wq ], na.rm = TRUE)
-            x[i, m, wq_start[11]+wq-1] <- x[i, m, wq_start[9]+wq-1] * mean(dopc[, wq], na.rm = TRUE)    
-          }
-        }
       }
     }
     
-    if(i == (hist_days + 1) | i == nsteps){
+    if(npars > 0){
+      for(par in 1:npars){
+        print(paste0(par_names_save[par],": mean ", round(mean(pars_corr[,par]),4)," sd ", round(sd(pars_corr[,par]),4)))
+      }
+    }
+    
+    if(i == (hist_days + 1)){
       x_restart <- x[i, , ]
       qt_restart <- qt
     }
-    
   }
   
   return(list(x = x, 
