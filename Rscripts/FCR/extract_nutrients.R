@@ -48,12 +48,12 @@ extract_nutrients <- function(fname,
   }
   
   #Unit Conversion and other calculations
-  obs_TN <- obs_TN
-  obs_TP <- obs_TP
-  obs_NH4 <- obs_NH4
-  obs_NO3NO2 <- obs_NO3NO2
-  obs_SRP <- obs_SRP
-  obs_DOC <- obs_DOC
-
-  return(list(NH4 = obs_NH4, SRP = obs_SRP, DOC = obs_DOC))
+  obs_TN <- obs_TN * 1000 * 0.001 * (1/14)
+  obs_TP <- obs_TP * 1000 * 0.001 * (1/30.97)
+  obs_NH4 <- obs_NH4 * 1000 * 0.001 * (1 / 18.04)
+  obs_NO3 <- obs_NO3NO2 * 1000 * 0.001 * (1/62.00)
+  obs_SRP <- obs_SRP * 1000 * 0.001 * (1/94.9714)
+  obs_DOC <- obs_DOC * 1000 * (1/12.01)
+    
+  return(list(NH4 = obs_NH4, NO3 = obs_NO3, SRP = obs_SRP, DOC = obs_DOC))
 }

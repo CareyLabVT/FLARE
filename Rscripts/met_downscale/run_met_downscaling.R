@@ -50,7 +50,7 @@ source(paste0(SCC_folder_location, "/FLARE/Rscripts/met_downscale/process_downsc
 
 output = process_downscale_GEFS(folder = paste0(SCC_folder_location, "FLARE/"),
                        noaa_location = paste0(SCC_folder_location, "SCC_data/noaa-data/"),
-                       met_station_location = paste0(SCC_folder_location, "SCC_data/carina-data/"),
+                       input_met_file = met_obs_fname_wdir[2],
                        working_directory = paste0(SCC_folder_location, "FLARE/working_directory/"),
                        sim_files_folder = NA,
                        n_ds_members = 5,

@@ -33,72 +33,73 @@ create_inflow_outflow_file <- function(full_time_day_local,
   wetland_time_tmp <- with_tz(wetland_time_local,local_tzone)
   
   inflow_2017 =  inflow[which(inflow_time_tmp %in% full_time_day_2017),]
-  inflow_2016 =  inflow[which(inflow_time_tmp %in% full_time_day_2016),]
-  inflow_2015 =  inflow[which(inflow_time_tmp %in% full_time_day_2015),]
-  inflow_2014 =  inflow[which(inflow_time_tmp %in% full_time_day_2014),]
-  inflow_2013 =  inflow[which(inflow_time_tmp %in% full_time_day_2015),]
-  inflow_new = inflow_2014
+  inflow_new = inflow_2017
   
   spillway_2017 =  spillway[which(spillway_time_tmp %in% full_time_day_2017),]
-  spillway_2016 =  spillway[which(spillway_time_tmp %in% full_time_day_2016),]
-  spillway_2015 =  spillway[which(spillway_time_tmp %in% full_time_day_2015),]
-  spillway_2014 =  spillway[which(spillway_time_tmp %in% full_time_day_2014),]
-  spillway_2013 =  spillway[which(spillway_time_tmp %in% full_time_day_2015),]
   spillway_new = spillway_2017
   
   wetland_2017 =  wetland[which(wetland_time_tmp %in% full_time_day_2017),]
-  wetland_2016 =  wetland[which(wetland_time_tmp %in% full_time_day_2016),]
-  wetland_2015 =  wetland[which(wetland_time_tmp %in% full_time_day_2015),]
-  wetland_2014 =  wetland[which(wetland_time_tmp %in% full_time_day_2014),]
-  wetland_2013 =  wetland[which(wetland_time_tmp %in% full_time_day_2015),]
   wetland_new = wetland_2017
   
   inflow_file_names <- rep(NA, n_inflow_outflow_members)
   spillway_file_names <- rep(NA, n_inflow_outflow_members)
   wetland_file_names <- rep(NA, n_inflow_outflow_members)
   
+  forecast_start_day <- day(full_time_day_local[start_forecast_step+1])
+  forecast_start_month <- month(full_time_day_local[start_forecast_step+1])
+  
   for(m in 1:(n_inflow_outflow_members)){
     for(i in 1:length(full_time_day_local)){
       curr_day <- day(full_time_day_local[i])
       curr_month <- month(full_time_day_local[i])
-      index1 <- which(day(inflow_time_tmp) == curr_day & month(inflow_time_tmp) == curr_month)
-      index2 <- which(day(spillway_time_tmp) == curr_day & month(spillway_time_tmp) == curr_month)
-      index3 <- which(day(wetland_time_tmp) == curr_day & month(wetland_time_tmp) == curr_month)
-      if(i < (start_forecast_step+1)){
-        hist_index1 <- index1
-        hist_index2 <- index2
-        hist_index3 <- index3
-      }
-      if(i < (start_forecast_step+1)){
+      
+      if(i <= (start_forecast_step+1)){
         for(j in 2:ncol(inflow)){
-          if(n_inflow_outflow_members == 1){
-            inflow_new[i,j] <- mean(inflow[index1,j], na.rm = TRUE)
-            wetland_new[i,j] <- mean(wetland[index3,j], na.rm = TRUE)
+          if(full_time_day_local[i] > inflow_time_tmp[nrow(inflow)] | full_time_day_local[i] < inflow_time_tmp[1]){
+            index1 <- which(day(inflow_time_tmp) == curr_day & month(inflow_time_tmp) == curr_month)
+            index2 <- which(day(wetland_time_tmp) == curr_day & month(wetland_time_tmp) == curr_month)
+
+            if(n_inflow_outflow_members == 1){
+              inflow_new[i,j] <- mean(inflow[index1,j], na.rm = TRUE)
+              wetland_new[i,j] <- mean(wetland[index2,j], na.rm = TRUE)
+            }else{
+              inflow_new[i,j] <- rnorm(1, mean(inflow[index1,j], na.rm = TRUE), sd(inflow[index1,j], na.rm = TRUE))
+              wetland_new[i,j] <- rnorm(1, mean(wetland[index2,j], na.rm = TRUE), sd(wetland[index2,j], na.rm = TRUE))
+            }
           }else{
-            inflow_new[i,j] <- rnorm(1, mean(inflow[index1,j], na.rm = TRUE), sd(inflow[index1,j], na.rm = TRUE))
-            wetland_new[i,j] <- rnorm(1, mean(wetland[index3,j], na.rm = TRUE), sd(wetland[index3,j], na.rm = TRUE))
+            index1 <- which(inflow_time_tmp == full_time_day_local[i])
+            index2 <- which(wetland_time_tmp == full_time_day_local[i])
+            inflow_new[i,j] <- inflow[index1,j]
+            print(inflow_new[i,j])
+            wetland_new[i,j] <- wetland[index2,j]
           }
         }
-        
         spillway_new[i,2] <- inflow_new[i,2] +  wetland_new[i,2] 
         
       }else{
+        
         for(j in 2:ncol(inflow)){
+          index1 <- which(day(inflow_time_tmp) == curr_day & month(inflow_time_tmp) == curr_month)
+          index2 <- which(day(wetland_time_tmp) == curr_day & month(wetland_time_tmp) == curr_month)
           if(n_inflow_outflow_members == 1){
             if(hold_inflow_outflow_constant){
+              index1 <- which(day(inflow_time_tmp) == forecast_start_day & month(inflow_time_tmp) == forecast_start_month)
+              index2 <- which(day(wetland_time_tmp) == forecast_start_day & month(wetland_time_tmp) == forecast_start_month)
               inflow_new[i,j] <- mean(inflow[index1,j], na.rm = TRUE)
-              wetland_new[i,j] <- mean(wetland[index3,j], na.rm = TRUE)
+              wetland_new[i,j] <- mean(wetland[index2,j], na.rm = TRUE)
             }else{
-              inflow_new[i,j] <- mean(inflow[hist_index1,j], na.rm = TRUE)
-              wetland_new[i,j] <- mean(wetland[hist_index3,j], na.rm = TRUE)    
+              inflow_new[i,j] <- mean(inflow[index1,j], na.rm = TRUE)
+              wetland_new[i,j] <- mean(wetland[index2,j], na.rm = TRUE)    
             }
           }else{
             if(hold_inflow_outflow_constant){
+              index1 <- which(day(inflow_time_tmp) == forecast_start_day & month(inflow_time_tmp) == forecast_start_month)
+              index2 <- which(day(wetland_time_tmp) == forecast_start_day & month(wetland_time_tmp) == forecast_start_month)
               inflow_new[i,j] <- rnorm(1, mean(inflow[index1,j], na.rm = TRUE), sd(inflow[index1,j], na.rm = TRUE))
-              wetland_new[i,j] <- rnorm(1, mean(wetland[index3,j], na.rm = TRUE), sd(wetland[index3,j], na.rm = TRUE))
+              wetland_new[i,j] <- rnorm(1, mean(wetland[index2,j], na.rm = TRUE), sd(wetland[index2,j], na.rm = TRUE))
             }else{
-              inflow_new[i,j] <- rnorm(1, mean(inflow[hist_index1,j], na.rm = TRUE), sd(inflow[index1,j], na.rm = TRUE))
-              wetland_new[i,j] <- rnorm(1, mean(wetland[hist_index3,j], na.rm = TRUE), sd(wetland[index3,j], na.rm = TRUE))  
+              inflow_new[i,j] <- rnorm(1, mean(inflow[index1,j], na.rm = TRUE), sd(inflow[index1,j], na.rm = TRUE))
+              wetland_new[i,j] <- rnorm(1, mean(wetland[index1,j], na.rm = TRUE), sd(wetland[index2,j], na.rm = TRUE))  
             }
           }
         }

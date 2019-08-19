@@ -228,7 +228,7 @@ observed_depths_chla_fdom <<- 1
 #Catwalk has the temperature string, fdom, chla, and do sensors
 temp_obs_fname <<- c("Catwalk.csv","Catwalk_cleanedEDI.csv")
 #Name of meteorology file name
-met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"),paste0(data_location, "/extra_files/Met_final_2015_2018_only2018.csv"))
+met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"),paste0(data_location, "/extra_files/Met_final_2015_2018.csv"))
 
 #met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"))
 
@@ -295,9 +295,9 @@ obs_error_wq <<- c(100, #OXY_oxy #0.25
                    NA, #CAR_dic
                    NA, #CAR_ch4
                    NA, #SIL_rsi
-                   NA, #NIT_amm
-                   NA, #NIT_nit
-                   NA, #PHS_frp
+                   0.1, #NIT_amm
+                   0.01, #NIT_nit
+                   0.01, #PHS_frp
                    1, #OGM_doc
                    NA, #OGM_poc
                    NA, #OGM_don
@@ -316,9 +316,9 @@ CAR_pH_process_error <<- 0.001
 CAR_dic_process_error <<- 1
 CAR_ch4_process_error <<- 1
 SIL_rsi_process_error <<- 1
-NIT_amm_process_error <<- 0.1
-NIT_nit_process_error <<- 0.01
-PHS_frp_process_error <<- 0.01
+NIT_amm_process_error <<- 1
+NIT_nit_process_error <<- 0.1
+PHS_frp_process_error <<- 0.1
 OGM_doc_process_error <<- 1
 OGM_poc_process_error <<- 0.1
 OGM_don_process_error <<- 0.1

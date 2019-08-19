@@ -65,6 +65,8 @@ run_flare<-function(start_day_local,
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_fdom_chain.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_temp_chain.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/read_sss_files.R"))
+  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_nutrients.R"))
+  
   
   ### METEROLOGY DOWNSCALING OPTIONS
   if(is.na(downscaling_coeff)){
@@ -243,7 +245,7 @@ run_flare<-function(start_day_local,
   ####################################################
   
   total_days <- hist_days + forecast_days
-  start_forecast_step <- hist_days
+  start_forecast_step <- hist_days + 1
   
   start_datetime_local <- as_datetime(paste0(start_day_local," ",start_time_local), tz = local_tzone)
   end_datetime_local <- start_datetime_local + total_days*24*60*60
@@ -299,7 +301,7 @@ run_flare<-function(start_day_local,
                                   tz = local_tzone)
   full_time_hour_local <- seq(as.POSIXct(full_time_local[1],
                                          tz = local_tzone), 
-                              as.POSIXct(full_time_GMT[length(full_time_GMT)],
+                              as.POSIXct(full_time_local[length(full_time_local)],
                                          tz = local_tzone),
                               by = "1 hour")
   
@@ -444,7 +446,7 @@ run_flare<-function(start_day_local,
     
     met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(code_folder,
                                                                                  noaa_location,
-                                                                                 met_station_location,
+                                                                                 input_met_file = met_obs_fname_wdir[2],
                                                                                  working_directory,
                                                                                  sim_files_folder = paste0(code_folder, "/", "sim_files"),
                                                                                  n_ds_members,
@@ -580,10 +582,10 @@ run_flare<-function(start_day_local,
     CAR_dic_obs <- array(NA, dim = dim(obs_do$obs))
     CAR_ch4_obs <- array(NA, dim = dim(obs_do$obs))
     SIL_rsi_obs <- array(NA, dim = dim(obs_do$obs))
-    NIT_amm_obs <- array(NA, dim = dim(obs_do$obs))
-    NIT_nit_obs <- array(NA, dim = dim(obs_do$obs))
-    PHS_frp_obs <- array(NA, dim = dim(obs_do$obs))
-    OGM_doc_obs <- obs_fdom$obs
+    NIT_amm_obs <- obs_nutrients$NH4
+    NIT_nit_obs <- obs_nutrients$NO3
+    PHS_frp_obs <- obs_nutrients$SRP
+    OGM_doc_obs <- obs_nutrients$DOC #obs_fdom$obs
     OGM_poc_obs <- array(NA, dim = dim(obs_do$obs))
     OGM_don_obs <- array(NA, dim = dim(obs_do$obs))
     OGM_pon_obs <- array(NA, dim = dim(obs_do$obs))

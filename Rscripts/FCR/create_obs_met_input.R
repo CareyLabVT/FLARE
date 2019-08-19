@@ -4,8 +4,8 @@ create_obs_met_input <- function(fname,
                                  input_file_tz = "EST5EDT",
                                  local_tzone) {
   if(length(fname) > 1){
-    d1 <- read.csv(fname[1], skip = 3)
-    d_names <- read.csv(fname[1], skip = 1)
+    d1 <- read_csv(fname[1], skip = 3)
+    d_names <- read_csv(fname[1], skip = 1, n_max = 3)
     names(d1) <- names(d_names)
     
     d1 <- d1[-85572, ]
@@ -16,7 +16,7 @@ create_obs_met_input <- function(fname,
     
     d1$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = local_tzone)
     
-    d2 <- read.csv(fname[2])
+    d2 <- read_csv(fname[2])
     
     TIMESTAMP_in <- as.POSIXct(d2$DateTime, 
                                format= "%Y-%m-%d %H:%M",
@@ -61,13 +61,13 @@ create_obs_met_input <- function(fname,
   }
   
   full_time_hour_local <- as.POSIXct(full_time_hour_local, tz = local_tz)
-  ShortWave <- rep(NA, length(full_time_hour_local) - 1)
-  LongWave <- rep(NA, length(full_time_hour_local) - 1)
-  AirTemp <- rep(NA, length(full_time_hour_local) - 1)
-  RelHum <- rep(NA, length(full_time_hour_local) - 1)
-  WindSpeed <- rep(NA, length(full_time_hour_local) - 1)
-  Rain <- rep(NA, length(full_time_hour_local) - 1)
-  Snow <- rep(NA, length(full_time_hour_local) - 1)
+  ShortWave <- rep(NA, length(full_time_hour_local))
+  LongWave <- rep(NA, length(full_time_hour_local))
+  AirTemp <- rep(NA, length(full_time_hour_local))
+  RelHum <- rep(NA, length(full_time_hour_local))
+  WindSpeed <- rep(NA, length(full_time_hour_local))
+  Rain <- rep(NA, length(full_time_hour_local))
+  Snow <- rep(NA, length(full_time_hour_local))
   
   if(length(which(d$TIMESTAMP == full_time_hour_local[1])) > 0){
     
@@ -88,17 +88,25 @@ create_obs_met_input <- function(fname,
       }
     }
     
-    remove_hours <- which(!is.na(AirTemp))
+   #remove_hours <- which(!is.na(AirTemp))
     
-    ShortWave <- ShortWave[remove_hours]
-    LongWave <- LongWave[remove_hours]
-    AirTemp <- AirTemp[remove_hours]
-    RelHum <- RelHum[remove_hours]
-    WindSpeed <- WindSpeed[remove_hours]
-    Rain <- Rain[remove_hours]
-    Snow <- Snow[remove_hours]
-    full_time_hour_local <- full_time_hour_local[remove_hours]
+    #ShortWave <- ShortWave[remove_hours]
+    #LongWave <- LongWave[remove_hours]
+    #AirTemp <- AirTemp[remove_hours]
+    #RelHum <- RelHum[remove_hours]
+    #WindSpeed <- WindSpeed[remove_hours]
+    #Rain <- Rain[remove_hours]
+    #Snow <- Snow[remove_hours]
+    #full_time_hour_local <- full_time_hour_local[remove_hours]
     
+    
+    ShortWave <- na.interpolation(ShortWave, option = "linear")
+    LongWave <- na.interpolation(LongWave, option = "linear")
+    AirTemp <- na.interpolation(AirTemp, option = "linear")
+    RelHum <- na.interpolation(RelHum, option = "linear")
+    WindSpeed <- na.interpolation(WindSpeed, option = "linear")
+    Rain <- na.interpolation(Rain, option = "linear")        
+    Snow <- na.interpolation(Snow, option = "linear")      
     
     historical_met <- data.frame(full_time_hour_local,
                                  ShortWave,
@@ -108,6 +116,7 @@ create_obs_met_input <- function(fname,
                                  WindSpeed,
                                  Rain,
                                  Snow)
+    
     n <- noquote(c("time",
                    "ShortWave",
                    "LongWave",

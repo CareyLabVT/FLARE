@@ -7,7 +7,7 @@
 # --------------------------------------
 process_downscale_GEFS <- function(folder,
                                    noaa_location,
-                                   met_station_location,
+                                   input_met_file,
                                    working_directory,
                                    sim_files_folder,
                                    n_ds_members,
@@ -41,12 +41,13 @@ process_downscale_GEFS <- function(folder,
   # 1. Load & reformat observational data
   # -----------------------------------
   
-  obs.file.path = paste(met_station_location, "/FCRmet.csv", sep = "")
+  obs.file.path = input_met_file
   for.file.path = noaa_location
   
-  obs.data <- read.csv(obs.file.path, skip = 4, header = F)
-  d_names <- read.csv(obs.file.path, skip = 1, header = T, nrows = 1)
-  names(obs.data) <- names(d_names)
+  #obs.data <- read_csv(obs.file.path, skip = 4, header = F)
+  obs.data <- read_csv(obs.file.path)
+  #d_names <- read.csv(obs.file.path, skip = 1, header = T, nrows = 1)
+  #names(obs.data) <- names(d_names)
   
   VarNames = as.vector(VarInfo$VarNames)
   
