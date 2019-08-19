@@ -70,7 +70,6 @@ create_inflow_outflow_file <- function(full_time_day_local,
             index1 <- which(inflow_time_tmp == full_time_day_local[i])
             index2 <- which(wetland_time_tmp == full_time_day_local[i])
             inflow_new[i,j] <- inflow[index1,j]
-            print(inflow_new[i,j])
             wetland_new[i,j] <- wetland[index2,j]
           }
         }
