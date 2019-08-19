@@ -930,26 +930,24 @@ if(!restart_present){
       
       if(initial_condition_uncertainty == FALSE){
         for(m in 1:nmembers){
-          x[1,m, ] <- c(the_temps_init,
-                        wq_init_vals_w_tchla,
-                        par_init_mean)
+            x[1, m, ] <- colMeans(x[1, , ])
+          }
         }
-      }
     }else{
       x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
                                   mean=c(the_temps_init,wq_init_vals_w_tchla),
                                   sigma=as.matrix(qt))
       if(initial_condition_uncertainty == FALSE){
         for(m in 1:nmembers){
-          x[1, m,1:nstates] <- c(the_temps_init, wq_init_vals_w_tchla)
+          x[1, m, ] <- colMeans(x[1, , ])
         }
       }
     }
   }else{
     if(npars > 0){
-      x[1, , ] <- rmvnorm(n=nmembers, 
-                          mean=c(the_temps_init, par_init_mean),
-                          sigma=as.matrix(qt))
+      x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
+                                  mean=c(the_temps_init), 
+                                  sigma=as.matrix(qt_init[1:nstates,1:nstates]))
       
       
       for(par in 1:npars){
@@ -958,7 +956,7 @@ if(!restart_present){
       
       if(initial_condition_uncertainty == FALSE){
         for(m in 1:nmembers){
-          x[1, m, ] <- c(the_temps_init, par_init_mean)
+          x[1, m, ] <- colMeans(x[1, , ])
         }
       }
     }else{
@@ -968,9 +966,7 @@ if(!restart_present){
       
       if(initial_condition_uncertainty == FALSE){
         for(m in 1:nmembers){
-          if(npars > 0){
-            x[1, m,] <- the_temps_init
-          }
+          x[1, m, ] <- colMeans(x[1, , ])
         }
       }
     }

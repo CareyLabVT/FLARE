@@ -401,14 +401,14 @@ run_EnKF <- function(x,
         if(npars > 0){
           for(m in 1:nmembers){
             if(parameter_uncertainty == FALSE){
-              x[i, m, ] <- colMeans(cbind(x_star, pars_corr)) 
+              x[i, m, ] <- colMeans(x[i, , ]) 
             }else{
-              x[i, m, ] <- c(colMeans(x_star),
+              x[i, m, ] <- c(colMeans(x[i, m, 1:nstates]),
                              x[i, m, (nstates + 1):(nstates + npars)])
             }
           }
         }else{
-          x[i, m, ] <- colMeans(x_star)
+          x[i, m, ] <- colMeans(x[i, m, 1:nstates])
         }
       }
     }
