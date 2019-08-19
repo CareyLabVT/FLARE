@@ -537,6 +537,12 @@ run_flare<-function(start_day_local,
 
   obs_fdom$obs[, ] <- NA
   
+  obs_nutrients <- extract_nutrients(fname = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/extra_files/chemistry.csv",
+                                     full_time_day_local,
+                                     modeled_depths = modeled_depths,
+                                     input_file_tz = "EST5EDT", 
+                                     local_tzone)
+  
   #Use the CTD observation rather than the sensor string when CTD data is avialable
   if(use_ctd){
     ## LOOK AT CTD DATA
