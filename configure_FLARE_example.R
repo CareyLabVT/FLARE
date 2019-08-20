@@ -1,10 +1,10 @@
-#################################################
-#Pull data from github?
-#Push results to github?
-pull_from_git <<- TRUE
-push_to_git <<- FALSE
+##########################
+# Lake information
+###########################
 
 lake_name <<- "FCR"
+lake_latitude <<- 37.307   #Degrees North 
+lake_longitude <<- 79.837  #Degrees West
 
 #Time zone that GLM is run in
 #Currently needed to be GMT so that it interfaces with the NOAA forecast
@@ -12,28 +12,58 @@ lake_name <<- "FCR"
 #Local time zone of the lake
 local_tzone <<- "EST"
 
-
-#Use GLM-AED?
+########################################
+## Temperature only or include water quality
+#########################################
 include_wq <<- TRUE
-simulate_SSS <<- TRUE
-#Use CTD data in place of the sensor string
-use_ctd <<- TRUE
+#TRUE = use AED
 
+##########################
+# Management Options
+###########################
+simulate_SSS <<- TRUE
+#Include SSS in data assimilation
+
+forecast_no_SSS <<- TRUE
+#Run forecasts without SSS turned off
+
+forecast_SSS <<- TRUE
+#Run forecasts without SSS turned on
+forecast_SSS_flow <<- 1000
+#m3/day rate of flow if SSS turned on in forecast
+forecast_SSS_Oxy <<- 500
+#umol/m3  of oxygen if SSS turned on in forecast
+
+
+
+#####################
+# Weather forcing options
+######################
+use_future_met <<- FALSE
+#TRUE = use NOAA forecast for "Future"
+#FALSE = use observed weather for "Future"; only works if "forecasting" past dates
+
+DOWNSCALE_MET <<- TRUE
 #Downscale the coarse resolutoin NOAA data to the local
 #site using the meterology station at the lake
-DOWNSCALE_MET <<- TRUE
+
+downscaling_coeff <<- NA
 #file name of previous downscaling coefficients
 #use NA if not using an existing file
-downscaling_coeff <<- NA
-#Dates to use to developing the downscaling coefficient
+
 met_ds_obs_start <<- as.Date("2018-04-06")
 met_ds_obs_end <<- as.Date("2018-12-06")
+#Dates to use to developing the downscaling coefficient
 
-#GLM and FLARE verizon
-#The code adds these to the output files
+############################
+# Run information
+#############################
+
 GLMversion <<- "GLM 3.0.0beta10"
 FLAREversion <<- "v1.0_beta.1"
+#GLM and FLARE version; the code adds these to the output files
 
+#GLM NML used as base 
 if(include_wq){
   if(simulate_SSS){
     base_GLM_nml <<- "glm3_wAED_SSS.nml"
@@ -44,7 +74,11 @@ if(include_wq){
   base_GLM_nml <<- "glm3_w0AED.nml" 
 }
 
+#################################
+### Uncertainty simulated
+################################
 
+uncert_mode <<- 1
 #Choose the types of uncertainty include in foreast
 #1 = all types
 #2 = no uncertainty
@@ -55,16 +89,18 @@ if(include_wq){
 #7 = only parameter uncertainty
 #8 = only meteorology downscaling uncertainty
 #9 = no sources of uncertainty and no state updating with EnKF
-uncert_mode <<- 1
 
 single_run <<- FALSE
-use_future_met <<- TRUE
+#Removes uncertainty and only simulates 3 ensemble members
 
-lake_latitude <<- 37.307   #Degrees North 
-lake_longitude <<- 79.837  #Degrees West
-
+#########################
+### Depth information
+#########################
 #Depths used in the EnKF
 #This are the depths that are saved between days
+#Init depth of lake
+lake_depth_init <<- 9.4  #not a modeled state
+
 if(!include_wq){
   modeled_depths <<- c(0.1, 0.33, 0.66, 
                        1.00, 1.33, 1.66,
@@ -91,16 +127,30 @@ if(!include_wq){
   #                     9.00)
 }
 
+##############################
+##  Ensemble members used
+##############################
+n_enkf_members <<- 1
+n_ds_members <<- 5
+n_inflow_outflow_members <<- 1
 #Note: this number is multiplied by 
 # 1) the number of NOAA ensembles (21)
 # 2) the number of downscaling essembles (50 is current)
 # get to the total number of essembles
-n_enkf_members <<- 1
-n_ds_members <<- 5
-n_inflow_outflow_members <<- 1
 
-#Init depth of lake
-lake_depth_init <<- 9.4  #not a modeled state
+################################
+### Process uncertainty adaption
+##################################
+qt_alpha <<- 0.8  #0 - all weight on the new Qt, 1 - all weight on the current Qt
+qt_beta <<- 0.7 # 
+
+
+#################################
+# Parameter calibration information
+#################################
+
+include_pars_in_qt_update <<- TRUE
+#Adapt the parameter noise
 
 #Initial zone temperatures and the upper and lower bounds
 #Zone 1 is Xm to Xm 
@@ -158,9 +208,7 @@ R_resp_init_upperbound <<-  0.015 #1.01
 #daily perturbance of parameter value
 R_resp_init_qt <<- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
 
-include_pars_in_qt_update <<- TRUE
-
-#Parameter vectors
+#Create parameter vectors
 if(include_wq){
   # par_names <<- c()
   # par_names_save <<- c()
@@ -179,23 +227,23 @@ if(include_wq){
   # par_init_qt <<- c(zone1temp_init_qt,Fsed_oxy_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
   # par_units <<- c("deg_C","-") #
   
-  #par_names <<- c("sed_temp_mean","sed_temp_mean","Fsed_oxy","sw_factor")
-  #par_names_save <<- c("zone1temp","zone2temp","Fsed_oxy","sw_factor")
-  #par_nml <<- c("glm3.nml","glm3.nml","aed2.nml","glm3.nml") #Fsed_oxy_init_mean,Rdom_minerl_init_mean,Rdom_minerl_init_mean,R_growth_init_mean)
-  #par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean, Fsed_oxy_init_mean, swf_init_mean)
-  #par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound, Fsed_oxy_init_lowerbound,swf_init_lowerbound) #Fsed_oxy_init_lowerbound,Rdom_minerl_init_lowerbound,R_growth_init_lowerbound)
-  #par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound, Fsed_oxy_init_upperbound,swf_init_upperbound)#Fsed_oxy_init_upperbound,Rdom_minerl_init_upperbound,R_growth_init_upperbound)
-  #par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt, Fsed_oxy_init_qt,swf_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
-  #par_units <<- c("deg_C","-","-","-") #
+  par_names <<- c("sed_temp_mean","sed_temp_mean","Fsed_oxy","sw_factor")
+  par_names_save <<- c("zone1temp","zone2temp","Fsed_oxy","sw_factor")
+  par_nml <<- c("glm3.nml","glm3.nml","aed2.nml","glm3.nml") #Fsed_oxy_init_mean,Rdom_minerl_init_mean,Rdom_minerl_init_mean,R_growth_init_mean)
+  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean, Fsed_oxy_init_mean, swf_init_mean)
+  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound, Fsed_oxy_init_lowerbound,swf_init_lowerbound) #Fsed_oxy_init_lowerbound,Rdom_minerl_init_lowerbound,R_growth_init_lowerbound)
+  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound, Fsed_oxy_init_upperbound,swf_init_upperbound)#Fsed_oxy_init_upperbound,Rdom_minerl_init_upperbound,R_growth_init_upperbound)
+  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt, Fsed_oxy_init_qt,swf_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
+  par_units <<- c("deg_C","-","-","-") #
   
-  par_names <<- c("sed_temp_mean","sed_temp_mean","Fsed_oxy","sw_factor","pd%R_growth")
-  par_names_save <<- c("zone1temp","zone2temp","Fsed_oxy","sw_factor","R_growth")
-  par_nml <<- c("glm3.nml","glm3.nml","aed2.nml","glm3.nml","aed2_phyto_pars.nml") #Fsed_oxy_init_mean,Rdom_minerl_init_mean,Rdom_minerl_init_mean,R_growth_init_mean)
-  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean, Fsed_oxy_init_mean, swf_init_mean,R_growth_init_mean)
-  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound, Fsed_oxy_init_lowerbound,swf_init_lowerbound,R_growth_init_lowerbound) #Fsed_oxy_init_lowerbound,Rdom_minerl_init_lowerbound,R_growth_init_lowerbound)
-  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound, Fsed_oxy_init_upperbound,swf_init_upperbound,R_growth_init_upperbound)#Fsed_oxy_init_upperbound,Rdom_minerl_init_upperbound,R_growth_init_upperbound)
-  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt, Fsed_oxy_init_qt,swf_init_qt,R_growth_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
-  par_units <<- c("deg_C","-","-","-","-") #
+  #par_names <<- c("sed_temp_mean","sed_temp_mean","Fsed_oxy","sw_factor","pd%R_growth")
+  #par_names_save <<- c("zone1temp","zone2temp","Fsed_oxy","sw_factor","R_growth")
+  #par_nml <<- c("glm3.nml","glm3.nml","aed2.nml","glm3.nml","aed2_phyto_pars.nml") #Fsed_oxy_init_mean,Rdom_minerl_init_mean,Rdom_minerl_init_mean,R_growth_init_mean)
+  #par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean, Fsed_oxy_init_mean, swf_init_mean,R_growth_init_mean)
+  #par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound, Fsed_oxy_init_lowerbound,swf_init_lowerbound,R_growth_init_lowerbound) #Fsed_oxy_init_lowerbound,Rdom_minerl_init_lowerbound,R_growth_init_lowerbound)
+  #par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound, Fsed_oxy_init_upperbound,swf_init_upperbound,R_growth_init_upperbound)#Fsed_oxy_init_upperbound,Rdom_minerl_init_upperbound,R_growth_init_upperbound)
+  #par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt, Fsed_oxy_init_qt,swf_init_qt,R_growth_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
+  #par_units <<- c("deg_C","-","-","-","-") #
   
 }else{
   #par_names <<- c("sw_factor")
@@ -216,26 +264,39 @@ if(include_wq){
   par_units <<- c("deg_C","deg_C","-") #
 }
 
-#Depths with temperature observations
+#####################################
+###  Observation information
+######################################
+
+
+use_ctd <<- TRUE
+#Use CTD data in place of the sensor string
+
 observed_depths_temp <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+#Depths with temperature observations
 
-#Depths with do observations
 observed_depths_do <<- c(1, 5, 9)
-#Depths with Chla and fdom observations
-observed_depths_chla_fdom <<- 1
+#Depths with do observations
 
+observed_depths_chla_fdom <<- 1
+#Depths with Chla and fdom observations
+
+temp_obs_fname <<- c("Catwalk.csv","Catwalk_cleanedEDI.csv")
 #name of catwalk file name
 #Catwalk has the temperature string, fdom, chla, and do sensors
-temp_obs_fname <<- c("Catwalk.csv","Catwalk_cleanedEDI.csv")
-#Name of meteorology file name
+
 met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"),paste0(data_location, "/extra_files/Met_final_2015_2018.csv"))
-
 #met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"))
+#Name of meteorology file name
 
-#Name of the historical inflow and outflow files
 inflow_file1 <<- "FCR_weir_inflow_newEDI_2013_2017_20190128_oneDOC.csv"
 outflow_file1 <<- "FCR_spillway_outflow_newEDI_SUMMED_WeirWetland_2013_2017_20190128.csv"
 inflow_file2 <<- "FCR_wetland_inflow_newEDI_2013_2017_20190305_oneDOC.csv"
+#Name of the historical inflow and outflow files
+
+#########################################
+###  Water quality state information
+#########################################
 
 #define water quality variables modeled.  Not used if include_wq == FALSE
 wq_names <<- c("OXY_oxy",
@@ -348,8 +409,18 @@ NCS_ss1_init_error <<- 0.5
 PHS_frp_ads_init_error <<- 0.1
 PHY_TCHLA_init_error <<- 3
 
-qt_alpha <<- 0.8  #0 - all weight on the new Qt, 1 - all weight on the current Qt
-qt_beta <<- 0.7 # 
+#########################################
+# Archiving options
+#######################################
+
+#Pull data from github?
+#Push results to github?
+pull_from_git <<- TRUE
+push_to_git <<- FALSE
+
+#########################################
+# Plotting related options
+#######################################
 
 # Options for printing function
 # Depths (meters) that the water quality variables are plotted
@@ -360,6 +431,8 @@ focal_depths_manager <<- c(1,5,9) #c(4,16,25)
 turnover_index_1 <<- 2
 turnover_index_2 <<- 9
 
-#Options that you will not adjust but are needed as global variables
+####################################
+# Extra options that you will not adjust
+####################################
 hold_inflow_outflow_constant <<- FALSE
 print_glm2screen <<- FALSE

@@ -42,7 +42,8 @@ run_flare<-function(start_day_local,
                     FLAREversion,
                     met_ds_obs_start,
                     met_ds_obs_end,
-                    modeled_depths){
+                    modeled_depths,
+                    forecast_sss_on){
   
   #################################################
   ### LOAD R FUNCTIONS AND OTHER INITIAL SET UP
@@ -400,7 +401,7 @@ run_flare<-function(start_day_local,
   met_file_names[1] <- obs_met_outfile
   
   ###CREATE FUTURE MET FILES
-  if(forecast_days > 0){
+  if(forecast_days > 0 & use_future_met){
     in_directory <- paste0(noaa_location)
     out_directory <- working_directory
     file_name <- forecast_base_name
@@ -1100,7 +1101,8 @@ enkf_output <- run_EnKF(x,
                         x_phyto_groups,
                         inflow_file_names,
                         outflow_file_names,
-                        management_input)
+                        management_input,
+                        forecast_sss_on)
 
 x <- enkf_output$x
 x_restart <- enkf_output$x_restart

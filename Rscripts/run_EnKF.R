@@ -25,7 +25,8 @@ run_EnKF <- function(x,
                      x_phyto_groups,
                      inflow_file_names,
                      outflow_file_names,
-                     management_input){
+                     management_input,
+                     forecast_sss_on){
   
   nsteps <- length(full_time_local)
   nmembers <- dim(x)[2]
@@ -115,7 +116,7 @@ run_EnKF <- function(x,
         update_var(wq_init_vals_w_phytos, "wq_init_vals" ,working_directory, "glm3.nml")
         
         if(simulate_SSS){
-          create_sss_input_output(x, i, m, full_time_day_local, working_directory, wq_start, management_input)
+          create_sss_input_output(x, i, m, full_time_day_local, working_directory, wq_start, management_input, hist_days, forecast_sss_on)
         }
       }
       
