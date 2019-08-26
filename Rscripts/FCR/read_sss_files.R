@@ -13,8 +13,8 @@ read_sss_files <-  function(full_time_day_local,
   d$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = local_tzone)
   
   
-  sss_flow <- rep(NA, length(full_time_day_local))
-  sss_OXY_oxy <- rep(NA, length(full_time_day_local))
+  sss_flow <- rep(0, length(full_time_day_local))
+  sss_OXY_oxy <- rep(0, length(full_time_day_local))
   
   if(length(which(d$TIMESTAMP == full_time_day_local[1])) > 0){
     
