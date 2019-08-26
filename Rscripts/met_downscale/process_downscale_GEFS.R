@@ -44,10 +44,10 @@ process_downscale_GEFS <- function(folder,
   obs.file.path = input_met_file
   for.file.path = noaa_location
   
-  #obs.data <- read_csv(obs.file.path, skip = 4, header = F)
-  obs.data <- read_csv(obs.file.path)
-  #d_names <- read.csv(obs.file.path, skip = 1, header = T, nrows = 1)
-  #names(obs.data) <- names(d_names)
+  obs.data <- read_csv(obs.file.path, skip = 4, col_names = FALSE)
+  #obs.data <- read_csv(obs.file.path)
+  d_names <- read_csv(obs.file.path, skip = 1, col_names = TRUE, n_max = 5)
+  names(obs.data) <- names(d_names)
   
   VarNames = as.vector(VarInfo$VarNames)
   

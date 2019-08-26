@@ -369,7 +369,7 @@ plot_forecast <- function(pdf_file_name,
     for(i in 1:nlayers){
       model = i
       obs <- obs_nutrients$NO3[,i]
-      ylim = range(c(NIT_amm[,,]),na.rm = TRUE) 
+      ylim = range(c(NIT_nit[,,]),na.rm = TRUE) 
       
       if(plot_summaries){
         mean_doc <- array(NA,dim=c(length(t),length(depths)))
@@ -377,58 +377,20 @@ plot_forecast <- function(pdf_file_name,
         lower95_doc <- array(NA,dim=c(length(t),length(depths)))
         for(ii in 1:length(depths)){
           for(j in 1:length(t)){
-            mean_doc[j,ii] <- mean(NIT_amm[j,,ii])
-            lower95_doc[j,ii] <- quantile(NIT_amm[j,,ii],0.025)
-            upper95_doc[j,ii] <- quantile(NIT_amm[j,,ii],0.975)
+            mean_doc[j,ii] <- mean(NIT_nit[j,,ii])
+            lower95_doc[j,ii] <- quantile(NIT_nit[j,,ii],0.025)
+            upper95_doc[j,ii] <- quantile(NIT_nit[j,,ii],0.975)
           }
         }
-        plot(full_time_local,mean_doc[,model],type='l',ylab='NIT_amm (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        plot(full_time_local,mean_doc[,model],type='l',ylab='NIT_nit (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
         points(full_time_local,lower95_doc[ ,model],type='l',lty='dashed')
         points(full_time_local,upper95_doc[ ,model],type='l',lty='dashed') 
       }else{
         
-        plot(full_time_local,NIT_amm[,1,model],type='l',ylab='NIT_amm (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        plot(full_time_local,NIT_nit[,1,model],type='l',ylab='NIT_nit (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
         if(length(temp[1,,model]) > 1){
           for(m in 2:length(temp[1,,model])){
-            points(full_time_local,NIT_amm[,m,model],type='l')
-          }
-        }
-      }
-      obs[is.na(obs)] = -999
-      points(full_time_local,obs,col='red',pch=19,cex=1.0)
-      
-      if(forecast_index > 1){
-        abline(v = full_time_local[forecast_index-1])
-      }
-    }
-    
-    par(mfrow=c(4,3))
-    
-    for(i in 1:nlayers){
-      model = i
-      obs <- obs_nutrients$DOC[,i] #obs_fdom$obs[,i]
-      ylim = range(c(OGM_doc[,,]),na.rm = TRUE) 
-      
-      if(plot_summaries){
-        mean_doc <- array(NA,dim=c(length(t),length(depths)))
-        upper95_doc <- array(NA,dim=c(length(t),length(depths)))
-        lower95_doc <- array(NA,dim=c(length(t),length(depths)))
-        for(ii in 1:length(depths)){
-          for(j in 1:length(t)){
-            mean_doc[j,ii] <- mean(OGM_doc[j,,ii])
-            lower95_doc[j,ii] <- quantile(OGM_doc[j,,ii],0.025)
-            upper95_doc[j,ii] <- quantile(OGM_doc[j,,ii],0.975)
-          }
-        }
-        plot(full_time_local,mean_doc[,model],type='l',ylab='OGM_doc (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
-        points(full_time_local,lower95_doc[ ,model],type='l',lty='dashed')
-        points(full_time_local,upper95_doc[ ,model],type='l',lty='dashed') 
-      }else{
-        
-        plot(full_time_local,OGM_doc[,1,model],type='l',ylab='OGM_doc (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
-        if(length(temp[1,,model]) > 1){
-          for(m in 2:length(temp[1,,model])){
-            points(full_time_local,OGM_doc[,m,model],type='l')
+            points(full_time_local,NIT_nit[,m,model],type='l')
           }
         }
       }
@@ -477,48 +439,6 @@ plot_forecast <- function(pdf_file_name,
         abline(v = full_time_local[forecast_index-1])
       }
     }    
-    
-    
-    par(mfrow=c(4,3))
-    
-    for(i in 1:nlayers){
-      model = i
-      obs <- obs_nutrients$NO3[,i] #obs_fdom$obs[,i]
-      ylim = range(c(NIT_nit[,,]),na.rm = TRUE) 
-      
-      if(plot_summaries){
-        mean_doc <- array(NA,dim=c(length(t),length(depths)))
-        upper95_doc <- array(NA,dim=c(length(t),length(depths)))
-        lower95_doc <- array(NA,dim=c(length(t),length(depths)))
-        for(ii in 1:length(depths)){
-          for(j in 1:length(t)){
-            mean_doc[j,ii] <- mean(NIT_nit[j,,ii])
-            lower95_doc[j,ii] <- quantile(NIT_nit[j,,ii],0.025)
-            upper95_doc[j,ii] <- quantile(NIT_nit[j,,ii],0.975)
-          }
-        }
-        plot(full_time_local,mean_doc[,model],type='l',ylab='NIT_nit (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
-        points(full_time_local,lower95_doc[ ,model],type='l',lty='dashed')
-        points(full_time_local,upper95_doc[ ,model],type='l',lty='dashed') 
-      }else{
-        
-        plot(full_time_local,NIT_nit[,1,model],type='l',ylab='NIT_nit (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
-        if(length(temp[1,,model]) > 1){
-          for(m in 2:length(temp[1,,model])){
-            points(full_time_local,NIT_nit[,m,model],type='l')
-          }
-        }
-      }
-      obs[is.na(obs)] = -999
-      points(full_time_local,obs,col='red',pch=19,cex=1.0)
-      
-      if(forecast_index > 1){
-        abline(v = full_time_local[forecast_index-1])
-      }
-    }
-    
-    
-    
     
     par(mfrow=c(4,3))
     

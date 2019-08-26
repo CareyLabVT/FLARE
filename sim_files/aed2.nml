@@ -144,8 +144,8 @@
 !-------------------------------------------------------------------------------
 &aed2_oxygen
    oxy_initial = 225.0 !overwritten by GLM nml
-   Fsed_oxy = -21.27753257 !-16.92136875 !-9.52843 !-21 intermediate for Mendota and Sunapee
-   Ksed_oxy = 7.05059507 !8.573749872 !4.98461 !6.8 is same for Mendota and FCR
+   Fsed_oxy = -24.21938847!-23.23110365!-20.75092427!-19.20335459!-16.92136875 !-9.52843 !-21 intermediate for Mendota and Sunapee
+   Ksed_oxy = 8.385887191!10.29694024!9.882739714!9.735279645!8.573749872 !4.98461 !6.8 is same for Mendota and FCR
    theta_sed_oxy = 1.08 !going to go for the same theta throughout
 !  Fsed_oxy_variable = 'SDF_Fsed_oxy'
 /
@@ -209,11 +209,11 @@
    co2_piston_model = 1
    !-- CH4 --
    ch4_initial = 5! 1 !based on similar values for previous May weather in FCR; formerly 27.6
-   Rch4ox = 0.0001 !Julia 0.1 !!!! 0.01 in manual, Ari 0.048, range 0.01-0.21
-   Kch4ox =  0.5 !! 0.5 in manual [not in thesis]
+   Rch4ox = 0.0001!1.274784175!0.0001 !Julia 0.1 !!!! 0.01 in manual, Ari 0.048, range 0.01-0.21
+   Kch4ox =  0.5 !0.74849557!0.5 !! 0.5 in manual [not in thesis]
    vTch4ox = 1.08
-   Fsed_ch4 = 48.41563495 !30! 100 !!!! 0.5 in manual higher Fsed- Ari =2.0, lit range 0.19-3.9 (Ari thesis)
-   Ksed_ch4 = 2.695367832! 15 ! 100 in manual turn this down 
+   Fsed_ch4 = 48.41563495!22.13956304!48.41563495 !30! 100 !!!! 0.5 in manual higher Fsed- Ari =2.0, lit range 0.19-3.9 (Ari thesis)
+   Ksed_ch4 = 2.695367832!16.48148889! 15 ! 100 in manual turn this down 
    theta_sed_ch4 = 1.08
    methane_reactant_variable='OXY_oxy'
    atm_ch4 = 1.76e-6
@@ -290,7 +290,7 @@
    nit_initial = 0.1 !27.6 ! observational data from FCR
    n2o_initial = 0.1 !23.5 ! matching nitrate data
   !-- Nitrification
-   Rnitrif =  0.011269445!0.33686418!0.011269445!0.075 !Kinneret 0.1;max obs in Taihu 0.42 Liu et al 2018 Water
+   Rnitrif =  0.011269445!0.33686418!0.075 !Kinneret 0.1;max obs in Taihu 0.42 Liu et al 2018 Water
    Knitrif = 35.60254662!61.02785995!20!78.1
    theta_nitrif = 1.08
    nitrif_reactant_variable = 'OXY_oxy'
@@ -324,7 +324,7 @@
   !-- Sediment fluxes
    Fsed_amm = 4 !3 !!!! manual 3.5 Paul 20
    Ksed_amm = 10 !!!! 25
-   Fsed_nit = -0.01!-1.937417788!-9.340307115!-0.35!-0.35 !-1.755 !!!! manual -4.5 Kinneret -0.5 Paul -8
+   Fsed_nit = -0.01!-1.937417788!-7.078329303!-9.340307115!-0.35!-0.35 !-1.755 !!!! manual -4.5 Kinneret -0.5 Paul -8
    Ksed_nit = 100 !!!! Kinneret +manual 100; paul 15
    Fsed_n2o =   0.0 !!! man -4.5
    Ksed_n2o = 100.0
@@ -334,7 +334,7 @@
 !  Fsed_amm_variable='SDF_Fsed_amm'
 !  Fsed_nit_variable='SDF_Fsed_nit'
 /
- 
+
 !###############################################################################
 ! PHO: aed2_phosphorus - AED phosphorus model
 !-------------------------------------------------------------------------------
@@ -457,12 +457,12 @@
      don_initial  =   0.1
      pop_initial  =   0.1
      dop_initial  =   1.5
-     !docr_initial = 120.0 !edited
-     !donr_initial =  13.0
-     !dopr_initial =   1.0
-     cpom_initial = 100.0
+     docr_initial = 0 !120.0 !edited
+     donr_initial =  0 !13.0
+     dopr_initial =   0 !1.0
+     cpom_initial =  0 !100.0
    !-- Breakdown and mineralisation (basic pool)
-     Rdom_minerl = 0.00001 !0.001!Paul 0.04
+     Rdom_minerl = 0.001!0.008653273!0.005405006 !0.001!Paul 0.04
      Rpom_hydrol = 0.03!Paul 0.03
      !Rpoc_hydrol  =   0.05 !manual 0.05 !Paul 0.01
      !Rdoc_minerl  =   0!0.01 !Manual 0.001; Paul 0.03 !doesnt work
@@ -471,9 +471,9 @@
      !Rpop_hydrol  =   0.05 ! Paul had 0.01
      !Rdop_minerl  =   0.01 !manual is 0.001, Paul had 0.01! doesnt work
      theta_hydrol =   1.08
-     theta_minerl =   1.067187839!1.08
+     theta_minerl =   1.08
      Kpom_hydrol  =  31.25
-     Kdom_minerl  =  24.14519378!63.41664237!24.14519378!31.25
+     Kdom_minerl  =  31.25
      simDenitrification = 1
      dom_miner_oxy_reactant_var = 'OXY_oxy'
    ! dom_miner_no2_reactant_var = 'NIT_no2'
@@ -496,14 +496,14 @@
 
    !-- Refractory organic matter (optional)
      simRPools    = .false. !needs to be on to keep the peace
-   ! Rdomr_minerl = 0.0001 !0.00001! Kinneret 0.0001 !Paul had 0.0005
+     Rdomr_minerl = 0.0001 !0.0001 !0.00001! Kinneret 0.0001 !Paul had 0.0005
    ! Kdomr_minerl = 0.001 !0.00001! Kinneret 0.0001 !Paul had 0.0005
      Rcpom_bdown  = 0.001 !Kinneret 0.0001 !Paul had 0.001
      X_cpom_n     = 0.005 !0.0005 !Paul had 0.005
      X_cpom_p     = 0.001 !0.0001 !Paul had 0.001
 
     !-- Light related parameters
-     KeDOM         = 0.0025!For 1 functional group, use 0.0025!0.0005 !paul had 0.0005; manual had 0.000005
+     KeDOM         = 0.0005 !paul had 0.0005; manual had 0.000005
      KePOM         = 0.0015!paul had 0.001, 
      KeDOMR        = 0.10000    ! paul had 0.05 formerly 0.1 = 1 (assuming KeDOMR is applied to CDOM in /m)
      KeCPOM        = 0.00096    ! = 0.08 (/m)/(mg/L)  /83.3  (mmol/m3)/(mg/L)
@@ -513,7 +513,7 @@
 
     !-- Particle settling parameters
      settling     =  3
-     w_pom        = -1.159357939!-0.06 !Paul had -1
+     w_pom        = -0.06 !Paul had -1
      d_pom        =  1e-5
      rho_pom      = 1.2e3 !previously 1.12e3
      w_cpom       = -0.01 !Paul had -0.1
@@ -527,7 +527,7 @@
      Xsc = 0.5
      Xsn = 0.05
      Xsp = 0.005
-     Fsed_doc = 100!10 !5 !manual 10.0, *****0.1 for Sunapee, 30 for Mendota
+     Fsed_doc = 10 !5 !manual 10.0, *****0.1 for Sunapee, 30 for Mendota
      Fsed_don = 0.0 !bombs if set to >0 manual 1.0, *****0.01 for Sunapee, 5 for Mendota
      Fsed_dop = 0.0 !bombs if set to >0 manuual 0.020; *****0.001 for Sunapee, -900 for Mendota
      Ksed_dom = 4.5
@@ -602,7 +602,7 @@
    si_uptake_target_variable='SIL_rsi'
    do_uptake_target_variable='OXY_oxy'
    c_uptake_target_variable='CAR_dic'
-   dbase= 'aed2_phyto_pars.nml'! 'aed2/aed2_phyto_pars_WhitneyComparison_6Mar19.nml'
+   dbase='aed2_phyto_pars.nml'!'aed2_phyto_pars_WhitneyComparison_6Mar19.nml'
    extra_diag = .true.
  !zerolimitfudgefactor = ??
   min_rho =  900.0

@@ -185,12 +185,12 @@ run_flare<-function(start_day_local,
     use_obs_constraint <- FALSE
     #SOURCES OF uncertainty
     observation_uncertainty <- FALSE
-    process_uncertainty <- TRUE
+    process_uncertainty <- FALSE
     weather_uncertainty <- FALSE
     initial_condition_uncertainty <- FALSE
     parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- FALSE
-    spin_up_days <- 0 #hist_days + 1
+    spin_up_days <- hist_days + 1
     n_enkf_members <- 3
   }
   
@@ -250,7 +250,7 @@ run_flare<-function(start_day_local,
   
   start_datetime_local <- as_datetime(paste0(start_day_local," ",start_time_local), tz = local_tzone)
   end_datetime_local <- start_datetime_local + total_days*24*60*60
-  forecast_start_time_local <- start_datetime_local + start_forecast_step*24*60*60
+  forecast_start_time_local <- start_datetime_local + hist_days*24*60*60
   
   
   start_datetime_GMT <- with_tz(start_datetime_local, tzone = "GMT")
@@ -445,9 +445,9 @@ run_flare<-function(start_day_local,
                          "IR01UpCo_Avg" = "LongWave",
                          "Rain_mm_Tot" = "Rain")
     
-    met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(code_folder,
+    met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder = code_folder,
                                                                                  noaa_location,
-                                                                                 input_met_file = met_obs_fname_wdir[2],
+                                                                                 input_met_file = met_obs_fname_wdir[1],
                                                                                  working_directory,
                                                                                  sim_files_folder = paste0(code_folder, "/", "sim_files"),
                                                                                  n_ds_members,
@@ -917,7 +917,12 @@ if(!restart_present){
                                   mean=c(the_temps_init, 
                                          wq_init_vals_w_tchla), 
                                   sigma=as.matrix(qt_init[1:nstates,1:nstates]))
-      
+      if(single_run){
+      for(m in 1:nmembers){
+      x[1,m ,1:nstates] <- rep(c(the_temps_init, 
+                            wq_init_vals_w_tchla))
+      }
+      }
       if(include_wq){
         for(m in 1:nmembers){
           index <- which(x[1,m,] < 0.0)
@@ -927,7 +932,11 @@ if(!restart_present){
       
       for(par in 1:npars){
         x[1, ,(nstates+par)] <- runif(n=nmembers,par_init_lowerbound[par], par_init_upperbound[par])
+        if(single_run){
+          x[1, ,(nstates+par)] <-  rep(par_init_mean[par], nmembers)
+        }
       }
+      
       
       if(initial_condition_uncertainty == FALSE){
         for(m in 1:nmembers){
@@ -938,6 +947,14 @@ if(!restart_present){
       x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
                                   mean=c(the_temps_init,wq_init_vals_w_tchla),
                                   sigma=as.matrix(qt))
+      
+      if(single_run){
+        for(m in 1:nmembers){
+          x[1,m ,1:nstates] <- rep(c(the_temps_init, 
+                                     wq_init_vals_w_tchla))
+        }
+      }
+      
       if(initial_condition_uncertainty == FALSE){
         for(m in 1:nmembers){
           x[1, m, ] <- colMeans(x[1, , ])
@@ -953,6 +970,9 @@ if(!restart_present){
       
       for(par in 1:npars){
         x[1, ,(nstates+par)] <- runif(n=nmembers,par_init_lowerbound[par], par_init_upperbound[par])
+        if(single_run){
+          x[1, ,(nstates+par)] <- rep(par_init_mean[par], nmembers)
+        }
       }
       
       if(initial_condition_uncertainty == FALSE){
@@ -1046,25 +1066,9 @@ surface_height[1, ] <- round(lake_depth_init, 3)
 
 #
 if(include_wq){
-  x_phyto_groups <- array(NA, dim=c(nsteps, nmembers, length(tchla_components_vars)*ndepths_modeled))
-  if(restart_present){
-    x_phyto_groups[1, ,] <- x[1,,wq_start[num_wq_vars]:wq_end[num_wq_vars]] * biomass_to_chla[1]
-  }else{
-    for(m in 1:nmembers){
-      phyto_biomass <- matrix(c(PHY_CYANOPCH1_init_depth), 
-                              nrow = ndepths_modeled,
-                              ncol = length(tchla_components_vars))
-      phyto_proportions <- phyto_biomass
-      index <- 0
-      for(d in 1:ndepths_modeled){
-        for(pp in 1:length(tchla_components_vars)){
-          index <- index + 1
-          phyto_proportions[d, pp] <- (phyto_biomass[d, pp]/biomass_to_chla[pp])/sum(phyto_biomass[d,]/biomass_to_chla)
-          x_phyto_groups[1, m, index] <- biomass_to_chla[pp] * phyto_proportions[d, pp] * x[1, m, wq_start[num_wq_vars] + (d-1)]
-        }
-      }
-    }
-    
+  x_phyto_groups <- array(NA, dim=c(nsteps, nmembers, ndepths_modeled))
+  for(m in 1:nmembers){
+    x_phyto_groups[1, m, ] <- biomass_to_chla * x[1, m, wq_start[num_wq_vars]:wq_end[num_wq_vars]]
   }
 }else{
   x_phyto_groups <- NA

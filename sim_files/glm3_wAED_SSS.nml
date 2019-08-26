@@ -121,7 +121,7 @@
    zone_heights = 5, 9.5
    sed_heat_Ksoil = 1.8, 1.8
    sed_temp_depth = 0.2, 0.2
-   sed_temp_mean = 11, 13 !11.08106752, 16.06112614
+   sed_temp_mean = 9.6629818, 8.1536734
    sed_temp_amplitude = 0, 0
    sed_temp_peak_doy = 275, 275
 /

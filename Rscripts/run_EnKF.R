@@ -57,7 +57,7 @@ run_EnKF <- function(x,
     #Create array to hold GLM predictions for each ensemble
     x_star <- array(NA, dim = c(nmembers, nstates))
     x_corr <- array(NA, dim = c(nmembers, nstates))
-  
+    
     #Matrix to store calculated ensemble specific deviations and innovations
     dit <- array(NA, dim = c(nmembers, nstates))
     dit_combined <- array(NA, dim = c(nmembers, nstates + npars))
@@ -120,7 +120,7 @@ run_EnKF <- function(x,
         }
       }
       
-
+      
       
       #ALLOWS ThE LOOPING ThROUGh NOAA ENSEMBLES
       
@@ -173,7 +173,7 @@ run_EnKF <- function(x,
                                                        vars = c(glm_output_vars,tchla_components_vars))
               x_star[m, 1:nstates] <- c(GLM_temp_wq_out$output[1:nstates])
               x_phyto_groups[i, m, ] <- GLM_temp_wq_out$output[(nstates+1):length(GLM_temp_wq_out$output)]
-
+              
             }else{
               GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "/output.nc",
                                                        working_dir = working_directory,
@@ -258,9 +258,9 @@ run_EnKF <- function(x,
     z_index <- which(!is.na(z[i, ]))
     
     #if no observations at a time step then just propogate model uncertainity
-
+    
     if(length(z_index) == 0 | i > (hist_days + 1) | i < (spin_up_days+1)){
-
+      
       if(npars > 0){
         
         x[i, , ] <- cbind(x_corr, pars_star)
@@ -268,24 +268,36 @@ run_EnKF <- function(x,
         if(process_uncertainty == FALSE & i > (hist_days + 1)){
           x[i, , ] <- cbind(x_star, pars_star)
         }
+        
         if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
             x[i, m, ] <- colMeans(cbind(colMeans(x_star), pars_star[m, ])) 
           }
         }
+        
+        if(i < (spin_up_days+1)){
+          x[i, , ] <- cbind(x_star, pars_star)
+        }
+        
       }else{
         if(i > (hist_days + 1)){
           x[i, , ] <- cbind(x_corr)
         }else{
           x[i, , ] <- x_prior[i, , ]
         }
+        
         if(process_uncertainty == FALSE & i > (hist_days + 1)){
           x[i, , ] <- cbind(x_star)
         }
+        
         if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
             x[i, m, ] <- colMeans(cbind(x_star))
           }
+        }
+        
+        if(i < (spin_up_days+1)){
+          x[i, , ] <- x_star
         }
       }
     }else{
@@ -380,9 +392,9 @@ run_EnKF <- function(x,
       #  print("In process error spin-up mode")
       #  curr_qt_alpha <- qt_alpha - (spin_up_days - i)*((qt_alpha -0.5)/spin_up_days)
       #}else{
-        curr_qt_alpha <- qt_alpha
+      curr_qt_alpha <- qt_alpha
       #}
-        
+      
       if(npars > 0){
         qt <- update_sigma(qt, p_t_combined, h_combined, x_star, pars_star, x_corr, pars_corr, psi_t, zt, npars, qt_pars, include_pars_in_qt_update, nstates, curr_qt_alpha)
       }else{
@@ -416,17 +428,7 @@ run_EnKF <- function(x,
     
     if(include_wq){
       for(m in 1:nmembers){
-        phyto_biomass <- matrix(x_phyto_groups[i, m, ], nrow = length(modeled_depths), ncol = length(tchla_components_vars))
-        phyto_proportions <- phyto_biomass
-        index <- 0
-        for(d in 1:length(modeled_depths)){
-          for(pp in 1:length(tchla_components_vars)){
-            index <- index + 1
-            phyto_proportions[d, pp] <- (phyto_biomass[d, pp]/biomass_to_chla[pp])/sum(phyto_biomass[d,]/biomass_to_chla)
-            #Update the phyto groups based on there ratios before CHLA updating
-            x_phyto_groups[i, m, index] <- biomass_to_chla[pp] * phyto_proportions[d, pp] * x[i, m, wq_start[num_wq_vars] + (d-1)]
-          }
-        }
+        x_phyto_groups[i, m, ] <- biomass_to_chla * x[i, m, wq_start[num_wq_vars]:wq_end[num_wq_vars]]
       }
     }
     
