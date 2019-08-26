@@ -39,7 +39,7 @@ forecast_SSS_Oxy <<- 500
 #####################
 # Weather forcing options
 ######################
-use_future_met <<- FALSE
+use_future_met <<- TRUE
 #TRUE = use NOAA forecast for "Future"
 #FALSE = use observed weather for "Future"; only works if "forecasting" past dates
 
@@ -155,13 +155,13 @@ include_pars_in_qt_update <<- TRUE
 #Initial zone temperatures and the upper and lower bounds
 #Zone 1 is Xm to Xm 
 #Zone 2 is Xm to Xm
-zone1_temp_init_mean <<- 15
+zone1_temp_init_mean <<- 10
 zone1_temp_init_lowerbound <<- 4
 zone1_temp_init_upperbound <<- 15
 #daily perturbance of parameter value
 zone1temp_init_qt <<- 0.1^2  #THIS IS THE VARIANCE, NOT THE SD
 
-zone2_temp_init_mean <<- 15 #11
+zone2_temp_init_mean <<- 10 #11
 zone2_temp_init_lowerbound <<-  4
 zone2_temp_init_upperbound <<-  15
 zone2temp_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
@@ -210,14 +210,14 @@ R_resp_init_qt <<- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Create parameter vectors
 if(include_wq){
-  # par_names <<- c()
-  # par_names_save <<- c()
-  # par_nml <<- c()
-  # par_init_mean <<- c()
-  # par_init_lowerbound <<- c()
-  # par_init_upperbound <<- c()
-  # par_init_qt <<- c()
-  # par_units <<- c() #
+  par_names <<- c()
+  par_names_save <<- c()
+  par_nml <<- c()
+  par_init_mean <<- c()
+  par_init_lowerbound <<- c()
+  par_init_upperbound <<- c()
+  par_init_qt <<- c()
+  par_units <<- c() #
   # par_names <<- c("sed_temp_mean","Fsed_oxy")
   # par_names_save <<- c("zone1temp","Fsed_oxy")
   # par_nml <<- c("glm3.nml","aed2.nml") #Fsed_oxy_init_mean,Rdom_minerl_init_mean,Rdom_minerl_init_mean,R_growth_init_mean)
@@ -319,23 +319,24 @@ wq_names <<- c("OXY_oxy",
 )
 
 #Default initial states if lacking observations 
-init_donc <<- 0.1/30
-init_dopc <<-1.5/30
+init_donc <<- 0.1/47.4
+init_dopc <<- 0.1/47.4
 init_ponc <<- (0.1/78.5)
 init_popc <<-(0.1/78.5)
+
 OXY_oxy_init <<- 300.62
-CAR_pH_init <<- 6.5
+CAR_pH_init <<- 6.2
 CAR_dic_init <<- 200
-CAR_ch4_init <<- 0.58
-SIL_rsi_init <<- 300
-NIT_amm_init <<- 2.6
-NIT_nit_init <<- 0.1
+CAR_ch4_init <<- 5
+SIL_rsi_init <<- 100
+NIT_amm_init <<- 0.69
+NIT_nit_init <<- 0.05
 PHS_frp_init <<- 0.07
-OGM_doc_init <<- 150
-OGM_poc_init <<- 1.0
+OGM_doc_init <<- 47.4
+OGM_poc_init <<- 78.5
 OGM_pon_init <<- OGM_poc_init * init_ponc
 OGM_pop_init <<- OGM_poc_init * init_popc
-NCS_ss1_init <<- 0.5
+NCS_ss1_init <<- 1.0
 PHS_frp_ads_init <<- 0.0
 PHY_TCHLA_init <<- 2.0
 
@@ -377,9 +378,9 @@ CAR_pH_process_error <<- 0.001
 CAR_dic_process_error <<- 1
 CAR_ch4_process_error <<- 1
 SIL_rsi_process_error <<- 1
-NIT_amm_process_error <<- 1
-NIT_nit_process_error <<- 0.1
-PHS_frp_process_error <<- 0.1
+NIT_amm_process_error <<- 0.005
+NIT_nit_process_error <<- 0.001
+PHS_frp_process_error <<- 0.001
 OGM_doc_process_error <<- 1
 OGM_poc_process_error <<- 0.1
 OGM_don_process_error <<- 0.1
