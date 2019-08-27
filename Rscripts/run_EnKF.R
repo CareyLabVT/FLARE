@@ -404,7 +404,7 @@ run_EnKF <- function(x,
       if(include_wq){
         for(m in 1:nmembers){
           index <- which(x[i,m,] < 0.0)
-          x[i, m, index[which(index < wq_end[num_wq_vars])]] <- 0.0
+          x[i, m, index[which(index <= wq_end[num_wq_vars])]] <- 0.0
         }
       }
       

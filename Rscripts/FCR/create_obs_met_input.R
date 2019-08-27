@@ -10,17 +10,13 @@ create_obs_met_input <- function(fname,
     
     d1 <- d1[-85572, ]
     
-    TIMESTAMP_in <- as.POSIXct(d1$TIMESTAMP, 
-                               format= "%Y-%m-%d %H:%M",
-                               tz = input_file_tz)
+    TIMESTAMP_in <- force_tz(d1$TIMESTAMP, tzone = input_file_tz)
     
     d1$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = local_tzone)
     
     d2 <- read_csv(fname[2])
     
-    TIMESTAMP_in <- as.POSIXct(d2$DateTime, 
-                               format= "%Y-%m-%d %H:%M",
-                               tz = input_file_tz)
+    TIMESTAMP_in <- force_tz(d2$DateTime, tzone = input_file_tz)
     
     d2$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = local_tzone)
     
@@ -39,7 +35,7 @@ create_obs_met_input <- function(fname,
     
     #d3 <- d3[which(d3$TIMESTAMP < d2$TIMESTAMP[1])]
     
-    d <- rbind(d1, d2)
+    d <- rbind(d2, d1)
     
   }else{
     
