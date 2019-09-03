@@ -503,7 +503,7 @@
      X_cpom_p     = 0.001 !0.0001 !Paul had 0.001
 
     !-- Light related parameters
-     KeDOM         = 0.0005 !paul had 0.0005; manual had 0.000005
+     KeDOM         = 0.0025 !paul had 0.0005; manual had 0.000005
      KePOM         = 0.0015!paul had 0.001, 
      KeDOMR        = 0.10000    ! paul had 0.05 formerly 0.1 = 1 (assuming KeDOMR is applied to CDOM in /m)
      KeCPOM        = 0.00096    ! = 0.08 (/m)/(mg/L)  /83.3  (mmol/m3)/(mg/L)

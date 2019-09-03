@@ -84,6 +84,8 @@ run_flare<-function(start_day_local,
   ### OPTIONS TO ISOLATE COMPONENTS OF UNCERTAINTY
   #################################################
   
+  print(uncert_mode)
+  
   if(uncert_mode == 1){
     #All sources of uncertainty and data used to constrain 
     use_obs_constraint <- TRUE
@@ -334,6 +336,7 @@ run_flare<-function(start_day_local,
   
   ###CREATE HISTORICAL MET FILE
   if(met_downscale_uncertainty == FALSE){
+    n_enkf_members <- n_enkf_members * n_ds_members
     n_ds_members <- 1
   }
   
@@ -383,9 +386,9 @@ run_flare<-function(start_day_local,
   if(!is.na(restart_file)){
     tmp <- file.copy(from = restart_file, to = working_directory, overwrite = TRUE)
   }
-
+  
   file.copy(from = paste0(working_directory, "/", base_GLM_nml), 
-              to = paste0(working_directory, "/", "glm3.nml"), overwrite = TRUE)
+            to = paste0(working_directory, "/", "glm3.nml"), overwrite = TRUE)
   
   ####################################################
   #### STEP 5: PROCESS AND ORGANIZE DRIVER DATA
@@ -474,6 +477,7 @@ run_flare<-function(start_day_local,
   }
   
   if(weather_uncertainty == FALSE){
+    n_enkf_members <- n_enkf_members * n_met_members
     n_met_members <- 1
   }
   
@@ -525,19 +529,19 @@ run_flare<-function(start_day_local,
                              local_tzone)
   
   obs_chla <- extract_chla_chain(fname = temp_obs_fname_wdir,
-                                      full_time_local,
-                                      modeled_depths = modeled_depths,
-                                      observed_depths_chla_fdom,
-                                      input_file_tz = "EST5EDT", 
-                                      local_tzone)
-  
-  obs_fdom <- extract_do_chain(fname = temp_obs_fname_wdir,
                                  full_time_local,
                                  modeled_depths = modeled_depths,
                                  observed_depths_chla_fdom,
                                  input_file_tz = "EST5EDT", 
                                  local_tzone)
-
+  
+  obs_fdom <- extract_do_chain(fname = temp_obs_fname_wdir,
+                               full_time_local,
+                               modeled_depths = modeled_depths,
+                               observed_depths_chla_fdom,
+                               input_file_tz = "EST5EDT", 
+                               local_tzone)
+  
   obs_fdom$obs[, ] <- NA
   
   obs_nutrients <- extract_nutrients(fname = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/extra_files/chemistry.csv",
@@ -555,10 +559,10 @@ run_flare<-function(start_day_local,
     
     #NEED TO DOUBLE CHECK TIME ZONE
     obs_ctd <- extract_CTD(fname = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/CTD/CTD_Meta_13_18_final.csv",
-                                full_time_day_local,
-                                modeled_depths = modeled_depths,
-                                input_file_tz = "EST5EDT",
-                                local_tzone)
+                           full_time_day_local,
+                           modeled_depths = modeled_depths,
+                           input_file_tz = "EST5EDT",
+                           local_tzone)
     
     for(i in 1:length(full_time_day_local)){
       if(!is.na(obs_ctd$obs_temp[i, 1])){
@@ -833,362 +837,376 @@ run_flare<-function(start_day_local,
     #  qt <- read.csv(paste0(working_directory, "/", "qt_cov_matrix.csv"))
     #}else{
     #  qt <- read.csv(paste0(working_directory, "/", cov_matrix))
-  
-  if(include_wq){
-    wq_var_error <- c(OXY_oxy_process_error,
-                      CAR_pH_process_error,
-                      CAR_dic_process_error,
-                      CAR_ch4_process_error,
-                      SIL_rsi_process_error,
-                      NIT_amm_process_error,
-                      NIT_nit_process_error,
-                      PHS_frp_process_error,
-                      OGM_doc_process_error,
-                      OGM_poc_process_error, 
-                      OGM_don_process_error,
-                      OGM_pon_process_error,
-                      OGM_dop_process_error,
-                      OGM_pop_process_error,
-                      NCS_ss1_process_error,
-                      PHS_frp_ads_process_error,
-                      PHY_TCHLA_process_error)
     
-    wq_var_init_error <- c(OXY_oxy_init_error,
-                           CAR_pH_init_error,
-                           CAR_dic_init_error,
-                           CAR_ch4_init_error,
-                           SIL_rsi_init_error,
-                           NIT_amm_init_error,
-                           NIT_nit_init_error,
-                           PHS_frp_init_error,
-                           OGM_doc_init_error,
-                           OGM_poc_init_error, 
-                           OGM_don_init_error,
-                           OGM_pon_init_error,
-                           OGM_dop_init_error,
-                           OGM_pop_init_error,
-                           NCS_ss1_init_error,
-                           PHS_frp_ads_init_error,
-                           PHY_TCHLA_process_error) 
-    
-    for(i in 1:num_wq_vars){
-      for(j in 1:ndepths_modeled){
+    if(include_wq){
+      wq_var_error <- c(OXY_oxy_process_error,
+                        CAR_pH_process_error,
+                        CAR_dic_process_error,
+                        CAR_ch4_process_error,
+                        SIL_rsi_process_error,
+                        NIT_amm_process_error,
+                        NIT_nit_process_error,
+                        PHS_frp_process_error,
+                        OGM_doc_process_error,
+                        OGM_poc_process_error, 
+                        OGM_don_process_error,
+                        OGM_pon_process_error,
+                        OGM_dop_process_error,
+                        OGM_pop_process_error,
+                        NCS_ss1_process_error,
+                        PHS_frp_ads_process_error,
+                        PHY_TCHLA_process_error)
+      
+      wq_var_init_error <- c(OXY_oxy_init_error,
+                             CAR_pH_init_error,
+                             CAR_dic_init_error,
+                             CAR_ch4_init_error,
+                             SIL_rsi_init_error,
+                             NIT_amm_init_error,
+                             NIT_nit_init_error,
+                             PHS_frp_init_error,
+                             OGM_doc_init_error,
+                             OGM_poc_init_error, 
+                             OGM_don_init_error,
+                             OGM_pon_init_error,
+                             OGM_dop_init_error,
+                             OGM_pop_init_error,
+                             NCS_ss1_init_error,
+                             PHS_frp_ads_init_error,
+                             PHY_TCHLA_process_error) 
+      
+      for(i in 1:num_wq_vars){
+        for(j in 1:ndepths_modeled){
+          qt <- rbind(qt, rep(0.0, ncol(qt)))
+          qt <- cbind(qt, rep(0.0, nrow(qt)))
+          qt[ncol(qt),nrow(qt)] <- wq_var_error[i]
+          
+          qt_init <- rbind(qt_init, rep(0.0, ncol(qt_init)))
+          qt_init <- cbind(qt_init, rep(0.0, nrow(qt_init)))
+          qt_init[ncol(qt_init),nrow(qt_init)] <- wq_var_init_error[i]
+        }
+      }
+    }
+    resid30day <- array(NA, dim =c(30, nrow(qt)))
+    #Covariance matrix for parameters
+    if(npars > 0){
+      for(pars in 1:npars){
         qt <- rbind(qt, rep(0.0, ncol(qt)))
         qt <- cbind(qt, rep(0.0, nrow(qt)))
-        qt[ncol(qt),nrow(qt)] <- wq_var_error[i]
+        qt[ncol(qt),nrow(qt)] <- par_init_qt[pars]
         
         qt_init <- rbind(qt_init, rep(0.0, ncol(qt_init)))
-        qt_init <- cbind(qt_init, rep(0.0, nrow(qt_init)))
-        qt_init[ncol(qt_init),nrow(qt_init)] <- wq_var_init_error[i]
+        qt_init <- cbind(qt_init, rep(0.0, nrow(qt)))
+        qt_init[ncol(qt_init),nrow(qt_init)] <- par_init_qt[pars]
       }
+      qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
+      diag(qt_pars) <- par_init_qt
+    }else{
+      qt_pars <- NA
     }
   }
-  resid30day <- array(NA, dim =c(30, nrow(qt)))
-  #Covariance matrix for parameters
-  if(npars > 0){
-    for(pars in 1:npars){
-      qt <- rbind(qt, rep(0.0, ncol(qt)))
-      qt <- cbind(qt, rep(0.0, nrow(qt)))
-      qt[ncol(qt),nrow(qt)] <- par_init_qt[pars]
-      
-      qt_init <- rbind(qt_init, rep(0.0, ncol(qt_init)))
-      qt_init <- cbind(qt_init, rep(0.0, nrow(qt)))
-      qt_init[ncol(qt_init),nrow(qt_init)] <- par_init_qt[pars]
-    }
-    qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
-    diag(qt_pars) <- par_init_qt
-  }else{
-    qt_pars <- NA
-  }
-}
-
-################################################################
-#### STEP 11: CREATE THE X ARRAY (STATES X TIME);INCLUDES INITIALATION
-################################################################
-nmembers <- n_enkf_members*n_met_members*n_ds_members
-
-x <- array(NA, dim=c(nsteps, nmembers, nstates + npars))
-
-#Initial conditions
-if(!restart_present){
-  if(include_wq){
-    if(npars > 0){
-      x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
-                                  mean=c(the_temps_init, 
-                                         wq_init_vals_w_tchla), 
-                                  sigma=as.matrix(qt_init[1:nstates,1:nstates]))
-      if(single_run){
-      for(m in 1:nmembers){
-      x[1,m ,1:nstates] <- rep(c(the_temps_init, 
-                            wq_init_vals_w_tchla))
-      }
-      }
-      if(include_wq){
-        for(m in 1:nmembers){
-          index <- which(x[1,m,] < 0.0)
-          x[1, m, index[which(index < wq_end[num_wq_vars])]] <- 0.0
-        }
-      }
-      
-      for(par in 1:npars){
-        x[1, ,(nstates+par)] <- runif(n=nmembers,par_init_lowerbound[par], par_init_upperbound[par])
+  
+  ################################################################
+  #### STEP 11: CREATE THE X ARRAY (STATES X TIME);INCLUDES INITIALATION
+  ################################################################
+  nmembers <- n_enkf_members*n_met_members*n_ds_members
+  
+  x <- array(NA, dim=c(nsteps, nmembers, nstates + npars))
+  
+  print(dim(x))
+  
+  #Initial conditions
+  if(!restart_present){
+    if(include_wq){
+      if(npars > 0){
+        x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
+                                    mean=c(the_temps_init, 
+                                           wq_init_vals_w_tchla), 
+                                    sigma=as.matrix(qt_init[1:nstates,1:nstates]))
         if(single_run){
-          x[1, ,(nstates+par)] <-  rep(par_init_mean[par], nmembers)
+          for(m in 1:nmembers){
+            x[1,m ,1:nstates] <- rep(c(the_temps_init, 
+                                       wq_init_vals_w_tchla))
+          }
         }
-      }
-      
-      
-      if(initial_condition_uncertainty == FALSE){
-        for(m in 1:nmembers){
+        if(include_wq){
+          for(m in 1:nmembers){
+            index <- which(x[1,m,] < 0.0)
+            x[1, m, index[which(index < wq_end[num_wq_vars])]] <- 0.0
+          }
+        }
+        
+        for(par in 1:npars){
+          x[1, ,(nstates+par)] <- runif(n=nmembers,par_init_lowerbound[par], par_init_upperbound[par])
+          if(single_run){
+            x[1, ,(nstates+par)] <-  rep(par_init_mean[par], nmembers)
+          }
+        }
+        
+        
+        if(initial_condition_uncertainty == FALSE & hist_days == 0){
+          for(m in 1:nmembers){
+            x[1, m, ] <- colMeans(x[1, , 1:nstates])
+          }
+        }
+      }else{
+        x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
+                                    mean=c(the_temps_init,wq_init_vals_w_tchla),
+                                    sigma=as.matrix(qt))
+        
+        if(single_run){
+          for(m in 1:nmembers){
+            x[1,m ,1:nstates] <- rep(c(the_temps_init, 
+                                       wq_init_vals_w_tchla))
+          }
+        }
+        
+        if(initial_condition_uncertainty == FALSE & hist_days == 0){
+          for(m in 1:nmembers){
             x[1, m, ] <- colMeans(x[1, , ])
           }
         }
-    }else{
-      x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
-                                  mean=c(the_temps_init,wq_init_vals_w_tchla),
-                                  sigma=as.matrix(qt))
-      
-      if(single_run){
-        for(m in 1:nmembers){
-          x[1,m ,1:nstates] <- rep(c(the_temps_init, 
-                                     wq_init_vals_w_tchla))
-        }
       }
-      
-      if(initial_condition_uncertainty == FALSE){
-        for(m in 1:nmembers){
-          x[1, m, ] <- colMeans(x[1, , ])
+    }else{
+      if(npars > 0){
+        x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
+                                    mean=c(the_temps_init), 
+                                    sigma=as.matrix(qt_init[1:nstates,1:nstates]))
+        
+        
+        for(par in 1:npars){
+          x[1, ,(nstates+par)] <- runif(n=nmembers,par_init_lowerbound[par], par_init_upperbound[par])
+          if(single_run){
+            x[1, ,(nstates+par)] <- rep(par_init_mean[par], nmembers)
+          }
+        }
+        
+        if(initial_condition_uncertainty == FALSE){
+          for(m in 1:nmembers){
+            x[1, m, ] <- colMeans(x[1, ,1:nstates])
+          }
+        }
+      }else{
+        x[1, , ] <- rmvnorm(n=nmembers, 
+                            mean=the_temps_init,
+                            sigma=as.matrix(qt))
+        
+        if(initial_condition_uncertainty == FALSE & hist_days == 0){
+          for(m in 1:nmembers){
+            x[1, m, ] <- colMeans(x[1, , ])
+          }
         }
       }
     }
-  }else{
-    if(npars > 0){
-      x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
-                                  mean=c(the_temps_init), 
-                                  sigma=as.matrix(qt_init[1:nstates,1:nstates]))
-      
-      
-      for(par in 1:npars){
-        x[1, ,(nstates+par)] <- runif(n=nmembers,par_init_lowerbound[par], par_init_upperbound[par])
-        if(single_run){
-          x[1, ,(nstates+par)] <- rep(par_init_mean[par], nmembers)
-        }
-      }
-      
-      if(initial_condition_uncertainty == FALSE){
-        for(m in 1:nmembers){
-          x[1, m, ] <- colMeans(x[1, , ])
-        }
-      }
-    }else{
-      x[1, , ] <- rmvnorm(n=nmembers, 
-                          mean=the_temps_init,
-                          sigma=as.matrix(qt))
-      
-      if(initial_condition_uncertainty == FALSE){
-        for(m in 1:nmembers){
-          x[1, m, ] <- colMeans(x[1, , ])
+    if(include_wq){
+      for(m in 1:nmembers){
+        for(wq in 1:num_wq_vars){
+          index <- which(x[1, m, 1:wq_end[num_wq_vars]] < 0.0)
+          index <- index[which(index > wq_start[1])]
+          x[1, m, index] <- 0.0
         }
       }
     }
+    write.csv(x[1, , ],paste0(working_directory, "/", "restart_",
+                              year(full_time_local[1]), "_",
+                              month(full_time_local[1]), "_",
+                              day(full_time_local[1]), "_cold.csv"),
+              row.names = FALSE)
   }
-  if(include_wq){
-    for(m in 1:nmembers){
-      for(wq in 1:num_wq_vars){
-        index <- which(x[1, m, 1:wq_end[num_wq_vars]] < 0.0)
-        index <- index[which(index > wq_start[1])]
-        x[1, m, index] <- 0.0
+  
+  #THIS ALLOWS THE EnKF TO BE RESTARTED FROM YESTERDAY"S RUN
+  if(restart_present){
+    print("Using restart file")
+    nc <- nc_open(restart_file)
+    restart_nmembers <- length(ncvar_get(nc, "ens"))
+    if(restart_nmembers > nmembers){
+      #sample restart_nmembers
+      sampled_nmembers <- sample(seq(1, restart_nmembers, 1),
+                                 nmembers,
+                                 replace=FALSE)
+      restart_x_previous <- ncvar_get(nc, "x_restart")
+      x_previous <- restart_x_previous[sampled_nmembers, ]
+      if(initial_condition_uncertainty == FALSE & hist_days == 0){
+        x_previous_1 <- colMeans(x_previous)
+        for(m in 1:nmembers){
+          x_previous[m, ] <- x_previous_1
+        }
       }
-    }
-  }
-  write.csv(x[1, , ],paste0(working_directory, "/", "restart_",
-                            year(full_time_local[1]), "_",
-                            month(full_time_local[1]), "_",
-                            day(full_time_local[1]), "_cold.csv"),
-            row.names = FALSE)
-}
-
-#THIS ALLOWS THE EnKF TO BE RESTARTED FROM YESTERDAY"S RUN
-if(restart_present){
-  print("Using restart file")
-  nc <- nc_open(restart_file)
-  restart_nmembers <- length(ncvar_get(nc, "ens"))
-  if(restart_nmembers > nmembers){
-    #sample restart_nmembers
-    sampled_nmembers <- sample(seq(1, restart_nmembers, 1),
-                               nmembers,
-                               replace=FALSE)
-    restart_x_previous <- ncvar_get(nc, "x_restart")
-    x_previous <- restart_x_previous[sampled_nmembers, ]
-    if(initial_condition_uncertainty == FALSE & hist_days == 0){
-      x_previous_1 <- colMeans(x_previous)
-      for(m in 1:nmembers){
-        x_previous[m, ] <- x_previous_1
-      }
-    }
-  }else if(restart_nmembers < nmembers){
-    sampled_nmembers <- sample(seq(1, restart_nmembers, 1),
-                               nmembers,
-                               replace = TRUE)
-    restart_x_previous <- ncvar_get(nc, "x_restart")
-    x_previous <- restart_x_previous[sampled_nmembers, ]
-    if(initial_condition_uncertainty == FALSE & hist_days == 0){
-      x_previous_1 <- colMeans(x_previous)
-      for(m in 1:nmembers){
-        x_previous[m, ] <- x_previous_1
-      }
-    }
-  }else{
-    restart_x_previous <- ncvar_get(nc, "x_restart")
-    if(initial_condition_uncertainty == FALSE & hist_days == 0){
-      x_previous_1 <- colMeans(x_previous) 
-      for(m in 1:nmembers){
-        x_previous[m, ] <- x_previous_1
+    }else if(restart_nmembers < nmembers){
+      sampled_nmembers <- sample(seq(1, restart_nmembers, 1),
+                                 nmembers,
+                                 replace = TRUE)
+      restart_x_previous <- ncvar_get(nc, "x_restart")
+      x_previous <- restart_x_previous[sampled_nmembers, ]
+      if(initial_condition_uncertainty == FALSE & hist_days == 0){
+        x_previous_1 <- colMeans(x_previous)
+        for(m in 1:nmembers){
+          x_previous[m, ] <- x_previous_1
+        }
       }
     }else{
+      restart_x_previous <- ncvar_get(nc, "x_restart")
       x_previous <- restart_x_previous
+      
+    }
+    nc_close(nc)
+  }else{
+    x_previous <- read.csv(paste0(working_directory, "/", "restart_",
+                                  year(full_time_local[1]), "_",
+                                  month(full_time_local[1]), "_",
+                                  day(full_time_local[1]), "_cold.csv"))
+  }
+  
+  #Set initial conditions
+  x[1, , ] <- as.matrix(x_previous)
+  
+  #If hist_days = 0 then the first day of the simulation will be a forecast 
+  #therefre the the initial_condition_uncertainty and parameter_uncertainty 
+  #need to be dealt with in the x[1, ,] , normally it is dealt with in the 
+  #run_EnKF script
+  if(hist_days == 0){
+    if(initial_condition_uncertainty == FALSE){
+      for(m in 1:nmembers){
+        x[1, m, 1:nstates]  <- colMeans(x[1, ,1:nstates])
+      }
+    }
+    if(parameter_uncertainty == FALSE){
+      for(m in 1:nmembers){
+        x[i, m, (nstates + 1):(nstates + npars)] <- colMeans(x[1, ,(nstates + 1):(nstates + npars)])
+      }
     }
   }
-  nc_close(nc)
-}else{
-  x_previous <- read.csv(paste0(working_directory, "/", "restart_",
-                                year(full_time_local[1]), "_",
-                                month(full_time_local[1]), "_",
-                                day(full_time_local[1]), "_cold.csv"))
-}
-
-#Set initial conditions
-x[1,,] <- as.matrix(x_previous)
-
-#Matrix to store essemble specific surface height
-surface_height <- array(NA, dim=c(nsteps, nmembers))
-surface_height[1, ] <- round(lake_depth_init, 3)
-
-#
-if(include_wq){
-  x_phyto_groups <- array(NA, dim=c(nsteps, nmembers, ndepths_modeled))
-  for(m in 1:nmembers){
-    x_phyto_groups[1, m, ] <- biomass_to_chla * x[1, m, wq_start[num_wq_vars]:wq_end[num_wq_vars]]
+  
+  
+  #Matrix to store essemble specific surface height
+  surface_height <- array(NA, dim=c(nsteps, nmembers))
+  surface_height[1, ] <- round(lake_depth_init, 3)
+  
+  #
+  if(include_wq){
+    x_phyto_groups <- array(NA, dim=c(nsteps, nmembers, ndepths_modeled))
+    for(m in 1:nmembers){
+      x_phyto_groups[1, m, ] <- biomass_to_chla * x[1, m, wq_start[num_wq_vars]:wq_end[num_wq_vars]]
+    }
+  }else{
+    x_phyto_groups <- NA
   }
-}else{
-  x_phyto_groups <- NA
-}
-
-####################################################
-#### STEP 12: Run Ensemble Kalman Filter
-####################################################
-
-enkf_output <- run_EnKF(x,
-                        z,
-                        qt,
-                        qt_pars,
-                        psi,
+  
+  ####################################################
+  #### STEP 12: Run Ensemble Kalman Filter
+  ####################################################
+  
+  enkf_output <- run_EnKF(x,
+                          z,
+                          qt,
+                          qt_pars,
+                          psi,
+                          full_time_local,
+                          working_directory,
+                          npars,
+                          modeled_depths,
+                          surface_height,
+                          wq_start,
+                          wq_end,
+                          met_file_names,
+                          include_wq,
+                          spin_up_days,
+                          z_states,
+                          glm_output_vars,
+                          process_uncertainty,
+                          initial_condition_uncertainty,
+                          parameter_uncertainty,
+                          machine,
+                          resid30day,
+                          hist_days,
+                          print_glm2screen,
+                          x_phyto_groups,
+                          inflow_file_names,
+                          outflow_file_names,
+                          management_input,
+                          forecast_sss_on)
+  
+  x <- enkf_output$x
+  x_restart <- enkf_output$x_restart
+  qt_restart <- enkf_output$qt_restart
+  x_prior <- enkf_output$x_prior
+  resid30day <- enkf_output$resid30day
+  
+  ####################################################
+  #### STEP 13: PROCESS OUTPUT
+  ####################################################
+  
+  ### CREATE FORECAST NAME
+  
+  if(day(full_time_local[1]) < 10){
+    file_name_H_day <- paste0("0",day(full_time_local[1]))
+  }else{
+    file_name_H_day <- day(full_time_local[1]) 
+  }
+  if(day(full_time_local[hist_days+1]) < 10){
+    file_name_F_day <- paste0("0",day(full_time_local[hist_days+1]))
+  }else{
+    file_name_F_day <- day(full_time_local[hist_days+1]) 
+  }
+  if(month(full_time_local[1]) < 10){
+    file_name_H_month <- paste0("0",month(full_time_local[1]))
+  }else{
+    file_name_H_month <- month(full_time_local[1]) 
+  }
+  if(month(full_time_local[hist_days+1]) < 10){
+    file_name_F_month <- paste0("0",month(full_time_local[hist_days+1]))
+  }else{
+    file_name_F_month <- month(full_time_local[hist_days+1]) 
+  }
+  
+  save_file_name <- paste0(sim_name, "_H_",
+                           (year(full_time_local[1])),"_",
+                           file_name_H_month,"_",
+                           file_name_H_day,"_",
+                           (year(full_time_local[hist_days+1])),"_",
+                           file_name_F_month,"_",
+                           file_name_F_day,"_F_",
+                           forecast_days) 
+  
+  time_of_forecast <- Sys.time()
+  time_of_forecast_string <- paste0(month(Sys.time()),
+                                    day(Sys.time()),
+                                    year(Sys.time()-2000),"_",
+                                    hour(Sys.time()), "_",
+                                    (minute(Sys.time())))
+  
+  
+  ###SAVE FORECAST
+  write_forecast_netcdf(x,
                         full_time_local,
-                        working_directory,
-                        npars,
+                        qt,
                         modeled_depths,
-                        surface_height,
+                        save_file_name,
+                        x_restart,
+                        qt_restart,
+                        time_of_forecast,
+                        hist_days,
+                        x_prior,
+                        include_wq,
                         wq_start,
                         wq_end,
-                        met_file_names,
-                        include_wq,
-                        spin_up_days,
-                        z_states,
-                        glm_output_vars,
-                        process_uncertainty,
-                        initial_condition_uncertainty,
-                        parameter_uncertainty,
-                        machine,
+                        z,
+                        nstates,
+                        npars,
+                        GLMversion,
+                        FLAREversion,
                         resid30day,
-                        hist_days,
-                        print_glm2screen,
-                        x_phyto_groups,
-                        inflow_file_names,
-                        outflow_file_names,
-                        management_input,
-                        forecast_sss_on)
-
-x <- enkf_output$x
-x_restart <- enkf_output$x_restart
-qt_restart <- enkf_output$qt_restart
-x_prior <- enkf_output$x_prior
-resid30day <- enkf_output$resid30day
-
-####################################################
-#### STEP 13: PROCESS OUTPUT
-####################################################
-
-### CREATE FORECAST NAME
-
-if(day(full_time_local[1]) < 10){
-  file_name_H_day <- paste0("0",day(full_time_local[1]))
-}else{
-  file_name_H_day <- day(full_time_local[1]) 
-}
-if(day(full_time_local[hist_days+1]) < 10){
-  file_name_F_day <- paste0("0",day(full_time_local[hist_days+1]))
-}else{
-  file_name_F_day <- day(full_time_local[hist_days+1]) 
-}
-if(month(full_time_local[1]) < 10){
-  file_name_H_month <- paste0("0",month(full_time_local[1]))
-}else{
-  file_name_H_month <- month(full_time_local[1]) 
-}
-if(month(full_time_local[hist_days+1]) < 10){
-  file_name_F_month <- paste0("0",month(full_time_local[hist_days+1]))
-}else{
-  file_name_F_month <- month(full_time_local[hist_days+1]) 
-}
-
-save_file_name <- paste0(sim_name, "_H_",
-                         (year(full_time_local[1])),"_",
-                         file_name_H_month,"_",
-                         file_name_H_day,"_",
-                         (year(full_time_local[hist_days+1])),"_",
-                         file_name_F_month,"_",
-                         file_name_F_day,"_F_",
-                         forecast_days) 
-
-time_of_forecast <- Sys.time()
-time_of_forecast_string <- paste0(month(Sys.time()),
-                                  day(Sys.time()),
-                                  year(Sys.time()-2000),"_",
-                                  hour(Sys.time()), "_",
-                                  (minute(Sys.time())))
-
-
-###SAVE FORECAST
-write_forecast_netcdf(x,
-                      full_time_local,
-                      qt,
-                      modeled_depths,
-                      save_file_name,
-                      x_restart,
-                      qt_restart,
-                      time_of_forecast,
-                      hist_days,
-                      x_prior,
-                      include_wq,
-                      wq_start,
-                      wq_end,
-                      z,
-                      nstates,
-                      npars,
-                      GLMversion,
-                      FLAREversion,
-                      resid30day,
-                      local_tzone)
-
-##ARCHIVE FORECAST
-restart_file_name <- archive_forecast(working_directory = working_directory,
-                                      folder = code_folder, 
-                                      forecast_base_name = forecast_base_name, 
-                                      forecast_location = forecast_location,
-                                      push_to_git = push_to_git,
-                                      save_file_name = save_file_name, 
-                                      time_of_forecast_string = time_of_forecast_string)
-
-return(list(restart_file_name <- restart_file_name,
-            sim_name <- paste0(save_file_name, "_", time_of_forecast_string)))
+                        local_tzone)
+  
+  ##ARCHIVE FORECAST
+  restart_file_name <- archive_forecast(working_directory = working_directory,
+                                        folder = code_folder, 
+                                        forecast_base_name = forecast_base_name, 
+                                        forecast_location = forecast_location,
+                                        push_to_git = push_to_git,
+                                        save_file_name = save_file_name, 
+                                        time_of_forecast_string = time_of_forecast_string)
+  
+  return(list(restart_file_name <- restart_file_name,
+              sim_name <- paste0(save_file_name, "_", time_of_forecast_string)))
 }

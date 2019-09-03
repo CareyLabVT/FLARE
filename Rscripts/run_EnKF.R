@@ -80,10 +80,6 @@ run_EnKF <- function(x,
         
         curr_pars <- x[i - 1, m , (nstates+1):(nstates+npars)]
         
-        if(parameter_uncertainty == FALSE){
-          curr_pars <- colMeans(x[i - 1, , (nstates+1):(nstates+npars)])
-        }
-        
         sed_temp_mean_index <- which(par_names == "sed_temp_mean")
         non_sed_temp_mean_index <- which(par_names != "sed_temp_mean")
         if(length(sed_temp_mean_index) == 1){
@@ -122,7 +118,7 @@ run_EnKF <- function(x,
       
       
       
-      #ALLOWS ThE LOOPING ThROUGh NOAA ENSEMBLES
+      #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
       
       working_directory_docker <- "/GLM/TestLake"
       if(i > (hist_days + 1) & use_future_met == TRUE){
@@ -287,12 +283,12 @@ run_EnKF <- function(x,
         }
         
         if(process_uncertainty == FALSE & i > (hist_days + 1)){
-          x[i, , ] <- cbind(x_star)
+          x[i, , ] <- x_star
         }
         
         if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
-            x[i, m, ] <- colMeans(cbind(x_star))
+            x[i, m, ] <- colMeans(x_star)
           }
         }
         
@@ -410,18 +406,23 @@ run_EnKF <- function(x,
       
       #IF NO INITIAL CONDITION UNCERTAINITY ThEN SET EACh ENSEMBLE MEMBER TO ThE MEAN
       #AT THE INITIATION OF ThE FUTURE FORECAST
-      if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
+      if(i == (hist_days + 1)){
         if(npars > 0){
-          for(m in 1:nmembers){
-            if(parameter_uncertainty == FALSE){
-              x[i, m, ] <- colMeans(x[i, , ]) 
-            }else{
-              x[i, m, ] <- c(colMeans(x[i, m, 1:nstates]),
-                             x[i, m, (nstates + 1):(nstates + npars)])
+          if(initial_condition_uncertainty == FALSE){
+            for(m in 1:nmembers){
+              x[1, m, 1:nstates]  <- colMeans(x[1, ,1:nstates])
             }
           }
+          if(parameter_uncertainty == FALSE){
+            for(m in 1:nmembers){
+              x[i, m, (nstates + 1):(nstates + npars)] <- colMeans(x[1, ,(nstates + 1):(nstates + npars)])
+            }
+          }
+          
         }else{
-          x[i, m, ] <- colMeans(x[i, m, 1:nstates])
+          if(initial_condition_uncertainty == FALSE){
+            x[i, m, ] <- colMeans(x[i, , 1:nstates])
+          }
         }
       }
     }
