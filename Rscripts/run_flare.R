@@ -84,8 +84,6 @@ run_flare<-function(start_day_local,
   ### OPTIONS TO ISOLATE COMPONENTS OF UNCERTAINTY
   #################################################
   
-  print(uncert_mode)
-  
   if(uncert_mode == 1){
     #All sources of uncertainty and data used to constrain 
     use_obs_constraint <- TRUE
@@ -912,9 +910,7 @@ run_flare<-function(start_day_local,
   nmembers <- n_enkf_members*n_met_members*n_ds_members
   
   x <- array(NA, dim=c(nsteps, nmembers, nstates + npars))
-  
-  print(dim(x))
-  
+
   #Initial conditions
   if(!restart_present){
     if(include_wq){

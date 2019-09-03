@@ -397,33 +397,35 @@ run_EnKF <- function(x,
         qt <- update_sigma(qt, p_t, h, x_star, pars_star = NA, x_corr, pars_corr = NA, psi_t, zt, npars, qt_pars, include_pars_in_qt_update, nstates, curr_qt_alpha) 
       }
       
-      if(include_wq){
-        for(m in 1:nmembers){
-          index <- which(x[i,m,] < 0.0)
-          x[i, m, index[which(index <= wq_end[num_wq_vars])]] <- 0.0
+    }
+    
+    #IF NO INITIAL CONDITION UNCERTAINITY THEN SET EACH ENSEMBLE MEMBER TO THE MEAN
+    #AT THE INITIATION OF ThE FUTURE FORECAST
+    if(i == (hist_days + 1)){
+      if(npars > 0){
+        if(initial_condition_uncertainty == FALSE){
+          for(m in 1:nmembers){
+            x[i, m, 1:nstates]  <- colMeans(x[i, ,1:nstates])
+          }
+        }
+        if(parameter_uncertainty == FALSE){
+          for(m in 1:nmembers){
+            x[i, m, (nstates + 1):(nstates + npars)] <- colMeans(x[i, ,(nstates + 1):(nstates + npars)])
+          }
+        }
+        
+      }else{
+        if(initial_condition_uncertainty == FALSE){
+          x[i, m, ] <- colMeans(x[i, , 1:nstates])
         }
       }
-      
-      #IF NO INITIAL CONDITION UNCERTAINITY ThEN SET EACh ENSEMBLE MEMBER TO ThE MEAN
-      #AT THE INITIATION OF ThE FUTURE FORECAST
-      if(i == (hist_days + 1)){
-        if(npars > 0){
-          if(initial_condition_uncertainty == FALSE){
-            for(m in 1:nmembers){
-              x[1, m, 1:nstates]  <- colMeans(x[1, ,1:nstates])
-            }
-          }
-          if(parameter_uncertainty == FALSE){
-            for(m in 1:nmembers){
-              x[i, m, (nstates + 1):(nstates + npars)] <- colMeans(x[1, ,(nstates + 1):(nstates + npars)])
-            }
-          }
-          
-        }else{
-          if(initial_condition_uncertainty == FALSE){
-            x[i, m, ] <- colMeans(x[i, , 1:nstates])
-          }
-        }
+    }
+    
+    #Correct any negative water quality states
+    if(include_wq){
+      for(m in 1:nmembers){
+        index <- which(x[i,m,] < 0.0)
+        x[i, m, index[which(index <= wq_end[num_wq_vars])]] <- 0.0
       }
     }
     
@@ -433,14 +435,19 @@ run_EnKF <- function(x,
       }
     }
     
+    #Print parameters to screen
     if(npars > 0){
       for(par in 1:npars){
         print(paste0(par_names_save[par],": mean ", round(mean(pars_corr[,par]),4)," sd ", round(sd(pars_corr[,par]),4)))
       }
     }
     
+    #Save the states after the last historical (data assimilation) time step (before forecasting)
     if(i == (hist_days + 1)){
       x_restart <- x[i, , ]
+      qt_restart <- qt
+    }else if(hist_days == 0 & i == 2){
+      x_restart <- x[1, , ]
       qt_restart <- qt
     }
   }
