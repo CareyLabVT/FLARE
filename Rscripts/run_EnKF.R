@@ -255,7 +255,7 @@ run_EnKF <- function(x,
     
     #if no observations at a time step then just propogate model uncertainity
     
-    if(length(z_index) == 0 | i > (hist_days + 1) | i < (spin_up_days+1)){
+    if(length(z_index) == 0 | i > (hist_days + 1) | i < (spin_up_days+1) | hist_days == 0){
       
       if(npars > 0){
         
@@ -284,12 +284,6 @@ run_EnKF <- function(x,
         
         if(process_uncertainty == FALSE & i > (hist_days + 1)){
           x[i, , ] <- x_star
-        }
-        
-        if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
-          for(m in 1:nmembers){
-            x[i, m, ] <- colMeans(x_star)
-          }
         }
         
         if(i < (spin_up_days+1)){
@@ -402,23 +396,21 @@ run_EnKF <- function(x,
     #IF NO INITIAL CONDITION UNCERTAINITY THEN SET EACH ENSEMBLE MEMBER TO THE MEAN
     #AT THE INITIATION OF ThE FUTURE FORECAST
     if(i == (hist_days + 1)){
+
+        if(initial_condition_uncertainty == FALSE){
+          state_means <- colMeans(x[i, ,1:nstates])
+          for(m in 1:nmembers){
+            x[i, m, 1:nstates]  <- state_means
+          }
+        }
       if(npars > 0){
-        if(initial_condition_uncertainty == FALSE){
-          for(m in 1:nmembers){
-            x[i, m, 1:nstates]  <- colMeans(x[i, ,1:nstates])
-          }
-        }
         if(parameter_uncertainty == FALSE){
+          par_means <- colMeans(x[i, ,(nstates + 1):(nstates + npars)])
           for(m in 1:nmembers){
-            x[i, m, (nstates + 1):(nstates + npars)] <- colMeans(x[i, ,(nstates + 1):(nstates + npars)])
+            x[i, m, (nstates + 1):(nstates + npars)] <- par_means
           }
         }
-        
-      }else{
-        if(initial_condition_uncertainty == FALSE){
-          x[i, m, ] <- colMeans(x[i, , 1:nstates])
-        }
-      }
+      } 
     }
     
     #Correct any negative water quality states

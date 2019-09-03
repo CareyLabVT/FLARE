@@ -941,8 +941,9 @@ run_flare<-function(start_day_local,
         
         
         if(initial_condition_uncertainty == FALSE & hist_days == 0){
+          state_means <- colMeans(x[1, , 1:nstates])
           for(m in 1:nmembers){
-            x[1, m, ] <- colMeans(x[1, , 1:nstates])
+            x[1, m, ] <- state_means
           }
         }
       }else{
@@ -958,8 +959,9 @@ run_flare<-function(start_day_local,
         }
         
         if(initial_condition_uncertainty == FALSE & hist_days == 0){
+          state_means <- colMeans(x[1, , 1:nstates])
           for(m in 1:nmembers){
-            x[1, m, ] <- colMeans(x[1, , ])
+            x[1, m, ] <- state_means
           }
         }
       }
@@ -978,8 +980,9 @@ run_flare<-function(start_day_local,
         }
         
         if(initial_condition_uncertainty == FALSE){
+          state_means <- colMeans(x[1, , 1:nstates])
           for(m in 1:nmembers){
-            x[1, m, ] <- colMeans(x[1, ,1:nstates])
+            x[1, m, ] <- state_means
           }
         }
       }else{
@@ -988,8 +991,9 @@ run_flare<-function(start_day_local,
                             sigma=as.matrix(qt))
         
         if(initial_condition_uncertainty == FALSE & hist_days == 0){
+          state_means <- colMeans(x[1, , 1:nstates])
           for(m in 1:nmembers){
-            x[1, m, ] <- colMeans(x[1, , ])
+            x[1, m, ] <- state_means
           }
         }
       }
@@ -1022,24 +1026,14 @@ run_flare<-function(start_day_local,
                                  replace=FALSE)
       restart_x_previous <- ncvar_get(nc, "x_restart")
       x_previous <- restart_x_previous[sampled_nmembers, ]
-      if(initial_condition_uncertainty == FALSE & hist_days == 0){
-        x_previous_1 <- colMeans(x_previous)
-        for(m in 1:nmembers){
-          x_previous[m, ] <- x_previous_1
-        }
-      }
+     
     }else if(restart_nmembers < nmembers){
       sampled_nmembers <- sample(seq(1, restart_nmembers, 1),
                                  nmembers,
                                  replace = TRUE)
       restart_x_previous <- ncvar_get(nc, "x_restart")
       x_previous <- restart_x_previous[sampled_nmembers, ]
-      if(initial_condition_uncertainty == FALSE & hist_days == 0){
-        x_previous_1 <- colMeans(x_previous)
-        for(m in 1:nmembers){
-          x_previous[m, ] <- x_previous_1
-        }
-      }
+     
     }else{
       restart_x_previous <- ncvar_get(nc, "x_restart")
       x_previous <- restart_x_previous
@@ -1062,13 +1056,15 @@ run_flare<-function(start_day_local,
   #run_EnKF script
   if(hist_days == 0){
     if(initial_condition_uncertainty == FALSE){
+      states_mean <- colMeans(x[1, ,1:nstates])
       for(m in 1:nmembers){
-        x[1, m, 1:nstates]  <- colMeans(x[1, ,1:nstates])
+        x[1, m, 1:nstates]  <- states_mean
       }
     }
     if(parameter_uncertainty == FALSE){
+      mean_pars <- colMeans(x[1, ,(nstates + 1):(nstates + npars)])
       for(m in 1:nmembers){
-        x[i, m, (nstates + 1):(nstates + npars)] <- colMeans(x[1, ,(nstates + 1):(nstates + npars)])
+        x[1, m, (nstates + 1):(nstates + npars)] <- mean_pars
       }
     }
   }
