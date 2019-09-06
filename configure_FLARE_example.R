@@ -27,7 +27,7 @@ simulate_SSS <<- TRUE
 forecast_no_SSS <<- TRUE
 #Run forecasts without SSS turned off
 
-forecast_SSS <<- TRUE
+forecast_SSS <<- FALSE
 #Run forecasts without SSS turned on
 forecast_SSS_flow <<- 1000
 #m3/day rate of flow if SSS turned on in forecast
@@ -126,6 +126,9 @@ if(!include_wq){
   #                     8.0, 8.33, 8.66,
   #                     9.00)
 }
+
+default_temp_init <- c(6.2, 5.7, 5.5, 5.5, 5.4, 5.3, 5.3, 5.3, 5.2, 5.0)
+default_temp_init_depths <-  c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
 
 ##############################
 ##  Ensemble members used
@@ -227,23 +230,23 @@ if(include_wq){
   # par_init_qt <<- c(zone1temp_init_qt,Fsed_oxy_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
   # par_units <<- c("deg_C","-") #
   
-  par_names <<- c("sed_temp_mean","sed_temp_mean","Fsed_oxy","sw_factor")
-  par_names_save <<- c("zone1temp","zone2temp","Fsed_oxy","sw_factor")
-  par_nml <<- c("glm3.nml","glm3.nml","aed2.nml","glm3.nml") #Fsed_oxy_init_mean,Rdom_minerl_init_mean,Rdom_minerl_init_mean,R_growth_init_mean)
-  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean, Fsed_oxy_init_mean, swf_init_mean)
-  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound, Fsed_oxy_init_lowerbound,swf_init_lowerbound) #Fsed_oxy_init_lowerbound,Rdom_minerl_init_lowerbound,R_growth_init_lowerbound)
-  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound, Fsed_oxy_init_upperbound,swf_init_upperbound)#Fsed_oxy_init_upperbound,Rdom_minerl_init_upperbound,R_growth_init_upperbound)
-  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt, Fsed_oxy_init_qt,swf_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
-  par_units <<- c("deg_C","-","-","-") #
+  #par_names <<- c("sed_temp_mean","sed_temp_mean","Fsed_oxy","sw_factor")
+  #par_names_save <<- c("zone1temp","zone2temp","Fsed_oxy","sw_factor")
+  #par_nml <<- c("glm3.nml","glm3.nml","aed2.nml","glm3.nml") #Fsed_oxy_init_mean,Rdom_minerl_init_mean,Rdom_minerl_init_mean,R_growth_init_mean)
+  #par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean, Fsed_oxy_init_mean, swf_init_mean)
+  #par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound, Fsed_oxy_init_lowerbound,swf_init_lowerbound) #Fsed_oxy_init_lowerbound,Rdom_minerl_init_lowerbound,R_growth_init_lowerbound)
+  #par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound, Fsed_oxy_init_upperbound,swf_init_upperbound)#Fsed_oxy_init_upperbound,Rdom_minerl_init_upperbound,R_growth_init_upperbound)
+  #par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt, Fsed_oxy_init_qt,swf_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
+  #par_units <<- c("deg_C","-","-","-") #
   
-  #par_names <<- c("sed_temp_mean","sed_temp_mean","Fsed_oxy","sw_factor","pd%R_growth")
-  #par_names_save <<- c("zone1temp","zone2temp","Fsed_oxy","sw_factor","R_growth")
-  #par_nml <<- c("glm3.nml","glm3.nml","aed2.nml","glm3.nml","aed2_phyto_pars.nml") #Fsed_oxy_init_mean,Rdom_minerl_init_mean,Rdom_minerl_init_mean,R_growth_init_mean)
-  #par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean, Fsed_oxy_init_mean, swf_init_mean,R_growth_init_mean)
-  #par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound, Fsed_oxy_init_lowerbound,swf_init_lowerbound,R_growth_init_lowerbound) #Fsed_oxy_init_lowerbound,Rdom_minerl_init_lowerbound,R_growth_init_lowerbound)
-  #par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound, Fsed_oxy_init_upperbound,swf_init_upperbound,R_growth_init_upperbound)#Fsed_oxy_init_upperbound,Rdom_minerl_init_upperbound,R_growth_init_upperbound)
-  #par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt, Fsed_oxy_init_qt,swf_init_qt,R_growth_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
-  #par_units <<- c("deg_C","-","-","-","-") #
+  par_names <<- c("sed_temp_mean","sed_temp_mean","Fsed_oxy","sw_factor","pd%R_growth")
+  par_names_save <<- c("zone1temp","zone2temp","Fsed_oxy","sw_factor","R_growth")
+  par_nml <<- c("glm3.nml","glm3.nml","aed2.nml","glm3.nml","aed2_phyto_pars.nml") #Fsed_oxy_init_mean,Rdom_minerl_init_mean,Rdom_minerl_init_mean,R_growth_init_mean)
+  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean, Fsed_oxy_init_mean, swf_init_mean,R_growth_init_mean)
+  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound, Fsed_oxy_init_lowerbound,swf_init_lowerbound,R_growth_init_lowerbound) #Fsed_oxy_init_lowerbound,Rdom_minerl_init_lowerbound,R_growth_init_lowerbound)
+  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound, Fsed_oxy_init_upperbound,swf_init_upperbound,R_growth_init_upperbound)#Fsed_oxy_init_upperbound,Rdom_minerl_init_upperbound,R_growth_init_upperbound)
+  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt, Fsed_oxy_init_qt,swf_init_qt,R_growth_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
+  par_units <<- c("deg_C","-","-","-","-") #
   
 }else{
   #par_names <<- c("sw_factor")

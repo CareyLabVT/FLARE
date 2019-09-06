@@ -654,24 +654,15 @@ run_flare<-function(start_day_local,
   if(is.na(restart_file)){
     if((length(which(init_temps_obs != 0.0)) == 0) |
        length(which(is.na(init_temps_obs))) > 0){
-      print("Pick another start day or provide an initial condition file: 
-            observations not avialable for starting day")
-      break
+      
+      print("Using default temperature values to initialize")
+      init_temps_obs <- default_temp_init
+      init_obs_temp_depths <- default_temp_init_depths
+      
     }
     temp_inter <- approxfun(init_obs_temp_depths, init_temps_obs, rule=2)
     the_temps_init <- temp_inter(modeled_depths)
-    if(include_wq){
-      do_inter <- approxfun(init_obs_do_depths, init_do_obs, rule=2)
-      OXY_oxy_init_depth <- do_inter(modeled_depths)
-      if(length(init_chla_obs) == 1){
-        PHY_TCHLA_init_depth <- rep(init_chla_obs, ndepths_modeled)
-      }else{
-        PHY_TCHLA_init_depth <- init_chla_obs
-      }
-      if(length(init_doc_obs) == 1){
-        OGM_doc_init_depth <- rep(init_doc_obs, ndepths_modeled)
-      }
-    }
+    
   }
   
   wq_start <- NA
@@ -700,6 +691,39 @@ run_flare<-function(start_day_local,
   the_sals_init <- 0.0
   
   if(include_wq & is.na(restart_file)){
+    
+    #Initialize Oxygen using data if avialable
+    if(length(length(which(init_do_obs != 0.0)) == 0)){
+      OXY_oxy_init_depth <- rep(OXY_oxy_init, ndepths_modeled) 
+    }else if(length(init_do_obs) == 1){
+      OXY_oxy_init_depth <- rep(OXY_oxy_init, ndepths_modeled)
+    }else{
+      do_inter <- approxfun(init_obs_do_depths, init_do_obs, rule=2)
+      OXY_oxy_init_depth <- do_inter(modeled_depths)
+    }
+    
+    #Initialize Chla usind data if avialable
+    if(length(length(which(init_chla_obs != 0.0)) == 0)){
+      PHY_TCHLA_init_depth <- rep(PHY_TCHLA_init, ndepths_modeled) 
+    }else if(length(init_chla_obs) == 1){
+      PHY_TCHLA_init_depth <- rep(init_chla_obs, ndepths_modeled)
+    }else{
+      chla_inter <- approxfun(init_chla_obs_depths, init_chla_obs, rule=2)
+      PHY_TCHLA_init_depth <- chla_inter(modeled_depths)
+    }
+    PHY_CYANOPCH1_init_depth <- PHY_TCHLA_init_depth/biomass_to_chla[1]
+    
+    #Initialize DOC usind data if avialable
+    if(length(length(which(init_doc_obs != 0.0)) == 0)){
+      OGM_doc_init_depth <- rep(OGM_doc_init, ndepths_modeled) 
+    }else if(length(init_doc_obs) == 1){
+      OGM_doc_init_depth <- rep(init_doc_obs, ndepths_modeled)
+    }else{
+      doc_inter <- approxfun(init_obs_do_depths, init_doc_obs, rule=2)
+      OGM_doc_init_depth <- doc_inter(modeled_depths)
+    }
+    
+    #Initilize other water quality variables
     CAR_pH_init_depth <- rep(CAR_pH_init, ndepths_modeled) 
     CAR_dic_init_depth <- rep(CAR_dic_init, ndepths_modeled)
     CAR_ch4_init_depth <- rep(CAR_ch4_init, ndepths_modeled)
@@ -708,27 +732,12 @@ run_flare<-function(start_day_local,
     NIT_nit_init_depth <- rep(NIT_nit_init, ndepths_modeled)
     PHS_frp_init_depth <- rep(PHS_frp_init, ndepths_modeled)
     OGM_poc_init_depth <- rep(OGM_poc_init, ndepths_modeled)
-    if(is.na(OGM_doc_init_depth[1])){
-      OGM_doc_init_depth <- rep(OGM_doc_init, ndepths_modeled)
-    }
     OGM_don_init_depth <- OGM_doc_init_depth * init_donc
-    
-    #OGM_don_init_depth <- rep(OGM_don_init, ndepths_modeled)
     OGM_pon_init_depth <- rep(OGM_pon_init, ndepths_modeled)
     OGM_dop_init_depth <- OGM_doc_init_depth * init_dopc
-    #OGM_dop_init_depth <- rep(OGM_dop_init, ndepths_modeled)
     OGM_pop_init_depth <- rep(OGM_pop_init, ndepths_modeled)
-    #PHY_TCHLA_init_depth <- rep(PHY_TCHLA_init, ndepths_modeled)
-    if(is.na(PHY_TCHLA_init_depth[1])){
-      PHY_TCHLA_init_depth <- rep(PHY_TCHLA_init, ndepths_modeled)
-    }
-    #phyto_proportions <- c(0.25, 0.25, 0.25, 0.25)
     NCS_ss1_init_depth <- rep(NCS_ss1_init, ndepths_modeled)
     PHS_frp_ads_init_depth <- rep(PHS_frp_ads_init, ndepths_modeled)
-    PHY_CYANOPCH1_init_depth <- PHY_TCHLA_init_depth/biomass_to_chla[1]
-    #PHY_CYANONPCH2_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[2]
-    #PHY_CHLOROPCH3_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[3]
-    #PHY_DIATOMPCH4_init_depth <- PHY_TCHLA_init_depth * phyto_proportions[4] 
     
     wq_init_vals_w_tchla <- c(OXY_oxy_init_depth,
                               CAR_pH_init_depth,
@@ -910,7 +919,7 @@ run_flare<-function(start_day_local,
   nmembers <- n_enkf_members*n_met_members*n_ds_members
   
   x <- array(NA, dim=c(nsteps, nmembers, nstates + npars))
-
+  
   #Initial conditions
   if(!restart_present){
     if(include_wq){
@@ -1026,14 +1035,14 @@ run_flare<-function(start_day_local,
                                  replace=FALSE)
       restart_x_previous <- ncvar_get(nc, "x_restart")
       x_previous <- restart_x_previous[sampled_nmembers, ]
-     
+      
     }else if(restart_nmembers < nmembers){
       sampled_nmembers <- sample(seq(1, restart_nmembers, 1),
                                  nmembers,
                                  replace = TRUE)
       restart_x_previous <- ncvar_get(nc, "x_restart")
       x_previous <- restart_x_previous[sampled_nmembers, ]
-     
+      
     }else{
       restart_x_previous <- ncvar_get(nc, "x_restart")
       x_previous <- restart_x_previous

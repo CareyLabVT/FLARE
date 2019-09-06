@@ -259,7 +259,11 @@ run_EnKF <- function(x,
       
       if(npars > 0){
         
-        x[i, , ] <- cbind(x_corr, pars_star)
+        if(i > (hist_days + 1)){
+          x[i, , ] <- cbind(x_corr, pars_star)
+        }else{
+          x[i, , ] <- cbind(x_corr, pars_corr)
+        }
         
         if(process_uncertainty == FALSE & i > (hist_days + 1)){
           x[i, , ] <- cbind(x_star, pars_star)
@@ -396,13 +400,13 @@ run_EnKF <- function(x,
     #IF NO INITIAL CONDITION UNCERTAINITY THEN SET EACH ENSEMBLE MEMBER TO THE MEAN
     #AT THE INITIATION OF ThE FUTURE FORECAST
     if(i == (hist_days + 1)){
-
-        if(initial_condition_uncertainty == FALSE){
-          state_means <- colMeans(x[i, ,1:nstates])
-          for(m in 1:nmembers){
-            x[i, m, 1:nstates]  <- state_means
-          }
+      
+      if(initial_condition_uncertainty == FALSE){
+        state_means <- colMeans(x[i, ,1:nstates])
+        for(m in 1:nmembers){
+          x[i, m, 1:nstates]  <- state_means
         }
+      }
       if(npars > 0){
         if(parameter_uncertainty == FALSE){
           par_means <- colMeans(x[i, ,(nstates + 1):(nstates + npars)])
