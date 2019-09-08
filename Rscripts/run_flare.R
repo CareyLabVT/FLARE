@@ -543,13 +543,20 @@ run_flare<-function(start_day_local,
                                input_file_tz = "EST5EDT", 
                                local_tzone)
   
-  obs_fdom$obs[, ] <- NA
+  #obs_fdom$obs[, ] <- NA
   
   obs_nutrients <- extract_nutrients(fname = paste0(data_location,"/extra_files/chemistry.csv"),
                                      full_time_day_local,
                                      modeled_depths = modeled_depths,
                                      input_file_tz = "EST5EDT", 
                                      local_tzone)
+  
+  #Combine fdom and nutrients
+  for(i in 1:length(full_time_day_local)){
+    if(length(which(!is.na(obs_nutrients$DOC[i,]))) > 0){
+      obs_fdom$obs[i,which(is.na(obs_fdom$obs[i,]))] <- obs_nutrients$DOC[i,which(is.na(obs_fdom$obs[i,]))]
+    }
+  }
   
   #Use the CTD observation rather than the sensor string when CTD data is avialable
   if(use_ctd){
@@ -561,6 +568,7 @@ run_flare<-function(start_day_local,
                            input_file_tz = "EST5EDT",
                            local_tzone)
     
+    #Merge CTD with other sensor data
     for(i in 1:length(full_time_day_local)){
       if(!is.na(obs_ctd$obs_temp[i, 1])){
         obs_temp$obs[i,which(is.na(obs_temp$obs[i,]))] <- obs_ctd$obs_temp[i,which(is.na(obs_temp$obs[i,]))]
@@ -589,14 +597,14 @@ run_flare<-function(start_day_local,
     NIT_amm_obs <- obs_nutrients$NH4
     NIT_nit_obs <- obs_nutrients$NO3
     PHS_frp_obs <- obs_nutrients$SRP
-    OGM_doc_obs <- obs_nutrients$DOC #obs_fdom$obs
+    OGM_doc_obs <- obs_fdom$obs
     OGM_poc_obs <- array(NA, dim = obs_dims)
     OGM_don_obs <- array(NA, dim = obs_dims)
     OGM_pon_obs <- array(NA, dim = obs_dims)
     OGM_dop_obs <- array(NA, dim = obs_dims)
     OGM_pop_obs <- array(NA, dim = obs_dims)
     NCS_ss1_obs <- array(NA, dim = obs_dims)
-    PHS_frp_ads_obs <- array(NA, dim = dim(obs_do$obs))
+    PHS_frp_ads_obs <- array(NA, dim = obs_dims)
     PHY_AGGREGATE_obs <- obs_chla$obs
     
     z <- cbind(obs_temp$obs,
@@ -647,9 +655,19 @@ run_flare<-function(start_day_local,
   init_doc_obs <- obs_fdom$obs[1, which(!is.na(obs_fdom$obs[1, ]))]
   init_doc_obs_depths <- modeled_depths[which(!is.na(obs_fdom$obs[1, ]))]
   
-  OGM_doc_init_depth <- NA
-  PHY_TCHLA_init_depth <- NA
-  OXY_oxy_init_depth <- NA
+  init_nit_amm_obs <- obs_nutrients$NH4[1, which(!is.na(obs_nutrients$NH4[1, ]))]
+  init_nit_amm_obs_depths <- modeled_depths[which(!is.na(obs_nutrients$NH4[1, ]))]
+  
+  init_nit_nit_obs <- obs_nutrients$NO3[1, which(!is.na(obs_nutrients$NO3[1, ]))]
+  init_nit_nit_obs_depths <- modeled_depths[which(!is.na(obs_nutrients$NO3[1, ]))]
+  
+  init_phs_frp_obs <- obs_nutrients$SRP[1, which(!is.na(obs_nutrients$SRP[1, ]))]
+  init_phs_frp_obs_depths <- modeled_depths[which(!is.na(obs_nutrients$SRP[1, ]))]
+  
+  
+  #OGM_doc_init_depth <- NA
+  #PHY_TCHLA_init_depth <- NA
+  #OXY_oxy_init_depth <- NA
   
   #NEED AN ERROR CHECK FOR WHETHER THERE ARE OBSERVED DATA
   if(is.na(restart_file)){
@@ -715,18 +733,46 @@ run_flare<-function(start_day_local,
     }else if(length(!is.na(init_doc_obs)) == 1){
       OGM_doc_init_depth <- rep(init_doc_obs, ndepths_modeled)
     }else{
-      doc_inter <- approxfun(init_obs_do_depths, init_doc_obs, rule=2)
+      doc_inter <- approxfun(init_doc_obs_depths, init_doc_obs, rule=2)
       OGM_doc_init_depth <- doc_inter(modeled_depths)
     }
+    
+    #Initialize DOC usind data if avialable
+    if(length(!is.na(init_nit_amm_obs)) == 0){
+      NIT_amm_init_depth <- rep(NIT_amm_init, ndepths_modeled) 
+    }else if(length(!is.na(init_nit_amm_obs)) == 1){
+      NIT_amm_init_depth <- rep(init_nit_amm_obs, ndepths_modeled)
+    }else{
+      temp_inter <- approxfun(init_nit_amm_obs_depths, init_nit_amm_obs, rule=2)
+      NIT_amm_init_depth <- temp_inter(modeled_depths)
+    }
+    
+    #Initialize DOC usind data if avialable
+    if(length(!is.na(init_nit_nit_obs)) == 0){
+      NIT_nit_init_depth <- rep(NIT_nit_init, ndepths_modeled) 
+    }else if(length(!is.na(init_nit_nit_obs)) == 1){
+      NIT_nit_init_depth <- rep(init_nit_nit_obs, ndepths_modeled)
+    }else{
+      temp_inter <- approxfun(init_nit_nit_obs_depths, init_nit_nit_obs, rule=2)
+      NIT_nit_init_depth <- temp_inter(modeled_depths)
+    }
+    
+    #Initialize DOC usind data if avialable
+    if(length(!is.na(init_phs_frp_obs)) == 0){
+      PHS_frp_init_depth <- rep(PHS_frp_init, ndepths_modeled) 
+    }else if(length(!is.na(init_phs_frp_obs)) == 1){
+      PHS_frp_init_depth <- rep(init_phs_frp_obs, ndepths_modeled)
+    }else{
+      temp_inter <- approxfun(init_phs_frp_obs_depths, init_phs_frp_obs, rule=2)
+      PHS_frp_init_depth <- temp_inter(modeled_depths)
+    }
+    
     
     #Initilize other water quality variables
     CAR_pH_init_depth  <- rep(CAR_pH_init, ndepths_modeled) 
     CAR_dic_init_depth <- rep(CAR_dic_init, ndepths_modeled)
     CAR_ch4_init_depth <- rep(CAR_ch4_init, ndepths_modeled)
     SIL_rsi_init_depth <- rep(SIL_rsi_init, ndepths_modeled)
-    NIT_amm_init_depth <- rep(NIT_amm_init, ndepths_modeled)
-    NIT_nit_init_depth <- rep(NIT_nit_init, ndepths_modeled)
-    PHS_frp_init_depth <- rep(PHS_frp_init, ndepths_modeled)
     OGM_poc_init_depth <- rep(OGM_poc_init, ndepths_modeled)
     OGM_don_init_depth <- OGM_doc_init_depth * init_donc
     OGM_pon_init_depth <- rep(OGM_pon_init, ndepths_modeled)

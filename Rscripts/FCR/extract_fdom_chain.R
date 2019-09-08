@@ -74,7 +74,8 @@ extract_fdom_chain <- function(fname = catwalk_fname,
   }
   
   #DIRRRRTY qsu -> mg/L ->  mmol/m3
-  obs<- obs*1000/(12*6)   
+  #From Mary Lofton Sept 8, Model_w/o_Oct_2018 (R2 = 0.593)
+  obs<- -98.147 + 26.101* obs
   
   
   return(list(obs = obs, depths = modeled_depths))

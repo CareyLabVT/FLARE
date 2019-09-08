@@ -1,8 +1,8 @@
 extract_CTD <- function(fname,
-                             full_time_day_local,
-                             modeled_depths,
-                             input_file_tz,
-                             local_tzone){
+                        full_time_day_local,
+                        modeled_depths,
+                        input_file_tz,
+                        local_tzone){
   
   d <- read.csv(fname)
   if(length(d[which(d$Reservoir == 'FCR' & d$Site == '50'),1])>0){
@@ -37,6 +37,8 @@ extract_CTD <- function(fname,
   }
   
   obs_do <- obs_do*1000/32
+  
+  obs_chla <- ctd_2_exo_chla[1] + ctd_2_exo_chla[2] * obs_chla
   
   obs_chla <- obs_chla * biomass_to_chla
   

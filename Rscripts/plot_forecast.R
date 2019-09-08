@@ -113,9 +113,15 @@ plot_forecast <- function(pdf_file_name,
                                      input_file_tz = "EST5EDT", 
                                      local_tzone)
   
+  #Combine fdom and nutrients
+  for(i in 1:length(full_time_day_local)){
+    if(length(which(!is.na(obs_nutrients$DOC[i,]))) > 0){
+      obs_fdom$obs[i,which(is.na(obs_fdom$obs[i,]))] <- obs_nutrients$DOC[i,which(is.na(obs_fdom$obs[i,]))]
+    }
+  }
+  
   #Use the CTD observation rather than the sensor string when CTD data is avialable
   if(use_ctd){
-    ## LOOK AT CTD DATA
     ## LOOK AT CTD DATA
     fl <- c(list.files("/Users/quinn/Dropbox (VTFRS)/Research/SSC_forecasting/SCC_data/CTD/",
                        pattern = "CTD", 
