@@ -19,7 +19,6 @@ run_EnKF <- function(x,
                      initial_condition_uncertainty,
                      parameter_uncertainty,
                      machine,
-                     resid30day,
                      hist_days,
                      print_glm2screen,
                      x_phyto_groups,
@@ -48,7 +47,6 @@ run_EnKF <- function(x,
     met_index <- 1
     inflow_outflow_index <- 1
     
-    #Update GLM NML files to match the current day of the simulation
     curr_start <- (full_time_local[i - 1])
     curr_stop <- (full_time_local[i])
     
@@ -72,14 +70,30 @@ run_EnKF <- function(x,
       pqt <- nqt[, (nstates+1):(nstates+npars)]
     }
     
+    # Start loop through ensemble members
     for(m in 1:nmembers){
       
-      update_var(round(x[i - 1, m, 1:length(modeled_depths)], 3), "the_temps", working_directory, "glm3.nml")
-      update_var(surface_height[i - 1, m], "lake_depth", working_directory, "glm3.nml")
+      if(i > (hist_days + 1) & use_future_met == TRUE){
+        curr_met_file <- met_file_names[1 + met_index]
+      }else{
+        curr_met_file <- met_file_names[1]
+      }
+      
       if(npars > 0){
-        
         curr_pars <- x[i - 1, m , (nstates+1):(nstates+npars)]
-        
+      }
+     
+      ########################################
+      #BEGIN GLM SPECIFIC PART
+      ########################################
+      # REQUIRES:
+      #curr_met_file, curr_pars, par_names, par_nml, x[i - 1, m, ], surface_height[i - 1, m],
+      # curr_start, curr_stop
+      # RETURNS;
+      # x_star[m, ], 
+      
+      if(npars > 0){
+      
         sed_temp_mean_index <- which(par_names == "sed_temp_mean")
         non_sed_temp_mean_index <- which(par_names != "sed_temp_mean")
         if(length(sed_temp_mean_index) == 1){
@@ -96,36 +110,26 @@ run_EnKF <- function(x,
         
         if(length(non_sed_temp_mean_index) > 0){
           for(par in non_sed_temp_mean_index){
-            if(par_names[par] == "pd%R_growth"){
-              update_var(curr_pars[par], par_names[par], working_directory, par_nml[par])
-            }else{
-              update_var(curr_pars[par], par_names[par], working_directory, par_nml[par])
-            }
+            update_var(curr_pars[par], par_names[par], working_directory, par_nml[par])
           }
         }
       }
       
       if(include_wq){
-        non_phytos <- round(c(x[i - 1, m, wq_start[1]:wq_end[num_wq_vars-1]]), 3)
-        phytos <- round(x_phyto_groups[i-1, m, ],3)
-        wq_init_vals_w_phytos <- c(non_phytos, phytos)
-        update_var(wq_init_vals_w_phytos, "wq_init_vals" ,working_directory, "glm3.nml")
+        wq_init_vals <- round(c(x[i - 1, m, wq_start[1]:wq_end[num_wq_vars]]), 3)
+        update_var(wq_init_vals, "wq_init_vals" ,working_directory, "glm3.nml")
         
         if(simulate_SSS){
           create_sss_input_output(x, i, m, full_time_day_local, working_directory, wq_start, management_input, hist_days, forecast_sss_on)
         }
       }
       
-      
+      update_var(round(x[i - 1, m, 1:length(modeled_depths)], 3), "the_temps", working_directory, "glm3.nml")
+      update_var(surface_height[i - 1, m], "lake_depth", working_directory, "glm3.nml") 
       
       #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
       
-      working_directory_docker <- "/GLM/TestLake"
-      if(i > (hist_days + 1) & use_future_met == TRUE){
-        update_var(met_file_names[1 + met_index], "meteo_fl", working_directory, "glm3.nml")
-      }else{
-        update_var(met_file_names[1], "meteo_fl", working_directory, "glm3.nml")
-      }
+      update_var(curr_met_file, "meteo_fl", working_directory, "glm3.nml")
       
       if(n_inflow_outflow_members == 1){
         tmp <- file.copy(from = inflow_file_names[1], to = "inflow_file1.csv", overwrite = TRUE)
@@ -162,21 +166,11 @@ run_EnKF <- function(x,
           
           if(length(ncvar_get(nc, "time")) > 1){
             nc_close(nc)
-            if(include_wq){
-              GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "/output.nc",
-                                                       working_dir = working_directory,
-                                                       z_out = modeled_depths,
-                                                       vars = c(glm_output_vars,tchla_components_vars))
-              x_star[m, 1:nstates] <- c(GLM_temp_wq_out$output[1:nstates])
-              x_phyto_groups[i, m, ] <- GLM_temp_wq_out$output[(nstates+1):length(GLM_temp_wq_out$output)]
-              
-            }else{
-              GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "/output.nc",
-                                                       working_dir = working_directory,
-                                                       z_out = modeled_depths,
-                                                       vars = "temp")
-              x_star[m, 1:length(modeled_depths)] <- c(GLM_temp_wq_out$output)
-            }
+            GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "/output.nc",
+                                                     working_dir = working_directory,
+                                                     z_out = modeled_depths,
+                                                     vars = glm_output_vars)
+            x_star[m, 1:nstates] <- GLM_temp_wq_out$output
             
             surface_height[i, m] <- round(GLM_temp_wq_out$surface_height, 3) 
             if(length(which(is.na(x_star[m, ]))) == 0){
@@ -195,6 +189,10 @@ run_EnKF <- function(x,
         }
       }
       
+      ########################################
+      #END GLM SPECIFIC PART
+      ########################################
+      
       #INCREMENT ThE MET_INDEX TO MOVE TO ThE NEXT NOAA ENSEMBLE
       met_index <- met_index + 1
       if(met_index > n_met_members){
@@ -206,7 +204,7 @@ run_EnKF <- function(x,
         inflow_outflow_index <- 1
       }
       
-    }
+    } # END ENSEMBLE LOOP
     
     
     # DEAL WITh ENSEMBLE MEMBERS ThAT ARE "BAD" AND 
@@ -296,12 +294,6 @@ run_EnKF <- function(x,
       }
     }else{
       
-      #does previous day have an observation
-      previous_day_obs <- FALSE
-      if(length(which(!is.na(z[i-1, ]))) > 0){
-        previous_day_obs <- TRUE
-      }
-      
       #if observation then calucate Kalman adjustment
       zt <- z[i, z_index]
       z_states_t <- z_states[i, z_index]
@@ -380,14 +372,8 @@ run_EnKF <- function(x,
       #between the dims here and the dims in the EnKF formulations)
       x[i, , 1:nstates] <- t(t(x_corr) + k_t %*% (d_mat - h %*% t(x_corr)))
       x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + k_t_pars %*% (d_mat - h %*% t(x_corr)))
-      
-      
-      #if(i < spin_up_days[2]){
-      #  print("In process error spin-up mode")
-      #  curr_qt_alpha <- qt_alpha - (spin_up_days - i)*((qt_alpha -0.5)/spin_up_days)
-      #}else{
+
       curr_qt_alpha <- qt_alpha
-      #}
       
       if(npars > 0){
         qt <- update_sigma(qt, p_t_combined, h_combined, x_star, pars_star, x_corr, pars_corr, psi_t, zt, npars, qt_pars, include_pars_in_qt_update, nstates, curr_qt_alpha)
@@ -425,12 +411,6 @@ run_EnKF <- function(x,
       }
     }
     
-    if(include_wq){
-      for(m in 1:nmembers){
-        x_phyto_groups[i, m, ] <- biomass_to_chla * x[i, m, wq_start[num_wq_vars]:wq_end[num_wq_vars]]
-      }
-    }
-    
     #Print parameters to screen
     if(npars > 0){
       for(par in 1:npars){
@@ -451,6 +431,5 @@ run_EnKF <- function(x,
   return(list(x = x, 
               x_restart = x_restart, 
               qt_restart = qt_restart, 
-              x_prior = x_prior,
-              resid30day = resid30day))
+              x_prior = x_prior))
 }

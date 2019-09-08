@@ -74,5 +74,7 @@ extract_chla_chain <- function(fname = catwalk_fname,
   
   obs <- exo_2_ctd_chla[1] + obs*exo_2_ctd_chla[2]
   
+  obs <- obs * biomass_to_chla
+  
   return(list(obs = obs, depths = modeled_depths))
 }

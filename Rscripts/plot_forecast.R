@@ -59,7 +59,7 @@ plot_forecast <- function(pdf_file_name,
     }
     
     OXY_oxy <- wq_output[which(wq_names == 'OXY_oxy'),,,]
-    PHY_TCHLA <- wq_output[which(wq_names == 'PHY_TCHLA'),,,]
+    PHY_TCHLA <- wq_output[which(wq_names == 'PHY_AGGREGATE'),,,]
     OGM_doc <- wq_output[which(wq_names == 'OGM_doc'),,,]
     
     NIT_amm <- wq_output[which(wq_names == 'NIT_amm'),,,]
@@ -290,10 +290,13 @@ plot_forecast <- function(pdf_file_name,
     }
     
     par(mfrow=c(4,3))
-    
+    PHY_TCHLA[,,] <- PHY_TCHLA[,,]/biomass_to_chla
     for(i in 1:nlayers){
       model = i
       obs <- obs_chla$obs[,i]
+      obs <- obs/biomass_to_chla
+      
+      
       ylim = range(c(PHY_TCHLA[,,]),na.rm = TRUE) 
       if(plot_summaries){
         mean_TCHLA <- array(NA,dim=c(length(t),length(depths)))

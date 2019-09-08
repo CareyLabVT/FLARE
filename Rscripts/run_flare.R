@@ -213,9 +213,10 @@ run_flare<-function(start_day_local,
   ### STEP 1: GRAB DATA FROM REPO OR SERVER
   #################################################
   
-  temperature_location <- paste0(data_location, "/", "mia-data")
-  met_station_location <- paste0(data_location, "/", "carina-data")
-  noaa_location <- paste0(data_location, "/", "noaa-data")
+  
+  temperature_location <- paste0(data_location, "/", "mia-data") #FCR SPECIFIC
+  met_station_location <- paste0(data_location, "/", "carina-data") #FCR SPECIFIC
+  noaa_location <- paste0(data_location, "/", "noaa-data") #FCR SPECIFIC
   if(pull_from_git){
     
     if(!file.exists(temperature_location)){
@@ -316,8 +317,12 @@ run_flare<-function(start_day_local,
   }
   
   ndepths_modeled <- length(modeled_depths)
-  num_wq_vars <- length(wq_names) 
-  glm_output_vars <- c("temp", wq_names)
+  num_wq_vars <- length(wq_names)
+  if(include_wq){
+   glm_output_vars <- c("temp", wq_names)
+  }else{
+    glm_output_vars <- "temp"
+  }
   npars <- length(par_names)
   
   # SET UP NUMBER OF ENSEMBLE MEMBERS
@@ -358,7 +363,7 @@ run_flare<-function(start_day_local,
                                "z")
   
   met_obs_fname_wdir <- met_obs_fname
-  #met_obs_fname_wdir <-paste0(met_station_location, "/", met_obs_fname)
+
   met_forecast_base_file_name <- paste0("met_hourly_",
                                         forecast_base_name,
                                         "_ens")
@@ -375,18 +380,16 @@ run_flare<-function(start_day_local,
   extra_input_files <- paste0(data_location, "/", "extra_files")
   fl <- c(list.files(extra_input_files, full.names = TRUE))
   tmp <- file.copy(from = fl, to = working_directory, overwrite = TRUE)
+  
   sim_files_folder <- paste0(code_folder, "/", "sim_files")
-  GLM_folder <- paste0(code_folder, "/", "glm", "/", machine) 
   fl <- c(list.files(sim_files_folder, full.names = TRUE))
   tmp <- file.copy(from = fl, to = working_directory, overwrite = TRUE)
-  fl <- c(list.files(GLM_folder, full.names = TRUE))
-  tmp <- file.copy(from = fl, to = working_directory, overwrite = TRUE)
+
   if(!is.na(restart_file)){
     tmp <- file.copy(from = restart_file, to = working_directory, overwrite = TRUE)
   }
   
-  file.copy(from = paste0(working_directory, "/", base_GLM_nml), 
-            to = paste0(working_directory, "/", "glm3.nml"), overwrite = TRUE)
+
   
   ####################################################
   #### STEP 5: PROCESS AND ORGANIZE DRIVER DATA
@@ -542,7 +545,7 @@ run_flare<-function(start_day_local,
   
   obs_fdom$obs[, ] <- NA
   
-  obs_nutrients <- extract_nutrients(fname = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/extra_files/chemistry.csv",
+  obs_nutrients <- extract_nutrients(fname = paste0(data_location,"/extra_files/chemistry.csv"),
                                      full_time_day_local,
                                      modeled_depths = modeled_depths,
                                      input_file_tz = "EST5EDT", 
@@ -550,13 +553,9 @@ run_flare<-function(start_day_local,
   
   #Use the CTD observation rather than the sensor string when CTD data is avialable
   if(use_ctd){
-    ## LOOK AT CTD DATA
-    fl <- c(list.files("/Users/quinn/Dropbox (VTFRS)/Research/SSC_forecasting/SCC_data/CTD/",
-                       pattern = "CTD", 
-                       full.names = TRUE))
-    
+
     #NEED TO DOUBLE CHECK TIME ZONE
-    obs_ctd <- extract_CTD(fname = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/CTD/CTD_Meta_13_18_final.csv",
+    obs_ctd <- extract_CTD(fname = paste0(data_location,"/CTD/CTD_Meta_13_18_final.csv"),
                            full_time_day_local,
                            modeled_depths = modeled_depths,
                            input_file_tz = "EST5EDT",
@@ -580,23 +579,25 @@ run_flare<-function(start_day_local,
   #observation in a time-step gets assigned an NA
   
   if(include_wq){
+    obs_dims <- dim(obs_do$obs)
+    
     OXY_oxy_obs <- obs_do$obs
-    CAR_pH_obs <- array(NA, dim = dim(obs_do$obs))
-    CAR_dic_obs <- array(NA, dim = dim(obs_do$obs))
-    CAR_ch4_obs <- array(NA, dim = dim(obs_do$obs))
-    SIL_rsi_obs <- array(NA, dim = dim(obs_do$obs))
+    CAR_pH_obs <- array(NA, dim = obs_dims)
+    CAR_dic_obs <- array(NA, dim = obs_dims)
+    CAR_ch4_obs <- array(NA, dim = obs_dims)
+    SIL_rsi_obs <- array(NA, dim = obs_dims)
     NIT_amm_obs <- obs_nutrients$NH4
     NIT_nit_obs <- obs_nutrients$NO3
     PHS_frp_obs <- obs_nutrients$SRP
     OGM_doc_obs <- obs_nutrients$DOC #obs_fdom$obs
-    OGM_poc_obs <- array(NA, dim = dim(obs_do$obs))
-    OGM_don_obs <- array(NA, dim = dim(obs_do$obs))
-    OGM_pon_obs <- array(NA, dim = dim(obs_do$obs))
-    OGM_dop_obs <- array(NA, dim = dim(obs_do$obs))
-    OGM_pop_obs <- array(NA, dim = dim(obs_do$obs))
-    NCS_ss1_obs <- array(NA, dim = dim(obs_do$obs))
+    OGM_poc_obs <- array(NA, dim = obs_dims)
+    OGM_don_obs <- array(NA, dim = obs_dims)
+    OGM_pon_obs <- array(NA, dim = obs_dims)
+    OGM_dop_obs <- array(NA, dim = obs_dims)
+    OGM_pop_obs <- array(NA, dim = obs_dims)
+    NCS_ss1_obs <- array(NA, dim = obs_dims)
     PHS_frp_ads_obs <- array(NA, dim = dim(obs_do$obs))
-    PHY_TCHLA_obs <- obs_chla$obs
+    PHY_AGGREGATE_obs <- obs_chla$obs
     
     z <- cbind(obs_temp$obs,
                OXY_oxy_obs,
@@ -615,7 +616,7 @@ run_flare<-function(start_day_local,
                OGM_pop_obs,
                NCS_ss1_obs,
                PHS_frp_ads_obs,
-               PHY_TCHLA_obs)
+               PHY_AGGREGATE_obs)
   }else{
     z <- cbind(obs_temp$obs) 
   }
@@ -652,17 +653,13 @@ run_flare<-function(start_day_local,
   
   #NEED AN ERROR CHECK FOR WHETHER THERE ARE OBSERVED DATA
   if(is.na(restart_file)){
-    if((length(which(init_temps_obs != 0.0)) == 0) |
-       length(which(is.na(init_temps_obs))) > 0){
-      
+    if((length(which(init_temps_obs != 0.0)) == 0) | length(which(is.na(init_temps_obs))) > 0){
       print("Using default temperature values to initialize")
       init_temps_obs <- default_temp_init
       init_obs_temp_depths <- default_temp_init_depths
-      
     }
     temp_inter <- approxfun(init_obs_temp_depths, init_temps_obs, rule=2)
     the_temps_init <- temp_inter(modeled_depths)
-    
   }
   
   wq_start <- NA
@@ -693,30 +690,29 @@ run_flare<-function(start_day_local,
   if(include_wq & is.na(restart_file)){
     
     #Initialize Oxygen using data if avialable
-    if(length(length(which(init_do_obs != 0.0)) == 0)){
+    if(length(!is.na(init_do_obs)) == 0){
       OXY_oxy_init_depth <- rep(OXY_oxy_init, ndepths_modeled) 
-    }else if(length(init_do_obs) == 1){
-      OXY_oxy_init_depth <- rep(OXY_oxy_init, ndepths_modeled)
+    }else if(length(!is.na(init_do_obs)) == 1){
+      OXY_oxy_init_depth <- rep(init_do_obs, ndepths_modeled)
     }else{
       do_inter <- approxfun(init_obs_do_depths, init_do_obs, rule=2)
       OXY_oxy_init_depth <- do_inter(modeled_depths)
     }
     
     #Initialize Chla usind data if avialable
-    if(length(length(which(init_chla_obs != 0.0)) == 0)){
-      PHY_TCHLA_init_depth <- rep(PHY_TCHLA_init, ndepths_modeled) 
-    }else if(length(init_chla_obs) == 1){
-      PHY_TCHLA_init_depth <- rep(init_chla_obs, ndepths_modeled)
+    if(length(!is.na(init_chla_obs)) == 0){
+      PHY_AGGREGATE_init_depth <- rep(PHY_AGGREGATE_init, ndepths_modeled) 
+    }else if(length(!is.na(init_chla_obs)) == 1){
+      PHY_AGGREGATE_init_depth <- rep(init_chla_obs, ndepths_modeled)
     }else{
       chla_inter <- approxfun(init_chla_obs_depths, init_chla_obs, rule=2)
-      PHY_TCHLA_init_depth <- chla_inter(modeled_depths)
+      PHY_AGGREGATE_init_depth <- chla_inter(modeled_depths)
     }
-    PHY_CYANOPCH1_init_depth <- PHY_TCHLA_init_depth/biomass_to_chla[1]
-    
+
     #Initialize DOC usind data if avialable
-    if(length(length(which(init_doc_obs != 0.0)) == 0)){
+    if(length(!is.na(init_doc_obs)) == 0){
       OGM_doc_init_depth <- rep(OGM_doc_init, ndepths_modeled) 
-    }else if(length(init_doc_obs) == 1){
+    }else if(length(!is.na(init_doc_obs)) == 1){
       OGM_doc_init_depth <- rep(init_doc_obs, ndepths_modeled)
     }else{
       doc_inter <- approxfun(init_obs_do_depths, init_doc_obs, rule=2)
@@ -724,7 +720,7 @@ run_flare<-function(start_day_local,
     }
     
     #Initilize other water quality variables
-    CAR_pH_init_depth <- rep(CAR_pH_init, ndepths_modeled) 
+    CAR_pH_init_depth  <- rep(CAR_pH_init, ndepths_modeled) 
     CAR_dic_init_depth <- rep(CAR_dic_init, ndepths_modeled)
     CAR_ch4_init_depth <- rep(CAR_ch4_init, ndepths_modeled)
     SIL_rsi_init_depth <- rep(SIL_rsi_init, ndepths_modeled)
@@ -739,7 +735,7 @@ run_flare<-function(start_day_local,
     NCS_ss1_init_depth <- rep(NCS_ss1_init, ndepths_modeled)
     PHS_frp_ads_init_depth <- rep(PHS_frp_ads_init, ndepths_modeled)
     
-    wq_init_vals_w_tchla <- c(OXY_oxy_init_depth,
+    wq_init_vals <- c(OXY_oxy_init_depth,
                               CAR_pH_init_depth,
                               CAR_dic_init_depth,
                               CAR_ch4_init_depth,
@@ -755,45 +751,44 @@ run_flare<-function(start_day_local,
                               OGM_pop_init_depth,
                               NCS_ss1_init_depth,
                               PHS_frp_ads_init_depth,
-                              PHY_TCHLA_init_depth)
-    
-    wq_init_vals_w_phytos <- c(OXY_oxy_init_depth,
-                               CAR_pH_init_depth,
-                               CAR_dic_init_depth,
-                               CAR_ch4_init_depth,
-                               SIL_rsi_init_depth,
-                               NIT_amm_init_depth,
-                               NIT_nit_init_depth,
-                               PHS_frp_init_depth,
-                               OGM_doc_init_depth,
-                               OGM_poc_init_depth,
-                               OGM_don_init_depth,
-                               OGM_pon_init_depth,
-                               OGM_dop_init_depth,
-                               OGM_pop_init_depth,
-                               NCS_ss1_init_depth,
-                               PHS_frp_ads_init_depth,
-                               PHY_CYANOPCH1_init_depth)
-    
+                              PHY_AGGREGATE_init_depth)
     
     #UPDATE NML WITH INITIAL CONDITIONS
-    update_var(wq_init_vals_w_phytos, "wq_init_vals", working_directory, "glm3.nml")
+
   }else if(!include_wq & is.na(restart_file)){
     #UPDATE NML WITH INITIAL CONDITIONS
-    update_var(" ", "wq_init_vals", working_directory, "glm3.nml")
+    wq_init_vals <- c(" ")
   }
+  
+  
+  ########################################
+  #BEGIN GLM SPECIFIC PART
+  ########################################
+  
+  GLM_folder <- paste0(code_folder, "/", "glm", "/", machine) 
+  fl <- c(list.files(GLM_folder, full.names = TRUE))
+  tmp <- file.copy(from = fl, to = working_directory, overwrite = TRUE)
+  
+  file.copy(from = paste0(working_directory, "/", base_GLM_nml), 
+            to = paste0(working_directory, "/", "glm3.nml"), overwrite = TRUE)
+  
+  update_var(wq_init_vals, "wq_init_vals", working_directory, "glm3.nml") #GLM SPECIFIC
   if(include_wq){
-    update_var(num_wq_vars, "num_wq_vars", working_directory, "glm3.nml")
+    update_var(num_wq_vars, "num_wq_vars", working_directory, "glm3.nml") #GLM SPECIFIC
   }else{
-    update_var(0, "num_wq_vars", working_directory, "glm3.nml")
+    update_var(0, "num_wq_vars", working_directory, "glm3.nml") #GLM SPECIFIC
   }
-  update_var(ndepths_modeled, "num_depths", working_directory, "glm3.nml")
-  update_var(modeled_depths, "the_depths", working_directory, "glm3.nml")
-  update_var(rep(the_sals_init, ndepths_modeled), "the_sals", working_directory, "glm3.nml")
+  update_var(ndepths_modeled, "num_depths", working_directory, "glm3.nml") #GLM SPECIFIC
+  update_var(modeled_depths, "the_depths", working_directory, "glm3.nml") #GLM SPECIFIC
+  update_var(rep(the_sals_init, ndepths_modeled), "the_sals", working_directory, "glm3.nml") #GLM SPECIFIC
   
   #Create a copy of the NML to record starting initial conditions
-  file.copy(from = paste0(working_directory, "/", "glm3.nml"), 
-            to = paste0(working_directory, "/", "glm3_initial.nml"), overwrite = TRUE)
+  file.copy(from = paste0(working_directory, "/", "glm3.nml"), #GLM SPECIFIC
+            to = paste0(working_directory, "/", "glm3_initial.nml"), overwrite = TRUE) #GLM SPECIFIC
+  
+  ########################################
+  #END GLM SPECIFIC PART
+  ########################################
   
   if(include_wq){
     nobs <- length(observed_depths_temp) + 
@@ -830,7 +825,6 @@ run_flare<-function(start_day_local,
   if(restart_present){
     nc <- nc_open(restart_file)
     qt <- ncvar_get(nc, "qt_restart")
-    resid30day <- ncvar_get(nc, "resid30day")
     qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
     diag(qt_pars) <- par_init_qt
     nc_close(nc)
@@ -840,11 +834,7 @@ run_flare<-function(start_day_local,
     diag(qt) <- rep(temp_process_error,ndepths_modeled )
     qt_init <- matrix(data = 0, nrow = ndepths_modeled, ncol = ndepths_modeled)
     diag(qt_init) <- rep(temp_init_error,ndepths_modeled )
-    #if(is.na(cov_matrix)){
-    #  qt <- read.csv(paste0(working_directory, "/", "qt_cov_matrix.csv"))
-    #}else{
-    #  qt <- read.csv(paste0(working_directory, "/", cov_matrix))
-    
+
     if(include_wq){
       wq_var_error <- c(OXY_oxy_process_error,
                         CAR_pH_process_error,
@@ -862,7 +852,7 @@ run_flare<-function(start_day_local,
                         OGM_pop_process_error,
                         NCS_ss1_process_error,
                         PHS_frp_ads_process_error,
-                        PHY_TCHLA_process_error)
+                        PHY_AGGREGATE_process_error)
       
       wq_var_init_error <- c(OXY_oxy_init_error,
                              CAR_pH_init_error,
@@ -880,7 +870,7 @@ run_flare<-function(start_day_local,
                              OGM_pop_init_error,
                              NCS_ss1_init_error,
                              PHS_frp_ads_init_error,
-                             PHY_TCHLA_process_error) 
+                             PHY_AGGREGATE_init_error) 
       
       for(i in 1:num_wq_vars){
         for(j in 1:ndepths_modeled){
@@ -894,7 +884,7 @@ run_flare<-function(start_day_local,
         }
       }
     }
-    resid30day <- array(NA, dim =c(30, nrow(qt)))
+
     #Covariance matrix for parameters
     if(npars > 0){
       for(pars in 1:npars){
@@ -926,12 +916,12 @@ run_flare<-function(start_day_local,
       if(npars > 0){
         x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
                                     mean=c(the_temps_init, 
-                                           wq_init_vals_w_tchla), 
+                                           wq_init_vals), 
                                     sigma=as.matrix(qt_init[1:nstates,1:nstates]))
         if(single_run){
           for(m in 1:nmembers){
             x[1,m ,1:nstates] <- rep(c(the_temps_init, 
-                                       wq_init_vals_w_tchla))
+                                       wq_init_vals))
           }
         }
         if(include_wq){
@@ -957,13 +947,13 @@ run_flare<-function(start_day_local,
         }
       }else{
         x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
-                                    mean=c(the_temps_init,wq_init_vals_w_tchla),
+                                    mean=c(the_temps_init,wq_init_vals),
                                     sigma=as.matrix(qt))
         
         if(single_run){
           for(m in 1:nmembers){
             x[1,m ,1:nstates] <- rep(c(the_temps_init, 
-                                       wq_init_vals_w_tchla))
+                                       wq_init_vals))
           }
         }
         
@@ -1083,16 +1073,6 @@ run_flare<-function(start_day_local,
   surface_height <- array(NA, dim=c(nsteps, nmembers))
   surface_height[1, ] <- round(lake_depth_init, 3)
   
-  #
-  if(include_wq){
-    x_phyto_groups <- array(NA, dim=c(nsteps, nmembers, ndepths_modeled))
-    for(m in 1:nmembers){
-      x_phyto_groups[1, m, ] <- biomass_to_chla * x[1, m, wq_start[num_wq_vars]:wq_end[num_wq_vars]]
-    }
-  }else{
-    x_phyto_groups <- NA
-  }
-  
   ####################################################
   #### STEP 12: Run Ensemble Kalman Filter
   ####################################################
@@ -1118,7 +1098,6 @@ run_flare<-function(start_day_local,
                           initial_condition_uncertainty,
                           parameter_uncertainty,
                           machine,
-                          resid30day,
                           hist_days,
                           print_glm2screen,
                           x_phyto_groups,
@@ -1131,7 +1110,6 @@ run_flare<-function(start_day_local,
   x_restart <- enkf_output$x_restart
   qt_restart <- enkf_output$qt_restart
   x_prior <- enkf_output$x_prior
-  resid30day <- enkf_output$resid30day
   
   ####################################################
   #### STEP 13: PROCESS OUTPUT
@@ -1196,7 +1174,6 @@ run_flare<-function(start_day_local,
                         npars,
                         GLMversion,
                         FLAREversion,
-                        resid30day,
                         local_tzone)
   
   ##ARCHIVE FORECAST
