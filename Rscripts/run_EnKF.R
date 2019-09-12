@@ -2,7 +2,8 @@ run_EnKF <- function(x,
                      z,
                      qt,
                      qt_pars,
-                     psi,
+                     psi_slope,
+                     psi_intercept,
                      full_time_local,
                      working_directory,
                      npars,
@@ -269,7 +270,7 @@ run_EnKF <- function(x,
         
         if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
-            x[i, m, ] <- colMeans(cbind(colMeans(x_star), pars_star[m, ])) 
+            x[i, m, ] <- c(colMeans(x_star), pars_star[m, ]) 
           }
         }
         
@@ -308,12 +309,17 @@ run_EnKF <- function(x,
       
       #Extract the data uncertainity for the data 
       #types present during the time-step 
+
+      curr_psi <- psi_intercept[z_index] + psi_slope[z_index] * zt
+
+      
+      
       if(length(z_index) > 1){
-        psi_t <- diag(psi[z_index])
+        psi_t <- diag(curr_psi)
       }else{
         #Special case where there is only one data 
         #type during the time-step
-        psi_t <- psi[z_index]
+        psi_t <- curr_psi
       }
       
       #Ensemble mean
@@ -403,6 +409,10 @@ run_EnKF <- function(x,
       } 
     }
     
+    ###################
+    ## Quality Control Step 
+    ##################
+    
     #Correct any negative water quality states
     if(include_wq){
       for(m in 1:nmembers){
@@ -410,6 +420,18 @@ run_EnKF <- function(x,
         x[i, m, index[which(index <= wq_end[num_wq_vars])]] <- 0.0
       }
     }
+    
+    #Correct any parameter values outside bounds
+    if(npars > 0){
+        for(par in 1:npars){
+          low_index <- which(x[i, ,nstates + par] < par_lowerbound[par])
+          high_index <- which(x[i, ,nstates + par] > par_upperbound[par]) 
+         x[i,low_index ,nstates + par] <- par_lowerbound[par]
+         x[i,high_index ,nstates + par] <- par_upperbound[par]
+      }
+    }
+    
+    ###############
     
     #Print parameters to screen
     if(npars > 0){

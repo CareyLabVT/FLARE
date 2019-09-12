@@ -106,8 +106,8 @@ plot_forecast <- function(pdf_file_name,
                                observed_depths_chla_fdom,
                                input_file_tz = "EST5EDT", 
                                local_tzone)
-  
-  obs_nutrients <- extract_nutrients(fname = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/extra_files/chemistry.csv",
+
+  obs_nutrients <- extract_nutrients(fname = paste0(data_location,"/extra_files/chemistry.csv"),
                                      full_time_day_local,
                                      modeled_depths = modeled_depths,
                                      input_file_tz = "EST5EDT", 
@@ -339,7 +339,7 @@ plot_forecast <- function(pdf_file_name,
     
     for(i in 1:nlayers){
       model = i
-      obs <- obs_nutrients$DOC[,i] #obs_fdom$obs[,i]
+      obs <- obs_fdom$obs[,i]
       ylim = range(c(OGM_doc[,,]),na.rm = TRUE) 
       
       if(plot_summaries){

@@ -190,7 +190,7 @@ run_flare<-function(start_day_local,
     initial_condition_uncertainty <- FALSE
     parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- FALSE
-    spin_up_days <- hist_days + 1
+    spin_up_days <- hist_days + 2
     n_enkf_members <- 3
   }
   
@@ -329,6 +329,7 @@ run_flare<-function(start_day_local,
   n_met_members <- 21
   if(single_run){
     n_met_members <- 3
+    n_ds_members <- 1
   }
   
   if(include_wq){
@@ -818,7 +819,7 @@ run_flare<-function(start_day_local,
   file.copy(from = paste0(working_directory, "/", base_GLM_nml), 
             to = paste0(working_directory, "/", "glm3.nml"), overwrite = TRUE)
   
-  update_var(wq_init_vals, "wq_init_vals", working_directory, "glm3.nml") #GLM SPECIFIC
+  #update_var(wq_init_vals, "wq_init_vals", working_directory, "glm3.nml") #GLM SPECIFIC
   if(include_wq){
     update_var(num_wq_vars, "num_wq_vars", working_directory, "glm3.nml") #GLM SPECIFIC
   }else{
@@ -848,12 +849,15 @@ run_flare<-function(start_day_local,
   #######################################################
   #### STEP 9: CREATE THE PSI VECTOR (DATA uncertainty)  
   #######################################################
-  psi <- rep(NA, length(obs_index))
+  psi_slope <- rep(NA, length(obs_index))
+  psi_intercept <- rep(NA, length(obs_index))
   
-  psi[1: ndepths_modeled] <- rep(obs_error_temperature, ndepths_modeled)
+  psi_slope[1: ndepths_modeled] <- rep(obs_error_temperature_slope, ndepths_modeled)
+  psi_intercept[1: ndepths_modeled] <- rep(obs_error_temperature_intercept, ndepths_modeled)
   if(include_wq){
     for(wq in 1:num_wq_vars){
-      psi[wq_start[wq]:wq_end[wq]] <- rep(obs_error_wq[wq], ndepths_modeled)
+      psi_intercept[wq_start[wq]:wq_end[wq]] <- rep(obs_error_wq_intercept[wq], ndepths_modeled)
+      psi_slope[wq_start[wq]:wq_end[wq]] <- rep(obs_error_wq_slope[wq], ndepths_modeled)
     }
   }
   
@@ -1127,7 +1131,8 @@ run_flare<-function(start_day_local,
                           z,
                           qt,
                           qt_pars,
-                          psi,
+                          psi_slope,
+                          psi_intercept,
                           full_time_local,
                           working_directory,
                           npars,
