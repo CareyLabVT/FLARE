@@ -4,7 +4,7 @@
    pd%p0 = 0.03
    pd%w_p = 0
    pd%Xcc = 50
-   pd%R_growth = 1.1
+   pd%R_growth = 1.5
    pd%fT_Method = 1
    pd%theta_growth = 1.06
    pd%T_std = 20

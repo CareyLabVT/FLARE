@@ -15,7 +15,7 @@ local_tzone <<- "EST"
 ########################################
 ## Temperature only or include water quality
 #########################################
-include_wq <<- TRUE
+include_wq <<- FALSE
 #TRUE = use AED
 
 ##########################
@@ -71,7 +71,8 @@ if(include_wq){
     base_GLM_nml <<- "glm3_wAED.nml"  
   }
 }else{
-  base_GLM_nml <<- "glm3_w0AED.nml" 
+  #base_GLM_nml <<- "glm3_woAED.nml"
+  base_GLM_nml <<- "glm3_woAED_constat_sedtemp.nml"
 }
 
 #################################
@@ -127,8 +128,9 @@ if(!include_wq){
   #                     9.00)
 }
 
-default_temp_init <- c(6.2, 5.7, 5.5, 5.5, 5.4, 5.3, 5.3, 5.3, 5.2, 5.0)
-default_temp_init_depths <-  c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
+default_temp_init <<- c(6.2, 5.7, 5.5, 5.5, 5.4, 5.3, 5.3, 5.3, 5.2, 5.0)
+default_temp_init_depths <<-  c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
+the_sals_init <<- 0.5
 
 ##############################
 ##  Ensemble members used
@@ -144,15 +146,14 @@ n_inflow_outflow_members <<- 1
 ################################
 ### Process uncertainty adaption
 ##################################
-qt_alpha <<- 0.5  #0 - all weight on the new Qt, 1 - all weight on the current Qt
+qt_alpha <<- 0.9  #0 - all weight on the new Qt, 1 - all weight on the current Qt
 qt_beta <<- 0.8 # 
-
 
 #################################
 # Parameter calibration information
 #################################
 
-include_pars_in_qt_update <<- TRUE
+include_pars_in_qt_update <<- FALSE
 #Adapt the parameter noise
 
 #Initial zone temperatures and the upper and lower bounds
@@ -213,7 +214,7 @@ Rdom_minerl_init_qt <<- 0.0001^2 #THIS IS THE VARIANCE, NOT THE SD
 R_growth_init_mean <<-  1.0
 R_growth_init_lowerbound <<-  0.5 #0.99
 R_growth_init_upperbound <<-  1.5 #1.01
-R_growth_lowerbound <<-  0.0 #0.99
+R_growth_lowerbound <<-  -10.00 #0.99
 R_growth_upperbound <<-  10.00 #1.01
 #daily perturbance of parameter value
 R_growth_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
@@ -279,9 +280,9 @@ if(include_wq){
     ,"sed_temp_mean"
     ,"Fsed_oxy"
     ,"pd%R_growth"
-    ,"Rnitrif"
+    #,"Rnitrif"
     #,"Fsed_frp"
-    ,"Rdom_minerl"
+    #,"Rdom_minerl"
     #,"Fsed_nit"
     #,"Fsed_amm"
     #, "Fsed_doc"
@@ -291,9 +292,9 @@ if(include_wq){
     ,"zone2temp"
     ,"Fsed_oxy"
     ,"R_growth"
-    ,"Rnitrif"
+    #,"Rnitrif"
     #,"Fsed_frp"
-    ,"Rdom_minerl"
+    #,"Rdom_minerl"
     #,"Fsed_nit"
     #,"Fsed_amm"
     #,"Fsed_doc"
@@ -303,7 +304,8 @@ if(include_wq){
     ,"glm3.nml"
     ,"aed2.nml"
     ,"aed2_phyto_pars.nml"
-    ,"aed2.nml","aed2.nml"
+    #,"aed2.nml"
+    #,"aed2.nml"
     , "aed2.nml"
     #, "aed2.nml"
     #, "aed2.nml"
@@ -314,7 +316,7 @@ if(include_wq){
     ,zone2_temp_init_mean
     ,Fsed_oxy_init_mean
     ,R_growth_init_mean
-    ,Rnitrif_init_mean
+    #,Rnitrif_init_mean
     #,Fsed_frp_init_mean
     ,Rdom_minerl_init_mean
     #,Fsed_nit_init_mean
@@ -326,9 +328,9 @@ if(include_wq){
     ,zone2_temp_init_lowerbound
     ,Fsed_oxy_init_lowerbound
     ,R_growth_init_lowerbound
-    ,Rnitrif_init_lowerbound
+    #,Rnitrif_init_lowerbound
     #,Fsed_frp_init_lowerbound
-    ,Rdom_minerl_init_lowerbound
+    #,Rdom_minerl_init_lowerbound
     #,Fsed_nit_init_lowerbound
     #,Fsed_amm_init_lowerbound
     #,Fsed_doc_init_lowerbound
@@ -338,9 +340,9 @@ if(include_wq){
     ,zone2_temp_init_upperbound
     ,Fsed_oxy_init_upperbound
     ,R_growth_init_upperbound
-    ,Rnitrif_init_upperbound 
+    #,Rnitrif_init_upperbound 
     #,Fsed_frp_init_upperbound
-    ,Rdom_minerl_init_upperbound
+    #,Rdom_minerl_init_upperbound
     #,Fsed_nit_init_upperbound
     #,Fsed_amm_init_upperbound
     #,Fsed_doc_init_upperbound
@@ -350,9 +352,9 @@ if(include_wq){
     ,zone2_temp_lowerbound 
     ,Fsed_oxy_lowerbound
     ,R_growth_lowerbound
-    ,Rnitrif_lowerbound
+    #,Rnitrif_lowerbound
     #,Fsed_frp_lowerbound
-    ,Rdom_minerl_lowerbound
+    #,Rdom_minerl_lowerbound
     #,Fsed_nit_lowerbound 
     #,Fsed_amm_lowerbound 
     #,Fsed_doc_lowerbound
@@ -362,9 +364,9 @@ if(include_wq){
     ,zone2_temp_upperbound
     ,Fsed_oxy_upperbound
     ,R_growth_upperbound
-    ,Rnitrif_upperbound
+    #,Rnitrif_upperbound
     #,Fsed_frp_upperbound
-    ,Rdom_minerl_upperbound
+    #,Rdom_minerl_upperbound
     #,Fsed_nit_upperbound
     #,Fsed_amm_upperbound
     #,Fsed_doc_upperbound
@@ -374,9 +376,9 @@ if(include_wq){
     ,zone2temp_init_qt
     ,Fsed_oxy_init_qt
     ,R_growth_init_qt
-    ,Rnitrif_init_qt
+    #,Rnitrif_init_qt
     #,Fsed_frp_init_qt
-    ,Rdom_minerl_init_qt
+    #,Rdom_minerl_init_qt
     #,Fsed_nit_init_qt
     #,Fsed_amm_init_qt
     #,Fsed_doc_init_qt
@@ -386,33 +388,40 @@ if(include_wq){
     ,"-"
     ,"-"
     ,"-"
-    ,"-" 
     #,"-" 
-    ,"-" 
-    #,"-"
+    #,"-" 
     #,"-" 
     #,"-"
-  )#, "-") #
+    #,"-" 
+    #,"-"
+  )
   
-  #par_init_qt <- par_init_qt *0.1
+  par_init_qt <- par_init_qt * 0.1
   
 }else{
-  #par_names <<- c("sw_factor")
-  #par_names_save <<- c("SW_factor")
-  #par_nml <<- c("glm3.nml")
-  #par_init_mean <<- c(swf_init_mean)
-  #par_init_lowerbound <<- c(swf_init_lowerbound)
-  #par_init_upperbound <<- c(swf_init_upperbound)
-  #par_init_qt <<- c(swf_init_qt)
-  #par_units <<- c("-")
-  par_names <<- c("sed_temp_mean","sed_temp_mean","Fsed_oxy") #"Fsed_oxy","Rdom_minerl","pd%R_growth")
-  par_names_save <<- c("zone1temp","zone2temp","Fsed_oxy")
-  par_nml <<- c("glm3.nml","glm3.nml","aed2.nml") #"aed2.nml","aed2.nml","aed2_phyto_pars.nml")
-  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean,Fsed_oxy_init_mean)#Fsed_oxy_init_mean,Rdom_minerl_init_mean,Rdom_minerl_init_mean,R_growth_init_mean)
-  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound,Fsed_oxy_init_lowerbound)#Fsed_oxy_init_lowerbound,Rdom_minerl_init_lowerbound,R_growth_init_lowerbound)
-  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound,Fsed_oxy_init_upperbound)#Fsed_oxy_init_upperbound,Rdom_minerl_init_upperbound,R_growth_init_upperbound)
-  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt,Fsed_oxy_init_qt)#Fsed_oxy_init_qt,Rdom_minerl_init_qt,R_growth_init_qt)
+  par_names <<- c() #c("sed_temp_mean","sed_temp_mean")
+  par_names_save <<- c() #c("zone1temp","zone2temp")
+  par_nml <<- c() #c("glm3.nml","glm3.nml")
+  par_init_mean <<- c() #c(zone1_temp_init_mean,zone2_temp_init_mean)
+  par_init_lowerbound <<- c() #c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound)
+  par_init_upperbound <<- c() #c(zone1_temp_init_upperbound,zone2_temp_init_upperbound)
+  par_lowerbound <<- c() #c(zone1_temp_lowerbound,zone2_temp_lowerbound)
+  par_upperbound <<- c() #c(zone1_temp_upperbound,zone2_temp_upperbound)
+  par_init_qt <<- c() #c(zone1temp_init_qt,zone2temp_init_qt)
+  par_units <<- c() #("deg_C","deg_C") #
+  
+  par_names <<- c("sed_temp_mean","sed_temp_mean","sw_factor")
+  par_names_save <<- c("zone1temp","zone2temp","sw_factor")
+  par_nml <<- c("glm3.nml","glm3.nml","glm3.nml")
+  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean,swf_init_mean)
+  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound,swf_init_lowerbound)
+  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound,swf_init_upperbound)
+  par_lowerbound <<- c(zone1_temp_lowerbound,zone2_temp_lowerbound,swf_lowerbound)
+  par_upperbound <<- c(zone1_temp_upperbound,zone2_temp_upperbound,swf_upperbound)
+  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt,swf_init_qt)
   par_units <<- c("deg_C","deg_C","-") #
+  
+  par_init_qt <- par_init_qt * 0.1
 }
 
 #####################################
@@ -440,9 +449,9 @@ met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"),paste0(data_
 #met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"))
 #Name of meteorology file name
 
-inflow_file1 <<- "FCR_weir_inflow_newEDI_2013_2017_20190128_oneDOC.csv"
-outflow_file1 <<- "FCR_spillway_outflow_newEDI_SUMMED_WeirWetland_2013_2017_20190128.csv"
-inflow_file2 <<- "FCR_wetland_inflow_newEDI_2013_2017_20190305_oneDOC.csv"
+inflow_file1 <<- "FCR_weir_inflow_newEDI_2013_2018_20190911_oneDOC.csv"
+outflow_file1 <<- "FCR_spillway_outflow_newEDI_SUMMED_WeirWetland_2013_2018_20190912.csv"
+inflow_file2 <<- "FCR_wetland_inflow_newEDI_2013_2018_20190912_oneDOC.csv"
 #Name of the historical inflow and outflow files
 
 #########################################
@@ -482,13 +491,13 @@ biomass_to_chla <<- c(50/12)
 
 OXY_oxy_init <<- 300.62
 CAR_pH_init <<- 6.2
-CAR_dic_init <<- 200
+CAR_dic_init <<- 2000
 CAR_ch4_init <<- 5
 SIL_rsi_init <<- 100
 NIT_amm_init <<- 0.69
 NIT_nit_init <<- 0.05
 PHS_frp_init <<- 0.07
-OGM_doc_init <<- 47.4
+OGM_doc_init <<- 200
 OGM_poc_init <<- 20 #78.5
 OGM_pon_init <<- OGM_poc_init * init_ponc
 OGM_pop_init <<- OGM_poc_init * init_popc
@@ -602,10 +611,10 @@ push_to_git <<- FALSE
 # Depths (meters) that the water quality variables are plotted
 focal_depths_wq <<- c(1,5,9)
 #Depths that are plotted for the manager plot
-focal_depths_manager <<- c(1,5,9) #c(4,16,25)
+focal_depths_manager <<- c(4,16,25) #c(4,16,25)
 #Indexes for the depths that are compared to calculate turnover
-turnover_index_1 <<- 2
-turnover_index_2 <<- 9
+turnover_index_1 <<- 4
+turnover_index_2 <<- 25
 
 ####################################
 # Extra options that you will not adjust

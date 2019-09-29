@@ -76,9 +76,9 @@
    cloud_mode = 4
    meteo_fl = 'FCR_GLM_met_NLDAS2_010113_010118_GMTadjusted.csv'
    subdaily = .true.
-   wind_factor = 1
-   sw_factor = 1.0
-   lw_factor = 1.0
+   wind_factor = 1.0
+   sw_factor = 1.06
+   lw_factor = 0.82
    at_factor = 1
    rh_factor = 1
    rain_factor = 1
@@ -121,7 +121,7 @@
    zone_heights = 5, 9.5
    sed_heat_Ksoil = 1.8, 1.8
    sed_temp_depth = 0.2, 0.2
-   sed_temp_mean = 12.74735129, 17.76424636 !14.0559738891602, 17.4647743724165!11.08106752, 16.06112614!9.6629818, 8.1536734
-   sed_temp_amplitude = 0, 0 !4.305576061,6.171897069!6, 6
-   sed_temp_peak_doy = 268.8703225,259.239013!275, 275
+   sed_temp_mean = 12.08, 15.17
+   sed_temp_amplitude = 2.84, 5.35
+   sed_temp_peak_doy = 257, 251
 /

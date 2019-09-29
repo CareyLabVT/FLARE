@@ -117,6 +117,7 @@ process_GEFS <- function(file_name,
   
   hrly.observations <- hrly.observations %>%
     mutate(AirTemp = AirTemp - 273.15)
+  
   obs.time0 <- hrly.observations %>% filter(timestamp == time0)
   
   VarNamesStates = VarInfo %>%
@@ -124,10 +125,13 @@ process_GEFS <- function(file_name,
   VarNamesStates = VarNamesStates$VarNames
   
   # replace the first measurements of the downscaled output with observations so that the model has a smooth transition from past observations to future forecast
-  
+  # if missing observation then it skips this step
   for(i in 1:length(VarNamesStates)){
-    output[which(output$timestamp == time0),VarNamesStates[i]] = obs.time0[VarNamesStates[i]]
+    if(nrow(obs.time0[VarNamesStates[i]]) == 1){
+      output[which(output$timestamp == time0),VarNamesStates[i]] = obs.time0[VarNamesStates[i]]
+    }
   }
+  
   output.time0.6.hrs <- output %>% 
     filter(timestamp == time0 | timestamp == time0 + 6*60*60)
   states.output0.6.hrs <- spline_to_hourly(output.time0.6.hrs,VarNamesStates)
@@ -140,7 +144,7 @@ process_GEFS <- function(file_name,
   output <- output %>% filter(timestamp < time_end)
   
   output$timestamp <- with_tz(output$timestamp, local_tzone)
-
+  
   # -----------------------------------
   # 3. Produce output files
   # -----------------------------------
@@ -151,7 +155,7 @@ process_GEFS <- function(file_name,
     # hrly.Rain.Snow = forecasts %>% dplyr::mutate(Snow = 0) %>%
     #   select(timestamp, NOAA.member, Rain, Snow) %>%
     #   repeat_6hr_to_hrly()
-
+    
     
     write_file <- function(df){
       # formats GLM_climate, writes it as a .csv file, and returns the filename

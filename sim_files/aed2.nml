@@ -144,7 +144,7 @@
 !-------------------------------------------------------------------------------
 &aed2_oxygen
    oxy_initial = 225.0 !overwritten by GLM nml
-   Fsed_oxy = -10.67607068!-15!-11.39271!-21.27753257!-24.21938847!-16.92136875 !-9.52843 !-21 intermediate for Mendota and Sunapee
+   Fsed_oxy = -20 !-15!-11.39271!-21.27753257!-24.21938847!-16.92136875 !-9.52843 !-21 intermediate for Mendota and Sunapee
    Ksed_oxy = 6.342157805!9.898986425!7.650863!7.05059507!8.385887191!8.573749872 !4.98461 !6.8 is same for Mendota and FCR
    theta_sed_oxy = 1.08 !going to go for the same theta throughout
 /
@@ -522,7 +522,7 @@
      Xsc = 0.5
      Xsn = 0.05
      Xsp = 0.005
-     Fsed_doc = 50 !10! check this-was100 !5 !manual 10.0, *****0.1 for Sunapee, 30 for Mendota
+     Fsed_doc = 100 !10! check this-was100 !5 !manual 10.0, *****0.1 for Sunapee, 30 for Mendota
      Fsed_don = 0.0 !bombs if set to >0 manual 1.0, *****0.01 for Sunapee, 5 for Mendota
      Fsed_dop = 0.0 !bombs if set to >0 manuual 0.020; *****0.001 for Sunapee, -900 for Mendota
      Ksed_dom = 4.5

@@ -71,20 +71,29 @@ create_obs_met_input <- function(fname,
       index <- which(d$TIMESTAMP == full_time_hour_local[i])
       index_2 <- which(d$TIMESTAMP == full_time_hour_local[i + 1])
       if(length(index) > 0 & length(index_2) > 0){
-        ShortWave[i] <- max(mean(d$ShortWave[index:index_2]), 0.0)
-        LongWave[i] <- mean(d$LongWave[index:index_2])
+        ShortWave[i] <- max(mean(d$ShortWave[index:index_2], na.rm = TRUE), 0.0)
+        LongWave[i] <- mean(d$LongWave[index:index_2], na.rm = TRUE)
         AirTemp[i] <- d$AirTemp[index]
+        if(is.na(AirTemp[i])){
+          AirTemp[i] <- mean(c(d$AirTemp[index-1],d$AirTemp[index+1]))
+        }
         RelHum[i] <- d$RelHum[index]
         if(is.na(RelHum[i])){
           RelHum[i] <- mean(c(d$RelHum[index-1],d$RelHum[index+1]))
         }
-        WindSpeed[i] <- mean(d$WindSpeed[index:index_2])
+        WindSpeed[i] <- mean(d$WindSpeed[index:index_2], na.rm = TRUE)
         Rain[i] <- (sum(d$Rain[index:index_2]) * 24) / 1000
         Snow[i] <- 0
       }
     }
     
-   #remove_hours <- which(!is.na(AirTemp))
+   na_hours <- length(which(is.na(AirTemp)))
+    
+    if(na_hours > 2){
+      missing_met <- TRUE
+    }else{
+      missing_met <- FALSE
+    }
     
     #ShortWave <- ShortWave[remove_hours]
     #LongWave <- LongWave[remove_hours]
@@ -131,6 +140,8 @@ create_obs_met_input <- function(fname,
                                           "Rain",
                                           "Snow"))
     write.csv(historical_met, file = outfile, row.names = FALSE, quote = FALSE)
+  }else{
+    missing_met <- TRUE
   }
-  
+  return(missing_met)
 }

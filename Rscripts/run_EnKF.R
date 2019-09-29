@@ -33,12 +33,13 @@ run_EnKF <- function(x,
   n_met_members <- length(met_file_names) - 1
   nstates <- dim(x)[3] - npars
   num_wq_vars <- length(wq_start)
-  
+
   full_time_day_local <- strftime(full_time_local,
                                   format="%Y-%m-%d",
                                   tz = local_tzone)
   
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
+  x_restart_forecasted <- array(NA, dim = c(nmembers, nstates + npars))
   
   ###START EnKF
   
@@ -83,7 +84,7 @@ run_EnKF <- function(x,
       if(npars > 0){
         curr_pars <- x[i - 1, m , (nstates+1):(nstates+npars)]
       }
-     
+      
       ########################################
       #BEGIN GLM SPECIFIC PART
       ########################################
@@ -94,7 +95,7 @@ run_EnKF <- function(x,
       # x_star[m, ], 
       
       if(npars > 0){
-      
+        
         sed_temp_mean_index <- which(par_names == "sed_temp_mean")
         non_sed_temp_mean_index <- which(par_names != "sed_temp_mean")
         if(length(sed_temp_mean_index) == 1){
@@ -149,6 +150,9 @@ run_EnKF <- function(x,
       #Necessary due to random Nan in AED output
       pass <- FALSE
       num_reruns <- 0
+      
+      #Sys.setenv(DYLD_LIBRARY_PATH="/opt/intel/lib")
+      #Sys.setenv(DYLD_LIBRARY_PATH=working_directory)
       
       while(!pass){
         unlink(paste0(working_directory, "/output.nc")) 
@@ -309,9 +313,9 @@ run_EnKF <- function(x,
       
       #Extract the data uncertainity for the data 
       #types present during the time-step 
-
+      
       curr_psi <- psi_intercept[z_index] + psi_slope[z_index] * zt
-
+      
       
       
       if(length(z_index) > 1){
@@ -377,8 +381,10 @@ run_EnKF <- function(x,
       #Update states array (transposes are necessary to convert 
       #between the dims here and the dims in the EnKF formulations)
       x[i, , 1:nstates] <- t(t(x_corr) + k_t %*% (d_mat - h %*% t(x_corr)))
+      if(npars > 0){
       x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + k_t_pars %*% (d_mat - h %*% t(x_corr)))
-
+      }
+      
       curr_qt_alpha <- qt_alpha
       
       if(npars > 0){
@@ -423,11 +429,11 @@ run_EnKF <- function(x,
     
     #Correct any parameter values outside bounds
     if(npars > 0){
-        for(par in 1:npars){
-          low_index <- which(x[i, ,nstates + par] < par_lowerbound[par])
-          high_index <- which(x[i, ,nstates + par] > par_upperbound[par]) 
-         x[i,low_index ,nstates + par] <- par_lowerbound[par]
-         x[i,high_index ,nstates + par] <- par_upperbound[par]
+      for(par in 1:npars){
+        low_index <- which(x[i, ,nstates + par] < par_lowerbound[par])
+        high_index <- which(x[i, ,nstates + par] > par_upperbound[par]) 
+        x[i,low_index ,nstates + par] <- par_lowerbound[par]
+        x[i,high_index ,nstates + par] <- par_upperbound[par]
       }
     }
     
@@ -448,10 +454,14 @@ run_EnKF <- function(x,
       x_restart <- x[1, , ]
       qt_restart <- qt
     }
+    if(i == (hist_days + 2)){
+      x_restart_forecasted <- x[i, , ]
+    }
   }
   
   return(list(x = x, 
               x_restart = x_restart, 
               qt_restart = qt_restart, 
-              x_prior = x_prior))
+              x_prior = x_prior,
+              x_restart_forecasted = x_restart_forecasted))
 }
