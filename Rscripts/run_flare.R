@@ -1164,7 +1164,6 @@ run_flare<-function(start_day_local,
     print("Using restart file")
     nc <- nc_open(restart_file)
     restart_nmembers <- length(ncvar_get(nc, "ens"))
-   
     x_restart_varname <- "x_restart"
     if(restart_nmembers > nmembers){
       #sample restart_nmembers
@@ -1259,7 +1258,6 @@ run_flare<-function(start_day_local,
   x_restart <- enkf_output$x_restart
   qt_restart <- enkf_output$qt_restart
   x_prior <- enkf_output$x_prior
-  x_restart_forecasted <- enkf_output$x_restart_forecasted
   
   ####################################################
   #### STEP 13: PROCESS OUTPUT
@@ -1312,7 +1310,6 @@ run_flare<-function(start_day_local,
                         modeled_depths,
                         save_file_name,
                         x_restart,
-                        x_restart_forecasted,
                         qt_restart,
                         time_of_forecast,
                         hist_days,

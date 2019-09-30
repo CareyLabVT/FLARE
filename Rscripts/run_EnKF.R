@@ -39,8 +39,7 @@ run_EnKF <- function(x,
                                   tz = local_tzone)
   
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
-  x_restart_forecasted <- array(NA, dim = c(nmembers, nstates + npars))
-  
+
   ###START EnKF
   
   for(i in 2:nsteps){
@@ -454,14 +453,10 @@ run_EnKF <- function(x,
       x_restart <- x[1, , ]
       qt_restart <- qt
     }
-    if(i == (hist_days + 2)){
-      x_restart_forecasted <- x[i, , ]
-    }
   }
   
   return(list(x = x, 
               x_restart = x_restart, 
               qt_restart = qt_restart, 
-              x_prior = x_prior,
-              x_restart_forecasted = x_restart_forecasted))
+              x_prior = x_prior))
 }
