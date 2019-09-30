@@ -12,14 +12,14 @@ plot_forecast <- function(pdf_file_name,
                           use_ctd,
                           modeled_depths){
   
-
+  
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_chla_chain.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_CTD.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_do_chain.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_fdom_chain.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_temp_chain.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_nutrients.R"))
-
+  
   npars <- length(par_names)
   
   nMETmembers <- 21
@@ -92,7 +92,7 @@ plot_forecast <- function(pdf_file_name,
                              observed_depths_do= observed_depths_do,
                              input_file_tz = "EST5EDT", 
                              local_tzone)
-
+  
   obs_chla <- extract_chla_chain(fname = temp_obs_fname_wdir,
                                  full_time_local,
                                  modeled_depths = modeled_depths,
@@ -106,7 +106,7 @@ plot_forecast <- function(pdf_file_name,
                                observed_depths_chla_fdom,
                                input_file_tz = "EST5EDT", 
                                local_tzone)
-
+  
   obs_nutrients <- extract_nutrients(fname = paste0(data_location,"/extra_files/chemistry.csv"),
                                      full_time_day_local,
                                      modeled_depths = modeled_depths,
@@ -129,17 +129,17 @@ plot_forecast <- function(pdf_file_name,
     
     #NEED TO DOUBLE CHECK TIME ZONE
     obs_ctd <- extract_CTD(fname = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/CTD/CTD_Meta_13_18_final.csv",
-                                full_time_day_local,
-                                modeled_depths = modeled_depths,
-                                input_file_tz = "EST5EDT",
-                                local_tzone)
+                           full_time_day_local,
+                           modeled_depths = modeled_depths,
+                           input_file_tz = "EST5EDT",
+                           local_tzone)
     
     for(i in 1:length(full_time_day_local)){
       if(!is.na(obs_ctd$obs_temp[i, 1])){
         obs_temp$obs[i,which(is.na(obs_temp$obs[i,]))] <- obs_ctd$obs_temp[i,which(is.na(obs_temp$obs[i,]))]
         obs_do$obs[i,which(is.na(obs_do$obs[i,]))] <- obs_ctd$obs_do[i,which(is.na(obs_do$obs[i,])) ]
         obs_chla$obs[i,which(is.na(obs_chla$obs[i,]))] <- obs_ctd$obs_chla[i, which(is.na(obs_chla$obs[i,])) ]
-    }
+      }
     }
   }
   
@@ -529,13 +529,13 @@ plot_forecast <- function(pdf_file_name,
   dev.off()
   
   forecasted_index <- which(forecasted == 1)
-
+  
   if(length(forecasted_index) == 16){
-
+    
     full_time_local_past <- seq(full_time_local[1] - days(5), full_time_local[2], by = "1 day") # grid
     full_time_local_combined <- seq(full_time_local_past[1], full_time_local[length(full_time_local)], by = "1 day")
     full_time_local_plotting <- seq(full_time_local_past[1]-days(3), full_time_local[length(full_time_local)]+days(5), by = "1 day")
-
+    
     obs_temp <- extract_temp_chain(fname = catwalk_fname,
                                    full_time_local = full_time_local_past,
                                    modeled_depths = modeled_depths,
@@ -549,60 +549,75 @@ plot_forecast <- function(pdf_file_name,
         }
       }
     }
-
+    
     
     nlayers <- length(depths)
-
+    
     focal_depths <- focal_depths_manager
     png( paste0(save_location,'/',pdf_file_name, "_management.png"),width = 12, height = 6,units = 'in',res=300)
     par(mfrow=c(1,2))
-
+    
     #PLOT OF TURNOVER PROBABILITY
-
+    
     prob_zero <- rep(NA,length(seq(3,18,1)))
     for(i in forecasted_index){
       prob_zero[i-2] = 100*length(which(temp[i,,turnover_index_1] - temp[i,,turnover_index_2] < 1))/length((temp[i,,obs_index[1]]))
     }
-
+    
     plot(full_time_local_plotting,rep(-99,length(full_time_local_plotting)),ylim=c(0,100),xlab = 'date',ylab = '% chance')
     title('Turnover forecast',cex.main=0.9)
-
+    
     points(full_time_local[3:18],prob_zero,type='o',ylim=c(0,100),xlab = 'date',ylab = 'Probablity of turnover')
     axis(1, at=full_time_local_plotting + hours(4),las=2, cex.axis=0.7, tck=-0.01,labels=FALSE)
     abline(v = full_time_local_past[length(full_time_local_past)])
     text(full_time_local_past[length(full_time_local_past)-2],80,'past')
     text(full_time_local[4],80,'future')
     #HISTORICAL AND FUTURE TEMPERATURE
-    depth_colors <- c("firebrick4",
-                      NA,
-                      NA,
-                      "firebrick1",
-                      NA,
-                      NA,
-                      "DarkOrange1",
-                      NA,
-                      NA,
-                      "gold",
-                      NA,
-                      NA,
-                      "greenyellow",
-                      NA,
-                      NA,
-                      "medium sea green",
-                      NA,
-                      NA,
-                      "sea green",
-                      NA,
-                      NA,
-                      "DeepSkyBlue4",
-                      NA,
-                      NA,
-                      "blue2",
-                      NA,
-                      NA,
-                      "blue4",
-                      NA)
-
+    if(length(depths) == 10){
+      depth_colors <- c("firebrick4",
+                        "firebrick1",
+                        "DarkOrange1",
+                        "gold",
+                        "greenyellow",
+                        "medium sea green",
+                        "sea green",
+                        "DeepSkyBlue4",
+                        "blue2",
+                        "blue4")
+      
+    }else{
+      depth_colors <- c("firebrick4",
+                        NA,
+                        NA,
+                        "firebrick1",
+                        NA,
+                        NA,
+                        "DarkOrange1",
+                        NA,
+                        NA,
+                        "gold",
+                        NA,
+                        NA,
+                        "greenyellow",
+                        NA,
+                        NA,
+                        "medium sea green",
+                        NA,
+                        NA,
+                        "sea green",
+                        NA,
+                        NA,
+                        "DeepSkyBlue4",
+                        NA,
+                        NA,
+                        "blue2",
+                        NA,
+                        NA,
+                        "blue4",
+                        NA)
+      }
+   
+    
     plot(full_time_local_plotting,rep(-99,length(full_time_local_plotting)),ylim=c(-5,35),xlab = 'date',ylab = expression(~degree~C))
     title(paste0('Water temperature forecast'),cex.main=0.9)
     tmp_day <- full_time_local[-1][1]
@@ -620,7 +635,7 @@ plot_forecast <- function(pdf_file_name,
         }
       }
     }
-
+    
     abline(v = full_time_local_past[length(full_time_local_past)])
     text(full_time_local_past[length(full_time_local_past)-2],30,'past')
     text(full_time_local[4],30.1,'future')
@@ -635,35 +650,171 @@ plot_forecast <- function(pdf_file_name,
       text(full_time_local_plotting[length(full_time_local_plotting)-2], temp_mean[length(temp_mean[,focal_depths[2]]),focal_depths[2]], '5m:1647', col='medium sea green')
       text(full_time_local_plotting[length(full_time_local_plotting)-2], temp_mean[length(temp_mean[,focal_depths[3]]),focal_depths[3]], '8m:1637', col='blue2')
     }
-
+    
     legend("left",c("0.1m","1m", "2m", "3m", "4m", "5m", "6m", "7m","8m", "9m"),
            text.col=c("firebrick4", "firebrick1", "DarkOrange1", "gold", "greenyellow", "medium sea green", "sea green",
                       "DeepSkyBlue4", "blue2", "blue4"), cex=1, y.intersp=1, x.intersp=0.001, inset=c(0,0), xpd=T, bty='n')
     legend('topright', c('mean','confidence bounds'), lwd=1.5, lty=c('dashed','dotted'),bty='n',cex = 1)
-
+    
     mtext(paste0('Falling Creek Reservoir\n',month(tmp_day),'/',day(tmp_day),'/',year(tmp_day)), side = 3, line = -2, outer = TRUE, font = 2)
     dev.off()
-  #   
-  #   jpeg(paste0(save_location,'/TO_',pdf_file_name, ".png"),width = 6, height = 6,units = 'in',res=300)
-  #   plot(full_time_local_plotting,rep(-99,length(full_time_local_plotting)),ylim=c(0,100),xlab = 'date',ylab = '% chance')
-  #   title('Turnover forecast',cex.main=0.9)
-  #   points(full_time_local[3:18],prob_zero,type='o',ylim=c(0,100),xlab = 'date',ylab = 'Probablity of turnover')
-  #   axis(1, at=full_time_local_plotting + hours(4),las=2, cex.axis=0.7, tck=-0.01,labels=FALSE)
-  #   abline(v = full_time_local_past[length(full_time_local_past)])
-  #   text(full_time_local_past[length(full_time_local_past)-2],80,'past')
-  #   text(full_time_local[4],80,'future')
-  #   abline(v = as.POSIXct('2018-10-21 20:00:00 EDT', tz = 'EST5EDT'),col='red')
-  #   dev.off()
-  #   
-     if(push_to_git){
-       setwd(save_location)
-       
-       file.copy(from = paste0(save_location,'/',pdf_file_name, "_management.png"), to = paste0(save_location,'/','Current_forecast.png'),overwrite=TRUE)
-       system(paste0('git add ', pdf_file_name, ".pdf"))
-       system(paste0('git add Current_forecast.png'))
-       system('git commit -m "forecast and plots"')
-       system('git push')
-     }
+    #   
+    #   jpeg(paste0(save_location,'/TO_',pdf_file_name, ".png"),width = 6, height = 6,units = 'in',res=300)
+    #   plot(full_time_local_plotting,rep(-99,length(full_time_local_plotting)),ylim=c(0,100),xlab = 'date',ylab = '% chance')
+    #   title('Turnover forecast',cex.main=0.9)
+    #   points(full_time_local[3:18],prob_zero,type='o',ylim=c(0,100),xlab = 'date',ylab = 'Probablity of turnover')
+    #   axis(1, at=full_time_local_plotting + hours(4),las=2, cex.axis=0.7, tck=-0.01,labels=FALSE)
+    #   abline(v = full_time_local_past[length(full_time_local_past)])
+    #   text(full_time_local_past[length(full_time_local_past)-2],80,'past')
+    #   text(full_time_local[4],80,'future')
+    #   abline(v = as.POSIXct('2018-10-21 20:00:00 EDT', tz = 'EST5EDT'),col='red')
+    #   dev.off()
+    #
+    
+    if(include_wq){
+      png(paste0(save_location,'/',pdf_file_name, "_water_quality_management.png"),width = 12, height = 12,units = 'in',res=300)
+      par(mfrow=c(3,3), oma = c(5, 2, 5, 2))
+      
+      for(i in 1:nlayers){
+        model = i
+        if(i %in% c(2, 6, 10)){
+          obs <- obs_do$obs[,i]
+          
+          ylim = range(c(OXY_oxy[,,c(2, 6, 10)]),na.rm = TRUE) 
+          if(plot_summaries){
+            mean_oxy <- array(NA,dim=c(length(t),length(depths)))
+            upper95_oxy <- array(NA,dim=c(length(t),length(depths)))
+            lower95_oxy <- array(NA,dim=c(length(t),length(depths)))
+            for(ii in 1:length(depths)){
+              for(j in 1:length(t)){
+                mean_oxy[j,ii] <- mean(OXY_oxy[j,,ii])
+                lower95_oxy[j,ii] <- quantile(OXY_oxy[j,,ii],0.025)
+                upper95_oxy[j,ii] <- quantile(OXY_oxy[j,,ii],0.975)
+              }
+            }
+            plot(full_time_local,mean_oxy[ ,model],type='l',ylab='Oxygen (mmol/m3)',xlab='day',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+            points(full_time_local,lower95_oxy[ ,model],type='l',lty='dashed')
+            points(full_time_local,upper95_oxy[ ,model],type='l',lty='dashed')   
+            
+          }else{
+            plot(full_time_local,OXY_oxy[,1,model],type='l',ylab='Oxygen (mmol/m3)',xlab='day',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+            if(length(temp[1,,model]) > 1){
+              for(m in 2:length(temp[1,,model])){
+                points(full_time_local,OXY_oxy[,m,model],type='l')
+              }
+            }
+          }
+          
+          obs[is.na(obs)] = -999
+          points(full_time_local[1:forecast_index-1],obs[1:forecast_index-1],col='red',pch=19,cex=1.0)
+          
+          if(forecast_index > 1){
+            abline(v = full_time_local[forecast_index-1])
+          }
+        }
+      }
+      
+      for(i in 1:nlayers){
+        model = i
+        
+        if(i %in% c(2)){
+          obs <- obs_chla$obs[,i]
+          obs <- obs/biomass_to_chla
+          
+          
+          ylim = range(c(PHY_TCHLA[,,2]),na.rm = TRUE) 
+          if(plot_summaries){
+            mean_TCHLA <- array(NA,dim=c(length(t),length(depths)))
+            upper95_TCHLA <- array(NA,dim=c(length(t),length(depths)))
+            lower95_TCHLA <- array(NA,dim=c(length(t),length(depths)))
+            for(ii in 1:length(depths)){
+              for(j in 1:length(t)){
+                mean_TCHLA[j,ii] <- mean(PHY_TCHLA[j,,ii])
+                lower95_TCHLA[j,ii] <- quantile(PHY_TCHLA[j,,ii],0.025)
+                upper95_TCHLA[j,ii] <- quantile(PHY_TCHLA[j,,ii],0.975)
+              }
+            }
+            plot(full_time_local,mean_TCHLA[,model],type='l',ylab='Chlorophyll a (ug/L)',xlab='day',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+            points(full_time_local,lower95_TCHLA[ ,model],type='l',lty='dashed')
+            points(full_time_local,upper95_TCHLA[ ,model],type='l',lty='dashed')   
+          }else{
+            plot(full_time_local,PHY_TCHLA[,1,model],type='l',ylab='Chlorophyll a (ug/L)',xlab='day',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+            if(length(temp[1,,model]) > 1){
+              for(m in 2:length(temp[1,,model])){
+                points(full_time_local,PHY_TCHLA[,m,model],type='l')
+              }
+            }
+          }
+          obs[is.na(obs)] = -999
+          points(full_time_local[1:forecast_index-1],obs[1:forecast_index-1],col='red',pch=19,cex=1.0)
+          
+          if(forecast_index > 1){
+            abline(v = full_time_local[forecast_index-1])
+          }
+        }
+      }
+      plot.new()
+      plot.new()
+      
+      for(i in 1:nlayers){
+        model = i
+        if(i %in% c(2)){
+          obs <- obs_fdom$obs[,i]
+          ylim = range(c(OGM_doc[,,2]),na.rm = TRUE) 
+          
+          if(plot_summaries){
+            mean_doc <- array(NA,dim=c(length(t),length(depths)))
+            upper95_doc <- array(NA,dim=c(length(t),length(depths)))
+            lower95_doc <- array(NA,dim=c(length(t),length(depths)))
+            for(ii in 1:length(depths)){
+              for(j in 1:length(t)){
+                mean_doc[j,ii] <- mean(OGM_doc[j,,ii])
+                lower95_doc[j,ii] <- quantile(OGM_doc[j,,ii],0.025)
+                upper95_doc[j,ii] <- quantile(OGM_doc[j,,ii],0.975)
+              }
+            }
+            plot(full_time_local,mean_doc[,model],type='l',ylab='Dissolved Organic Matter (mmol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+            points(full_time_local,lower95_doc[ ,model],type='l',lty='dashed')
+            points(full_time_local,upper95_doc[ ,model],type='l',lty='dashed') 
+          }else{
+            
+            plot(full_time_local,OGM_doc[,1,model],type='l',ylab='Dissolved Organic Matter (mmol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+            if(length(temp[1,,model]) > 1){
+              for(m in 2:length(temp[1,,model])){
+                points(full_time_local,OGM_doc[,m,model],type='l')
+              }
+            }
+          }
+          obs[is.na(obs)] = -999
+          points(full_time_local[1:forecast_index-1],obs[1:forecast_index-1],col='red',pch=19,cex=1.0)
+          
+          if(forecast_index > 1){
+            abline(v = full_time_local[forecast_index-1])
+          }
+        }
+      }
+      plot.new()
+      plot.new()
+      
+      tmp_day <- full_time_local[-1][1]
+      mtext(paste0('Falling Creek Reservoir (EXPERIMENTAL - RESEARCH ONLY): ',month(tmp_day),'/',day(tmp_day),'/',year(tmp_day),"\n"), side = 3, line = -2, outer = TRUE, font = 2)
+      
+      dev.off() 
+    }
+    
+    if(push_to_git){
+      setwd(save_location)
+      if(include_wq){
+        file.copy(from = paste0(save_location,'/',pdf_file_name, "_water_quality_management.png"), to = paste0(save_location,'/','Current_forecast_WQ.png'),overwrite=TRUE)
+        system(paste0('git add Current_forecast_WQ.png'))
+      }else{
+        file.copy(from = paste0(save_location,'/',pdf_file_name, "_management.png"), to = paste0(save_location,'/','Current_forecast.png'),overwrite=TRUE)
+        system(paste0('git add Current_forecast.png'))
+      }
+      system(paste0('git add ', pdf_file_name, ".pdf"))
+      system('git commit -m "forecast and plots"')
+      system('git push')
+    }
   }
 }
 

@@ -573,7 +573,7 @@
    the_phytos = 1!1,2,3,4
    settling = 1!1,1,1,1
    !-- Benthic phytoplankton group (microphytobenthos)
-  !do_mpb       =   0
+  do_mpb       =   0
   !R_mpbg       =   0.50
   !R_mpbr       =   0.05
   !I_Kmpb       = 100.00

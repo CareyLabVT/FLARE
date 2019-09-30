@@ -78,7 +78,7 @@
    subdaily = .true.
    wind_factor = 1.0
    sw_factor = 1.06
-   lw_factor = 0.82
+   lw_factor = 1.0
    at_factor = 1
    rh_factor = 1
    rain_factor = 1
@@ -122,6 +122,6 @@
    sed_heat_Ksoil = 1.8, 1.8
    sed_temp_depth = 0.2, 0.2
    sed_temp_mean = 12.08, 15.17
-   sed_temp_amplitude = 2.84, 5.35
+   sed_temp_amplitude = 0, 0 !2.84, 5.35
    sed_temp_peak_doy = 257, 251
 /
