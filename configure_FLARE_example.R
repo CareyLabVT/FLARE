@@ -55,6 +55,8 @@ met_ds_obs_start <<- as.Date("2018-04-06")
 met_ds_obs_end <<- as.Date("2018-12-06")
 #Dates to use to developing the downscaling coefficient
 
+missing_met_data_threshold <<- 100
+
 ############################
 # Run information
 #############################
@@ -103,19 +105,29 @@ single_run <<- FALSE
 lake_depth_init <<- 9.4  #not a modeled state
 
 if(!include_wq){
-  modeled_depths <<- c(0.1, 0.33, 0.66, 
-                       1.00, 1.33, 1.66,
-                       2.00, 2.33, 2.66,
-                       3.0, 3.33, 3.66,
-                       4.0, 4.33, 4.66,
-                       5.0, 5.33, 5.66,
-                       6.0, 6.33, 6.66,
-                       7.00, 7.33, 7.66,
-                       8.0, 8.33, 8.66,
-                       9.00)
-  #modeled_depths <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
+  #modeled_depths <<- c(0.1, 0.33, 0.66, 
+  #                     1.00, 1.33, 1.66,
+  #                     2.00, 2.33, 2.66,
+  #                     3.0, 3.33, 3.66,
+  #                     4.0, 4.33, 4.66,
+  #                     5.0, 5.33, 5.66,
+  #                     6.0, 6.33, 6.66,
+  #                     7.00, 7.33, 7.66,
+  #                     8.0, 8.33, 8.66,
+  #                     9.00)
+  modeled_depths <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
 }else{
   modeled_depths <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
+  #modeled_depths <<- c(0.1, 0.5, 
+  #                     1, 2.5, 
+  #                     2, 2.5, 
+  #                     3, 3.5,
+  #                     4, 4.5, 
+  #                     5, 5.5, 
+  #                     6, 6.5, 
+  #                     7, 7.5,
+  #                     8, 8.5, 
+  #                     9) 
   #modeled_depths <<- c(0.1, 0.33, 0.66, 
   #                     1.00, 1.33, 1.66,
   #                     2.00, 2.33, 2.66,
@@ -147,7 +159,7 @@ n_inflow_outflow_members <<- 1
 ### Process uncertainty adaption
 ##################################
 qt_alpha <<- 0.9  #0 - all weight on the new Qt, 1 - all weight on the current Qt
-qt_beta <<- 0.8 # 
+qt_beta <<- 0.6 # 
 
 #################################
 # Parameter calibration information
@@ -273,11 +285,22 @@ Fsed_doc_upperbound <<-  1000 #1.01
 #daily perturbance of parameter value
 Fsed_doc_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
 
+par_names <<- c("sed_temp_mean","sed_temp_mean","sw_factor")
+par_names_save <<- c("zone1temp","zone2temp","sw_factor")
+par_nml <<- c("glm3.nml","glm3.nml","glm3.nml")
+par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean,swf_init_mean)
+par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound,swf_init_lowerbound)
+par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound,swf_init_upperbound)
+par_lowerbound <<- c(zone1_temp_lowerbound,zone2_temp_lowerbound,swf_lowerbound)
+par_upperbound <<- c(zone1_temp_upperbound,zone2_temp_upperbound,swf_upperbound)
+par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt,swf_init_qt)
+par_units <<- c("deg_C","deg_C","-") #
 #Create parameter vectors
 if(include_wq){
   par_names <<- c(
     "sed_temp_mean"
     ,"sed_temp_mean"
+    ,"sw_factor"
     ,"Fsed_oxy"
     ,"pd%R_growth"
     #,"Rnitrif"
@@ -290,6 +313,7 @@ if(include_wq){
   par_names_save <<- c(
     "zone1temp"
     ,"zone2temp"
+    ,"sw_factor"
     ,"Fsed_oxy"
     ,"R_growth"
     #,"Rnitrif"
@@ -301,6 +325,7 @@ if(include_wq){
   )
   par_nml <<- c(
     "glm3.nml"
+    ,"glm3.nml"
     ,"glm3.nml"
     ,"aed2.nml"
     ,"aed2_phyto_pars.nml"
@@ -314,6 +339,7 @@ if(include_wq){
   par_init_mean <<- c(
     zone1_temp_init_mean
     ,zone2_temp_init_mean
+    ,swf_init_mean
     ,Fsed_oxy_init_mean
     ,R_growth_init_mean
     #,Rnitrif_init_mean
@@ -326,6 +352,7 @@ if(include_wq){
   par_init_lowerbound <<- c(
     zone1_temp_init_lowerbound
     ,zone2_temp_init_lowerbound
+    ,swf_init_lowerbound
     ,Fsed_oxy_init_lowerbound
     ,R_growth_init_lowerbound
     #,Rnitrif_init_lowerbound
@@ -338,6 +365,7 @@ if(include_wq){
   par_init_upperbound <<- c(
     zone1_temp_init_upperbound
     ,zone2_temp_init_upperbound
+    ,swf_init_upperbound
     ,Fsed_oxy_init_upperbound
     ,R_growth_init_upperbound
     #,Rnitrif_init_upperbound 
@@ -350,6 +378,7 @@ if(include_wq){
   par_lowerbound <<- c(
     zone1_temp_lowerbound
     ,zone2_temp_lowerbound 
+    ,swf_lowerbound
     ,Fsed_oxy_lowerbound
     ,R_growth_lowerbound
     #,Rnitrif_lowerbound
@@ -362,6 +391,7 @@ if(include_wq){
   par_upperbound <<- c(
     zone1_temp_upperbound
     ,zone2_temp_upperbound
+    ,swf_upperbound
     ,Fsed_oxy_upperbound
     ,R_growth_upperbound
     #,Rnitrif_upperbound
@@ -374,6 +404,7 @@ if(include_wq){
   par_init_qt <<- c(
     zone1temp_init_qt
     ,zone2temp_init_qt
+    ,swf_init_qt
     ,Fsed_oxy_init_qt
     ,R_growth_init_qt
     #,Rnitrif_init_qt
@@ -388,6 +419,7 @@ if(include_wq){
     ,"-"
     ,"-"
     ,"-"
+    ,"-"
     #,"-" 
     #,"-" 
     #,"-" 
@@ -396,7 +428,6 @@ if(include_wq){
     #,"-"
   )
   
-  par_init_qt <- par_init_qt * 0.1
   
 }else{
   par_names <<- c() #c("sed_temp_mean","sed_temp_mean")
@@ -421,7 +452,7 @@ if(include_wq){
   par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt,swf_init_qt)
   par_units <<- c("deg_C","deg_C","-") #
   
-  par_init_qt <- par_init_qt * 0.1
+  #par_init_qt <- par_init_qt * 0.1
 }
 
 #####################################
@@ -429,8 +460,10 @@ if(include_wq){
 ######################################
 
 
-use_ctd <<- TRUE
+use_ctd <<- FALSE
 #Use CTD data in place of the sensor string
+use_nutrient_data <<- FALSE
+#Use EDI formated nutrient file
 
 observed_depths_temp <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9)
 #Depths with temperature observations
@@ -611,10 +644,10 @@ push_to_git <<- FALSE
 # Depths (meters) that the water quality variables are plotted
 focal_depths_wq <<- c(1,5,9)
 #Depths that are plotted for the manager plot
-focal_depths_manager <<- c(4,16,25) #c(4,16,25)
+focal_depths_manager <<- c(2, 6, 9) #c(4,16,25) #c(4,16,25)
 #Indexes for the depths that are compared to calculate turnover
-turnover_index_1 <<- 4
-turnover_index_2 <<- 25
+turnover_index_1 <<- 2 #4
+turnover_index_2 <<- 9 #25
 
 ####################################
 # Extra options that you will not adjust

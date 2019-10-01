@@ -89,11 +89,8 @@ create_obs_met_input <- function(fname,
     
    na_hours <- length(which(is.na(AirTemp)))
     
-    if(na_hours > 2){
-      missing_met <- TRUE
-    }else{
-      missing_met <- FALSE
-    }
+    missing_met <- na_hours
+
     
     #ShortWave <- ShortWave[remove_hours]
     #LongWave <- LongWave[remove_hours]
@@ -141,7 +138,7 @@ create_obs_met_input <- function(fname,
                                           "Snow"))
     write.csv(historical_met, file = outfile, row.names = FALSE, quote = FALSE)
   }else{
-    missing_met <- TRUE
+    missing_met <- length(full_time_hour_local)
   }
   return(missing_met)
 }
