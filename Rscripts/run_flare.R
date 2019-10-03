@@ -1228,8 +1228,7 @@ surface_height <- array(NA, dim=c(nsteps, nmembers))
 surface_height[1, ] <- round(lake_depth_init, 3)
 
 #Matrix to store snow and ice heights
-snow_ice_height <- array(NA, dim=c(nsteps, nmembers, 3))
-surface_height[1, ] <- c(0, 0, 0)
+snow_ice_height <- array(0.0, dim=c(nsteps, nmembers, 3))
 
 ####################################################
 #### STEP 12: Run Ensemble Kalman Filter
