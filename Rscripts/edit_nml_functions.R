@@ -204,6 +204,11 @@ get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars){
   layer_mids <- c(elevs[1]/2, elevs[1:num_z-1] + diff(elevs)/2)
   elevs_re <- c(0, layer_mids, tail(elevs, 1))
   
+  snow <- ncvar_get(glm_nc, "hsnow")[2]
+  ice_white <- ncvar_get(glm_nc, "hwice")[2] 
+  ice_total <- ncvar_get(glm_nc, "hice")[2] 
+  ice_blue <- ice_total - ice_white
+  
   output <- array(NA,dim=c(num_dep,length(vars)))
   for(v in 1:length(vars)){
     temp <- ncvar_get(glm_nc, vars[v])
@@ -218,5 +223,6 @@ get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars){
   }
   nc_close(glm_nc)
   return(list(output = output,
-              surface_height = elev_surf[length(tallest_layer), 2]))
+              surface_height = elev_surf[length(tallest_layer), 2],
+              snow_wice_bice = c(snow, ice_white, ice_blue)))
 }

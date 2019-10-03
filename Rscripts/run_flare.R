@@ -1227,6 +1227,10 @@ if(hist_days == 0){
 surface_height <- array(NA, dim=c(nsteps, nmembers))
 surface_height[1, ] <- round(lake_depth_init, 3)
 
+#Matrix to store snow and ice heights
+snow_ice_height <- array(NA, dim=c(nsteps, nmembers, 3))
+surface_height[1, ] <- c(0, 0, 0)
+
 ####################################################
 #### STEP 12: Run Ensemble Kalman Filter
 ####################################################
@@ -1259,12 +1263,15 @@ enkf_output <- run_EnKF(x,
                         inflow_file_names,
                         outflow_file_names,
                         management_input,
-                        forecast_sss_on)
+                        forecast_sss_on,
+                        snow_ice_height)
 
 x <- enkf_output$x
 x_restart <- enkf_output$x_restart
 qt_restart <- enkf_output$qt_restart
 x_prior <- enkf_output$x_prior
+surface_height_restart <- enkf_output$surface_height_restart
+snow_ice_restart <- enkf_output$snow_ice_restart
 
 ####################################################
 #### STEP 13: PROCESS OUTPUT
@@ -1329,7 +1336,9 @@ write_forecast_netcdf(x,
                       npars,
                       GLMversion,
                       FLAREversion,
-                      local_tzone)
+                      local_tzone,
+                      surface_height_restart,
+                      snow_ice_restart)
 
 ##ARCHIVE FORECAST
 restart_file_name <- archive_forecast(working_directory = working_directory,

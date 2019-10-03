@@ -26,7 +26,8 @@ run_EnKF <- function(x,
                      inflow_file_names,
                      outflow_file_names,
                      management_input,
-                     forecast_sss_on){
+                     forecast_sss_on,
+                     snow_ice_height){
   
   nsteps <- length(full_time_local)
   nmembers <- dim(x)[2]
@@ -177,6 +178,9 @@ run_EnKF <- function(x,
             x_star[m, 1:nstates] <- GLM_temp_wq_out$output
             
             surface_height[i, m] <- round(GLM_temp_wq_out$surface_height, 3) 
+            
+            snow_ice_height[i, m, ] <- round(GLM_temp_wq_out$snow_wice_bice, 3)
+            
             if(length(which(is.na(x_star[m, ]))) == 0){
               pass = TRUE
             }else{
@@ -449,14 +453,20 @@ run_EnKF <- function(x,
     if(i == (hist_days + 1)){
       x_restart <- x[i, , ]
       qt_restart <- qt
+      surface_height_restart <- surface_height[i, ]
+      snow_ice_restart <- snow_ice_height[i, , ]
     }else if(hist_days == 0 & i == 2){
       x_restart <- x[1, , ]
       qt_restart <- qt
+      surface_height_restart <- surface_height[i, ]
+      snow_ice_restart <- snow_ice_height[i, , ]
     }
   }
   
   return(list(x = x, 
               x_restart = x_restart, 
               qt_restart = qt_restart, 
-              x_prior = x_prior))
+              x_prior = x_prior,
+              surface_height_restart = surface_height_restart,
+              snow_ice_restart = snow_ice_restart))
 }
