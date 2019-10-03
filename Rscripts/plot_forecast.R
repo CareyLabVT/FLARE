@@ -123,12 +123,9 @@ plot_forecast <- function(pdf_file_name,
   #Use the CTD observation rather than the sensor string when CTD data is avialable
   if(use_ctd){
     ## LOOK AT CTD DATA
-    fl <- c(list.files("/Users/quinn/Dropbox (VTFRS)/Research/SSC_forecasting/SCC_data/CTD/",
-                       pattern = "CTD", 
-                       full.names = TRUE))
-    
+
     #NEED TO DOUBLE CHECK TIME ZONE
-    obs_ctd <- extract_CTD(fname = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/CTD/CTD_Meta_13_18_final.csv",
+    obs_ctd <- extract_CTD(fname = paste0(data_location,"CTD/CTD_Meta_13_18_final.csv"),
                            full_time_day_local,
                            modeled_depths = modeled_depths,
                            input_file_tz = "EST5EDT",
