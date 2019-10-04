@@ -1222,13 +1222,15 @@ if(hist_days == 0){
   }
 }
 
-
 #Matrix to store essemble specific surface height
 surface_height <- array(NA, dim=c(nsteps, nmembers))
 surface_height[1, ] <- round(lake_depth_init, 3)
 
 #Matrix to store snow and ice heights
-snow_ice_height <- array(0.0, dim=c(nsteps, nmembers, 3))
+snow_ice_height <- array(NA, dim=c(nsteps, nmembers, 3))
+snow_ice_height[1, ,1] <- default_snow_height_init
+snow_ice_height[1, ,2] <- default_white_ice_init
+snow_ice_height[1, ,3] <- default_blue_ice_init
 
 ####################################################
 #### STEP 12: Run Ensemble Kalman Filter

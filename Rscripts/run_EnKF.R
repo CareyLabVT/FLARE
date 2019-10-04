@@ -129,9 +129,9 @@ run_EnKF <- function(x,
       update_var(round(x[i - 1, m, 1:length(modeled_depths)], 3), "the_temps", working_directory, "glm3.nml")
       update_var(surface_height[i - 1, m], "lake_depth", working_directory, "glm3.nml") 
       
-      update_var(snow_ice_height[i - 1, m, 1], "delzSnow", working_directory, "glm3.nml") 
-      update_var(snow_ice_height[i - 1, m, 2], "delzWhiteIce", working_directory, "glm3.nml") 
-      update_var(snow_ice_height[i - 1, m, 3], "delzBlueIce", working_directory, "glm3.nml")
+      update_var(0.0, "snow_height", working_directory, "glm3.nml") 
+      update_var(snow_ice_height[i - 1, m, 2], "white_ice_height", working_directory, "glm3.nml") 
+      update_var(snow_ice_height[i - 1, m, 3], "blue_ice_height", working_directory, "glm3.nml")
       
       #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
       
