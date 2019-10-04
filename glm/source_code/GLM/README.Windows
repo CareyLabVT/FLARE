@@ -1,0 +1,22 @@
+
+Building for Windows requires Visual Studio and Intel fortran and either Visual C++ or Intel C++.
+
+We use vs2015 Community with Visual C and Intel fortran
+
+If you want to built with FABM included (the default) you will need to also install cmake
+
+   https://cmake.org/download/
+
+For fetching the sources it may be useful to have the command line git tools installed :
+
+  https://blogs.msdn.microsoft.com/devops/2013/03/08/use-the-git-command-prompt-to-supplement-visual-studio/
+
+or install Git for Windows :
+
+  https://gitforwindows.org/
+
+You will also need netcdf and some other 3rd party libraries. There are utilities available in the
+AED_Tools repository under win-3rd-party for fetching and building them. They will need cmake too.
+
+
+

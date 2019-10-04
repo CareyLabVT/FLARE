@@ -1,0 +1,4 @@
+*.o
+libplot.a
+tstfont
+tstmap

@@ -107,7 +107,7 @@ plot_forecast <- function(pdf_file_name,
                                input_file_tz = "EST5EDT", 
                                local_tzone)
   
-  obs_nutrients <- extract_nutrients(fname = paste0(data_location,"/extra_files/chemistry.csv"),
+  obs_nutrients <- extract_nutrients(fname = paste0(data_location,"/manual-data/chemistry.csv"),
                                      full_time_day_local,
                                      modeled_depths = modeled_depths,
                                      input_file_tz = "EST5EDT", 
@@ -125,7 +125,7 @@ plot_forecast <- function(pdf_file_name,
     ## LOOK AT CTD DATA
 
     #NEED TO DOUBLE CHECK TIME ZONE
-    obs_ctd <- extract_CTD(fname = paste0(data_location,"CTD/CTD_Meta_13_18_final.csv"),
+    obs_ctd <- extract_CTD(fname = paste0(data_location,"/manual-data/CTD_Meta_13_18_final.csv"),
                            full_time_day_local,
                            modeled_depths = modeled_depths,
                            input_file_tz = "EST5EDT",

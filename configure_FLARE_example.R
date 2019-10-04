@@ -145,7 +145,7 @@ default_temp_init_depths <<-  c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9)
 the_sals_init <<- 0.0
 
 default_snow_height_init <<- 0.0
-default_white_ice_init <<- 0.1
+default_white_ice_init <<- 0.0
 default_blue_ice_init <<- 0.0
 
 ##############################

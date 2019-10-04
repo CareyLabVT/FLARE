@@ -217,6 +217,7 @@ run_flare<-function(start_day_local,
   temperature_location <- paste0(data_location, "/", "mia-data") #FCR SPECIFIC
   met_station_location <- paste0(data_location, "/", "carina-data") #FCR SPECIFIC
   noaa_location <- paste0(data_location, "/", "noaa-data") #FCR SPECIFIC
+  manual_data_location <- paste0(data_location, "/", "manual-data") #FCR SPECIFIC
   if(pull_from_git){
     
     if(!file.exists(temperature_location)){
@@ -232,6 +233,11 @@ run_flare<-function(start_day_local,
       system("git clone -b noaa-data --single-branch https://github.com/CareyLabVT/SCCData.git noaa-data")
     }
     
+    if(!file.exists(manual_data_location)){
+      setwd(data_location)
+      system("git clone -b manual-data --single-branch https://github.com/CareyLabVT/SCCData.git manual-data")
+    }
+    
     setwd(temperature_location)
     system(paste0("git pull"))
     
@@ -239,6 +245,9 @@ run_flare<-function(start_day_local,
     system(paste0("git pull"))
     
     setwd(noaa_location)
+    system(paste0("git pull"))
+    
+    setwd(manual_data_location)
     system(paste0("git pull"))
   }
   
@@ -399,7 +408,7 @@ run_flare<-function(start_day_local,
                    to = working_directory, 
                    overwrite = TRUE)
   
-  extra_input_files <- paste0(data_location, "/", "extra_files")
+  extra_input_files <- paste0(data_location, "/", "manual-data")
   fl <- c(list.files(extra_input_files, full.names = TRUE))
   tmp <- file.copy(from = fl, to = working_directory, overwrite = TRUE)
   
@@ -640,7 +649,7 @@ run_flare<-function(start_day_local,
     #obs_fdom$obs[, ] <- NA
     
     if(use_nutrient_data){
-      obs_nutrients <- extract_nutrients(fname = paste0(data_location,"/extra_files/chemistry.csv"),
+      obs_nutrients <- extract_nutrients(fname = paste0(data_location,"/manual-data/chemistry.csv"),
                                          full_time_day_local,
                                          modeled_depths = modeled_depths,
                                          input_file_tz = "EST5EDT", 
@@ -664,7 +673,7 @@ run_flare<-function(start_day_local,
 if(use_ctd){
   
   #NEED TO DOUBLE CHECK TIME ZONE
-  obs_ctd <- extract_CTD(fname = paste0(data_location,"/CTD/CTD_Meta_13_18_final.csv"),
+  obs_ctd <- extract_CTD(fname = paste0(data_location,"/manual-data/CTD_Meta_13_18_final.csv"),
                          full_time_day_local,
                          modeled_depths = modeled_depths,
                          input_file_tz = "EST5EDT",
