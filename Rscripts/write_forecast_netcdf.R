@@ -18,7 +18,9 @@ write_forecast_netcdf <- function(x,
                                   FLAREversion,
                                   local_tzone,                      
                                   surface_height_restart,
-                                  snow_ice_restart){
+                                  snow_ice_restart,
+                                  snow_ice_height,
+                                  surface_height){
   
   obs <- z
   
@@ -36,6 +38,8 @@ write_forecast_netcdf <- function(x,
   #Set variable that states whether value is forecasted
   forecasted <- rep(1,length(t))
   forecasted[1:(hist_days+1)] <- 0
+  
+  ice_thickness <- snow_ice_height[, ,2] + snow_ice_height[, , 3]
   
   #Create summary output
   mean_temp <- array(NA,dim=c(length(t),length(depths)))
@@ -71,34 +75,36 @@ write_forecast_netcdf <- function(x,
   def_list[[6]]  <- ncvar_def("x_restart","-",list(ensdim,stateagudim),fillvalue,'matrix for restarting EnKF',prec="float")
   def_list[[7]] <- ncvar_def("x_prior","-",list(timedim,ensdim,stateagudim),fillvalue,'Predicted states prior to Kalman correction',prec="float")
   def_list[[8]] <- ncvar_def("obs","various",list(timedim,obsdim),fillvalue,'temperature observations',prec="single")
-  def_list[[9]] <- ncvar_def("forecasted","-",list(timedim),missval = -99,longname = dlname <- '0 = historical; 1 = forecasted',prec="integer")
-  def_list[[10]] <- ncvar_def("surface_height_restart","-",list(ensdim),missval = -99,longname = dlname <- 'Surface Height',prec="integer")
-  def_list[[11]] <- ncvar_def("snow_ice_restart","-",list(ensdim, snow_ice_dim),missval = -99,longname = dlname <- 'Snow (1), White Ice (2), Blue Ice (3)',prec="integer")
+  def_list[[9]] <- ncvar_def("forecasted","-",list(timedim),missval = -99,longname = '0 = historical; 1 = forecasted',prec="integer")
+  def_list[[10]] <- ncvar_def("surface_height_restart","m",list(ensdim),missval = -99,longname =  'Surface Height',prec="integer")
+  def_list[[11]] <- ncvar_def("snow_ice_restart","m",list(ensdim, snow_ice_dim),missval = -99,longname = 'Snow (1), White Ice (2), Blue Ice (3)',prec="integer")
+  def_list[[12]] <- ncvar_def("ice_depth","m", list(timedim,ensdim),missval = -99,longname = 'Ice Thickness',prec="integer")
+  def_list[[13]] <- ncvar_def("lake_depth","m",list(timedim,ensdim),missval = -99,longname = 'Depth of lake',prec="integer")
   
   if(npars > 0){
     for(par in 1:npars){
-      def_list[[11+par]] <-ncvar_def(par_names_save[par],par_units[par],list(timedim,ensdim),fillvalue,par_names_save[par],prec="single")
+      def_list[[13+par]] <-ncvar_def(par_names_save[par],par_units[par],list(timedim,ensdim),fillvalue,par_names_save[par],prec="single")
     }
   }
   
   if(include_wq){
-    def_list[[11+npars+1]] <- ncvar_def("OXY_oxy","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OXY_oxy',prec="single")
-    def_list[[11+npars+2]]<- ncvar_def("CAR_pH","-",list(timedim,ensdim,depthdim),fillvalue,'CAR_pH',prec="single")
-    def_list[[11+npars+3]] <- ncvar_def("CAR_dic","umol/L",list(timedim,ensdim,depthdim),fillvalue,'CAR_dic',prec="single")
-    def_list[[11+npars+4]] <- ncvar_def("CAR_ch4","umol/L",list(timedim,ensdim,depthdim),fillvalue,'CAR_ch4',prec="single")
-    def_list[[11+npars+5]] <- ncvar_def("SIL_rsi","umol/L",list(timedim,ensdim,depthdim),fillvalue,'SIL_rsi',prec="single")
-    def_list[[11+npars+6]] <- ncvar_def("NIT_amm","umol/L",list(timedim,ensdim,depthdim),fillvalue,'NIT_amm',prec="single")
-    def_list[[11+npars+7]] <- ncvar_def("NIT_nit","umol/L",list(timedim,ensdim,depthdim),fillvalue,'NIT_nit',prec="single")
-    def_list[[11+npars+8]] <- ncvar_def("PHS_frp","umol/L",list(timedim,ensdim,depthdim),fillvalue,'PHS_frp',prec="single")
-    def_list[[11+npars+9]] <- ncvar_def("OGM_doc","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OGM_doc',prec="single")
-    def_list[[11+npars+10]] <- ncvar_def("OGM_poc","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OGM_poc',prec="single")
-    def_list[[11+npars+11]] <- ncvar_def("OGM_don","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OGM_don',prec="single")
-    def_list[[11+npars+12]] <- ncvar_def("OGM_pon","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OGM_pon',prec="single")
-    def_list[[11+npars+13]] <- ncvar_def("OGM_dop","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OGM_dop',prec="single")
-    def_list[[11+npars+14]] <- ncvar_def("OGM_pop","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OGM_pop',prec="single")
-    def_list[[11+npars+15]] <- ncvar_def("NCS_ss1","",list(timedim,ensdim,depthdim),fillvalue,'NCS_ss1',prec="single")
-    def_list[[11+npars+16]] <- ncvar_def("PHS_frp_ads","umol/L",list(timedim,ensdim,depthdim),fillvalue,'PHS_frp_ads',prec="single")
-    def_list[[11+npars+17]] <- ncvar_def("PHY_AGGREGATE","umol/L",list(timedim,ensdim,depthdim),fillvalue,'PHY_AGGREGATE',prec="single")
+    def_list[[13+npars+1]] <- ncvar_def("OXY_oxy","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OXY_oxy',prec="single")
+    def_list[[13+npars+2]]<- ncvar_def("CAR_pH","-",list(timedim,ensdim,depthdim),fillvalue,'CAR_pH',prec="single")
+    def_list[[13+npars+3]] <- ncvar_def("CAR_dic","umol/L",list(timedim,ensdim,depthdim),fillvalue,'CAR_dic',prec="single")
+    def_list[[13+npars+4]] <- ncvar_def("CAR_ch4","umol/L",list(timedim,ensdim,depthdim),fillvalue,'CAR_ch4',prec="single")
+    def_list[[13+npars+5]] <- ncvar_def("SIL_rsi","umol/L",list(timedim,ensdim,depthdim),fillvalue,'SIL_rsi',prec="single")
+    def_list[[13+npars+6]] <- ncvar_def("NIT_amm","umol/L",list(timedim,ensdim,depthdim),fillvalue,'NIT_amm',prec="single")
+    def_list[[13+npars+7]] <- ncvar_def("NIT_nit","umol/L",list(timedim,ensdim,depthdim),fillvalue,'NIT_nit',prec="single")
+    def_list[[13+npars+8]] <- ncvar_def("PHS_frp","umol/L",list(timedim,ensdim,depthdim),fillvalue,'PHS_frp',prec="single")
+    def_list[[13+npars+9]] <- ncvar_def("OGM_doc","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OGM_doc',prec="single")
+    def_list[[13+npars+10]] <- ncvar_def("OGM_poc","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OGM_poc',prec="single")
+    def_list[[13+npars+11]] <- ncvar_def("OGM_don","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OGM_don',prec="single")
+    def_list[[13+npars+12]] <- ncvar_def("OGM_pon","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OGM_pon',prec="single")
+    def_list[[13+npars+13]] <- ncvar_def("OGM_dop","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OGM_dop',prec="single")
+    def_list[[13+npars+14]] <- ncvar_def("OGM_pop","umol/L",list(timedim,ensdim,depthdim),fillvalue,'OGM_pop',prec="single")
+    def_list[[13+npars+15]] <- ncvar_def("NCS_ss1","",list(timedim,ensdim,depthdim),fillvalue,'NCS_ss1',prec="single")
+    def_list[[13+npars+16]] <- ncvar_def("PHS_frp_ads","umol/L",list(timedim,ensdim,depthdim),fillvalue,'PHS_frp_ads',prec="single")
+    def_list[[13+npars+17]] <- ncvar_def("PHY_AGGREGATE","umol/L",list(timedim,ensdim,depthdim),fillvalue,'PHY_AGGREGATE',prec="single")
   }
   
   ncout <- nc_create(ncfname,def_list,force_v4=T)
@@ -115,31 +121,33 @@ write_forecast_netcdf <- function(x,
   ncvar_put(ncout,def_list[[9]] ,as.array(forecasted))
   ncvar_put(ncout,def_list[[10]] ,surface_height_restart)
   ncvar_put(ncout,def_list[[11]] ,snow_ice_restart)
+  ncvar_put(ncout,def_list[[12]] ,ice_thickness)
+  ncvar_put(ncout,def_list[[13]] ,surface_height)
   
   if(npars > 0){
     for(par in 1:npars){
-      ncvar_put(ncout,def_list[[11 + par]] ,x[,,nstates + par])
+      ncvar_put(ncout,def_list[[13 + par]] ,x[,,nstates + par])
     }
   }
   
   if(include_wq){
-    ncvar_put(ncout,def_list[[11+npars+1]],x[,,wq_start[1]:wq_end[1]])
-    ncvar_put(ncout,def_list[[11+npars+2]],x[,,wq_start[2]:wq_end[2]])
-    ncvar_put(ncout,def_list[[11+npars+3]],x[,,wq_start[3]:wq_end[3]])
-    ncvar_put(ncout,def_list[[11+npars+4]],x[,,wq_start[4]:wq_end[4]])
-    ncvar_put(ncout,def_list[[11+npars+5]],x[,,wq_start[5]:wq_end[5]])
-    ncvar_put(ncout,def_list[[11+npars+6]],x[,,wq_start[6]:wq_end[6]])
-    ncvar_put(ncout,def_list[[11+npars+7]],x[,,wq_start[7]:wq_end[7]])
-    ncvar_put(ncout,def_list[[11+npars+8]],x[,,wq_start[8]:wq_end[8]])
-    ncvar_put(ncout,def_list[[11+npars+9]],x[,,wq_start[9]:wq_end[9]])
-    ncvar_put(ncout,def_list[[11+npars+10]],x[,,wq_start[10]:wq_end[10]])
-    ncvar_put(ncout,def_list[[11+npars+11]],x[,,wq_start[11]:wq_end[11]])
-    ncvar_put(ncout,def_list[[11+npars+12]],x[,,wq_start[12]:wq_end[12]])
-    ncvar_put(ncout,def_list[[11+npars+13]],x[,,wq_start[13]:wq_end[13]])
-    ncvar_put(ncout,def_list[[11+npars+14]],x[,,wq_start[14]:wq_end[14]])
-    ncvar_put(ncout,def_list[[11+npars+15]],x[,,wq_start[15]:wq_end[15]])
-    ncvar_put(ncout,def_list[[11+npars+16]],x[,,wq_start[16]:wq_end[16]])
-    ncvar_put(ncout,def_list[[11+npars+17]],x[,,wq_start[17]:wq_end[17]])
+    ncvar_put(ncout,def_list[[13+npars+1]],x[,,wq_start[1]:wq_end[1]])
+    ncvar_put(ncout,def_list[[13+npars+2]],x[,,wq_start[2]:wq_end[2]])
+    ncvar_put(ncout,def_list[[13+npars+3]],x[,,wq_start[3]:wq_end[3]])
+    ncvar_put(ncout,def_list[[13+npars+4]],x[,,wq_start[4]:wq_end[4]])
+    ncvar_put(ncout,def_list[[13+npars+5]],x[,,wq_start[5]:wq_end[5]])
+    ncvar_put(ncout,def_list[[13+npars+6]],x[,,wq_start[6]:wq_end[6]])
+    ncvar_put(ncout,def_list[[13+npars+7]],x[,,wq_start[7]:wq_end[7]])
+    ncvar_put(ncout,def_list[[13+npars+8]],x[,,wq_start[8]:wq_end[8]])
+    ncvar_put(ncout,def_list[[13+npars+9]],x[,,wq_start[9]:wq_end[9]])
+    ncvar_put(ncout,def_list[[13+npars+10]],x[,,wq_start[10]:wq_end[10]])
+    ncvar_put(ncout,def_list[[13+npars+11]],x[,,wq_start[11]:wq_end[11]])
+    ncvar_put(ncout,def_list[[13+npars+12]],x[,,wq_start[12]:wq_end[12]])
+    ncvar_put(ncout,def_list[[13+npars+13]],x[,,wq_start[13]:wq_end[13]])
+    ncvar_put(ncout,def_list[[13+npars+14]],x[,,wq_start[14]:wq_end[14]])
+    ncvar_put(ncout,def_list[[13+npars+15]],x[,,wq_start[15]:wq_end[15]])
+    ncvar_put(ncout,def_list[[13+npars+16]],x[,,wq_start[16]:wq_end[16]])
+    ncvar_put(ncout,def_list[[13+npars+17]],x[,,wq_start[17]:wq_end[17]])
   }
   
   

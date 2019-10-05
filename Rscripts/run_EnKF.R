@@ -472,5 +472,7 @@ run_EnKF <- function(x,
               qt_restart = qt_restart, 
               x_prior = x_prior,
               surface_height_restart = surface_height_restart,
-              snow_ice_restart = snow_ice_restart))
+              snow_ice_restart = snow_ice_restart,
+              snow_ice_height = snow_ice_height,
+              surface_height = surface_height))
 }

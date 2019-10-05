@@ -1282,6 +1282,8 @@ qt_restart <- enkf_output$qt_restart
 x_prior <- enkf_output$x_prior
 surface_height_restart <- enkf_output$surface_height_restart
 snow_ice_restart <- enkf_output$snow_ice_restart
+snow_ice_height <- enkf_output$snow_ice_height
+surface_height <- enkf_output$surface_height
 
 ####################################################
 #### STEP 13: PROCESS OUTPUT
@@ -1348,7 +1350,9 @@ write_forecast_netcdf(x,
                       FLAREversion,
                       local_tzone,
                       surface_height_restart,
-                      snow_ice_restart)
+                      snow_ice_restart,
+                      snow_ice_height,
+                      surface_height)
 
 ##ARCHIVE FORECAST
 restart_file_name <- archive_forecast(working_directory = working_directory,
