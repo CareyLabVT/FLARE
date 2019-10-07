@@ -12,7 +12,7 @@ create_sss_input_output <- function(x, i, m, full_time_day_local, working_direct
       OXY1 <- x[i-1, m, wq_start[1] + depth_index - 1] + 0.0
     }
   }else{
-    FLOW1 <- management_input[i-1, 1] * (1/(60*60*24))
+    FLOW1 <- management_input[i-1, 1]
     #Add input oxygen to the existing concentration
     OXY1 <- x[i-1, m, wq_start[1] + depth_index - 1] + management_input[i-1, 2]
     #Add use the input oxygen as the concentration
@@ -28,7 +28,7 @@ create_sss_input_output <- function(x, i, m, full_time_day_local, working_direct
       OXY2 <- x[i-1, m, wq_start[1] + depth_index - 1]
     }
   }else{
-    FLOW2 <- management_input[i, 1] * (1/(60*60*24))
+    FLOW2 <- management_input[i, 1]
     #Add input oxygen to the existing concentration
     OXY2 <- x[i-1, m, wq_start[1] + depth_index - 1] + management_input[i, 2]
     #Add use the input oxygen as the concentration

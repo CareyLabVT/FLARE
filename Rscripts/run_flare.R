@@ -602,7 +602,7 @@ run_flare<-function(start_day_local,
   management_input <- read_sss_files(full_time_day_local,
                                      working_directory,
                                      input_file_tz = 'EST5EDT', 
-                                     sss_file = "Calc_HOX_flow_DO_20190320.csv",
+                                     sss_file = "FCR_SSS_inflow_2013_2019.csv",
                                      local_tzone)
   
   
