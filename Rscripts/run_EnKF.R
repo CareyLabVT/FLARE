@@ -41,6 +41,10 @@ run_EnKF <- function(x,
   
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
 
+  
+  old_LD_LIBRARY_PATH <- Sys.getenv("LD_LIBRARY_PATH")
+  Sys.setenv(LD_LIBRARY_PATH = paste(old_LD_LIBRARY_PATH, working_directory, sep = ":"))
+  
   ###START EnKF
   
   for(i in 2:nsteps){
@@ -157,7 +161,7 @@ run_EnKF <- function(x,
       
       #Sys.setenv(DYLD_LIBRARY_PATH="/opt/intel/lib")
       #Sys.setenv(DYLD_LIBRARY_PATH=working_directory)
-      
+
       while(!pass){
         unlink(paste0(working_directory, "/output.nc")) 
         
