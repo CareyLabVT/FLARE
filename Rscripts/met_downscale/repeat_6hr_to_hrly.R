@@ -1,7 +1,7 @@
 repeat_6hr_to_hrly <- function(data.6hr){
-  data.hrly = data.6hr %>%
+  data.hrly <- data.6hr %>%
   group_by_all() %>%
-  expand(timestamp = c(timestamp  - 1*60*60,
+  tidyr::expand(timestamp = c(timestamp  - 1*60*60,
                        timestamp  - 2*60*60,
                        timestamp  - 3*60*60,
                        timestamp  - 4*60*60,

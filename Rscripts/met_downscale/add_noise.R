@@ -19,10 +19,10 @@ add_noise <- function(debiased, cov, n_ds_members, n_met_members, VarNames){
   
   for(NOAA.ens in 1:n_met_members){
     for(dscale.ens in 1:n_ds_members){
-      noise = rmvnorm(1, mean = rep(0, length(VarNames)), sigma = cov)
+      noise <- rmvnorm(1, mean = rep(0, length(VarNames)), sigma = cov)
       colnames(noise) <- colnames(cov)
       for(VarNum in 1:length(VarNames)){
-        VarName = VarNames[VarNum]
+        VarName <- VarNames[VarNum]
         with.noise[which(with.noise$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),VarName] =
           with.noise[which(with.noise$NOAA.member == NOAA.ens & with.noise$dscale.member == dscale.ens),VarName] + noise[,VarName]
       }

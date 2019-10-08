@@ -1,4 +1,4 @@
-ShortWave_to_hrly <- function(debiased, time0, lat, lon, output_tz){
+ShortWave_to_hrly <- function(debiased, time0, lat, lon, local_tzone){
   ## downscale shortwave to hourly
   
   grouping = "NOAA.member"
@@ -12,7 +12,7 @@ ShortWave_to_hrly <- function(debiased, time0, lat, lon, output_tz){
       expand(fday = seq((fday.group - 23/24), fday.group, by = 1/24)) %>%# the days since start of forecast 
       ungroup() %>%
       filter(fday > -1/24) %>% # (rounding error causes the first "fday" to be -1e-16 instead of 0)
-      dplyr::mutate(timestamp = as_datetime(time0 + fday*24*60*60, tz = output_tz)) %>%
+      dplyr::mutate(timestamp = as_datetime(time0 + fday*24*60*60, tz = local_tzone)) %>%
       # filter(timestamp >= time0 + 6*60*60) %>%
       dplyr::mutate(date = as_date(timestamp),
                     hour = hour(timestamp))
@@ -27,7 +27,7 @@ ShortWave_to_hrly <- function(debiased, time0, lat, lon, output_tz){
   ShortWave.ds <- debiased %>% 
     select(ShortWave, grouping) %>%
     full_join(ShortWave.hours, by = grouping) %>%
-    dplyr::mutate(timestamp = as_datetime(paste(date, " ", hour, ":","00:00", sep = ""), tz = output_tz) - 1*60*60) %>% # subtract one hour to convert times from representing pervious hour to representing the next hour
+    dplyr::mutate(timestamp = as_datetime(paste(date, " ", hour, ":","00:00", sep = ""), tz = local_tzone) - 1*60*60) %>% # subtract one hour to convert times from representing pervious hour to representing the next hour
     dplyr::mutate(doy = yday(date) + hour/24) %>%
     dplyr::mutate(rpot = solar_geom(doy, lon, lat)) %>% # hourly sw flux calculated using solar geometry
     dplyr::group_by_at(grouping) %>%

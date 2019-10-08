@@ -1,124 +1,80 @@
 if (!"mvtnorm" %in% installed.packages()) install.packages("mvtnorm")
 if (!"ncdf4" %in% installed.packages()) install.packages("ncdf4")
 if (!"lubridate" %in% installed.packages()) install.packages("lubridate")
-if (!"glmtools" %in% installed.packages()) install.packages("glmtools",
-                                                            repos=c("http://cran.rstudio.com",
-                                                                    "http://owi.usgs.gov/R"))
 if (!"RCurl" %in% installed.packages()) install.packages("RCurl")
 if (!"testit" %in% installed.packages()) install.packages("testit")
 if (!"imputeTS" %in% installed.packages()) install.packages("imputeTS")
-if (!"tidyr" %in% installed.packages()) install.packages("tidyr")
-if (!"dplyr" %in% installed.packages()) install.packages("dplyr")
-if (!"ggplot2" %in% installed.packages()) install.packages("ggplot2")
+if (!"tidyverse" %in% installed.packages()) install.packages("tidyverse")
 
 library(mvtnorm)
-library(glmtools)
 library(ncdf4)
 library(lubridate)
 library(RCurl)
 library(testit)
 library(imputeTS)
-library(tidyr)
-library(dplyr)
-library(ggplot2)
-
-
-data_location = "/Users/laurapuckett/Desktop/SCC_forecasting/SCC_data/"
-folder <- "/Users/laurapuckett/Desktop/SCC_forecasting/FLARE/"
-forecast_location <- "/Users/laurapuckett/Desktop/SCC_forecasting/forecasts/" 
-
+library(tidyverse)
+library(tools)
 
 data_location = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
-folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
-forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/"
+code_folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
+forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/test/"
 
-restart_file <- "/Users/quinn/Dropbox/Research/SSC_forecasting/GLEON_AGU_2018/FCR_betaV2_hist_2018_10_1_forecast_2018_10_2_2018102_5_53.nc"
-spin_up_days <- 0
-push_to_git <- FALSE
-pull_from_git <- TRUE
-reference_tzone <- "GMT"
-forecast_days <- 2
-include_wq <- FALSE
-use_ctd <- FALSE
-DOWNSCALE_MET <- FALSE
-GLMversion <- "GLM 3.0.0beta10"
-FLAREversion <- "v1.0_beta.1"
+source(paste0(forecast_location,"/","configure_FLARE.R"))
+source(paste0(code_folder, "/", "Rscripts/run_flare.R"))
+source(paste0(code_folder, "/", "Rscripts/plot_forecast.R"))
 
-#Note: this number is multiplied by 
-# 1) the number of NOAA ensembles (21)
-# 2) the number of downscaling essembles (50 is current)
-# get to the total number of essembles
-n_enkf_members <- 2
-n_ds_members <- 1
-
-source(paste0(folder, "/", "Rscripts/run_enkf_forecast.R"))
-source(paste0(folder, "/", "Rscripts/evaluate_forecast.R"))
-source(paste0(folder, "/", "Rscripts/plot_forecast.R"))
+restart_file <- NA
 
 sim_name <- "test" 
-start_day <- "2018-07-10 00:00:00" #GMT
-forecast_start_day <-"2019-01-25 00:00:00" #GMT 
-hist_days <- as.numeric(difftime(as.POSIXct(forecast_start_day, tz = reference_tzone),
-                                 as.POSIXct(start_day, tz = reference_tzone)))
-# 
-# start_day= "2018-07-06 00:00:00"
-# sim_name = NA
-# hist_days = 1
-# forecast_days = 16  
-# spin_up_days = 0
-# restart_file = NA
-# folder 
-# forecast_location = NA
-# push_to_git = FALSE
-# pull_from_git = TRUE 
-#  
-# n_enkf_members = NA
-# n_ds_members = 5
-# include_wq = FALSE
-# use_ctd = use_ctd
-# uncert_mode = 1
-# reference_tzone
-# cov_matrix = NA
-# alpha = c(0.5,0.5,0.5)
-# downscaling_coeff = NA
-# GLMversion
-# DOWNSCALE_MET = TRUE
-# FLAREversion
+forecast_days <- 16
+spin_up_days <- 0
 
-out <- run_enkf_forecast(start_day= start_day,
-                         sim_name = sim_name,
-                         hist_days = hist_days,
-                         forecast_days = forecast_days,
-                         spin_up_days = 0,
-                         restart_file = NA,
-                         folder = folder,
-                         forecast_location = forecast_location,
-                         push_to_git = push_to_git,
-                         pull_from_git = pull_from_git,
-                         data_location = data_location,
-                         n_enkf_members = n_enkf_members,
-                         n_ds_members = n_ds_members,
-                         include_wq = include_wq,
-                         use_ctd = use_ctd,
-                         uncert_mode = 1,
-                         reference_tzone,
-                         cov_matrix = "Qt_cov_matrix_11June_11Aug_18.csv",
-                         alpha = c(0, 0, 0),
-                         downscaling_coeff = NA,
-                         GLMversion,
-                         DOWNSCALE_MET,
-                         FLAREversion)
+start_day_local <- "2019-09-20"  #Note: 2018-07-16 is the first day with CTD observations for initial conditions
+start_time_local <- "07:00:00"
+forecast_start_day_local <- "2019-09-22" 
+
+start_day_local <- as.POSIXct(start_day_local, format = "%Y-%m-%d")
+forecast_start_day_local <- as.POSIXct(forecast_start_day_local, format = "%Y-%m-%d")
+hist_days <- as.numeric(difftime(as_date(forecast_start_day_local),as_date(start_day_local)))
+
+out <- run_flare(start_day_local,
+                 start_time_local,
+                 forecast_start_day_local,
+                 sim_name = sim_name,
+                 hist_days = hist_days,
+                 forecast_days = 0,
+                 spin_up_days = spin_up_days,
+                 restart_file = restart_file,
+                 code_folder = code_folder,
+                 forecast_location = forecast_location,
+                 push_to_git = push_to_git,
+                 pull_from_git = pull_from_git,
+                 data_location = data_location,
+                 n_enkf_members = n_enkf_members,
+                 n_ds_members = n_ds_members,
+                 include_wq = include_wq,
+                 use_ctd = use_ctd,
+                 uncert_mode = uncert_mode,
+                 cov_matrix = cov_matrix,
+                 downscaling_coeff = downscaling_coeff,
+                 GLMversion = GLMversion,
+                 DOWNSCALE_MET = DOWNSCALE_MET,
+                 FLAREversion = FLAREversion,
+                 met_ds_obs_start = met_ds_obs_start,
+                 met_ds_obs_end = met_ds_obs_end,
+                 modeled_depths = modeled_depths,
+                 forecast_sss_on = FALSE)
 
 
 plot_forecast(pdf_file_name = unlist(out)[2],
               output_file = unlist(out)[1],
               include_wq = include_wq,
               forecast_days = forecast_days,
-              code_location = paste0(folder, "/Rscripts/"),
+              code_folder = code_folder,
               save_location = forecast_location,
               data_location = data_location,
-              plot_summaries = FALSE,
-              pre_scc = FALSE,
+              plot_summaries = TRUE,
               push_to_git = push_to_git,
               pull_from_git = pull_from_git,
-              use_ctd = use_ctd)
+              use_ctd = use_ctd,
+              modeled_depths = modeled_depths)

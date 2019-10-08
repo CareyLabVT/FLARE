@@ -1,0 +1,46 @@
+Version 1.0.19
+Fix segfault on save_all_in_one. Added :
+   void init_plotter_no_gui(void);
+   void save_all_plots_named(const char*name);
+
+Version 1.0.13
+Fix to menu on mac
+
+Version 1.0.12
+Added preliminary mac version
+Conditional compile to not try font change when on windows (it didnt work anyway)
+
+Version 1.0.11
+Changed InitX and CleanupX to InitUI and CleanupUI to be more generic
+Removed WinBasic.h and renamed xbasic.h to ui_basic.h
+
+Version 1.0.6
+
+Axis labelling auto-selects scientific notation is ((max/min > 0 && < 0.01) || > 10000)
+
+Version 1.0.5
+
+Added support for labelling axes
+Moved vs???? into win directory
+
+Version 1.0.4
+
+Added support for save-all-in-one flag from commandline
+Fixed a labeling issue with 2d plots
+
+Version 1.0.3
+
+Added support for alternative fonts
+Minor code cleanups
+
+Version 1.0.2
+
+Corrected bug in 2d plot introduced by z-scale factor fix in 1.0.1
+Improved summary display
+
+Version 1.0.1
+
+Added support for sub daily plotting
+Added version stamp support
+Fixed problem with save all-in-1 not getting rows right if not exact multiple of columns
+Changed z-scale labels to be sideways and allow for < 0.01 maxima/minima
