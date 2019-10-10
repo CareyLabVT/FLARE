@@ -527,7 +527,7 @@ plot_forecast <- function(pdf_file_name,
   
   forecasted_index <- which(forecasted == 1)
   
-  if(length(forecasted_index) == 16){
+  if(length(forecasted_index) == 16 & forecasted_index[1] == 3){
     
     full_time_local_past <- seq(full_time_local[1] - days(5), full_time_local[2], by = "1 day") # grid
     full_time_local_combined <- seq(full_time_local_past[1], full_time_local[length(full_time_local)], by = "1 day")
@@ -555,6 +555,7 @@ plot_forecast <- function(pdf_file_name,
     par(mfrow=c(1,2))
     
     #PLOT OF TURNOVER PROBABILITY
+    
     
     prob_zero <- rep(NA,length(seq(3,18,1)))
     for(i in forecasted_index){
