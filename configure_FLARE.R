@@ -478,12 +478,13 @@ observed_depths_do <<- c(1, 5, 9)
 observed_depths_chla_fdom <<- 1
 #Depths with Chla and fdom observations
 
-temp_obs_fname <<- c("Catwalk.csv","Catwalk_cleanedEDI.csv")
+#temp_obs_fname <<- c("Catwalk.csv","Catwalk_cleanedEDI.csv")
+temp_obs_fname <<- c("Catwalk.csv")
 #name of catwalk file name
 #Catwalk has the temperature string, fdom, chla, and do sensors
 
-met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"),paste0(data_location, "/extra_files/Met_final_2015_2018.csv"))
-#met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"))
+#met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"),paste0(data_location, "/extra_files/Met_final_2015_2018.csv"))
+met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"))
 #Name of meteorology file name
 
 inflow_file1 <<- "FCR_weir_inflow_newEDI_2013_2018_20190911_oneDOC.csv"

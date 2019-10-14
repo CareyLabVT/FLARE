@@ -67,7 +67,6 @@
    white_ice_height = 0.0
    blue_ice_height = 0.0
 /
-
 &meteorology
    met_sw = .true.
    lw_type = 'LW_IN'
