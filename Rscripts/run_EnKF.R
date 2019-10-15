@@ -27,7 +27,7 @@ run_EnKF <- function(x,
                      outflow_file_names,
                      management_input,
                      forecast_sss_on,
-                     snow_ice_height){
+                     snow_ice_thickness){
   
   nsteps <- length(full_time_local)
   nmembers <- dim(x)[2]
@@ -133,9 +133,9 @@ run_EnKF <- function(x,
       update_var(round(x[i - 1, m, 1:length(modeled_depths)], 3), "the_temps", working_directory, "glm3.nml")
       update_var(surface_height[i - 1, m], "lake_depth", working_directory, "glm3.nml") 
       
-      update_var(0.0, "snow_height", working_directory, "glm3.nml") 
-      update_var(snow_ice_height[i - 1, m, 2], "white_ice_height", working_directory, "glm3.nml") 
-      update_var(snow_ice_height[i - 1, m, 3], "blue_ice_height", working_directory, "glm3.nml")
+      update_var(0.0, "snow_thickness", working_directory, "glm3.nml") 
+      update_var(snow_ice_thickness[i - 1, m, 2], "white_ice_thickness", working_directory, "glm3.nml") 
+      update_var(snow_ice_thickness[i - 1, m, 3], "blue_ice_thickness", working_directory, "glm3.nml")
       
       #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
       
@@ -187,7 +187,7 @@ run_EnKF <- function(x,
             
             surface_height[i, m] <- round(GLM_temp_wq_out$surface_height, 3) 
             
-            snow_ice_height[i, m, ] <- round(GLM_temp_wq_out$snow_wice_bice, 3)
+            snow_ice_thickness[i, m, ] <- round(GLM_temp_wq_out$snow_wice_bice, 3)
             
             if(length(which(is.na(x_star[m, ]))) == 0){
               pass = TRUE
@@ -240,6 +240,7 @@ run_EnKF <- function(x,
           replace_index <- sample(good_index, 1)
           x_star[m, ] <- x_star[replace_index, ]
           surface_height[i, m] <- surface_height[i, replace_index]
+          snow_ice_thickness[i, m, ] <- snow_ice_thickness[i, replace_index, ]
         }
       }
     }
@@ -462,12 +463,12 @@ run_EnKF <- function(x,
       x_restart <- x[i, , ]
       qt_restart <- qt
       surface_height_restart <- surface_height[i, ]
-      snow_ice_restart <- snow_ice_height[i, , ]
+      snow_ice_restart <- snow_ice_thickness[i, , ]
     }else if(hist_days == 0 & i == 2){
       x_restart <- x[1, , ]
       qt_restart <- qt
       surface_height_restart <- surface_height[i, ]
-      snow_ice_restart <- snow_ice_height[i, , ]
+      snow_ice_restart <- snow_ice_thickness[i, , ]
     }
   }
   
@@ -477,6 +478,6 @@ run_EnKF <- function(x,
               x_prior = x_prior,
               surface_height_restart = surface_height_restart,
               snow_ice_restart = snow_ice_restart,
-              snow_ice_height = snow_ice_height,
+              snow_ice_thickness = snow_ice_thickness,
               surface_height = surface_height))
 }

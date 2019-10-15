@@ -4,7 +4,7 @@ read_sss_files <-  function(full_time_day_local,
                             sss_file,
                             local_tzone){
   
-  d <- read.csv(paste0(working_directory, "/", sss_file))
+  d <- read.csv(sss_file)
   
   TIMESTAMP_in <- as.POSIXct(d$time, 
                              format= "%Y-%m-%d",
