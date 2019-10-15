@@ -170,8 +170,8 @@ process_GEFS <- function(file_name,
                                          "WindSpeed",
                                          "Rain",
                                          "Snow"))
-      current_filename = paste0(out_directory,'/','met_hourly_',file_name,'_NOAA',NOAA.ens,'_ds',dscale.ens,'.csv')
-      write.csv(GLM_climate,file = current_filename, row.names = FALSE, quote = FALSE)
+      current_filename = paste0('met_hourly_',file_name,'_NOAA',NOAA.ens,'_ds',dscale.ens,'.csv')
+      write.csv(GLM_climate,file = paste0(working_directory, "/", current_filename), row.names = FALSE, quote = FALSE)
       return(current_filename)
     }
     
