@@ -419,12 +419,13 @@ run_flare<-function(start_day_local,
   ####################################################
   
   met_file_names <- rep(NA, 1+(n_met_members*n_ds_members))
-  obs_met_outfile <- paste0(working_directory, "/", "GLM_met.csv")
+  obs_met_outfile <- "GLM_met.csv"
   missing_met <- create_obs_met_input(fname = met_obs_fname_wdir,
                                       outfile=obs_met_outfile,
                                       full_time_hour_local, 
                                       input_file_tz = "EST5EDT",
-                                      local_tzone)
+                                      local_tzone,
+                                      working_directory)
   if(missing_met < missing_met_data_threshold){
     met_file_names[1] <- obs_met_outfile
   }else{
@@ -1230,8 +1231,8 @@ surface_height[1, ] <- round(lake_depth_init, 3)
 #Matrix to store snow and ice heights
 snow_ice_thickness <- array(NA, dim=c(nsteps, nmembers, 3))
 snow_ice_thickness[1, ,1] <- default_snow_thickness_init
-snow_ice_thickness[1, ,2] <- default_white_thickness_init
-snow_ice_thickness[1, ,3] <- default_blue_thickness_init
+snow_ice_thickness[1, ,2] <- default_white_ice_thickness_init
+snow_ice_thickness[1, ,3] <- default_blue_ice_thickness_init
 
 ####################################################
 #### STEP 12: Run Ensemble Kalman Filter

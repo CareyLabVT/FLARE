@@ -2,7 +2,8 @@ create_obs_met_input <- function(fname,
                                  outfile,
                                  full_time_hour_local,
                                  input_file_tz = "EST5EDT",
-                                 local_tzone) {
+                                 local_tzone,
+                                 working_directory) {
   if(length(fname) > 1){
     d1 <- read_csv(fname[1], skip = 3)
     d_names <- read_csv(fname[1], skip = 1, n_max = 3)
@@ -136,7 +137,7 @@ create_obs_met_input <- function(fname,
                                           "WindSpeed",
                                           "Rain",
                                           "Snow"))
-    write.csv(historical_met, file = outfile, row.names = FALSE, quote = FALSE)
+    write.csv(historical_met, file = paste0(working_directory, "/", outfile), row.names = FALSE, quote = FALSE)
   }else{
     missing_met <- length(full_time_hour_local)
   }
