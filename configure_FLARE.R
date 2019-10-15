@@ -144,9 +144,9 @@ default_temp_init <<- c(6.2, 5.7, 5.5, 5.5, 5.4, 5.3, 5.3, 5.3, 5.2, 5.0)
 default_temp_init_depths <<-  c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
 the_sals_init <<- 0.0
 
-default_snow_height_init <<- 0.0
-default_white_ice_init <<- 0.0
-default_blue_ice_init <<- 0.0
+default_snow_thickness_init <<- 0.0
+default_white_ice_thickness_init <<- 0.0
+default_blue_ice_thickness_init <<- 0.0
 
 ##############################
 ##  Ensemble members used
@@ -478,8 +478,8 @@ observed_depths_do <<- c(1, 5, 9)
 observed_depths_chla_fdom <<- 1
 #Depths with Chla and fdom observations
 
-#temp_obs_fname <<- c("Catwalk.csv","Catwalk_cleanedEDI.csv")
-temp_obs_fname <<- c("Catwalk.csv")
+#temp_obs_fname <<- c(paste0(data_location,"/mia-data/Catwalk.csv"),paste0(data_location, "/manual-data/Catwalk_cleanedEDI.csv"))
+temp_obs_fname <<- paste0(data_location,"/mia-data/Catwalk.csv")
 #name of catwalk file name
 #Catwalk has the temperature string, fdom, chla, and do sensors
 
@@ -487,9 +487,9 @@ temp_obs_fname <<- c("Catwalk.csv")
 met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"))
 #Name of meteorology file name
 
-inflow_file1 <<- "FCR_weir_inflow_newEDI_2013_2018_20190911_oneDOC.csv"
-outflow_file1 <<- "FCR_spillway_outflow_newEDI_SUMMED_WeirWetland_2013_2018_20190912.csv"
-inflow_file2 <<- "FCR_wetland_inflow_newEDI_2013_2018_20190912_oneDOC.csv"
+inflow_file1 <<- paste0(data_location,"/manual-data/FCR_weir_inflow_newEDI_2013_2018_20190911_oneDOC.csv")
+outflow_file1 <<- paste0(data_location,"/manual-data/FCR_spillway_outflow_newEDI_SUMMED_WeirWetland_2013_2018_20190912.csv")
+inflow_file2 <<- paste0(data_location,"/manual-data/FCR_wetland_inflow_newEDI_2013_2018_20190912_oneDOC.csv")
 #Name of the historical inflow and outflow files
 
 #########################################

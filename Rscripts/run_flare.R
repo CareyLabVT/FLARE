@@ -404,14 +404,6 @@ run_flare<-function(start_day_local,
                        day(full_time_local[1]))
   }
   
-  tmp <- file.copy(from = paste0(temperature_location, "/", temp_obs_fname[1]), 
-                   to = working_directory, 
-                   overwrite = TRUE)
-  
-  extra_input_files <- paste0(data_location, "/", "manual-data")
-  fl <- c(list.files(extra_input_files, full.names = TRUE))
-  tmp <- file.copy(from = fl, to = working_directory, overwrite = TRUE)
-  
   sim_files_folder <- paste0(code_folder, "/", "sim_files")
   fl <- c(list.files(sim_files_folder, full.names = TRUE))
   tmp <- file.copy(from = fl, to = working_directory, overwrite = TRUE)
@@ -602,7 +594,7 @@ run_flare<-function(start_day_local,
   management_input <- read_sss_files(full_time_day_local,
                                      working_directory,
                                      input_file_tz = 'EST5EDT', 
-                                     sss_file = "FCR_SSS_inflow_2013_2019.csv",
+                                     sss_file = paste0(data_location,"/manual-data/FCR_SSS_inflow_2013_2019.csv"),
                                      local_tzone)
   
   
@@ -614,7 +606,7 @@ run_flare<-function(start_day_local,
   # observed_depths_temp, local_tzone, observed_depths_do, exo_2_ctd_chla, use_ctd
   
   #Extract observations, 
-  temp_obs_fname_wdir <- paste0(working_directory, "/", temp_obs_fname)
+  temp_obs_fname_wdir <- temp_obs_fname
   #PROCESS TEMPERATURE OBSERVATIONS
   obs_temp <- extract_temp_chain(fname = temp_obs_fname_wdir,
                                  full_time_local,
@@ -1236,10 +1228,10 @@ surface_height <- array(NA, dim=c(nsteps, nmembers))
 surface_height[1, ] <- round(lake_depth_init, 3)
 
 #Matrix to store snow and ice heights
-snow_ice_height <- array(NA, dim=c(nsteps, nmembers, 3))
-snow_ice_height[1, ,1] <- default_snow_height_init
-snow_ice_height[1, ,2] <- default_white_ice_init
-snow_ice_height[1, ,3] <- default_blue_ice_init
+snow_ice_thickness <- array(NA, dim=c(nsteps, nmembers, 3))
+snow_ice_thickness[1, ,1] <- default_snow_thickness_init
+snow_ice_thickness[1, ,2] <- default_white_thickness_init
+snow_ice_thickness[1, ,3] <- default_blue_thickness_init
 
 ####################################################
 #### STEP 12: Run Ensemble Kalman Filter
@@ -1274,7 +1266,7 @@ enkf_output <- run_EnKF(x,
                         outflow_file_names,
                         management_input,
                         forecast_sss_on,
-                        snow_ice_height)
+                        snow_ice_thickness)
 
 x <- enkf_output$x
 x_restart <- enkf_output$x_restart
@@ -1282,7 +1274,7 @@ qt_restart <- enkf_output$qt_restart
 x_prior <- enkf_output$x_prior
 surface_height_restart <- enkf_output$surface_height_restart
 snow_ice_restart <- enkf_output$snow_ice_restart
-snow_ice_height <- enkf_output$snow_ice_height
+snow_ice_thickness <- enkf_output$snow_ice_thickness
 surface_height <- enkf_output$surface_height
 
 ####################################################
@@ -1351,7 +1343,7 @@ write_forecast_netcdf(x,
                       local_tzone,
                       surface_height_restart,
                       snow_ice_restart,
-                      snow_ice_height,
+                      snow_ice_thickness,
                       surface_height)
 
 ##ARCHIVE FORECAST
