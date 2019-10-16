@@ -19,7 +19,7 @@ write_forecast_netcdf <- function(x,
                                   local_tzone,                      
                                   surface_height_restart,
                                   snow_ice_restart,
-                                  snow_ice_height,
+                                  snow_ice_thickness,
                                   surface_height){
   
   obs <- z
@@ -39,7 +39,7 @@ write_forecast_netcdf <- function(x,
   forecasted <- rep(1,length(t))
   forecasted[1:(hist_days+1)] <- 0
   
-  ice_thickness <- snow_ice_height[, ,2] + snow_ice_height[, , 3]
+  ice_thickness <- snow_ice_thickness[, ,2] + snow_ice_thickness[, , 3]
   
   #Create summary output
   mean_temp <- array(NA,dim=c(length(t),length(depths)))
