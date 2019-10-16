@@ -76,7 +76,7 @@ plot_forecast <- function(pdf_file_name,
   working_directory <- paste0(save_location, "/", "working_directory")
   
   #Extract observations, 
-  temp_obs_fname_wdir <- paste0(working_directory, "/", temp_obs_fname)
+  temp_obs_fname_wdir <- temp_obs_fname
   #PROCESS TEMPERATURE OBSERVATIONS
   obs_temp <- extract_temp_chain(fname = temp_obs_fname_wdir,
                                  full_time_local,
