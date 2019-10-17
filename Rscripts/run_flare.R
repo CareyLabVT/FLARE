@@ -67,7 +67,7 @@ run_flare<-function(start_day_local,
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_temp_chain.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/read_sss_files.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_nutrients.R"))
-  
+  source(paste0(code_folder,"/","Rscripts/",lake_name,"/temp_oxy_chla_qaqc.R")) 
   
   ### METEROLOGY DOWNSCALING OPTIONS
   if(is.na(downscaling_coeff)){
@@ -630,8 +630,17 @@ run_flare<-function(start_day_local,
   
   #Extract observations, 
   temp_obs_fname_wdir <- temp_obs_fname
+  
+  cleaned_temp_oxy_chla_file <- paste0(working_directory, "/Catwalk_postQAQC.csv")
+  temp_oxy_chla_qaqc(temp_obs_fname_wdir[1], 
+                     paste0(data_location, '/mia-data/CAT_MaintenanceLog.txt'), 
+                     cleaned_temp_oxy_chla_file)
+  
+  new_temp_obs_fname_wdir <- temp_obs_fname_wdir
+  new_temp_obs_fname_wdir[1] <- cleaned_temp_oxy_chla_file
+  
   #PROCESS TEMPERATURE OBSERVATIONS
-  obs_temp <- extract_temp_chain(fname = temp_obs_fname_wdir,
+  obs_temp <- extract_temp_chain(fname = new_temp_obs_fname_wdir,
                                  full_time_local,
                                  modeled_depths = modeled_depths,
                                  observed_depths_temp = observed_depths_temp,
@@ -640,28 +649,26 @@ run_flare<-function(start_day_local,
   
   if(include_wq){
     #PROCESS DO OBSERVATIONS
-    obs_do <- extract_do_chain(fname = temp_obs_fname_wdir,
+    obs_do <- extract_do_chain(fname = new_temp_obs_fname_wdir,
                                full_time_local,
                                modeled_depths = modeled_depths,
                                observed_depths_do= observed_depths_do,
                                input_file_tz = "EST5EDT", 
                                local_tzone)
     
-    obs_chla <- extract_chla_chain(fname = temp_obs_fname_wdir,
+    obs_chla <- extract_chla_chain(fname = new_temp_obs_fname_wdir,
                                    full_time_local,
                                    modeled_depths = modeled_depths,
                                    observed_depths_chla_fdom,
                                    input_file_tz = "EST5EDT", 
                                    local_tzone)
     
-    obs_fdom <- extract_do_chain(fname = temp_obs_fname_wdir,
+    obs_fdom <- extract_do_chain(fname = new_temp_obs_fname_wdir,
                                  full_time_local,
                                  modeled_depths = modeled_depths,
                                  observed_depths_chla_fdom,
                                  input_file_tz = "EST5EDT", 
                                  local_tzone)
-    
-    #obs_fdom$obs[, ] <- NA
     
     if(use_nutrient_data){
       obs_nutrients <- extract_nutrients(fname = nutrients_fname,
