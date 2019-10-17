@@ -76,11 +76,11 @@ plot_forecast <- function(pdf_file_name,
   working_directory <- paste0(save_location, "/", "working_directory")
   
   cleaned_temp_oxy_chla_file <- paste0(working_directory, "/Catwalk_postQAQC.csv")
-  temp_oxy_chla_qaqc(temp_obs_fname_wdir[1], 
+  temp_oxy_chla_qaqc(temp_obs_fname[1], 
                      paste0(data_location, '/mia-data/CAT_MaintenanceLog.txt'), 
                      cleaned_temp_oxy_chla_file)
   
-  new_temp_obs_fname_wdir <- temp_obs_fname_wdir
+  new_temp_obs_fname_wdir <- temp_obs_fname
   new_temp_obs_fname_wdir[1] <- cleaned_temp_oxy_chla_file
   #PROCESS TEMPERATURE OBSERVATIONS
   
