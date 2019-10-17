@@ -321,7 +321,7 @@
    !simWetDeposition = .true.
    !atm_din_conc = 0.5
   !-- Sediment fluxes
-   Fsed_amm = 3.5 !3 !!!! manual 3.5 Paul 20
+   Fsed_amm = 5 !3 !!!! manual 3.5 Paul 20
    Ksed_amm = 25.0
    Fsed_nit = -0.5 !-0.999821009!-0.15!-5.376338936!-0.01!-1.937417788!-9.340307115!-0.35!-0.35 !-1.755 !!!! manual -4.5 Kinneret -0.5 Paul -8
    Ksed_nit = 100 !!!! Kinneret +manual 100; paul 15
@@ -377,7 +377,7 @@
 !-------------------------------------------------------------------------------
 &aed2_phosphorus
    frp_initial = 0.065 !Kinneret&manual 0.29 from observational data
-   Fsed_frp = 0.0001!0.118264303!0.082020643!0.001 !!!!  manual 0.08 Paul 0.40
+   Fsed_frp = 0.1 !0.0001!0.118264303!0.082020643!0.001 !!!!  manual 0.08 Paul 0.40
    Ksed_frp = 50.0 !24.44440037!35.94895616!10 !!!! Kinneret 50.0 manual 80
    theta_sed_frp = 1.08
    phosphorus_reactant_variable = 'OXY_oxy'

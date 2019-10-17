@@ -15,9 +15,9 @@ library(imputeTS)
 library(tidyverse)
 library(tools)
 
-data_location = "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
-code_folder <- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
-forecast_location <- "/Users/quinn/Dropbox/Research/SSC_forecasting/test/"
+data_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
+code_folder <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
+forecast_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/test/"
 
 source(paste0(forecast_location,"/","configure_FLARE.R"))
 source(paste0(code_folder, "/", "Rscripts/run_flare.R"))
