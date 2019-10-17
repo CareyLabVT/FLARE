@@ -16,7 +16,7 @@ extract_temp_chain <- function(fname,
     d2 <- read.csv(fname[2], na.strings = 'NA', stringsAsFactors = FALSE)
     
     obs <- array(NA,dim=c(length(full_time_local),length(modeled_depths)))
-    depths_w_obs <- observed_depths_chla_fdom
+    depths_w_obs <- observed_depths_temp
     obs_index <-   rep(NA,length(depths_w_obs))
     for(i in 1:length(depths_w_obs)){
       obs_index[i] <- which.min(abs(modeled_depths - depths_w_obs[i]))
