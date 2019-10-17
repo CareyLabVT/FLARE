@@ -249,6 +249,28 @@ run_flare<-function(start_day_local,
     
     setwd(manual_data_location)
     system(paste0("git pull"))
+    
+    if(length(met_obs_fname) > 1 & !file.exists(met_obs_fname[2])){
+      inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/389/2/63808664f8feda6a703ef42601207d2e" 
+      download.file(inUrl1,met_obs_fname[2],method="curl")
+    }
+    
+    if(length(temp_obs_fname) > 1 & !file.exists(temp_obs_fname[2])){
+      inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/271/2/ea8d89aa2804fb4657acb5b2dbdcc944" 
+      download.file(inUrl1,temp_obs_fname[2],method="curl")
+      
+    }
+    
+    if(!is.na(ctd_fname) & !file.exists(ctd_fname)){
+      inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/200/6/2143055cdfad2e5bd99c2b0b2670cc56" 
+      download.file(inUrl1,ctd_fname,method="curl")
+    }
+    
+    if(!is.na(nutrients_fname) & !file.exists(nutrients_fname)){
+      inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/199/5/2b3dc84ae6b12d10bd5485f1c300af13" 
+      download.file(inUrl1,nutrients_fname,method="curl")
+    }
+    
   }
   
   ####################################################
@@ -595,7 +617,7 @@ run_flare<-function(start_day_local,
   management_input <- read_sss_files(full_time_day_local,
                                      working_directory,
                                      input_file_tz = 'EST5EDT', 
-                                     sss_file = paste0(data_location,"/manual-data/FCR_SSS_inflow_2013_2019.csv"),
+                                     sss_file = sss_fname,
                                      local_tzone)
   
   
@@ -642,7 +664,7 @@ run_flare<-function(start_day_local,
     #obs_fdom$obs[, ] <- NA
     
     if(use_nutrient_data){
-      obs_nutrients <- extract_nutrients(fname = paste0(data_location,"/manual-data/chemistry.csv"),
+      obs_nutrients <- extract_nutrients(fname = nutrients_fname,
                                          full_time_day_local,
                                          modeled_depths = modeled_depths,
                                          input_file_tz = "EST5EDT", 
@@ -666,7 +688,7 @@ run_flare<-function(start_day_local,
 if(use_ctd){
   
   #NEED TO DOUBLE CHECK TIME ZONE
-  obs_ctd <- extract_CTD(fname = paste0(data_location,"/manual-data/CTD_Meta_13_18_final.csv"),
+  obs_ctd <- extract_CTD(fname = ctd_fname,
                          full_time_day_local,
                          modeled_depths = modeled_depths,
                          input_file_tz = "EST5EDT",
