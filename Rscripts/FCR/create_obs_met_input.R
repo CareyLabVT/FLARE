@@ -66,7 +66,7 @@ create_obs_met_input <- function(fname,
   Rain <- rep(NA, length(full_time_hour_local))
   Snow <- rep(NA, length(full_time_hour_local))
   
-  if(length(which(d$TIMESTAMP == full_time_hour_local[1])) > 0){
+  if(length(which(d$TIMESTAMP %in% full_time_hour_local)) > 0){
     
     for(i in 1:(length(full_time_hour_local) - 1)){
       index <- which(d$TIMESTAMP == full_time_hour_local[i])
@@ -88,21 +88,21 @@ create_obs_met_input <- function(fname,
       }
     }
     
-   na_hours <- length(which(is.na(AirTemp)))
+    observed_hours <- which(full_time_hour_local <= d$TIMESTAMP[length(d$TIMESTAMP)])
+    
+    ShortWave <- ShortWave[observed_hours]
+    LongWave <- LongWave[observed_hours]
+    AirTemp <- AirTemp[observed_hours]
+    RelHum <- RelHum[observed_hours]
+    WindSpeed <- WindSpeed[observed_hours]
+    Rain <- Rain[observed_hours]
+    Snow <- Snow[observed_hours]
+    full_time_hour_local <- full_time_hour_local[observed_hours]
+    
+    na_hours <- length(which(is.na(AirTemp)))
     
     missing_met <- na_hours
 
-    
-    #ShortWave <- ShortWave[remove_hours]
-    #LongWave <- LongWave[remove_hours]
-    #AirTemp <- AirTemp[remove_hours]
-    #RelHum <- RelHum[remove_hours]
-    #WindSpeed <- WindSpeed[remove_hours]
-    #Rain <- Rain[remove_hours]
-    #Snow <- Snow[remove_hours]
-    #full_time_hour_local <- full_time_hour_local[remove_hours]
-    
-    
     ShortWave <- na.interpolation(ShortWave, option = "linear")
     LongWave <- na.interpolation(LongWave, option = "linear")
     AirTemp <- na.interpolation(AirTemp, option = "linear")

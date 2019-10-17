@@ -66,7 +66,7 @@ process_GEFS <- function(file_name,
     if(is.na(downscaling_coeff)){
       load(file = paste(out_directory,"/debiased.coefficients.RData", sep = ""))
     }else{
-      load(file = paste(out_directory,"/",downscaling_coeff, sep = ""))
+      load(file = downscaling_coeff)
     }
     ds = downscale_met(forecasts,
                        debiased.coefficients,

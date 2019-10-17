@@ -107,7 +107,7 @@ plot_forecast <- function(pdf_file_name,
                                input_file_tz = "EST5EDT", 
                                local_tzone)
   
-  obs_nutrients <- extract_nutrients(fname = paste0(data_location,"/manual-data/chemistry.csv"),
+  obs_nutrients <- extract_nutrients(fname = nutrients_fname,
                                      full_time_day_local,
                                      modeled_depths = modeled_depths,
                                      input_file_tz = "EST5EDT", 
@@ -125,7 +125,7 @@ plot_forecast <- function(pdf_file_name,
     ## LOOK AT CTD DATA
 
     #NEED TO DOUBLE CHECK TIME ZONE
-    obs_ctd <- extract_CTD(fname = paste0(data_location,"/manual-data/CTD_Meta_13_18_final.csv"),
+    obs_ctd <- extract_CTD(fname = ctd_fname,
                            full_time_day_local,
                            modeled_depths = modeled_depths,
                            input_file_tz = "EST5EDT",
@@ -312,11 +312,11 @@ plot_forecast <- function(pdf_file_name,
             upper95_TCHLA[j,ii] <- quantile(PHY_TCHLA[j,,ii],0.975)
           }
         }
-        plot(full_time_local,mean_TCHLA[,model],type='l',ylab='PHY_TCHLA (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        plot(full_time_local,mean_TCHLA[,model],type='l',ylab='PHY_TCHLA (ug/L)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
         points(full_time_local,lower95_TCHLA[ ,model],type='l',lty='dashed')
         points(full_time_local,upper95_TCHLA[ ,model],type='l',lty='dashed')   
       }else{
-        plot(full_time_local,PHY_TCHLA[,1,model],type='l',ylab='PHY_TCHLA (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        plot(full_time_local,PHY_TCHLA[,1,model],type='l',ylab='PHY_TCHLA (ug/L)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
         if(length(temp[1,,model]) > 1){
           for(m in 2:length(temp[1,,model])){
             points(full_time_local,PHY_TCHLA[,m,model],type='l')
