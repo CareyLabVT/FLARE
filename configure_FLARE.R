@@ -47,7 +47,7 @@ DOWNSCALE_MET <<- TRUE
 #Downscale the coarse resolutoin NOAA data to the local
 #site using the meterology station at the lake
 
-downscaling_coeff <<- NA
+downscaling_coeff <<- paste0(data_location, "/manual-data/debiased.coefficients_04_06_2018_12_06_2018.RData")
 #file name of previous downscaling coefficients
 #use NA if not using an existing file
 

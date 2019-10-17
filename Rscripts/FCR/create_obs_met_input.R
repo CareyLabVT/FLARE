@@ -66,7 +66,7 @@ create_obs_met_input <- function(fname,
   Rain <- rep(NA, length(full_time_hour_local))
   Snow <- rep(NA, length(full_time_hour_local))
   
-  if(length(which(d$TIMESTAMP == full_time_hour_local[1])) > 0){
+  if(length(which(d$TIMESTAMP %in% full_time_hour_local)) > 0){
     
     for(i in 1:(length(full_time_hour_local) - 1)){
       index <- which(d$TIMESTAMP == full_time_hour_local[i])
