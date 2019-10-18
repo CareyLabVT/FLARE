@@ -45,7 +45,7 @@ extract_temp_chain <- function(fname,
     for(i in 1:length(full_time_local)){
       index = which(d$TIMESTAMP==full_time_local[i])
       if(length(index)>0){
-        obs[i, ] <- unlist(d[index,2:11])
+        obs[i,obs_index] <- unlist(d[index,2:11])
         if(is.na(obs[i,obs_index[2]]) & !is.na(d[index,"wtr_1_exo"])){
           obs[i,obs_index[2]] <- d[index,"wtr_1_exo"]
         }
