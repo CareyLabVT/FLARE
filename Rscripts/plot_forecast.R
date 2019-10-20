@@ -540,7 +540,7 @@ plot_forecast <- function(pdf_file_name,
     full_time_local_combined <- seq(full_time_local_past[1], full_time_local[length(full_time_local)], by = "1 day")
     full_time_local_plotting <- seq(full_time_local_past[1]-days(3), full_time_local[length(full_time_local)]+days(5), by = "1 day")
     
-    obs_temp <- extract_temp_chain(fname = catwalk_fname,
+    obs_temp <- extract_temp_chain(fname = new_temp_obs_fname_wdir,
                                    full_time_local = full_time_local_past,
                                    modeled_depths = modeled_depths,
                                    observed_depths_temp = observed_depths_temp,

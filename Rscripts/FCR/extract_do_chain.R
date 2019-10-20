@@ -50,9 +50,7 @@ extract_do_chain <- function(fname = catwalk_fname,
     
   }else{
     #Different lakes are going to have to modify this for their temperature data format
-    d1 <- read.csv(fname[1], skip = 4, na.strings = 'NAN', stringsAsFactors = FALSE)
-    d_names <- read.csv(fname[1], skip =1, stringsAsFactors = FALSE)
-    names(d1) <- names(d_names)
+    d1 <- read.csv(fname, na.strings = 'NA', stringsAsFactors = FALSE)
     
     obs <- array(NA,dim=c(length(full_time_local),length(modeled_depths)))
     depths_w_obs <- observed_depths_do
@@ -61,14 +59,11 @@ extract_do_chain <- function(fname = catwalk_fname,
       obs_index[i] <- which.min(abs(modeled_depths - depths_w_obs[i]))
     }
     
-    TIMESTAMP_in <- as_datetime(d1$TIMESTAMP,tz = input_file_tz)
+    TIMESTAMP_in <- as_datetime(d1$DateTime,tz = input_file_tz)
     d1$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = local_tzone)
     
-    d3 <- data.frame(TIMESTAMP = d1$TIMESTAMP, doobs_1 = d1$doobs_1, doobs_5 = d1$doobs_5, doobs_9 = d1$doobs_9)
-    
-    
-    d <- d3
-    
+    d <- data.frame(TIMESTAMP = d1$TIMESTAMP, doobs_1 = d1$EXODO_mgL_1, doobs_5 = d1$RDO_mgL_5, doobs_9 = d1$RDO_mgL_9)
+ 
     full_time_local <- as.POSIXct(full_time_local,tz = local_tzone)
     for(i in 1:length(full_time_local)){
       index = which(d$TIMESTAMP==full_time_local[i])

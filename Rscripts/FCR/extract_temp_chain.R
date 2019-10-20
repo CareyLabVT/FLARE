@@ -60,9 +60,7 @@ extract_temp_chain <- function(fname,
     
   }else{
     #Different lakes are going to have to modify this for their temperature data format
-    d <- read.csv(fname[1], skip = 4, na.strings = 'NAN', stringsAsFactors = FALSE)
-    d_names <- read.csv(fname, skip =1, stringsAsFactors = FALSE)
-    names(d) <- names(d_names)
+    d1 <- read.csv(fname, na.strings = 'NA', stringsAsFactors = FALSE)
     
     obs <- array(NA,dim=c(length(full_time_local),length(modeled_depths)))
     depths_w_obs <- observed_depths_temp
@@ -71,22 +69,25 @@ extract_temp_chain <- function(fname,
       obs_index[i] <- which.min(abs(modeled_depths - depths_w_obs[i]))
     }
     
-    TIMESTAMP_in <- as_datetime(d$TIMESTAMP,tz = input_file_tz)
-    d$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = local_tzone)
+    TIMESTAMP_in <- as_datetime(d1$DateTime,tz = input_file_tz)
+    d1$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = local_tzone)
+    
+    d <-  data.frame(TIMESTAMP = d1$TIMESTAMP, wtr_surface = d1$ThermistorTemp_C_surface, wtr_1 = d1$ThermistorTemp_C_1, wtr_2 = d1$ThermistorTemp_C_2, wtr_3 = d1$ThermistorTemp_C_3, wtr_4 = d1$ThermistorTemp_C_4,
+                      wtr_5 = d1$ThermistorTemp_C_5, wtr_6 = d1$ThermistorTemp_C_6, wtr_7 = d1$ThermistorTemp_C_7, wtr_8 = d1$ThermistorTemp_C_8, wtr_9 = d1$ThermistorTemp_C_9, wtr_1_exo = d1$EXOTemp_C_1, wtr_5_do = d1$RDOTemp_C_5, wtr_9_do = d1$RDOTemp_C_9)
     
     full_time_local <- as.POSIXct(full_time_local,tz = local_tzone)
     for(i in 1:length(full_time_local)){
       index = which(d$TIMESTAMP==full_time_local[i])
       if(length(index)>0){
-        obs[i,obs_index] <- unlist(d[index,5:14])
-        if(is.na(obs[i,obs_index[2]]) & !is.na(d[index,23])){
-          obs[i,obs_index[2]] <- d[index,23]
+        obs[i,obs_index] <- unlist(d[index,2:11])
+        if(is.na(obs[i,obs_index[2]]) & !is.na(d[index,"wtr_1_exo"])){
+          obs[i,obs_index[2]] <- d[index,"wtr_1_exo"]
         }
-        if(is.na(obs[i,obs_index[6]]) & !is.na(d[index,17])){
-          obs[i,obs_index[6]] <- d[index,17]
+        if(is.na(obs[i,obs_index[6]]) & !is.na(d[index,"wtr_5_do"])){
+          obs[i,obs_index[6]] <- d[index,"wtr_5_do"]
         }
-        if(is.na(obs[i,obs_index[10]]) & !is.na(d[index,20])){ 
-          obs[i,obs_index[10]] <- d[index,20]
+        if(is.na(obs[i,obs_index[10]]) & !is.na(d[index,"wtr_9_do"])){ 
+          obs[i,obs_index[10]] <- d[index,"wtr_9_do"]
         }
       }
     }
