@@ -1301,9 +1301,9 @@ void initialise_lake(int namlst)
           { "num_wq_vars",       TYPE_INT,              &num_wq_vars       },
           { "wq_names",          TYPE_STR|MASK_LIST,    &wq_names          },
           { "wq_init_vals",      TYPE_DOUBLE|MASK_LIST, &wq_init_vals      },
-          { "snow_thickness", 	 TYPE_DOUBLE,		    &snow_thickness	   },
-          { "white_ice_thickness",  TYPE_DOUBLE,		&white_ice_thickness},
-          { "blue_ice_thickness", 	 TYPE_DOUBLE,		&blue_ice_thickness},
+          { "snow_thickness", 		 TYPE_DOUBLE,		&snow_thickness	   },
+          { "white_ice_thickness",  TYPE_DOUBLE,		&white_ice_thickness  },
+          { "blue_ice_thickness", 	 TYPE_DOUBLE,		&blue_ice_thickness   },
           { NULL,                TYPE_END,              NULL               }
     };
 
@@ -1311,9 +1311,6 @@ void initialise_lake(int namlst)
     int nx, np, nz;
     int *idx = NULL;
 
-    SurfData.delzSnow = zero;
-    SurfData.delzWhiteIce = zero;
-    SurfData.delzBlueIce = zero;
 /*----------------------------------------------------------------------------*/
     //-------------------------------------------------
     // Do the initial profiles
@@ -1432,10 +1429,10 @@ void initialise_lake(int namlst)
     SurfData.delzWhiteIce = white_ice_thickness;
     SurfData.delzBlueIce = blue_ice_thickness;
     
-    //Initializing with non-zero snow height causes segmentation faults
-    SurfData.delzSnow = 0.0; 
+    //Initializing with non-zero snow thickness causes segmentation faults
+    SurfData.delzSnow = zero;
     
-    if(SurfData.delzBlueIce > 0 ||  SurfData.delzWhiteIce > 0){
+    if(SurfData.delzBlueIce > 0.0 || SurfData.delzWhiteIce > 0.0){
       ice = TRUE;
     }
 

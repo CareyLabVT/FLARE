@@ -78,7 +78,7 @@ write_forecast_netcdf <- function(x,
   def_list[[9]] <- ncvar_def("forecasted","-",list(timedim),missval = -99,longname = '0 = historical; 1 = forecasted',prec="integer")
   def_list[[10]] <- ncvar_def("surface_height_restart","m",list(ensdim),missval = -99,longname =  'Surface Height',prec="integer")
   def_list[[11]] <- ncvar_def("snow_ice_restart","m",list(ensdim, snow_ice_dim),missval = -99,longname = 'Snow (1), White Ice (2), Blue Ice (3)',prec="integer")
-  def_list[[12]] <- ncvar_def("ice_depth","m", list(timedim,ensdim),missval = -99,longname = 'Ice Thickness',prec="integer")
+  def_list[[12]] <- ncvar_def("ice_thickness","m", list(timedim,ensdim),missval = -99,longname = 'Ice Thickness',prec="integer")
   def_list[[13]] <- ncvar_def("lake_depth","m",list(timedim,ensdim),missval = -99,longname = 'Depth of lake',prec="integer")
   
   if(npars > 0){

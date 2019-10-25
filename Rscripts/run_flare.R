@@ -68,6 +68,8 @@ run_flare<-function(start_day_local,
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/read_sss_files.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_nutrients.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/temp_oxy_chla_qaqc.R")) 
+  source(paste0(code_folder,"/","Rscripts/",lake_name,"/met_qaqc.R")) 
+  met_qaqc
   
   ### METEROLOGY DOWNSCALING OPTIONS
   if(is.na(downscaling_coeff)){
@@ -193,6 +195,8 @@ run_flare<-function(start_day_local,
     spin_up_days <- hist_days + 2
     n_enkf_members <- 3
   }
+  
+  #met_downscale_uncertainty <- FALSE
   
   ####################################################
   #### DETECT PLATFORM  
@@ -442,12 +446,22 @@ run_flare<-function(start_day_local,
   
   met_file_names <- rep(NA, 1+(n_met_members*n_ds_members))
   obs_met_outfile <- "GLM_met.csv"
+  
+  cleaned_met_file <- paste0(working_directory, "/FCRMet_postQAQC.csv")
+  met_qaqc(fname = met_obs_fname,
+           cleaned_met_file,
+           input_file_tz = "EST",
+           local_tzone)
+  
+  met_obs_fname_wdir <- cleaned_met_file
+  
   missing_met <- create_obs_met_input(fname = met_obs_fname_wdir,
                                       outfile=obs_met_outfile,
                                       full_time_hour_local, 
                                       input_file_tz = "EST5EDT",
                                       local_tzone,
                                       working_directory)
+  
   if(missing_met < missing_met_data_threshold){
     met_file_names[1] <- obs_met_outfile
   }else{
@@ -477,29 +491,29 @@ run_flare<-function(start_day_local,
                                        "6hr",
                                        "6hr"),
                           "debias_method" = c("lm",
-                                              "lm",
+                                              "none",
                                               "lm",
                                               "lm",
                                               "lm",
                                               "compare_totals"),
                           "use_covariance" = c(TRUE,
-                                               TRUE,
+                                               FALSE,
                                                TRUE,
                                                TRUE,
                                                TRUE,
                                                FALSE),
                           stringsAsFactors = FALSE)
     
-    replaceObsNames <- c("AirTC_Avg" = "AirTemp",
-                         "WS_ms_Avg" = "WindSpeed",
-                         "RH" = "RelHum",
-                         "SR01Up_Avg" = "ShortWave",
-                         "IR01UpCo_Avg" = "LongWave",
-                         "Rain_mm_Tot" = "Rain")
+    replaceObsNames <- c("AirTemp" = "AirTemp",
+                         "WindSpeed" = "WindSpeed",
+                         "RelHum" = "RelHum",
+                         "ShortWave" = "ShortWave",
+                         "LongWave" = "LongWave",
+                         "Rain" = "Rain")
     
     temp_met_file<- process_downscale_GEFS(folder = code_folder,
                                            noaa_location,
-                                           input_met_file = met_obs_fname_wdir[1],
+                                           input_met_file = met_obs_fname_wdir,
                                            working_directory,
                                            sim_files_folder = paste0(code_folder, "/", "sim_files"),
                                            n_ds_members,
@@ -516,7 +530,7 @@ run_flare<-function(start_day_local,
                                            full_time_local,
                                            first_obs_date = met_ds_obs_start,
                                            last_obs_date = met_ds_obs_end,
-                                           input_met_file_tz = "EST5EDT")
+                                           input_met_file_tz = local_tzone)
     
     met_file_names[1] <- temp_met_file[1]
   }
@@ -559,16 +573,16 @@ run_flare<-function(start_day_local,
                                                FALSE),
                           stringsAsFactors = FALSE)
     
-    replaceObsNames <- c("AirTC_Avg" = "AirTemp",
-                         "WS_ms_Avg" = "WindSpeed",
-                         "RH" = "RelHum",
-                         "SR01Up_Avg" = "ShortWave",
-                         "IR01UpCo_Avg" = "LongWave",
-                         "Rain_mm_Tot" = "Rain")
+    replaceObsNames <- c("AirTemp" = "AirTemp",
+                         "WindSpeed" = "WindSpeed",
+                         "RelHum" = "RelHum",
+                         "ShortWave" = "ShortWave",
+                         "LongWave" = "LongWave",
+                         "Rain" = "Rain")
     
     met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder = code_folder,
                                                                                  noaa_location,
-                                                                                 input_met_file = met_obs_fname_wdir[1],
+                                                                                 input_met_file = met_obs_fname_wdir,
                                                                                  working_directory,
                                                                                  sim_files_folder = paste0(code_folder, "/", "sim_files"),
                                                                                  n_ds_members,
@@ -585,7 +599,7 @@ run_flare<-function(start_day_local,
                                                                                  full_time_local,
                                                                                  first_obs_date = met_ds_obs_start,
                                                                                  last_obs_date = met_ds_obs_end,
-                                                                                 input_met_file_tz = "EST5EDT")
+                                                                                 input_met_file_tz = local_tzone)
     
     if(weather_uncertainty == FALSE & met_downscale_uncertainty == TRUE){
       met_file_names <- met_file_names[1:(1+(1*n_ds_members))]

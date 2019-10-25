@@ -36,12 +36,14 @@ extract_fdom_chain <- function(fname = catwalk_fname,
     d4 <- data.frame(TIMESTAMP = d2$TIMESTAMP, fDOM_1 = d2$EXOfDOM_QSU_1)
     
     d <- rbind(d3,d4)
+    d <- d %>% 
+      arrange(TIMESTAMP)
     
     full_time_local <- as.POSIXct(full_time_local,tz = local_tzone)
     for(i in 1:length(full_time_local)){
-      index = which(d$TIMESTAMP==full_time_local[i])
-      if(length(index)>0){
-        obs[i,obs_index] <- d$fDOM_1[index]
+      index <- which(d$TIMESTAMP <= full_time_local[i] & d$TIMESTAMP > full_time_local[i] - hours(24))
+      if(length(start_index)>0){
+        obs[i,obs_index] <- mean(d$fDOM_1[index], na.rm = TRUE)
       }
     }
     
@@ -63,7 +65,7 @@ extract_fdom_chain <- function(fname = catwalk_fname,
 
     full_time_local <- as.POSIXct(full_time_local,tz = local_tzone)
     for(i in 1:length(full_time_local)){
-      index = which(d$TIMESTAMP==full_time_local[i])
+      index <- which(d$TIMESTAMP <= full_time_local[i] & d$TIMESTAMP > full_time_local[i] - hours(24))
       if(length(index)>0){
         obs[i,obs_index] <- d$fDOM_1[index]
       }

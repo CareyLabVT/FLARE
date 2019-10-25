@@ -15,7 +15,7 @@ export WITH_XPLOTS=true
 
 # The default is MacPorts : uncomment the next line if you use "homebrew"
 # the build_glm.sh scripts will try to auto-configure this
-#export HOMEBREW=true
+export HOMEBREW=true
 
 export CURDIR=`pwd`
 export FABMDIR=${CURDIR}/../fabm-git

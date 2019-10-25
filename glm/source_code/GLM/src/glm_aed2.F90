@@ -1122,7 +1122,6 @@ SUBROUTINE aed2_do_glm(wlev, pIce) BIND(C, name=_WQ_DO_GLM)
       depth(i) = surf - z(i)
       layer_area(i) = (area(i)-area(i-1))/area(i)
    ENDDO
-   
 
    IF ( benthic_mode .GT. 1 ) THEN
       j = 1
@@ -1170,35 +1169,35 @@ SUBROUTINE aed2_do_glm(wlev, pIce) BIND(C, name=_WQ_DO_GLM)
          ENDIF
       ENDDO
    ENDIF
-   
    CALL check_states(column,wlev)
-   
+
    DO split=1,split_factor
 
       IF (benthic_mode .GT. 1) THEN
          CALL copy_to_zone(cc, wlev)
          CALL calc_zone_areas(area, wlev, z(wlev))
       ENDIF
+
       !# Update local light field (self-shading may have changed through
       !# changes in biological state variables). Update_light is set to
       !# be inline with current aed2_phyoplankton, which requires only
       !# surface par, then integrates over depth of a layer
       CALL update_light(column, wlev)
+
       !# Fudge
       nir(:) = (par(:)/par_fraction) * nir_fraction
       uva(:) = (par(:)/par_fraction) * uva_fraction
       uvb(:) = (par(:)/par_fraction) * uvb_fraction
+
       !# Time-integrate one biological time step
       CALL calculate_fluxes(column, wlev, column_sed, n_zones,  &
                                   flux(:,:), flux_atm, flux_ben, flux_zone(:,:))
-                                  
       !# Update the water column layers
       DO v = 1, n_vars
          DO lev = 1, wlev
             cc(lev, v) = cc(lev, v) + dt_eff*flux(lev, v)
          ENDDO
       ENDDO
-
       !# Now update benthic variables, depending on whether zones are simulated
       IF ( benthic_mode .GT. 1 ) THEN
          ! Loop through benthic state variables to update their mass
@@ -1215,15 +1214,12 @@ SUBROUTINE aed2_do_glm(wlev, pIce) BIND(C, name=_WQ_DO_GLM)
          ENDDO
       ENDIF
 
-
       !# Distribute cc-sed benthic properties back into main cc array
       IF ( benthic_mode .GT. 1 ) &
-      		CALL copy_from_zone(cc, cc_diag, cc_diag_hz, wlev)
+         CALL copy_from_zone(cc, cc_diag, cc_diag_hz, wlev)
 
-      	CALL check_states(column, wlev)
-
+      CALL check_states(column, wlev)
    ENDDO
-   
 END SUBROUTINE aed2_do_glm
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

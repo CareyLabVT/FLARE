@@ -87,8 +87,8 @@
    cd = 0.0013
    ce = 0.0013
    ch = 0.0013
-   rain_threshold = 0.01
-   runoff_coef = 0.3
+   !rain_threshold = 0.01
+   !runoff_coef = 0.3
    time_fmt = 'YYYY-MM-DD hh:mm:ss'
 /
 &inflow
@@ -121,9 +121,9 @@
    benthic_mode = 2
    n_zones = 2
    zone_heights = 5, 9.5
-   sed_heat_Ksoil = 1.8, 1.8
+   sed_heat_Ksoil = 1.2, 1.2
    sed_temp_depth = 0.2, 0.2
    sed_temp_mean = 12.08, 15.17
-   sed_temp_amplitude = 0, 0 !2.84, 5.35
+   sed_temp_amplitude = 3, 6
    sed_temp_peak_doy = 257, 251
 /

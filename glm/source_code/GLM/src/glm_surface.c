@@ -237,9 +237,9 @@ void do_surface_thermodynamics(int jday, int iclock, int LWModel,
     * Prior to surface heating, check for local runoff inputs from rain
     * and merge with the surface layer properties
     ***********************************************************************/
-    
+
     AED_REAL catch_runoff = zero;
-    
+
     if ( catchrain && MetData.Rain>rain_threshold ) {
 
         // Compute runoff in m3 for this time step
@@ -1179,7 +1179,7 @@ void do_surface_thermodynamics(int jday, int iclock, int LWModel,
     AvgSurfTemp = AvgSurfTemp * (1 - (noSecs/SecsPerDay)/dt_ice_avg) +
                   Lake[surfLayer].Temp * (noSecs/SecsPerDay)/dt_ice_avg ;
 
-    if (AvgSurfTemp <= 0.1 && SurfData.delzBlueIce == 0. && Lake[surfLayer].Height>0.1) {
+    if (AvgSurfTemp <= 0.0 && SurfData.delzBlueIce == 0. && Lake[surfLayer].Height>0.1) {
         // Start a new blue ice layer
         ice                     = TRUE;
         SurfData.delzBlueIce    = 0.05;

@@ -67,15 +67,15 @@
    subdaily = .true.
    wind_factor = 1.0
    sw_factor = 1.06
-   lw_factor = 0.82
+   lw_factor = 1.0
    at_factor = 1
    rh_factor = 1
    rain_factor = 1
    cd = 0.0013
    ce = 0.0013
    ch = 0.0013
-   rain_threshold = 0.01 !WAS TURNED OFF
-   runoff_coef = 0.3  !WAS TURNED OFF
+   !rain_threshold = 0.01 !WAS TURNED OFF
+   !runoff_coef = 0.3  !WAS TURNED OFF
    time_fmt = 'YYYY-MM-DD hh:mm:ss'
 /
 &inflow
@@ -108,9 +108,9 @@
    benthic_mode = 2
    n_zones = 2
    zone_heights = 5, 9.5
-   sed_heat_Ksoil = 1.8, 1.8
+   sed_heat_Ksoil = 1.2, 1.2
    sed_temp_depth = 0.2, 0.2
    sed_temp_mean = 12.08, 15.17
-   sed_temp_amplitude = 2.84, 5.35
+   sed_temp_amplitude = 3, 6
    sed_temp_peak_doy = 257, 251
 /

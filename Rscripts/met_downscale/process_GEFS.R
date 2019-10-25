@@ -43,16 +43,20 @@ process_GEFS <- function(file_name,
   #end_step <- as_datetime(tail(d$forecast.date,1), tz = local_tzone)
   
   # adjust for different timezones in saved GEFS forecasts 
-  #if(date(full_time_local[1])>as_date("2018-12-07")){ 
-  #  for.input_tz = "GMT"
-  #}else{
-  #  for.input_tz = "US/Eastern"
-  #}
+  if(date(full_time_local[1])>as_datetime("2018-12-07 02:00:00", tz = "EST")){ 
+    for.input_tz = "GMT"
+    forecasts <- prep_for(d, input_tz = for.input_tz, local_tzone)
+  }else{
+    for.input_tz = "US/Eastern"
+
+  }
   
-  for.input_tz = "GMT"
+  #for.input_tz = "GMT"
   
   #full_time_local <- seq(begin_step, end_step, by = "1 hour", tz = local_tzone) # grid
-  forecasts <- prep_for(d, input_tz = for.input_tz, for.input_tz)
+  
+  forecasts <- prep_for(d, input_tz = for.input_tz, local_tzone)
+
   time0 = min(forecasts$timestamp)
   time_end = max(forecasts$timestamp)
   
@@ -68,11 +72,11 @@ process_GEFS <- function(file_name,
     }else{
       load(file = downscaling_coeff)
     }
-    ds = downscale_met(forecasts,
+    ds <- downscale_met(forecasts,
                        debiased.coefficients,
                        VarInfo,
                        PLOT = FALSE,
-                       local_tzone = "GMT")
+                       local_tzone = local_tzone)
     ds <- ds %>% mutate(AirTemp = AirTemp - 273.15) # from Kelvin to Celsius 
     if(met_downscale_uncertainty == TRUE){
       ## Downscaling + noise addition option

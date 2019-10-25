@@ -2,7 +2,7 @@
    pd%p_name = 'AGGREGATE'
    pd%p_initial = 10
    pd%p0 = 0.03
-   pd%w_p = 0
+   pd%w_p = 0.0
    pd%Xcc = 50
    pd%R_growth = 0.5
    pd%fT_Method = 1
@@ -17,7 +17,7 @@
    pd%f_pr = 0.005
    pd%R_resp = 0.08
    pd%theta_resp = 1.05
-   pd%k_fres = 0.6
+   pd%k_fres = 0.0
    pd%k_fdom = 0.05
    pd%salTol = 0
    pd%S_bep = 2

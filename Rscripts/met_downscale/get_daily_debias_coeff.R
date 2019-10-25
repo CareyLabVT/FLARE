@@ -11,12 +11,17 @@ get_daily_debias_coeff <- function(joined.data, VarInfo, PLOT, working_directory
       slope <- model$coefficients[2]
       res <- residuals(model)
       r2 <- summary(model)$r.squared
- 
-    }else{
+    }else if(method == "compare_totals"){
       # option where comparing sum rather than fitting a line
       slope <- sum(col.obs)/sum(col.for)
       intercept <- 0
       res <- col.for*slope - col.obs
+      r2 <- NA
+    }else if(method == "none"){
+      # option where comparing sum rather than fitting a line
+      slope <- 1
+      intercept <- 0
+      res <- NA
       r2 <- NA
     }
     

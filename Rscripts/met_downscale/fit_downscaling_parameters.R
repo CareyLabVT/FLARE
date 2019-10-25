@@ -88,7 +88,7 @@ fit_downscaling_parameters <- function(observations,
   
   
   ## downscale shortwave to hourly
-  ShortWave.ds <- ShortWave_to_hrly(debiased, time0 = NA, lat = 37.307, lon = 360 - 79.837, local_tzone)
+  ShortWave.ds <- ShortWave_to_hrly(debiased, time0 = NA, lat = lake_latitude, lon = 360 - lake_longitude, local_tzone)
   
   # -----------------------------------
   # 6. join debiased forecasts of different variables into one dataframe

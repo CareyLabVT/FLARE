@@ -23,10 +23,10 @@ process_saved_forecasts <- function(data.path,working_directory, local_tzone){
   state.forecasts = NULL
   for(i in 1:length(forecast.files.list)){
     tmp.data = read.csv(paste0(data.path, "/", forecast.files.list[i]))
-    #if(as_datetime(tmp.data$forecast.date[1]) < as_datetime('2018-12-07 00:00:00')){
-    #  input_tz = "EST5EDT"
-    #}else{input_tz = "GMT"}
-    input_tz = "GMT"
+    if(as_datetime(tmp.data$forecast.date[1]) < as_datetime('2018-12-07 00:00:00')){
+      input_tz = "EST5EDT"
+    }else{input_tz = "GMT"}
+    #input_tz = "GMT"
     tmp.data <- tmp.data %>%
       dplyr::mutate(forecast.date = as_datetime(forecast.date, tz = input_tz))
     tmp.data$forecast.date = with_tz(tmp.data$forecast.date, local_tzone)
