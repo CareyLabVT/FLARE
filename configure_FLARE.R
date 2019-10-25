@@ -36,6 +36,7 @@ forecast_SSS_Oxy <<- 500
 sss_fname <<- paste0(data_location,"/manual-data/FCR_SSS_inflow_2013_2019.csv")
 
 
+
 #####################
 # Weather forcing options
 ######################
@@ -47,7 +48,8 @@ DOWNSCALE_MET <<- TRUE
 #Downscale the coarse resolutoin NOAA data to the local
 #site using the meterology station at the lake
 
-downscaling_coeff <<- paste0(data_location, "/manual-data/debiased.coefficients_04_06_2018_12_06_2018.RData")
+downscaling_coeff <<- NA #paste0(data_location, "/manual-data/debiased.coefficients_04_06_2018_12_06_2018.RData")
+
 #file name of previous downscaling coefficients
 #use NA if not using an existing file
 
@@ -55,7 +57,7 @@ met_ds_obs_start <<- as.Date("2018-04-06")
 met_ds_obs_end <<- as.Date("2018-12-06")
 #Dates to use to developing the downscaling coefficient
 
-missing_met_data_threshold <<- 1000
+missing_met_data_threshold <<- 100
 
 ############################
 # Run information
@@ -73,8 +75,8 @@ if(include_wq){
     base_GLM_nml <<- "glm3_wAED.nml"  
   }
 }else{
-  #base_GLM_nml <<- "glm3_woAED.nml"
-  base_GLM_nml <<- "glm3_woAED_constat_sedtemp.nml"
+  base_GLM_nml <<- "glm3_woAED.nml"
+  #base_GLM_nml <<- "glm3_woAED_constat_sedtemp.nml"
 }
 
 #################################
@@ -162,14 +164,14 @@ n_inflow_outflow_members <<- 1
 ################################
 ### Process uncertainty adaption
 ##################################
-qt_alpha <<- 0.9  #0 - all weight on the new Qt, 1 - all weight on the current Qt
+qt_alpha <<- 0.5  #0 - all weight on the new Qt, 1 - all weight on the current Qt
 qt_beta <<- 0.7 # 
 
 #################################
 # Parameter calibration information
 #################################
 
-include_pars_in_qt_update <<- FALSE
+include_pars_in_qt_update <<- TRUE
 #Adapt the parameter noise
 
 #Initial zone temperatures and the upper and lower bounds
@@ -181,21 +183,21 @@ zone1_temp_init_upperbound <<- 20
 zone1_temp_lowerbound <<- -100
 zone1_temp_upperbound <<- 100
 #daily perturbance of parameter value
-zone1temp_init_qt <<- 0.1^2  #THIS IS THE VARIANCE, NOT THE SD
+zone1temp_init_qt <<- 1^2  #THIS IS THE VARIANCE, NOT THE SD
 
 zone2_temp_init_mean <<- 17.76424636
 zone2_temp_init_lowerbound <<-  10
 zone2_temp_init_upperbound <<-  20
 zone2_temp_lowerbound <<-  -100
 zone2_temp_upperbound <<-  100
-zone2temp_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
+zone2temp_init_qt <<- 1^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Shortwave factor
 swf_init_mean <<- 1.0
 swf_init_lowerbound <<- 0.5
 swf_init_upperbound <<- 2.0
-swf_lowerbound <<- 0.5
-swf_upperbound <<- 2.0
+swf_lowerbound <<- -10
+swf_upperbound <<- 10
 #daily perturbance of parameter value
 swf_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
 
@@ -203,8 +205,8 @@ swf_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
 lwf_init_mean <<- 1.0
 lwf_init_lowerbound <<- 0.5
 lwf_init_upperbound <<- 2.0
-lwf_lowerbound <<- 0.5
-lwf_upperbound <<- 2.0
+lwf_lowerbound <<- -10
+lwf_upperbound <<- 10
 #daily perturbance of parameter value
 lwf_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
 
@@ -263,9 +265,9 @@ Fsed_frp_upperbound <<-  1000 #1.01
 Fsed_frp_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Fsed_amm
-Fsed_amm_init_mean <<- 3.5
-Fsed_amm_init_lowerbound <<-  1 #0.99
-Fsed_amm_init_upperbound <<-  5 #1.01
+Fsed_amm_init_mean <<- 5
+Fsed_amm_init_lowerbound <<-  2 #0.99
+Fsed_amm_init_upperbound <<-  8 #1.01
 Fsed_amm_lowerbound <<-  -1000 #0.99
 Fsed_amm_upperbound <<-  1000 #1.01
 #daily perturbance of parameter value
@@ -289,133 +291,132 @@ Fsed_doc_upperbound <<-  1000 #1.01
 #daily perturbance of parameter value
 Fsed_doc_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
 
-par_names <<- c("sed_temp_mean","sed_temp_mean","sw_factor")
-par_names_save <<- c("zone1temp","zone2temp","sw_factor")
-par_nml <<- c("glm3.nml","glm3.nml","glm3.nml")
-par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean,swf_init_mean)
-par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound,swf_init_lowerbound)
-par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound,swf_init_upperbound)
-par_lowerbound <<- c(zone1_temp_lowerbound,zone2_temp_lowerbound,swf_lowerbound)
-par_upperbound <<- c(zone1_temp_upperbound,zone2_temp_upperbound,swf_upperbound)
-par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt,swf_init_qt)
-par_units <<- c("deg_C","deg_C","-") #
 #Create parameter vectors
 if(include_wq){
   par_names <<- c(
     "sed_temp_mean"
     ,"sed_temp_mean"
     ,"sw_factor"
+    ,"lw_factor"
     ,"Fsed_oxy"
-    ,"pd%R_growth"
+    #,"pd%R_growth"
     #,"Rnitrif"
     #,"Fsed_frp"
     #,"Rdom_minerl"
     #,"Fsed_nit"
-    #,"Fsed_amm"
+    ,"Fsed_amm"
     #, "Fsed_doc"
   )
   par_names_save <<- c(
     "zone1temp"
     ,"zone2temp"
     ,"sw_factor"
+    ,"lw_factor"
     ,"Fsed_oxy"
-    ,"R_growth"
+    #,"R_growth"
     #,"Rnitrif"
     #,"Fsed_frp"
     #,"Rdom_minerl"
     #,"Fsed_nit"
-    #,"Fsed_amm"
+    ,"Fsed_amm"
     #,"Fsed_doc"
   )
   par_nml <<- c(
     "glm3.nml"
     ,"glm3.nml"
     ,"glm3.nml"
+    ,"glm3.nml"
     ,"aed2.nml"
-    ,"aed2_phyto_pars.nml"
+    #,"aed2_phyto_pars.nml"
     #,"aed2.nml"
     #,"aed2.nml"
+    #, "aed2.nml"
+    #, "aed2.nml"
     , "aed2.nml"
-    #, "aed2.nml"
-    #, "aed2.nml"
     #, "aed2.nml"
   ) 
   par_init_mean <<- c(
     zone1_temp_init_mean
     ,zone2_temp_init_mean
     ,swf_init_mean
+    ,lwf_init_mean
     ,Fsed_oxy_init_mean
-    ,R_growth_init_mean
+    #,R_growth_init_mean
     #,Rnitrif_init_mean
     #,Fsed_frp_init_mean
-    ,Rdom_minerl_init_mean
+    #,Rdom_minerl_init_mean
     #,Fsed_nit_init_mean
-    #,Fsed_amm_init_mean
+    ,Fsed_amm_init_mean
     #,Fsed_doc_init_mean
   )
   par_init_lowerbound <<- c(
     zone1_temp_init_lowerbound
     ,zone2_temp_init_lowerbound
     ,swf_init_lowerbound
+    ,lwf_init_lowerbound
     ,Fsed_oxy_init_lowerbound
-    ,R_growth_init_lowerbound
+    #,R_growth_init_lowerbound
     #,Rnitrif_init_lowerbound
     #,Fsed_frp_init_lowerbound
     #,Rdom_minerl_init_lowerbound
     #,Fsed_nit_init_lowerbound
-    #,Fsed_amm_init_lowerbound
+    ,Fsed_amm_init_lowerbound
     #,Fsed_doc_init_lowerbound
   )
   par_init_upperbound <<- c(
     zone1_temp_init_upperbound
     ,zone2_temp_init_upperbound
     ,swf_init_upperbound
+    ,lwf_init_upperbound
     ,Fsed_oxy_init_upperbound
-    ,R_growth_init_upperbound
+    #,R_growth_init_upperbound
     #,Rnitrif_init_upperbound 
     #,Fsed_frp_init_upperbound
     #,Rdom_minerl_init_upperbound
     #,Fsed_nit_init_upperbound
-    #,Fsed_amm_init_upperbound
+    ,Fsed_amm_init_upperbound
     #,Fsed_doc_init_upperbound
   )
   par_lowerbound <<- c(
     zone1_temp_lowerbound
     ,zone2_temp_lowerbound 
     ,swf_lowerbound
+    ,lwf_lowerbound
     ,Fsed_oxy_lowerbound
-    ,R_growth_lowerbound
+    #,R_growth_lowerbound
     #,Rnitrif_lowerbound
     #,Fsed_frp_lowerbound
     #,Rdom_minerl_lowerbound
     #,Fsed_nit_lowerbound 
-    #,Fsed_amm_lowerbound 
+    ,Fsed_amm_lowerbound 
     #,Fsed_doc_lowerbound
   )
   par_upperbound <<- c(
     zone1_temp_upperbound
     ,zone2_temp_upperbound
     ,swf_upperbound
+    ,lwf_upperbound
     ,Fsed_oxy_upperbound
-    ,R_growth_upperbound
+    #,R_growth_upperbound
     #,Rnitrif_upperbound
     #,Fsed_frp_upperbound
     #,Rdom_minerl_upperbound
     #,Fsed_nit_upperbound
-    #,Fsed_amm_upperbound
+    ,Fsed_amm_upperbound
     #,Fsed_doc_upperbound
   )
   par_init_qt <<- c(
     zone1temp_init_qt
     ,zone2temp_init_qt
     ,swf_init_qt
+    ,lwf_init_qt
     ,Fsed_oxy_init_qt
-    ,R_growth_init_qt
+    #,R_growth_init_qt
     #,Rnitrif_init_qt
     #,Fsed_frp_init_qt
     #,Rdom_minerl_init_qt
     #,Fsed_nit_init_qt
-    #,Fsed_amm_init_qt
+    ,Fsed_amm_init_qt
     #,Fsed_doc_init_qt
   )
   par_units <<- c(
@@ -424,11 +425,12 @@ if(include_wq){
     ,"-"
     ,"-"
     ,"-"
+    #,"-"
     #,"-" 
     #,"-" 
     #,"-" 
     #,"-"
-    #,"-" 
+    ,"-" 
     #,"-"
   )
   
@@ -445,16 +447,16 @@ if(include_wq){
   par_init_qt <<- c() #c(zone1temp_init_qt,zone2temp_init_qt)
   par_units <<- c() #("deg_C","deg_C") #
   
-  par_names <<- c("sed_temp_mean","sed_temp_mean","sw_factor")
-  par_names_save <<- c("zone1temp","zone2temp","sw_factor")
-  par_nml <<- c("glm3.nml","glm3.nml","glm3.nml")
-  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean,swf_init_mean)
-  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound,swf_init_lowerbound)
-  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound,swf_init_upperbound)
-  par_lowerbound <<- c(zone1_temp_lowerbound,zone2_temp_lowerbound,swf_lowerbound)
-  par_upperbound <<- c(zone1_temp_upperbound,zone2_temp_upperbound,swf_upperbound)
-  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt,swf_init_qt)
-  par_units <<- c("deg_C","deg_C","-") #
+  par_names <<- c("sed_temp_mean","sed_temp_mean","sw_factor","lw_factor")
+  par_names_save <<- c("zone1temp","zone2temp","sw_factor","lw_factor")
+  par_nml <<- c("glm3.nml","glm3.nml","glm3.nml","glm3.nml")
+  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean,swf_init_mean, lwf_init_mean)
+  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound,swf_init_lowerbound, lwf_init_lowerbound)
+  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound,swf_init_upperbound, lwf_init_upperbound)
+  par_lowerbound <<- c(zone1_temp_lowerbound,zone2_temp_lowerbound,swf_lowerbound, lwf_lowerbound)
+  par_upperbound <<- c(zone1_temp_upperbound,zone2_temp_upperbound,swf_upperbound, lwf_upperbound)
+  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt,swf_init_qt, lwf_init_qt)
+  par_units <<- c("deg_C","deg_C","-","-") #
   
   #par_init_qt <- par_init_qt * 0.1
 }
@@ -493,8 +495,6 @@ inflow_file1 <<- paste0(data_location,"/manual-data/FCR_weir_inflow_newEDI_2013_
 outflow_file1 <<- paste0(data_location,"/manual-data/FCR_spillway_outflow_newEDI_SUMMED_WeirWetland_2013_2018_20190912.csv")
 inflow_file2 <<- paste0(data_location,"/manual-data/FCR_wetland_inflow_newEDI_2013_2018_20190912_oneDOC.csv")
 #Name of the historical inflow and outflow files
-
-
 
 
 #########################################

@@ -49,7 +49,11 @@ update_sigma <- function(qt, p_t, h, x_star, pars_star, x_corr, pars_corr, psi_t
   
   y_corr <- matrix(NA, nrow =  nmembers, ncol = length(zt))
   for(m in 1:nmembers){
+    if(length(psi_t) > 1){
     y_corr[m, ] <- zt + t(rmvnorm(n = 1, mean = rep(0,dim(psi_t)[1]), sigma = psi_t))
+    }else{
+      y_corr[m, ] <- zt + t(rnorm(n = 1, mean = 0, sd = sqrt(psi_t)))
+    }
     y_tmp <- y_corr[m,] - h %*% x_par_corr[m, ]
     if(m == 1){
       y_it <- y_tmp %*% t(y_tmp)

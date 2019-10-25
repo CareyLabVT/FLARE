@@ -38,13 +38,16 @@ extract_do_chain <- function(fname = catwalk_fname,
     
     d <- rbind(d3,d4)
     
+    d <- d %>% 
+      arrange(TIMESTAMP)
+    
     full_time_local <- as.POSIXct(full_time_local,tz = local_tzone)
     for(i in 1:length(full_time_local)){
-      index = which(d$TIMESTAMP==full_time_local[i])
+      index <- which(d$TIMESTAMP <= full_time_local[i] & d$TIMESTAMP > full_time_local[i] - hours(1))
       if(length(index)>0){
-        obs[i,obs_index[1]] <- max(c(d$doobs_1[index],0.0))
-        obs[i,obs_index[2]] <- max(c(d$doobs_5[index],0.0))
-        obs[i,obs_index[3]] <- max(c(d$doobs_9[index],0.0))
+        obs[i,obs_index[1]] <- max(c(mean(d$doobs_1[index], na.rm = TRUE),0.0))
+        obs[i,obs_index[2]] <- max(c(mean(d$doobs_5[index], na.rm = TRUE),0.0))
+        obs[i,obs_index[3]] <- max(c(mean(d$doobs_9[index], na.rm = TRUE),0.0))
       }
     }
     
@@ -64,13 +67,16 @@ extract_do_chain <- function(fname = catwalk_fname,
     
     d <- data.frame(TIMESTAMP = d1$TIMESTAMP, doobs_1 = d1$EXODO_mgL_1, doobs_5 = d1$RDO_mgL_5, doobs_9 = d1$RDO_mgL_9)
  
+    d <- d %>% 
+      arrange(TIMESTAMP)
+    
     full_time_local <- as.POSIXct(full_time_local,tz = local_tzone)
     for(i in 1:length(full_time_local)){
-      index = which(d$TIMESTAMP==full_time_local[i])
+      index <- which(d$TIMESTAMP <= full_time_local[i] & d$TIMESTAMP > full_time_local[i] - hours(1))
       if(length(index)>0){
-        obs[i,obs_index[1]] <- max(c(d$doobs_1[index],0.0))
-        obs[i,obs_index[2]] <- max(c(d$doobs_5[index],0.0))
-        obs[i,obs_index[3]] <- max(c(d$doobs_9[index],0.0))
+        obs[i,obs_index[1]] <- max(c(mean(d$doobs_1[index], na.rm = TRUE),0.0))
+        obs[i,obs_index[2]] <- max(c(mean(d$doobs_5[index], na.rm = TRUE),0.0))
+        obs[i,obs_index[3]] <- max(c(mean(d$doobs_9[index], na.rm = TRUE),0.0))
       }
     }
   }
