@@ -66,6 +66,7 @@
    snow_thickness = 0.0
    white_ice_thickness = 0.0
    blue_ice_thickness = 0.0
+   avg_surf_temp = 6.0
 /
 &meteorology
    met_sw = .true.

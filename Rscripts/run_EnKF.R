@@ -27,7 +27,8 @@ run_EnKF <- function(x,
                      outflow_file_names,
                      management_input,
                      forecast_sss_on,
-                     snow_ice_thickness){
+                     snow_ice_thickness,
+                     avg_surf_temp){
   
   nsteps <- length(full_time_local)
   nmembers <- dim(x)[2]
@@ -42,9 +43,8 @@ run_EnKF <- function(x,
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
 
   
-  old_LD_LIBRARY_PATH <- Sys.getenv("LD_LIBRARY_PATH")
-  Sys.setenv(LD_LIBRARY_PATH = paste(old_LD_LIBRARY_PATH, working_directory, sep = ":"))
-  
+  old_DYLD_LIBRARY_PATH <- Sys.getenv("DYLD_FALLBACK_LIBRARY_PATH")
+  Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = paste(old_DYLD_LIBRARY_PATH, working_directory, sep = ":"))
   ###START EnKF
   
   for(i in 2:nsteps){
@@ -122,7 +122,8 @@ run_EnKF <- function(x,
       }
       
       if(include_wq){
-        wq_init_vals <- round(c(x[i - 1, m, wq_start[1]:wq_end[num_wq_vars]]), 3)
+        non_tchla_states <- c(wq_start[1]:wq_end[16], wq_start[18]:wq_end[num_wq_vars])
+        wq_init_vals <- round(c(x[i - 1, m, non_tchla_states]), 3)
         update_var(wq_init_vals, "wq_init_vals" ,working_directory, "glm3.nml")
         
         if(simulate_SSS){
@@ -136,6 +137,7 @@ run_EnKF <- function(x,
       update_var(0.0, "snow_thickness", working_directory, "glm3.nml") 
       update_var(snow_ice_thickness[i - 1, m, 2], "white_ice_thickness", working_directory, "glm3.nml") 
       update_var(snow_ice_thickness[i - 1, m, 3], "blue_ice_thickness", working_directory, "glm3.nml")
+      update_var(avg_surf_temp[i - 1, m], "avg_surf_temp", working_directory, "glm3.nml")
       
       #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
       
@@ -188,6 +190,8 @@ run_EnKF <- function(x,
             surface_height[i, m] <- round(GLM_temp_wq_out$surface_height, 3) 
             
             snow_ice_thickness[i, m, ] <- round(GLM_temp_wq_out$snow_wice_bice, 3)
+      
+            avg_surf_temp[i, m] <- round(GLM_temp_wq_out$avg_surf_temp, 3)
             
             if(length(which(is.na(x_star[m, ]))) == 0){
               pass = TRUE
@@ -464,11 +468,13 @@ run_EnKF <- function(x,
       qt_restart <- qt
       surface_height_restart <- surface_height[i, ]
       snow_ice_restart <- snow_ice_thickness[i, , ]
+      avg_surf_temp_restart <- avg_surf_temp[i, ]
     }else if(hist_days == 0 & i == 2){
       x_restart <- x[1, , ]
       qt_restart <- qt
       surface_height_restart <- surface_height[i, ]
       snow_ice_restart <- snow_ice_thickness[i, , ]
+      avg_surf_temp_restart <- avg_surf_temp[i, ]
     }
   }
   
@@ -479,5 +485,6 @@ run_EnKF <- function(x,
               surface_height_restart = surface_height_restart,
               snow_ice_restart = snow_ice_restart,
               snow_ice_thickness = snow_ice_thickness,
-              surface_height = surface_height))
+              surface_height = surface_height,
+              avg_surf_temp_restart = avg_surf_temp_restart))
 }

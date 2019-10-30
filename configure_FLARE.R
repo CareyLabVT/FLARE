@@ -15,7 +15,7 @@ local_tzone <<- "EST"
 ########################################
 ## Temperature only or include water quality
 #########################################
-include_wq <<- TRUE
+include_wq <<- FALSE
 #TRUE = use AED
 
 ##########################
@@ -75,7 +75,7 @@ if(include_wq){
     base_GLM_nml <<- "glm3_wAED.nml"  
   }
 }else{
-  base_GLM_nml <<- "glm3_woAED.nml"
+  base_GLM_nml <<- "glm3_woAED_nowetland.nml"
   #base_GLM_nml <<- "glm3_woAED_constat_sedtemp.nml"
 }
 
@@ -177,25 +177,25 @@ include_pars_in_qt_update <<- TRUE
 #Initial zone temperatures and the upper and lower bounds
 #Zone 1 is Xm to Xm 
 #Zone 2 is Xm to Xm
-zone1_temp_init_mean <<- 12.74735129
-zone1_temp_init_lowerbound <<- 10
-zone1_temp_init_upperbound <<- 20
+zone1_temp_init_mean <<- 10
+zone1_temp_init_lowerbound <<- 5
+zone1_temp_init_upperbound <<- 12
 zone1_temp_lowerbound <<- -100
 zone1_temp_upperbound <<- 100
 #daily perturbance of parameter value
 zone1temp_init_qt <<- 1^2  #THIS IS THE VARIANCE, NOT THE SD
 
-zone2_temp_init_mean <<- 17.76424636
-zone2_temp_init_lowerbound <<-  10
-zone2_temp_init_upperbound <<-  20
+zone2_temp_init_mean <<- 13
+zone2_temp_init_lowerbound <<-  5
+zone2_temp_init_upperbound <<-  12
 zone2_temp_lowerbound <<-  -100
 zone2_temp_upperbound <<-  100
 zone2temp_init_qt <<- 1^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Shortwave factor
-swf_init_mean <<- 1.0
+swf_init_mean <<- 0.8
 swf_init_lowerbound <<- 0.5
-swf_init_upperbound <<- 2.0
+swf_init_upperbound <<- 1.0
 swf_lowerbound <<- -10
 swf_upperbound <<- 10
 #daily perturbance of parameter value
@@ -205,8 +205,8 @@ swf_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
 lwf_init_mean <<- 1.0
 lwf_init_lowerbound <<- 0.5
 lwf_init_upperbound <<- 2.0
-lwf_lowerbound <<- -10
-lwf_upperbound <<- 10
+lwf_lowerbound <<- 0.5
+lwf_upperbound <<- 2.0
 #daily perturbance of parameter value
 lwf_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
 
@@ -297,7 +297,6 @@ if(include_wq){
     "sed_temp_mean"
     ,"sed_temp_mean"
     ,"sw_factor"
-    ,"lw_factor"
     ,"Fsed_oxy"
     #,"pd%R_growth"
     #,"Rnitrif"
@@ -311,7 +310,6 @@ if(include_wq){
     "zone1temp"
     ,"zone2temp"
     ,"sw_factor"
-    ,"lw_factor"
     ,"Fsed_oxy"
     #,"R_growth"
     #,"Rnitrif"
@@ -323,7 +321,6 @@ if(include_wq){
   )
   par_nml <<- c(
     "glm3.nml"
-    ,"glm3.nml"
     ,"glm3.nml"
     ,"glm3.nml"
     ,"aed2.nml"
@@ -339,7 +336,6 @@ if(include_wq){
     zone1_temp_init_mean
     ,zone2_temp_init_mean
     ,swf_init_mean
-    ,lwf_init_mean
     ,Fsed_oxy_init_mean
     #,R_growth_init_mean
     #,Rnitrif_init_mean
@@ -353,7 +349,6 @@ if(include_wq){
     zone1_temp_init_lowerbound
     ,zone2_temp_init_lowerbound
     ,swf_init_lowerbound
-    ,lwf_init_lowerbound
     ,Fsed_oxy_init_lowerbound
     #,R_growth_init_lowerbound
     #,Rnitrif_init_lowerbound
@@ -367,7 +362,6 @@ if(include_wq){
     zone1_temp_init_upperbound
     ,zone2_temp_init_upperbound
     ,swf_init_upperbound
-    ,lwf_init_upperbound
     ,Fsed_oxy_init_upperbound
     #,R_growth_init_upperbound
     #,Rnitrif_init_upperbound 
@@ -381,7 +375,6 @@ if(include_wq){
     zone1_temp_lowerbound
     ,zone2_temp_lowerbound 
     ,swf_lowerbound
-    ,lwf_lowerbound
     ,Fsed_oxy_lowerbound
     #,R_growth_lowerbound
     #,Rnitrif_lowerbound
@@ -395,7 +388,6 @@ if(include_wq){
     zone1_temp_upperbound
     ,zone2_temp_upperbound
     ,swf_upperbound
-    ,lwf_upperbound
     ,Fsed_oxy_upperbound
     #,R_growth_upperbound
     #,Rnitrif_upperbound
@@ -409,7 +401,6 @@ if(include_wq){
     zone1temp_init_qt
     ,zone2temp_init_qt
     ,swf_init_qt
-    ,lwf_init_qt
     ,Fsed_oxy_init_qt
     #,R_growth_init_qt
     #,Rnitrif_init_qt
@@ -421,7 +412,6 @@ if(include_wq){
   )
   par_units <<- c(
     "deg_C"
-    ,"-"
     ,"-"
     ,"-"
     ,"-"
@@ -447,16 +437,16 @@ if(include_wq){
   par_init_qt <<- c() #c(zone1temp_init_qt,zone2temp_init_qt)
   par_units <<- c() #("deg_C","deg_C") #
   
-  par_names <<- c("sed_temp_mean","sed_temp_mean","sw_factor","lw_factor")
-  par_names_save <<- c("zone1temp","zone2temp","sw_factor","lw_factor")
-  par_nml <<- c("glm3.nml","glm3.nml","glm3.nml","glm3.nml")
-  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean,swf_init_mean, lwf_init_mean)
-  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound,swf_init_lowerbound, lwf_init_lowerbound)
-  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound,swf_init_upperbound, lwf_init_upperbound)
-  par_lowerbound <<- c(zone1_temp_lowerbound,zone2_temp_lowerbound,swf_lowerbound, lwf_lowerbound)
-  par_upperbound <<- c(zone1_temp_upperbound,zone2_temp_upperbound,swf_upperbound, lwf_upperbound)
-  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt,swf_init_qt, lwf_init_qt)
-  par_units <<- c("deg_C","deg_C","-","-") #
+  par_names <<- c("sed_temp_mean","sed_temp_mean","sw_factor")
+  par_names_save <<- c("zone1temp","zone2temp","sw_factor")
+  par_nml <<- c("glm3.nml","glm3.nml","glm3.nml")
+  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean,swf_init_mean)
+  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound,swf_init_lowerbound)
+  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound,swf_init_upperbound)
+  par_lowerbound <<- c(zone1_temp_lowerbound,zone2_temp_lowerbound,swf_lowerbound)
+  par_upperbound <<- c(zone1_temp_upperbound,zone2_temp_upperbound,swf_upperbound)
+  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt,swf_init_qt)
+  par_units <<- c("deg_C","deg_C","-") #
   
   #par_init_qt <- par_init_qt * 0.1
 }
@@ -501,6 +491,10 @@ inflow_file2 <<- paste0(data_location,"/manual-data/FCR_wetland_inflow_newEDI_20
 ###  Water quality state information
 #########################################
 
+#The names of the phytoplankton groups that contribute to
+#total chl-a in GLM
+tchla_components_vars <<- c("PHY_AGGREGATE","PHY_AGGREGATE_2","PHY_AGGREGATE_3")
+
 #define water quality variables modeled.  Not used if include_wq == FALSE
 wq_names <<- c("OXY_oxy",
                "CAR_pH",
@@ -518,7 +512,8 @@ wq_names <<- c("OXY_oxy",
                "OGM_pop",
                "NCS_ss1",
                "PHS_frp_ads",
-               "PHY_AGGREGATE"
+               "PHY_TCHLA",
+               tchla_components_vars
 )
 
 #Default initial states if lacking observations 
@@ -546,11 +541,9 @@ OGM_pon_init <<- OGM_poc_init * init_ponc
 OGM_pop_init <<- OGM_poc_init * init_popc
 NCS_ss1_init <<- 1.0
 PHS_frp_ads_init <<- 0.0
-PHY_AGGREGATE_init <<- 2.0 * biomass_to_chla
+PHY_TCHLA_init <<- 3.0
 
-#The names of the phytoplankton groups that contribute to
-#total chl-a in GLM
-tchla_components_vars <<- c("PHY_AGGREGATE")
+init_phyto_proportion <<- c(0.2, 0.4, 0.4)
 
 proportional_obs_error <<- TRUE
 
@@ -560,6 +553,9 @@ obs_error_temperature_intercept <<- 0.0001 #NEED TO DOUBLE CHECK
 obs_error_temperature_slope <<- 0.0 #NEED TO DOUBLE CHECK
 
 #Observational uncertainty for each variable
+
+obs_error_wq_intercept_phyto = c(NA, NA, NA)
+
 obs_error_wq_intercept <<- c(100, #OXY_oxy #0.25
                              NA, #CAR_pH
                              NA, #CAR_dic
@@ -576,7 +572,11 @@ obs_error_wq_intercept <<- c(100, #OXY_oxy #0.25
                              NA, #OGM_pop
                              NA, #NCS_ss1
                              NA, #PHS_frp_ads
-                             5) #PHY_AGGREGATE
+                             0.1, #PHY_TCHLA
+                             obs_error_wq_intercept_phyto)
+
+
+obs_error_wq_slope_phyto = c(NA, NA, NA)
 
 obs_error_wq_slope <<- c(0, #OXY_oxy #0.25
                          NA, #CAR_pH
@@ -594,7 +594,9 @@ obs_error_wq_slope <<- c(0, #OXY_oxy #0.25
                          NA, #OGM_pop
                          NA, #NCS_ss1
                          NA, #PHS_frp_ads
-                         0) #PHY_AGGREGATE
+                         0, #PHY_TCHLA
+                         obs_error_wq_slope_phyto)
+
 
 ctd_2_exo_chla <- c(-0.35, 1.9)
 
@@ -615,8 +617,8 @@ OGM_dop_process_error <<- 0.1
 OGM_pop_process_error <<- 0.1
 NCS_ss1_process_error <<- 0.01
 PHS_frp_ads_process_error <<- 0.0001
-PHY_AGGREGATE_process_error <<- 5
-
+PHY_TCHLA_process_error <<- 5
+PHY_process_error <<- c(0.001, 0.001, 0.001)
 
 temp_init_error <<- 0.5
 OXY_oxy_init_error <<- 1000
@@ -635,7 +637,9 @@ OGM_dop_init_error <<- 3
 OGM_pop_init_error <<- 4
 NCS_ss1_init_error <<- 0.5
 PHS_frp_ads_init_error <<- 0.1
-PHY_AGGREGATE_init_error <<- 3
+PHY_TCHLA_init_error <<- 3
+PHY_init_error <<- c(3, 3, 3)
+
 
 #########################################
 # Archiving options

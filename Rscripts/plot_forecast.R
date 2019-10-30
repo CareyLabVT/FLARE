@@ -59,7 +59,7 @@ plot_forecast <- function(pdf_file_name,
     }
     
     OXY_oxy <- wq_output[which(wq_names == 'OXY_oxy'),,,]
-    PHY_TCHLA <- wq_output[which(wq_names == 'PHY_AGGREGATE'),,,]
+    PHY_TCHLA <- wq_output[which(wq_names == 'PHY_TCHLA'),,,]
     OGM_doc <- wq_output[which(wq_names == 'OGM_doc'),,,]
     
     NIT_amm <- wq_output[which(wq_names == 'NIT_amm'),,,]
@@ -278,12 +278,12 @@ plot_forecast <- function(pdf_file_name,
             upper95_oxy[j,ii] <- quantile(OXY_oxy[j,,ii],0.975)
           }
         }
-        plot(full_time_local,mean_oxy[ ,model],type='l',ylab='Oxygen (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        plot(full_time_local,mean_oxy[ ,model],type='l',ylab='Oxygen (mmol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
         points(full_time_local,lower95_oxy[ ,model],type='l',lty='dashed')
         points(full_time_local,upper95_oxy[ ,model],type='l',lty='dashed')   
         
       }else{
-        plot(full_time_local,OXY_oxy[,1,model],type='l',ylab='Oxygen (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        plot(full_time_local,OXY_oxy[,1,model],type='l',ylab='Oxygen (mmol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
         if(length(temp[1,,model]) > 1){
           for(m in 2:length(temp[1,,model])){
             points(full_time_local,OXY_oxy[,m,model],type='l')
@@ -300,13 +300,11 @@ plot_forecast <- function(pdf_file_name,
     }
     
     par(mfrow=c(4,3))
-    PHY_TCHLA[,,] <- PHY_TCHLA[,,]/biomass_to_chla
+    PHY_TCHLA[,,] <- PHY_TCHLA[,,]
     for(i in 1:nlayers){
       model = i
       obs <- obs_chla$obs[,i]
-      obs <- obs/biomass_to_chla
-      
-      
+
       ylim = range(c(PHY_TCHLA[,,]),na.rm = TRUE) 
       if(plot_summaries){
         mean_TCHLA <- array(NA,dim=c(length(t),length(depths)))
@@ -357,12 +355,12 @@ plot_forecast <- function(pdf_file_name,
             upper95_doc[j,ii] <- quantile(OGM_doc[j,,ii],0.975)
           }
         }
-        plot(full_time_local,mean_doc[,model],type='l',ylab='OGM_doc (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        plot(full_time_local,mean_doc[,model],type='l',ylab='OGM_doc (mmol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
         points(full_time_local,lower95_doc[ ,model],type='l',lty='dashed')
         points(full_time_local,upper95_doc[ ,model],type='l',lty='dashed') 
       }else{
         
-        plot(full_time_local,OGM_doc[,1,model],type='l',ylab='OGM_doc (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        plot(full_time_local,OGM_doc[,1,model],type='l',ylab='OGM_doc (mmol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
         if(length(temp[1,,model]) > 1){
           for(m in 2:length(temp[1,,model])){
             points(full_time_local,OGM_doc[,m,model],type='l')
@@ -395,12 +393,12 @@ plot_forecast <- function(pdf_file_name,
             upper95_doc[j,ii] <- quantile(NIT_nit[j,,ii],0.975)
           }
         }
-        plot(full_time_local,mean_doc[,model],type='l',ylab='NIT_nit (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        plot(full_time_local,mean_doc[,model],type='l',ylab='NIT_nit (mmol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
         points(full_time_local,lower95_doc[ ,model],type='l',lty='dashed')
         points(full_time_local,upper95_doc[ ,model],type='l',lty='dashed') 
       }else{
         
-        plot(full_time_local,NIT_nit[,1,model],type='l',ylab='NIT_nit (umol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+        plot(full_time_local,NIT_nit[,1,model],type='l',ylab='NIT_nit (mmol/m3)',xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
         if(length(temp[1,,model]) > 1){
           for(m in 2:length(temp[1,,model])){
             points(full_time_local,NIT_nit[,m,model],type='l')

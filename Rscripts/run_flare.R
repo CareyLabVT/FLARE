@@ -69,7 +69,7 @@ run_flare<-function(start_day_local,
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_nutrients.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/temp_oxy_chla_qaqc.R")) 
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/met_qaqc.R")) 
-  met_qaqc
+  
   
   ### METEROLOGY DOWNSCALING OPTIONS
   if(is.na(downscaling_coeff)){
@@ -386,6 +386,8 @@ run_flare<-function(start_day_local,
   }else{
     nstates <- ndepths_modeled
   }
+  
+  num_phytos <- length(tchla_components_vars)
   
   ###CREATE HISTORICAL MET FILE
   if(met_downscale_uncertainty == FALSE){
@@ -754,7 +756,12 @@ if(include_wq){
   OGM_pop_obs <- array(NA, dim = obs_dims)
   NCS_ss1_obs <- array(NA, dim = obs_dims)
   PHS_frp_ads_obs <- array(NA, dim = obs_dims)
-  PHY_AGGREGATE_obs <- obs_chla$obs
+  PHY_TCHLA_obs <- obs_chla$obs
+  PHY_obs <- NULL
+  for(phytos in 1:num_phytos){
+  PHY_obs <- cbind(PHY_obs, array(NA, dim = obs_dims))
+  }
+
   
   z <- cbind(obs_temp$obs,
              OXY_oxy_obs,
@@ -773,7 +780,8 @@ if(include_wq){
              OGM_pop_obs,
              NCS_ss1_obs,
              PHS_frp_ads_obs,
-             PHY_AGGREGATE_obs)
+             PHY_TCHLA_obs,
+             PHY_obs)
 }else{
   z <- cbind(obs_temp$obs) 
 }
@@ -868,12 +876,24 @@ if(include_wq & is.na(restart_file)){
   
   #Initialize Chla usind data if avialable
   if(length(!is.na(init_chla_obs)) == 0){
-    PHY_AGGREGATE_init_depth <- rep(PHY_AGGREGATE_init, ndepths_modeled) 
+    PHY_TCHLA_init_depth <- rep(PHY_TCHLA_init, ndepths_modeled) 
+    PHY_init_depth <- NULL
+    for(phyto in 1:num_phytos){
+      PHY_init_depth <- c(PHY_init_depth, (PHY_TCHLA_init_depth * biomass_to_chla * init_phyto_proportion[phyto]))
+    }
   }else if(length(!is.na(init_chla_obs)) == 1){
-    PHY_AGGREGATE_init_depth <- rep(init_chla_obs, ndepths_modeled)
+    PHY_TCHLA_init_depth <- rep(init_chla_obs, ndepths_modeled)
+    PHY_init_depth <- NULL
+    for(phyto in 1:num_phytos){
+      PHY_init_depth <- c(PHY_init_depth, (PHY_TCHLA_init_depth * biomass_to_chla * init_phyto_proportion[phyto]))
+    }
   }else{
     chla_inter <- approxfun(init_chla_obs_depths, init_chla_obs, rule=2)
-    PHY_AGGREGATE_init_depth <- chla_inter(modeled_depths)
+    PHY_TCHLA_init_depth <- chla_inter(modeled_depths)
+    PHY_init_depth <- NULL
+    for(phyto in 1:num_phytos){
+      PHY_init_depth <- c(PHY_init_depth, (PHY_TCHLA_init_depth * biomass_to_chla * init_phyto_proportion[phyto]))
+    }
   }
   
   #Initialize DOC usind data if avialable
@@ -946,7 +966,9 @@ if(include_wq & is.na(restart_file)){
                     OGM_pop_init_depth,
                     NCS_ss1_init_depth,
                     PHS_frp_ads_init_depth,
-                    PHY_AGGREGATE_init_depth)
+                    PHY_TCHLA_init_depth,
+                    PHY_init_depth
+                    )
   
   #UPDATE NML WITH INITIAL CONDITIONS
   
@@ -969,7 +991,7 @@ file.copy(from = paste0(working_directory, "/", base_GLM_nml),
 
 #update_var(wq_init_vals, "wq_init_vals", working_directory, "glm3.nml") #GLM SPECIFIC
 if(include_wq){
-  update_var(num_wq_vars, "num_wq_vars", working_directory, "glm3.nml") #GLM SPECIFIC
+  update_var(num_wq_vars-1, "num_wq_vars", working_directory, "glm3.nml") #GLM SPECIFIC
 }else{
   update_var(0, "num_wq_vars", working_directory, "glm3.nml") #GLM SPECIFIC
 }
@@ -1050,7 +1072,8 @@ if(restart_present){
                       OGM_pop_process_error,
                       NCS_ss1_process_error,
                       PHS_frp_ads_process_error,
-                      PHY_AGGREGATE_process_error)
+                      PHY_TCHLA_process_error,
+                      PHY_process_error)
     
     wq_var_init_error <- c(OXY_oxy_init_error,
                            CAR_pH_init_error,
@@ -1068,7 +1091,8 @@ if(restart_present){
                            OGM_pop_init_error,
                            NCS_ss1_init_error,
                            PHS_frp_ads_init_error,
-                           PHY_AGGREGATE_init_error) 
+                           PHY_TCHLA_init_error,
+                           PHY_init_error) 
     
     for(i in 1:num_wq_vars){
       for(j in 1:ndepths_modeled){
@@ -1107,6 +1131,12 @@ if(restart_present){
 nmembers <- n_enkf_members*n_met_members*n_ds_members
 
 x <- array(NA, dim=c(nsteps, nmembers, nstates + npars))
+
+#Matrix to store essemble specific surface height
+surface_height <- array(NA, dim=c(nsteps, nmembers))
+snow_ice_thickness <- array(NA, dim=c(nsteps, nmembers, 3))
+avg_surf_temp <- array(NA, dim=c(nsteps, nmembers))
+
 
 #Initial conditions
 if(!restart_present){
@@ -1216,7 +1246,10 @@ if(restart_present){
   print("Using restart file")
   nc <- nc_open(restart_file)
   restart_nmembers <- length(ncvar_get(nc, "ens"))
-  x_restart_varname <- "x_restart"
+  surface_height_restart <- ncvar_get(nc, "surface_height_restart")
+  snow_ice_thickness_restart <- ncvar_get(nc, "snow_ice_thickness_restart")
+  avg_surf_temp_restart <- ncvar_get(nc, "avg_surf_temp_restart")
+
   if(restart_nmembers > nmembers){
     #sample restart_nmembers
     sampled_nmembers <- sample(seq(1, restart_nmembers, 1),
@@ -1225,6 +1258,13 @@ if(restart_present){
     restart_x_previous <- ncvar_get(nc, x_restart_varname)
     x_previous <- restart_x_previous[sampled_nmembers, ]
     
+    snow_ice_thickness[1, , 1] <- snow_ice_thickness_restart[sampled_nmembers, 1]
+    snow_ice_thickness[1, , 2] <- snow_ice_thickness_restart[sampled_nmembers, 2]
+    snow_ice_thickness[1, , 3] <- snow_ice_thickness_restart[sampled_nmembers, 3]
+    
+    surface_height[1, ] <- surface_height_restart[sampled_nmembers]
+    avg_surf_temp[1, ] <- avg_surf_temp[sampled_nmembers]
+    
   }else if(restart_nmembers < nmembers){
     sampled_nmembers <- sample(seq(1, restart_nmembers, 1),
                                nmembers,
@@ -1232,9 +1272,22 @@ if(restart_present){
     restart_x_previous <- ncvar_get(nc, x_restart_varname)
     x_previous <- restart_x_previous[sampled_nmembers, ]
     
+    snow_ice_thickness[1, ,1] <- snow_ice_thickness_restart[sampled_nmembers, 1]
+    snow_ice_thickness[1, ,2] <- snow_ice_thickness_restart[sampled_nmembers, 2]
+    snow_ice_thickness[1, ,3] <- snow_ice_thickness_restart[sampled_nmembers, 3]
+    
+    surface_height[1, ] <- surface_height_restart[sampled_nmembers]
+    avg_surf_temp[1, ] <- avg_surf_temp[sampled_nmembers]
+    
   }else{
     restart_x_previous <- ncvar_get(nc, x_restart_varname)
     x_previous <- restart_x_previous
+    snow_ice_thickness[1, ,1] <- snow_ice_thickness_restart[, 1]
+    snow_ice_thickness[1, ,2] <- snow_ice_thickness_restart[, 2]
+    snow_ice_thickness[1, ,3] <- snow_ice_thickness_restart[, 3]
+    
+    surface_height[1, ] <- surface_height_restart[sampled_nmembers]
+    avg_surf_temp[1, ] <- avg_surf_temp[sampled_nmembers]
     
   }
   nc_close(nc)
@@ -1243,6 +1296,16 @@ if(restart_present){
                                 year(full_time_local[1]), "_",
                                 month(full_time_local[1]), "_",
                                 day(full_time_local[1]), "_cold.csv"))
+  
+
+  surface_height[1, ] <- round(lake_depth_init, 3)
+  
+  #Matrix to store snow and ice heights
+  snow_ice_thickness[1, ,1] <- default_snow_thickness_init
+  snow_ice_thickness[1, ,2] <- default_white_ice_thickness_init
+  snow_ice_thickness[1, ,3] <- default_blue_ice_thickness_init
+  
+  avg_surf_temp[1, ] <- x[1, ,1]
 }
 
 #Set initial conditions
@@ -1266,16 +1329,6 @@ if(hist_days == 0){
     }
   }
 }
-
-#Matrix to store essemble specific surface height
-surface_height <- array(NA, dim=c(nsteps, nmembers))
-surface_height[1, ] <- round(lake_depth_init, 3)
-
-#Matrix to store snow and ice heights
-snow_ice_thickness <- array(NA, dim=c(nsteps, nmembers, 3))
-snow_ice_thickness[1, ,1] <- default_snow_thickness_init
-snow_ice_thickness[1, ,2] <- default_white_ice_thickness_init
-snow_ice_thickness[1, ,3] <- default_blue_ice_thickness_init
 
 ####################################################
 #### STEP 12: Run Ensemble Kalman Filter
@@ -1310,7 +1363,8 @@ enkf_output <- run_EnKF(x,
                         outflow_file_names,
                         management_input,
                         forecast_sss_on,
-                        snow_ice_thickness)
+                        snow_ice_thickness,
+                        avg_surf_temp)
 
 x <- enkf_output$x
 x_restart <- enkf_output$x_restart
@@ -1320,6 +1374,7 @@ surface_height_restart <- enkf_output$surface_height_restart
 snow_ice_restart <- enkf_output$snow_ice_restart
 snow_ice_thickness <- enkf_output$snow_ice_thickness
 surface_height <- enkf_output$surface_height
+avg_surf_temp_restart <- enkf_output$avg_surf_temp_restart
 
 ####################################################
 #### STEP 13: PROCESS OUTPUT
@@ -1388,7 +1443,8 @@ write_forecast_netcdf(x,
                       surface_height_restart,
                       snow_ice_restart,
                       snow_ice_thickness,
-                      surface_height)
+                      surface_height,
+                      avg_surf_temp_restart)
 
 ##ARCHIVE FORECAST
 restart_file_name <- archive_forecast(working_directory = working_directory,

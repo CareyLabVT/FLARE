@@ -88,7 +88,7 @@ int  atmos_stability(     AED_REAL *Q_latentheat,
  ******************************************************************************/
 
 int ice = FALSE;               // flag that tells if there is ice cover
-
+AED_REAL  AvgSurfTemp= 6.;  // Recent average of surface temp, for ice-on.
 // Heat fluxes; these are made available for the lake.csv output
 AED_REAL zonL;                 // average z/L - MO atmospheric stability
 AED_REAL Q_shortwave;          // Solar radiation at water surface
@@ -102,7 +102,7 @@ static AED_REAL  Q_icewater;   // Heat flux across water/ice interface
 static AED_REAL  Q_surflayer;  // Heat flux through the water surface
 static AED_REAL  Q_underflow;  // Heat flux through water due to flow under the ice
 //static AED_REAL  U_flow;     // Velocity estimate of the underflow
-static AED_REAL  AvgSurfTemp= 6.;  // Recent average of surface temp, for ice-on.
+
 
 static AED_REAL  snow_rain_compact = 1. ; //update based on timestep and scaling
 
@@ -1179,7 +1179,7 @@ void do_surface_thermodynamics(int jday, int iclock, int LWModel,
     AvgSurfTemp = AvgSurfTemp * (1 - (noSecs/SecsPerDay)/dt_ice_avg) +
                   Lake[surfLayer].Temp * (noSecs/SecsPerDay)/dt_ice_avg ;
 
-    if (AvgSurfTemp <= 0.0 && SurfData.delzBlueIce == 0. && Lake[surfLayer].Height>0.1) {
+    if (Lake[surfLayer].Temp <= 0.0 && AvgSurfTemp <= 4 && SurfData.delzBlueIce == 0. && Lake[surfLayer].Height>0.1) {
         // Start a new blue ice layer
         ice                     = TRUE;
         SurfData.delzBlueIce    = 0.05;
