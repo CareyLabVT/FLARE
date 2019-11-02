@@ -1247,7 +1247,9 @@ run_flare<-function(start_day_local,
     surface_height_restart <- ncvar_get(nc, "surface_height_restart")
     snow_ice_thickness_restart <- ncvar_get(nc, "snow_ice_restart")
     avg_surf_temp_restart <- ncvar_get(nc, "avg_surf_temp_restart")
-    x_phyto_groups_restart <- ncvar_get(nc, "phyto_restart")
+    if(include_wq){
+      x_phyto_groups_restart <- ncvar_get(nc, "phyto_restart")
+    }
     if(restart_nmembers > nmembers){
       #sample restart_nmembers
       sampled_nmembers <- sample(seq(1, restart_nmembers, 1),
