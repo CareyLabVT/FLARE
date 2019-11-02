@@ -32,7 +32,7 @@ plot_forecast <- function(pdf_file_name,
   }
   catwalk_fname <- paste0(mia_location,'/','Catwalk.csv')
   
-  
+  wq_names_w_phytos <- c(wq_names, tchla_components_vars)
   
   nc <- nc_open(output_file)
   t <- ncvar_get(nc,'time')
@@ -53,18 +53,18 @@ plot_forecast <- function(pdf_file_name,
   }
   
   if(include_wq){
-    wq_output <- array(NA,dim = c(length(wq_names),dim(temp)[1],dim(temp)[2],dim(temp)[3]))
-    for(i in 1:length(wq_names)){
-      wq_output[i,,,] <- ncvar_get(nc,wq_names[i])
+    wq_output <- array(NA,dim = c(length(wq_names_w_phytos),dim(temp)[1],dim(temp)[2],dim(temp)[3]))
+    for(i in 1:length(wq_names_w_phytos)){
+      wq_output[i,,,] <- ncvar_get(nc,wq_names_w_phytos[i])
     }
     
-    OXY_oxy <- wq_output[which(wq_names == 'OXY_oxy'),,,]
-    PHY_TCHLA <- wq_output[which(wq_names == 'PHY_TCHLA'),,,]
-    OGM_doc <- wq_output[which(wq_names == 'OGM_doc'),,,]
+    OXY_oxy <- wq_output[which(wq_names_w_phytos == 'OXY_oxy'),,,]
+    PHY_TCHLA <- wq_output[which(wq_names_w_phytos == 'PHY_TCHLA'),,,]
+    OGM_doc <- wq_output[which(wq_names_w_phytos == 'OGM_doc'),,,]
     
-    NIT_amm <- wq_output[which(wq_names == 'NIT_amm'),,,]
-    NIT_nit <- wq_output[which(wq_names == 'NIT_nit'),,,]
-    PHS_frp <- wq_output[which(wq_names == 'PHS_frp'),,,]
+    NIT_amm <- wq_output[which(wq_names_w_phytos == 'NIT_amm'),,,]
+    NIT_nit <- wq_output[which(wq_names_w_phytos == 'NIT_nit'),,,]
+    PHS_frp <- wq_output[which(wq_names_w_phytos == 'PHS_frp'),,,]
   }
   
   nc_close(nc)
@@ -493,8 +493,8 @@ plot_forecast <- function(pdf_file_name,
     
     
     par(mfrow=c(4,3))
-    for(wq in 1:length(wq_names)){
-      if(!wq_names[wq]  %in% c("PHY_TCHLA","OGM_doc","OXY_oxy","NIT_amm","NIT_nit","PHS_frp")){
+    for(wq in 1:length(wq_names_w_phytos)){
+      if(!wq_names_w_phytos[wq]  %in% c("PHY_TCHLA","OGM_doc","OXY_oxy","NIT_amm","NIT_nit","PHS_frp")){
         
         for(i in focal_depths_wq){
           model <- i
@@ -510,11 +510,11 @@ plot_forecast <- function(pdf_file_name,
                 upper95_wq[j,ii] <- quantile(wq_output[wq,j,,ii],0.975)
               }
             }
-            plot(full_time_local,mean_wq[,model],type='l',ylab=wq_names[wq],xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+            plot(full_time_local,mean_wq[,model],type='l',ylab=wq_names_w_phytos[wq],xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
             points(full_time_local,lower95_wq[ ,model],type='l',lty='dashed')
             points(full_time_local,upper95_wq[ ,model],type='l',lty='dashed')
           }else{
-            plot(full_time_local,wq_output[wq,,1,model],type='l',ylab=wq_names[wq],xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
+            plot(full_time_local,wq_output[wq,,1,model],type='l',ylab=wq_names_w_phytos[wq],xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
             for(m in 2:length(temp[1,,model])){
               points(full_time_local,wq_output[wq,,m,model],type='l')
             }

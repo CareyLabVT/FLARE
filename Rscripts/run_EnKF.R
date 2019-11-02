@@ -34,14 +34,19 @@ run_EnKF <- function(x,
   nmembers <- dim(x)[2]
   n_met_members <- length(met_file_names) - 1
   nstates <- dim(x)[3] - npars
-  num_wq_vars <- length(wq_start)
-
+  ndepths_modeled <- length(modeled_depths)
+  
+  if(include_wq){
+    num_wq_vars <- length(wq_start)
+    num_phytos <- length(tchla_components_vars)
+  }
+  
   full_time_day_local <- strftime(full_time_local,
                                   format="%Y-%m-%d",
                                   tz = local_tzone)
   
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
-
+  
   
   old_DYLD_LIBRARY_PATH <- Sys.getenv("DYLD_FALLBACK_LIBRARY_PATH")
   Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = paste(old_DYLD_LIBRARY_PATH, working_directory, sep = ":"))
@@ -61,6 +66,10 @@ run_EnKF <- function(x,
     #Create array to hold GLM predictions for each ensemble
     x_star <- array(NA, dim = c(nmembers, nstates))
     x_corr <- array(NA, dim = c(nmembers, nstates))
+    
+    if(include_wq){
+      phyto_groups_star <-  array(NA, dim = c(nmembers, length(modeled_depths), num_phytos))
+    }
     
     #Matrix to store calculated ensemble specific deviations and innovations
     dit <- array(NA, dim = c(nmembers, nstates))
@@ -122,8 +131,8 @@ run_EnKF <- function(x,
       }
       
       if(include_wq){
-        non_tchla_states <- c(wq_start[1]:wq_end[16], wq_start[18]:wq_end[num_wq_vars])
-        wq_init_vals <- round(c(x[i - 1, m, non_tchla_states]), 3)
+        non_tchla_states <- c(wq_start[1]:wq_end[16])
+        wq_init_vals <- round(c(x[i - 1, m, non_tchla_states], x_phyto_groups[i-1,m ,]), 3)
         update_var(wq_init_vals, "wq_init_vals" ,working_directory, "glm3.nml")
         
         if(simulate_SSS){
@@ -163,7 +172,7 @@ run_EnKF <- function(x,
       
       #Sys.setenv(DYLD_LIBRARY_PATH="/opt/intel/lib")
       #Sys.setenv(DYLD_LIBRARY_PATH=working_directory)
-
+      
       while(!pass){
         unlink(paste0(working_directory, "/output.nc")) 
         
@@ -181,17 +190,28 @@ run_EnKF <- function(x,
           
           if(length(ncvar_get(nc, "time")) > 1){
             nc_close(nc)
+            
+            if(include_wq){
+              output_vars <- c(glm_output_vars, tchla_components_vars)
+            }else{
+              output_vars <- c(glm_output_vars)
+            }
             GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "/output.nc",
                                                      working_dir = working_directory,
                                                      z_out = modeled_depths,
-                                                     vars = glm_output_vars)
-            x_star[m, 1:nstates] <- GLM_temp_wq_out$output
+                                                     vars = output_vars)
+            
+            x_star[m, 1:nstates] <- round(c(GLM_temp_wq_out$output)[1:nstates], 3)
             
             surface_height[i, m] <- round(GLM_temp_wq_out$surface_height, 3) 
             
             snow_ice_thickness[i, m, ] <- round(GLM_temp_wq_out$snow_wice_bice, 3)
-      
+            
             avg_surf_temp[i, m] <- round(GLM_temp_wq_out$avg_surf_temp, 3)
+            
+            if(include_wq){
+              phyto_groups_star[m, , ] <- round(GLM_temp_wq_out$output[ , (length(glm_output_vars) + 1): (length(glm_output_vars)+ num_phytos)], 3)
+            }
             
             if(length(which(is.na(x_star[m, ]))) == 0){
               pass = TRUE
@@ -398,7 +418,7 @@ run_EnKF <- function(x,
       #between the dims here and the dims in the EnKF formulations)
       x[i, , 1:nstates] <- t(t(x_corr) + k_t %*% (d_mat - h %*% t(x_corr)))
       if(npars > 0){
-      x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + k_t_pars %*% (d_mat - h %*% t(x_corr)))
+        x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + k_t_pars %*% (d_mat - h %*% t(x_corr)))
       }
       
       curr_qt_alpha <- qt_alpha
@@ -431,6 +451,8 @@ run_EnKF <- function(x,
       } 
     }
     
+    
+    
     ###################
     ## Quality Control Step 
     ##################
@@ -453,6 +475,18 @@ run_EnKF <- function(x,
       }
     }
     
+    if(include_wq){
+      phyto_proportions <- array(NA, dim = c(nmembers, ndepths_modeled, num_phytos))
+      for(m in 1:nmembers){
+        phyto_groups_chla <- phyto_groups_star[m, ,] / biomass_to_chla
+        total <- rowSums(phyto_groups_chla)
+        phyto_proportions[m, , ] <- phyto_groups_chla/total
+        updated_tchla <- x[i, m, wq_start[num_wq_vars]:wq_end[num_wq_vars]]
+        tmp <- matrix(rep(biomass_to_chla,each=ndepths_modeled),nrow=ndepths_modeled)
+        x_phyto_groups[i, m , ] <- c(phyto_proportions[m, , ] * updated_tchla * tmp) 
+      }
+    } 
+    
     ###############
     
     #Print parameters to screen
@@ -469,12 +503,22 @@ run_EnKF <- function(x,
       surface_height_restart <- surface_height[i, ]
       snow_ice_restart <- snow_ice_thickness[i, , ]
       avg_surf_temp_restart <- avg_surf_temp[i, ]
+      if(include_wq){
+        x_phyto_groups_restart <- x_phyto_groups[i, ,]
+      }else{
+        x_phyto_groups_restart <- NA
+      }
     }else if(hist_days == 0 & i == 2){
       x_restart <- x[1, , ]
       qt_restart <- qt
       surface_height_restart <- surface_height[i, ]
       snow_ice_restart <- snow_ice_thickness[i, , ]
       avg_surf_temp_restart <- avg_surf_temp[i, ]
+      if(include_wq){
+        x_phyto_groups_restart <- x_phyto_groups[i, ,]
+      }else{
+        x_phyto_groups_restart <- NA
+      }
     }
   }
   
@@ -486,5 +530,7 @@ run_EnKF <- function(x,
               snow_ice_restart = snow_ice_restart,
               snow_ice_thickness = snow_ice_thickness,
               surface_height = surface_height,
-              avg_surf_temp_restart = avg_surf_temp_restart))
+              avg_surf_temp_restart = avg_surf_temp_restart,
+              x_phyto_groups_restart = x_phyto_groups_restart,
+              x_phyto_groups = x_phyto_groups))
 }
