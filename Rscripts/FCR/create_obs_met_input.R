@@ -3,11 +3,13 @@ create_obs_met_input <- function(fname,
                                  full_time_hour_local,
                                  input_file_tz = "EST5EDT",
                                  local_tzone,
-                                 working_directory) {
+                                 working_directory,
+                                 hist_days) {
   
   d <- read_csv(fname)
+  
+  d$timestamp <- force_tz(d$timestamp, tz = local_tzone)
 
-  full_time_hour_local <- as.POSIXct(full_time_hour_local, tz = local_tz)
   ShortWave <- rep(NA, length(full_time_hour_local))
   LongWave <- rep(NA, length(full_time_hour_local))
   AirTemp <- rep(NA, length(full_time_hour_local))
@@ -40,6 +42,12 @@ create_obs_met_input <- function(fname,
   
     observed_hours <- which(full_time_hour_local <= d$timestamp[length(d$timestamp)])
     
+    if(length(observed_hours) < (hist_days * 24)){
+      missing_met <- TRUE
+    }else{
+      missing_met <- FALSE
+    }
+
     ShortWave <- ShortWave[observed_hours]
     LongWave <- LongWave[observed_hours]
     AirTemp <- AirTemp[observed_hours]
@@ -49,10 +57,6 @@ create_obs_met_input <- function(fname,
     Snow <- Snow[observed_hours]
     full_time_hour_local <- full_time_hour_local[observed_hours]
     
-    na_hours <- length(which(is.na(AirTemp)))
-    
-    missing_met <- na_hours
-
     ShortWave <- na.interpolation(ShortWave, option = "linear")
     LongWave <- na.interpolation(LongWave, option = "linear")
     AirTemp <- na.interpolation(AirTemp, option = "linear")
@@ -91,7 +95,7 @@ create_obs_met_input <- function(fname,
                                           "Snow"))
     write.csv(historical_met, file = paste0(working_directory, "/", outfile), row.names = FALSE, quote = FALSE)
   }else{
-    missing_met <- length(full_time_hour_local)
+    missing_met <- TRUE
   }
   return(missing_met)
 }

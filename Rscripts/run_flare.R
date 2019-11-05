@@ -462,9 +462,10 @@ run_flare<-function(start_day_local,
                                       full_time_hour_local, 
                                       input_file_tz = "EST5EDT",
                                       local_tzone,
-                                      working_directory)
+                                      working_directory,
+                                      hist_days)
   
-  if(missing_met < missing_met_data_threshold){
+  if(missing_met  == FALSE){
     met_file_names[1] <- obs_met_outfile
   }else{
     if(hist_days > 1){
