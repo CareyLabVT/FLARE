@@ -42,11 +42,6 @@ create_obs_met_input <- function(fname,
   
     observed_hours <- which(full_time_hour_local <= d$timestamp[length(d$timestamp)])
     
-    if(length(observed_hours) < (hist_days * 24)){
-      missing_met <- TRUE
-    }else{
-      missing_met <- FALSE
-    }
 
     ShortWave <- ShortWave[observed_hours]
     LongWave <- LongWave[observed_hours]
@@ -57,6 +52,17 @@ create_obs_met_input <- function(fname,
     Snow <- Snow[observed_hours]
     full_time_hour_local <- full_time_hour_local[observed_hours]
     
+    if(length(observed_hours) < (hist_days * 24)){
+      missing_met <- TRUE
+    }else{
+      na_hours <- length(which(is.na(AirTemp)))
+      if(na_hours < missing_met_data_threshold){
+        missing_met <- FALSE
+      }else{
+        missing_met <- TRUE
+      }
+    }
+    
     ShortWave <- na.interpolation(ShortWave, option = "linear")
     LongWave <- na.interpolation(LongWave, option = "linear")
     AirTemp <- na.interpolation(AirTemp, option = "linear")
@@ -64,8 +70,6 @@ create_obs_met_input <- function(fname,
     WindSpeed <- na.interpolation(WindSpeed, option = "linear")
     Rain <- na.interpolation(Rain, option = "linear")        
     Snow <- na.interpolation(Snow, option = "linear")    
-    
-
     
     historical_met <- data.frame(full_time_hour_local,
                                  ShortWave,
