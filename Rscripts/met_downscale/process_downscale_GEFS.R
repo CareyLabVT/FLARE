@@ -24,7 +24,8 @@ process_downscale_GEFS <- function(folder,
                                    full_time_local,
                                    first_obs_date,
                                    last_obs_date,
-                                   input_met_file_tz){
+                                   input_met_file_tz,
+                                   weather_uncertainty){
   # -----------------------------------
   # 0. Source necessary files
   # -----------------------------------
@@ -98,7 +99,8 @@ process_downscale_GEFS <- function(folder,
                        met_downscale_uncertainty,
                        WRITE_FILES = TRUE,
                        downscaling_coeff,
-                       full_time_local)
+                       full_time_local,
+                       weather_uncertainty)
   files = met_forecast_output[[1]]
   output = met_forecast_output[[2]]
   if(compare_output_to_obs == TRUE){

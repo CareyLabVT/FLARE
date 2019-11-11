@@ -26,7 +26,8 @@ process_GEFS <- function(file_name,
                          met_downscale_uncertainty,
                          WRITE_FILES,
                          downscaling_coeff,
-                         full_time_local){
+                         full_time_local,
+                         weather_uncertainty){
   # -----------------------------------
   # 1. read in and reformat forecast data
   # -----------------------------------
@@ -45,17 +46,15 @@ process_GEFS <- function(file_name,
   # adjust for different timezones in saved GEFS forecasts 
   if(date(full_time_local[1])>as_datetime("2018-12-07 02:00:00", tz = "EST")){ 
     for.input_tz = "GMT"
-    forecasts <- prep_for(d, input_tz = for.input_tz, local_tzone)
   }else{
     for.input_tz = "US/Eastern"
-
   }
   
   #for.input_tz = "GMT"
   
   #full_time_local <- seq(begin_step, end_step, by = "1 hour", tz = local_tzone) # grid
   
-  forecasts <- prep_for(d, input_tz = for.input_tz, local_tzone)
+  forecasts <- prep_for(d, input_tz = for.input_tz, local_tzone, weather_uncertainty)
 
   time0 = min(forecasts$timestamp)
   time_end = max(forecasts$timestamp)

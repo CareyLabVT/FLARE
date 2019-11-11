@@ -19,9 +19,9 @@ create_inflow_outflow_file <- function(full_time_day_local,
   full_time_day_2015 <- as.POSIXct(full_time_day_local, 
                                    tz = local_tzone) - 5*365*24*60*60
   
-  inflow = read.csv(inflow_file1)
-  spillway = read.csv(outflow_file1)
-  wetland = read.csv(inflow_file2)
+  inflow <- read.csv(inflow_file1)
+  spillway <- read.csv(outflow_file1)
+  wetland <- read.csv(inflow_file2)
   
   inflow_time_local <- as.POSIXct(inflow$time, tz = input_file_tz)
   inflow_time_tmp <- with_tz(inflow_time_local,local_tzone)
@@ -53,7 +53,7 @@ create_inflow_outflow_file <- function(full_time_day_local,
       curr_day <- day(full_time_day_local[i])
       curr_month <- month(full_time_day_local[i])
       
-      if(i < (start_forecast_step)){
+      if(i <= (start_forecast_step) || use_future_inflow == FALSE){
         for(j in 2:ncol(inflow)){
           if(full_time_day_local[i] > inflow_time_tmp[nrow(inflow)] | full_time_day_local[i] < inflow_time_tmp[1]){
             index1 <- which(day(inflow_time_tmp) == curr_day & month(inflow_time_tmp) == curr_month)
@@ -64,6 +64,8 @@ create_inflow_outflow_file <- function(full_time_day_local,
             }else{
               inflow_new[i,j] <- rnorm(1, mean(inflow[index1,j], na.rm = TRUE), sd(inflow[index1,j], na.rm = TRUE))
               wetland_new[i,j] <- rnorm(1, mean(wetland[index2,j], na.rm = TRUE), sd(wetland[index2,j], na.rm = TRUE))
+              inflow_new[i,j] <- max(inflow_new[i,j], 0.0)
+              wetland_new[i,j] <- max(wetland_new[i,j], 0.0)
             }
           }else{
             index1 <- which(inflow_time_tmp == full_time_day_local[i])
@@ -72,7 +74,12 @@ create_inflow_outflow_file <- function(full_time_day_local,
             wetland_new[i,j] <- wetland[index2,j]
           }
         }
-        spillway_new[i,2] <- inflow_new[i,2] +  wetland_new[i,2] 
+        
+        if(include_wetland_inflow){
+          spillway_new[i,2] <- inflow_new[i,2] +  wetland_new[i,2] 
+        }else{
+          spillway_new[i,2] <- inflow_new[i,2]
+        }
         
       }else{
         
@@ -98,10 +105,16 @@ create_inflow_outflow_file <- function(full_time_day_local,
             }else{
               inflow_new[i,j] <- rnorm(1, mean(inflow[index1,j], na.rm = TRUE), sd(inflow[index1,j], na.rm = TRUE))
               wetland_new[i,j] <- rnorm(1, mean(wetland[index2,j], na.rm = TRUE), sd(wetland[index2,j], na.rm = TRUE))  
+              inflow_new[i,j] <- max(inflow_new[i,j], 0.0)
+              wetland_new[i,j] <- max(wetland_new[i,j], 0.0)
             }
           }
         }
-        spillway_new[i,2] <- inflow_new[i,2] + wetland_new[i,2] 
+        if(include_wetland_inflow){
+          spillway_new[i,2] <- inflow_new[i,2] +  wetland_new[i,2] 
+        }else{
+          spillway_new[i,2] <- inflow_new[i,2]
+        }
       }
     }
     

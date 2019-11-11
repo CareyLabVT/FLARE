@@ -27,7 +27,7 @@ fit_downscaling_parameters <- function(observations,
   NOAA.data <- inner_join(NOAA.flux, NOAA.state, by = c("forecast.date","ensembles"))
   NOAA_input_tz <- attributes(NOAA.data$forecast.date)$tzone
   
-  forecasts <- prep_for(NOAA.data, input_tz = NOAA_input_tz, local_tzone) %>%
+  forecasts <- prep_for(NOAA.data, input_tz = NOAA_input_tz, local_tzone, weather_uncertainty = FALSE) %>%
     dplyr::group_by(NOAA.member, date(timestamp))  %>%
     dplyr::mutate(n = n()) %>%
     # force NA for days without 4 NOAA entries (because having less than 4 entries would introduce error in daily comparisons)

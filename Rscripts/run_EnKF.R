@@ -82,7 +82,11 @@ run_EnKF <- function(x,
     
     nqt <- rmvnorm(n = nmembers, sigma = as.matrix(qt)) 
     if(npars > 0){
-      pqt <- nqt[, (nstates+1):(nstates+npars)]
+      if(i > (hist_days + 1) && parameter_uncertainty == FALSE){
+        pqt <- rep(0, length(nqt[, (nstates+1):(nstates+npars)]))
+      }else{
+        pqt <- nqt[, (nstates+1):(nstates+npars)] 
+      }
     }
     
     # Start loop through ensemble members
@@ -299,18 +303,19 @@ run_EnKF <- function(x,
       if(npars > 0){
         
         if(i > (hist_days + 1)){
-          x[i, , ] <- cbind(x_corr, pars_star)
+          x[i, , ] <- cbind(x_corr, pars_corr)
         }else{
           x[i, , ] <- cbind(x_corr, pars_corr)
         }
         
         if(process_uncertainty == FALSE & i > (hist_days + 1)){
-          x[i, , ] <- cbind(x_star, pars_star)
+          x[i, , ] <- cbind(x_star, pars_corr)
         }
         
         if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
             x[i, m, ] <- c(colMeans(x_star), pars_star[m, ]) 
+            x[i, m, ] <- c(colMeans(x_star), pars_corr[m, ]) 
           }
         }
         

@@ -106,6 +106,7 @@ run_flare<-function(start_day_local,
     initial_condition_uncertainty <- FALSE
     parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- FALSE
+    n_inflow_outflow_members <<- 1
   }else if(uncert_mode == 3){
     #Only process uncertainty
     use_obs_constraint <- TRUE
@@ -116,6 +117,7 @@ run_flare<-function(start_day_local,
     initial_condition_uncertainty <- FALSE
     parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- FALSE
+    n_inflow_outflow_members <<- 1
   }else if(uncert_mode == 4){
     #only noaa weather uncertainty
     use_obs_constraint <- TRUE
@@ -126,6 +128,7 @@ run_flare<-function(start_day_local,
     initial_condition_uncertainty <- FALSE
     parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- FALSE
+    n_inflow_outflow_members <<- 1
   }else if(uncert_mode == 5){
     #only initial condition uncertainty with data constraint
     use_obs_constraint <- TRUE
@@ -136,6 +139,7 @@ run_flare<-function(start_day_local,
     initial_condition_uncertainty <- TRUE
     parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- FALSE
+    n_inflow_outflow_members <<- 1
   }else if(uncert_mode == 6){
     #only initial condition uncertainty without data constraint
     use_obs_constraint <- FALSE
@@ -146,6 +150,7 @@ run_flare<-function(start_day_local,
     initial_condition_uncertainty <- TRUE
     parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- FALSE
+    n_inflow_outflow_members <<- 1
   }else if(uncert_mode == 7){
     #only parameter uncertainty
     use_obs_constraint <- TRUE
@@ -156,6 +161,7 @@ run_flare<-function(start_day_local,
     initial_condition_uncertainty <- FALSE
     parameter_uncertainty <- TRUE
     met_downscale_uncertainty <- FALSE
+    n_inflow_outflow_members <<- 1
   }else if(uncert_mode == 8){
     #only met downscale uncertainty
     use_obs_constraint <- TRUE
@@ -166,11 +172,23 @@ run_flare<-function(start_day_local,
     initial_condition_uncertainty <- FALSE
     parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- TRUE
+    n_inflow_outflow_members <<- 1
   }else if(uncert_mode == 9){
     #No sources of uncertainty and no data used to constrain 
     use_obs_constraint <- FALSE
     #SOURCES OF uncertainty
     observation_uncertainty <- FALSE
+    process_uncertainty <- FALSE
+    weather_uncertainty <- FALSE
+    initial_condition_uncertainty <- FALSE
+    parameter_uncertainty <- FALSE
+    met_downscale_uncertainty <- FALSE
+    n_inflow_outflow_members <<- 1
+  }else if(uncert_mode == 10){
+    #Only inflow uncertainty
+    use_obs_constraint <- TRUE
+    #SOURCES OF uncertainty
+    observation_uncertainty <- TRUE
     process_uncertainty <- FALSE
     weather_uncertainty <- FALSE
     initial_condition_uncertainty <- FALSE
@@ -533,7 +551,8 @@ run_flare<-function(start_day_local,
                                            full_time_local,
                                            first_obs_date = met_ds_obs_start,
                                            last_obs_date = met_ds_obs_end,
-                                           input_met_file_tz = local_tzone)
+                                           input_met_file_tz = local_tzone,
+                                           weather_uncertainty)
     
     met_file_names[1] <- temp_met_file[1]
   }
@@ -602,7 +621,8 @@ run_flare<-function(start_day_local,
                                                                                  full_time_local,
                                                                                  first_obs_date = met_ds_obs_start,
                                                                                  last_obs_date = met_ds_obs_end,
-                                                                                 input_met_file_tz = local_tzone)
+                                                                                 input_met_file_tz = local_tzone,
+                                                                                 weather_uncertainty)
     
     if(weather_uncertainty == FALSE & met_downscale_uncertainty == TRUE){
       met_file_names <- met_file_names[1:(1+(1*n_ds_members))]

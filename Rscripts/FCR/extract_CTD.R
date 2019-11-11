@@ -40,7 +40,5 @@ extract_CTD <- function(fname,
   
   obs_chla <- ctd_2_exo_chla[1] + ctd_2_exo_chla[2] * obs_chla
   
-  obs_chla <- obs_chla * biomass_to_chla
-  
   return(list(obs_temp = obs_temp,obs_chla = obs_chla, obs_do= obs_do, obs_pH = obs_pH,obs_sal= obs_sal, depths = modeled_depths))
 }
