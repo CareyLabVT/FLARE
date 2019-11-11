@@ -15,7 +15,7 @@ local_tzone <<- "EST"
 ########################################
 ## Temperature only or include water quality
 #########################################
-include_wq <<- TRUE
+include_wq <<- FALSE
 #TRUE = use AED
 
 ##########################
@@ -48,16 +48,18 @@ DOWNSCALE_MET <<- TRUE
 #Downscale the coarse resolutoin NOAA data to the local
 #site using the meterology station at the lake
 
-downscaling_coeff <<- NA #paste0(data_location, "/manual-data/debiased.coefficients_04_06_2018_12_06_2018.RData")
+downscaling_coeff <<- paste0(data_location, "/manual-data/debiased.coefficients.2018_07_12_2019_07_11.RData")
 
 #file name of previous downscaling coefficients
 #use NA if not using an existing file
 
-met_ds_obs_start <<- as.Date("2018-04-06")
-met_ds_obs_end <<- as.Date("2018-12-06")
+met_ds_obs_start <<- as.Date("2018-07-12")
+met_ds_obs_end <<- as.Date("2019-07-11")
 #Dates to use to developing the downscaling coefficient
 
 missing_met_data_threshold <<- 100
+
+use_future_inflow <<- TRUE
 
 ############################
 # Run information
@@ -75,8 +77,8 @@ if(include_wq){
     base_GLM_nml <<- "glm3_wAED.nml"  
   }
 }else{
-  base_GLM_nml <<- "glm3_woAED_nowetland.nml"
-  #base_GLM_nml <<- "glm3_woAED_constat_sedtemp.nml"
+  #base_GLM_nml <<- "glm3_woAED.nml"
+  base_GLM_nml <<- "glm3_woAED_constant_sedtemp.nml"
 }
 
 #################################
@@ -107,17 +109,30 @@ single_run <<- FALSE
 lake_depth_init <<- 9.4  #not a modeled state
 
 if(!include_wq){
-  #modeled_depths <<- c(0.1, 0.33, 0.66, 
-  #                     1.00, 1.33, 1.66,
-  #                     2.00, 2.33, 2.66,
-  #                     3.0, 3.33, 3.66,
-  #                     4.0, 4.33, 4.66,
-  #                     5.0, 5.33, 5.66,
-  #                     6.0, 6.33, 6.66,
-  #                     7.00, 7.33, 7.66,
-  #                     8.0, 8.33, 8.66,
+  modeled_depths <<- c(0.1, 0.33, 0.66, 
+                       1.00, 1.33, 1.66,
+                       2.00, 2.33, 2.66,
+                       3.0, 3.33, 3.66,
+                       4.0, 4.33, 4.66,
+                       5.0, 5.33, 5.66,
+                       6.0, 6.33, 6.66,
+                       7.00, 7.33, 7.66,
+                       8.0, 8.33, 8.66,
+                       9.00)
+  
+  #modeled_depths <<- c(0.1, 0.5, 
+  #                     1.00, 1.5,
+  #                     2.00, 2.5,
+  #                     3.0, 3.5,
+  #                     4.0, 4.5,
+  #                     5.0, 5.5,
+  #                     6.0, 6.5,
+  #                     7.00, 7.5,
+  #                     8.0, 8.5,
   #                     9.00)
-  modeled_depths <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
+  
+  
+  #modeled_depths <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
 }else{
   modeled_depths <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
   #modeled_depths <<- c(0.1, 0.5, 
@@ -154,8 +169,8 @@ default_blue_ice_thickness_init <<- 0.0
 ##  Ensemble members used
 ##############################
 n_enkf_members <<- 1
-n_ds_members <<- 5
-n_inflow_outflow_members <<- 1
+n_ds_members <<- 21
+n_inflow_outflow_members <<- 21
 #Note: this number is multiplied by 
 # 1) the number of NOAA ensembles (21)
 # 2) the number of downscaling essembles (50 is current)
@@ -164,8 +179,8 @@ n_inflow_outflow_members <<- 1
 ################################
 ### Process uncertainty adaption
 ##################################
-qt_alpha <<- 0.5  #0 - all weight on the new Qt, 1 - all weight on the current Qt
-qt_beta <<- 0.7 # 
+qt_alpha <<- 0.7  #0 - all weight on the new Qt, 1 - all weight on the current Qt
+qt_beta <<- 0.8 # 
 
 #################################
 # Parameter calibration information
@@ -494,6 +509,8 @@ met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"),paste0(data_
 
 inflow_file1 <<- paste0(data_location,"/manual-data/FCR_weir_inflow_newEDI_2013_2018_20190911_oneDOC.csv")
 outflow_file1 <<- paste0(data_location,"/manual-data/FCR_spillway_outflow_newEDI_SUMMED_WeirWetland_2013_2018_20190912.csv")
+
+include_wetland_inflow <<- FALSE
 inflow_file2 <<- paste0(data_location,"/manual-data/FCR_wetland_inflow_newEDI_2013_2018_20190912_oneDOC.csv")
 #Name of the historical inflow and outflow files
 
@@ -565,7 +582,7 @@ obs_error_temperature_slope <<- 0.0 #NEED TO DOUBLE CHECK
 
 obs_error_wq_intercept_phyto = c(NA, NA, NA)
 
-obs_error_wq_intercept <<- c(2.0, #OXY_oxy #0.25
+obs_error_wq_intercept <<- c(5, #OXY_oxy #0.25
                              NA, #CAR_pH
                              NA, #CAR_dic
                              NA, #CAR_ch4
@@ -573,7 +590,7 @@ obs_error_wq_intercept <<- c(2.0, #OXY_oxy #0.25
                              0.01, #NIT_amm
                              0.001, #NIT_nit
                              0.001, #PHS_frp
-                             100, #OGM_doc
+                             500, #OGM_doc
                              NA, #OGM_poc
                              NA, #OGM_don
                              NA, #OGM_pon
@@ -581,7 +598,7 @@ obs_error_wq_intercept <<- c(2.0, #OXY_oxy #0.25
                              NA, #OGM_pop
                              NA, #NCS_ss1
                              NA, #PHS_frp_ads
-                             0.1) #PHY_TCHLA
+                             0.25) #PHY_TCHLA
 
 
 obs_error_wq_slope_phyto = c(NA, NA, NA)
