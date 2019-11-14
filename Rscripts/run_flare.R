@@ -69,7 +69,7 @@ run_flare<-function(start_day_local,
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_nutrients.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/temp_oxy_chla_qaqc.R")) 
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/met_qaqc.R")) 
-  
+  source(paste0(code_folder,"/","Rscripts/",lake_name,"/inflow_qaqc.R"))   
   
   ### METEROLOGY DOWNSCALING OPTIONS
   if(is.na(downscaling_coeff)){

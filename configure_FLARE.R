@@ -169,8 +169,8 @@ default_blue_ice_thickness_init <<- 0.0
 ##  Ensemble members used
 ##############################
 n_enkf_members <<- 1
-n_ds_members <<- 5
-n_inflow_outflow_members <<- 1
+n_ds_members <<- 10
+n_inflow_outflow_members <<- 21
 #Note: this number is multiplied by 
 # 1) the number of NOAA ensembles (21)
 # 2) the number of downscaling essembles (50 is current)
@@ -179,8 +179,8 @@ n_inflow_outflow_members <<- 1
 ################################
 ### Process uncertainty adaption
 ##################################
-qt_alpha <<- 0.5  #0 - all weight on the new Qt, 1 - all weight on the current Qt
-qt_beta <<- 0.8 # 
+qt_alpha <<- 0.8  #0 - all weight on the new Qt, 1 - all weight on the current Qt
+qt_beta <<- 0.7 # 
 
 #################################
 # Parameter calibration information
@@ -463,43 +463,43 @@ if(include_wq){
   par_units <<- c() #("deg_C","deg_C") #
   
   par_names <<- c("sed_temp_mean"
-                  #,"sed_temp_mean"
+                  ,"sed_temp_mean"
                   ,"sw_factor"
                   ,"lw_factor")
   par_names_save <<- c("zone1temp"
-                       #,"zone2temp"
+                       ,"zone2temp"
                        ,"sw_factor"
                        ,"lw_factor")
   par_nml <<- c("glm3.nml"
-                #,"glm3.nml"
+                ,"glm3.nml"
                 ,"glm3.nml"
                 ,"glm3.nml")
   par_init_mean <<- c(zone1_temp_init_mean
-                      #,zone2_temp_init_mean
+                      ,zone2_temp_init_mean
                       ,swf_init_mean
                       , lwf_init_mean)
   par_init_lowerbound <<- c(zone1_temp_init_lowerbound
-                            #,zone2_temp_init_lowerbound
+                            ,zone2_temp_init_lowerbound
                             ,swf_init_lowerbound
                             ,lwf_init_lowerbound)
   par_init_upperbound <<- c(zone1_temp_init_upperbound
-                            #,zone2_temp_init_upperbound
+                            ,zone2_temp_init_upperbound
                             ,swf_init_upperbound
                             , lwf_init_upperbound)
   par_lowerbound <<- c(zone1_temp_lowerbound
-                       #,zone2_temp_lowerbound
+                       ,zone2_temp_lowerbound
                        ,swf_lowerbound
                        , lwf_lowerbound)
   par_upperbound <<- c(zone1_temp_upperbound
-                       #,zone2_temp_upperbound
+                       ,zone2_temp_upperbound
                        ,swf_upperbound
                        , lwf_upperbound)
   par_init_qt <<- c(zone1temp_init_qt
-                    #,zone2temp_init_qt
+                    ,zone2temp_init_qt
                     ,swf_init_qt
                     , lwf_init_qt)
   par_units <<- c("deg_C"
-                  #,"deg_C"
+                  ,"deg_C"
                   ,"-"
                   ,"-") #
   
@@ -536,8 +536,16 @@ temp_obs_fname <<- c(paste0(data_location,"/mia-data/Catwalk.csv"),paste0(data_l
 met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"),paste0(data_location, "/manual-data/Met_final_2015_2018.csv"))
 #met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"))
 #Name of meteorology file name
+#2013 - dec 2018
 
-inflow_file1 <<- paste0(data_location,"/manual-data/FCR_weir_inflow_newEDI_2013_2018_20190911_oneDOC.csv")
+inflow_file1 <<- c(paste0(data_location,"/diana-data/FCRweir.csv"),
+                   paste0(data_location,"/manual-data/FCR_weir_inflow_newEDI_2013_2018_20190911_oneDOC.csv"),
+                   paste0(data_location,"/manual-data/inflow_working_2019.csv"))
+
+chemistry_file <<- paste0(data_location,"/manual-data/FCR_weir_inflow_newEDI_2013_2018_20190911_oneDOC.csv")
+
+
+#inflow_file1 <<- paste0(data_location,"/manual-data/FCR_weir_inflow_newEDI_2013_2018_20190911_oneDOC.csv")
 outflow_file1 <<- paste0(data_location,"/manual-data/FCR_spillway_outflow_newEDI_SUMMED_WeirWetland_2013_2018_20190912.csv")
 
 include_wetland_inflow <<- FALSE
