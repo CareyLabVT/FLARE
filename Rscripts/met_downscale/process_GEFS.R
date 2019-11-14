@@ -55,7 +55,7 @@ process_GEFS <- function(file_name,
   #full_time_local <- seq(begin_step, end_step, by = "1 hour", tz = local_tzone) # grid
   
   forecasts <- prep_for(d, input_tz = for.input_tz, local_tzone, weather_uncertainty)
-
+  
   time0 = min(forecasts$timestamp)
   time_end = max(forecasts$timestamp)
   
@@ -72,38 +72,14 @@ process_GEFS <- function(file_name,
       load(file = downscaling_coeff)
     }
     ds <- downscale_met(forecasts,
-                       debiased.coefficients,
-                       VarInfo,
-                       PLOT = FALSE,
-                       local_tzone = local_tzone)
+                        debiased.coefficients,
+                        VarInfo,
+                        PLOT = FALSE,
+                        local_tzone = local_tzone,
+                        debiased.covar,
+                        n_ds_members,
+                        n_met_members)
     ds <- ds %>% mutate(AirTemp = AirTemp - 273.15) # from Kelvin to Celsius 
-    if(met_downscale_uncertainty == TRUE){
-      ## Downscaling + noise addition option
-      print("with noise")
-      ds.noise = add_noise(debiased = ds,
-                           cov = debiased.covar,
-                           n_ds_members,
-                           n_met_members,
-                           VarNames = VarInfo$VarNames) %>%
-        mutate(ShortWave = ifelse(ShortWaveOld == 0, 0, ShortWave),
-               ShortWave = ifelse(ShortWave < 0, 0, ShortWave),
-               RelHum = ifelse(RelHum <0, 0, RelHum),
-               RelHum = ifelse(RelHum > 100, 100, RelHum),
-               WindSpeed = ifelse(WindSpeed <0, 0, WindSpeed),
-               Rain = ifelse(Rain <0, 0, Rain)) %>%
-        arrange(NOAA.member, dscale.member, timestamp)
-      print("noise added")
-      output = ds.noise
-    }else{
-      print("without noise")
-      ds = ds %>% mutate(dscale.member = 0) %>%
-        mutate(ShortWave = ifelse(ShortWave <0, 0, ShortWave),
-               RelHum = ifelse(RelHum <0, 0, RelHum),
-               RelHum = ifelse(RelHum > 100, 100, RelHum),
-               Rain = ifelse(Rain <0, 0, Rain)) %>%
-        arrange(NOAA.member, timestamp)
-      output = ds
-    }
     
   }else{
     ## "out of box" option
@@ -219,13 +195,3 @@ process_GEFS <- function(file_name,
   }
   return(list(met_file_list, output))
 }
-
-
-
-
-
-
-
-
-
-

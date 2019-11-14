@@ -32,7 +32,7 @@ create_inflow_outflow_file <- function(full_time_day_local,
   forecast_start_month <- month(full_time_day_local[start_forecast_step])
   
   
-  if(forecast_days > 0){
+  if(forecast_days > 0 & use_future_inflow){
     curr_all_days <- NULL
     for(m in 2:length(met_file_names)){
       curr_met_daily <- read_csv(paste0(working_directory,"/",met_file_names[m])) %>% 
@@ -149,12 +149,14 @@ create_inflow_outflow_file <- function(full_time_day_local,
         inflow_new[i,3] <- curr_met_daily$AirTemp
         
         #OVERWRITE FOR NOW UNTIL WE GET AN EQUATION
+        index1 <- which(day(inflow_time) == curr_day & month(inflow_time) == curr_month)
         inflow_new[i,2] <- rnorm(1, mean(inflow[index1,2], na.rm = TRUE), sd(inflow[index1,2], na.rm = TRUE))
-        inflow_new[i,3]  <- rnorm(1, mean(inflow[index2,3], na.rm = TRUE), sd(inflow[index2,3], na.rm = TRUE))
+        inflow_new[i,3]  <- rnorm(1, mean(inflow[index1,3], na.rm = TRUE), sd(inflow[index1,3], na.rm = TRUE))
         inflow_new[i,2] <- max(inflow_new[i,2], 0.0)
         inflow_new[i,3] <- max(inflow_new[i,3], 0.0)
         
-        wetland_new[i,2] <- rnorm(1, mean(wetland[index1,2], na.rm = TRUE), sd(wetland[index1,2], na.rm = TRUE))
+        index2 <- which(day(wetland_time) == curr_day & month(wetland_time) == curr_month)
+        wetland_new[i,2] <- rnorm(1, mean(wetland[index2,2], na.rm = TRUE), sd(wetland[index2,2], na.rm = TRUE))
         wetland_new[i,3]  <- rnorm(1, mean(wetland[index2,3], na.rm = TRUE), sd(wetland[index2,3], na.rm = TRUE))  
         wetland_new[i,2] <- max(wetland_new[i,2], 0.0)
         wetland_new[i,3] <- max(wetland_new[i,3], 0.0)
@@ -203,7 +205,7 @@ create_inflow_outflow_file <- function(full_time_day_local,
     names(inflow_new) <- c("time","FLOW","TEMP","SALT","OXY_oxy","NIT_amm","NIT_nit", "PHS_frp", "OGM_doc", "OGM_poc",
                            "OGM_don","OGM_dop","OGM_pop", "PHS_frp_ads","OGM_pon")    
     names(wetland_new) <- c("time","FLOW","TEMP","SALT","NIT_amm","NIT_nit", "PHS_frp", "OGM_doc", "OGM_poc",
-                           "OGM_don","OGM_dop","OGM_pop", "PHS_frp_ads","OGM_pon","OXY_oxy")   
+                            "OGM_don","OGM_dop","OGM_pop", "PHS_frp_ads","OGM_pon","OXY_oxy")   
     names(spillway_new) <- c("time","FLOW")   
     
     write.csv(inflow_new,
