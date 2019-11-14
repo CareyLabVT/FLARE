@@ -7,7 +7,8 @@ create_inflow_outflow_file <- function(full_time_day_local,
                                        outflow_file1,
                                        chemistry_file,
                                        local_tzone,
-                                       met_file_names){
+                                       met_file_names,
+                                       forecast_days){
   
   inflow <- read.csv(inflow_file1)
   spillway <- read.csv(outflow_file1)

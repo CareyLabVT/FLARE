@@ -713,7 +713,8 @@ run_flare<-function(start_day_local,
                                                      outflow_file1,
                                                      chemistry_file,
                                                      local_tzone,
-                                                     met_file_names)
+                                                     met_file_names,
+                                                     forecast_days)
   
   inflow_file_names <- cbind(inflow1 = inflow_outflow_files$inflow_file_names,
                              inflow2 = inflow_outflow_files$wetland_file_names)
