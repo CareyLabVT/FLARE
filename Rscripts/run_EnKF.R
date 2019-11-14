@@ -429,10 +429,39 @@ run_EnKF <- function(x,
       curr_qt_alpha <- qt_alpha
       
       if(npars > 0){
-        qt <- update_sigma(qt, p_t_combined, h_combined, x_star, pars_star, x_corr, pars_corr, psi_t, zt, npars, qt_pars, include_pars_in_qt_update, nstates, curr_qt_alpha)
+        qt <- update_sigma(qt, 
+                           p_t = p_t_combined, 
+                           h = h_combined, 
+                           x_star, 
+                           pars_star, 
+                           x_corr, 
+                           pars_corr, 
+                           psi_t, 
+                           zt, 
+                           npars, 
+                           qt_pars, 
+                           include_pars_in_qt_update, 
+                           nstates, 
+                           curr_qt_alpha)
       }else{
         qt <- update_sigma(qt, p_t, h, x_star, pars_star = NA, x_corr, pars_corr = NA, psi_t, zt, npars, qt_pars, include_pars_in_qt_update, nstates, curr_qt_alpha) 
       }
+      
+      #old_qt <- qt
+      #qt <- old_qt
+      new_qt <- qt
+      new_qt[,] <- 0.0
+      diag(new_qt) <- diag(qt)
+      new_qt[1:nstates,1:nstates] <- 0.0
+      
+      for(s in 1:nstates){
+        index <- c(s,s+1, s + 2, s + 3)
+        index <- index[which(index > 0 & index <= nstates)]
+        new_qt[s, index] <- qt[s, index]
+        new_qt[index, s] <- qt[s, index]
+      }
+      
+      qt <- new_qt
       
     }
     

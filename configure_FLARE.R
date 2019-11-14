@@ -169,8 +169,8 @@ default_blue_ice_thickness_init <<- 0.0
 ##  Ensemble members used
 ##############################
 n_enkf_members <<- 1
-n_ds_members <<- 21
-n_inflow_outflow_members <<- 21
+n_ds_members <<- 5
+n_inflow_outflow_members <<- 1
 #Note: this number is multiplied by 
 # 1) the number of NOAA ensembles (21)
 # 2) the number of downscaling essembles (50 is current)
@@ -179,7 +179,7 @@ n_inflow_outflow_members <<- 21
 ################################
 ### Process uncertainty adaption
 ##################################
-qt_alpha <<- 0.7  #0 - all weight on the new Qt, 1 - all weight on the current Qt
+qt_alpha <<- 0.5  #0 - all weight on the new Qt, 1 - all weight on the current Qt
 qt_beta <<- 0.8 # 
 
 #################################
@@ -462,16 +462,46 @@ if(include_wq){
   par_init_qt <<- c() #c(zone1temp_init_qt,zone2temp_init_qt)
   par_units <<- c() #("deg_C","deg_C") #
   
-  par_names <<- c("sed_temp_mean","sed_temp_mean","sw_factor","lw_factor")
-  par_names_save <<- c("zone1temp","zone2temp","sw_factor","lw_factor")
-  par_nml <<- c("glm3.nml","glm3.nml","glm3.nml","glm3.nml")
-  par_init_mean <<- c(zone1_temp_init_mean,zone2_temp_init_mean,swf_init_mean, lwf_init_mean)
-  par_init_lowerbound <<- c(zone1_temp_init_lowerbound,zone2_temp_init_lowerbound,swf_init_lowerbound, lwf_init_lowerbound)
-  par_init_upperbound <<- c(zone1_temp_init_upperbound,zone2_temp_init_upperbound,swf_init_upperbound, lwf_init_upperbound)
-  par_lowerbound <<- c(zone1_temp_lowerbound,zone2_temp_lowerbound,swf_lowerbound, lwf_lowerbound)
-  par_upperbound <<- c(zone1_temp_upperbound,zone2_temp_upperbound,swf_upperbound, lwf_upperbound)
-  par_init_qt <<- c(zone1temp_init_qt,zone2temp_init_qt,swf_init_qt, lwf_init_qt)
-  par_units <<- c("deg_C","deg_C","-","-") #
+  par_names <<- c("sed_temp_mean"
+                  #,"sed_temp_mean"
+                  ,"sw_factor"
+                  ,"lw_factor")
+  par_names_save <<- c("zone1temp"
+                       #,"zone2temp"
+                       ,"sw_factor"
+                       ,"lw_factor")
+  par_nml <<- c("glm3.nml"
+                #,"glm3.nml"
+                ,"glm3.nml"
+                ,"glm3.nml")
+  par_init_mean <<- c(zone1_temp_init_mean
+                      #,zone2_temp_init_mean
+                      ,swf_init_mean
+                      , lwf_init_mean)
+  par_init_lowerbound <<- c(zone1_temp_init_lowerbound
+                            #,zone2_temp_init_lowerbound
+                            ,swf_init_lowerbound
+                            ,lwf_init_lowerbound)
+  par_init_upperbound <<- c(zone1_temp_init_upperbound
+                            #,zone2_temp_init_upperbound
+                            ,swf_init_upperbound
+                            , lwf_init_upperbound)
+  par_lowerbound <<- c(zone1_temp_lowerbound
+                       #,zone2_temp_lowerbound
+                       ,swf_lowerbound
+                       , lwf_lowerbound)
+  par_upperbound <<- c(zone1_temp_upperbound
+                       #,zone2_temp_upperbound
+                       ,swf_upperbound
+                       , lwf_upperbound)
+  par_init_qt <<- c(zone1temp_init_qt
+                    #,zone2temp_init_qt
+                    ,swf_init_qt
+                    , lwf_init_qt)
+  par_units <<- c("deg_C"
+                  #,"deg_C"
+                  ,"-"
+                  ,"-") #
   
   #par_init_qt <- par_init_qt * 0.1
 }

@@ -1,7 +1,6 @@
 create_obs_met_input <- function(fname,
                                  outfile,
                                  full_time_hour_local,
-                                 input_file_tz = "EST5EDT",
                                  local_tzone,
                                  working_directory,
                                  hist_days) {

@@ -52,10 +52,10 @@ met_qaqc <- function(fname, cleaned_met_file,input_file_tz,local_tzone,working_d
   }
   
   
-  wshgt <- 4
+  wshgt <- 3
   roughlength <- 0.000114
   d$WindSpeed <- d$WindSpeed * log(10.00 / 0.000114) / log(wshgt / 0.000114)
-  
+
   maxTempC = 41 # an upper bound of realistic temperature for the study site in deg C
   minTempC = -24 # an lower bound of realistic temperature for the study site in deg C
 
@@ -71,5 +71,5 @@ met_qaqc <- function(fname, cleaned_met_file,input_file_tz,local_tzone,working_d
   
 
   
-  write_csv(d, cleaned_met_file)
+  write.csv(d, cleaned_met_file)
 }

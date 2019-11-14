@@ -47,7 +47,7 @@ process_downscale_GEFS <- function(folder,
   
   obs.data <- read_csv(obs.file.path)
   
-  obs.data$timestamp <- as_datetime(obs.data$timestamp, tz = local_tzone)
+  obs.data$timestamp <- force_tz(obs.data$timestamp, tz = local_tzone)
   
   VarNames = as.vector(VarInfo$VarNames)
   

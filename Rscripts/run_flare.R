@@ -240,6 +240,7 @@ run_flare<-function(start_day_local,
   met_station_location <- paste0(data_location, "/", "carina-data") #FCR SPECIFIC
   noaa_location <- paste0(data_location, "/", "noaa-data") #FCR SPECIFIC
   manual_data_location <- paste0(data_location, "/", "manual-data") #FCR SPECIFIC
+  diana_data_location <- paste0(data_location, "/", "diana-data") #FCR SPECIFIC
   if(pull_from_git){
     
     if(!file.exists(temperature_location)){
@@ -260,6 +261,11 @@ run_flare<-function(start_day_local,
       system("git clone -b manual-data --single-branch https://github.com/CareyLabVT/SCCData.git manual-data")
     }
     
+    if(!file.exists(diana_data_location)){
+      setwd(data_location)
+      system("git clone -b diana-data --single-branch https://github.com/CareyLabVT/SCCData.git diana-data")
+    }
+    
     setwd(temperature_location)
     system(paste0("git pull"))
     
@@ -270,6 +276,9 @@ run_flare<-function(start_day_local,
     system(paste0("git pull"))
     
     setwd(manual_data_location)
+    system(paste0("git pull"))
+    
+    setwd(diana_data_location)
     system(paste0("git pull"))
     
     if(length(met_obs_fname) > 1 & !file.exists(met_obs_fname[2])){
@@ -478,7 +487,6 @@ run_flare<-function(start_day_local,
   missing_met <- create_obs_met_input(fname = met_obs_fname_wdir,
                                       outfile=obs_met_outfile,
                                       full_time_hour_local, 
-                                      input_file_tz = "EST5EDT",
                                       local_tzone,
                                       working_directory,
                                       hist_days)
@@ -629,6 +637,56 @@ run_flare<-function(start_day_local,
     }else if(weather_uncertainty == FALSE & met_downscale_uncertainty == FALSE){
       met_file_names <- met_file_names[1:2]
     }
+    
+    if(weather_uncertainty == FALSE & n_inflow_outflow_members > 1){
+      inflow_met_file_names <- rep(NA, 1+(n_met_members*n_ds_members))
+      inflow_met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder = code_folder,
+                                                                                          noaa_location,
+                                                                                          input_met_file = met_obs_fname_wdir,
+                                                                                          working_directory,
+                                                                                          sim_files_folder = paste0(code_folder, "/", "sim_files"),
+                                                                                          n_ds_members,
+                                                                                          n_met_members,
+                                                                                          file_name,
+                                                                                          local_tzone,
+                                                                                          FIT_PARAMETERS,
+                                                                                          DOWNSCALE_MET,
+                                                                                          met_downscale_uncertainty,
+                                                                                          compare_output_to_obs = FALSE,
+                                                                                          VarInfo,
+                                                                                          replaceObsNames,
+                                                                                          downscaling_coeff,
+                                                                                          full_time_local,
+                                                                                          first_obs_date = met_ds_obs_start,
+                                                                                          last_obs_date = met_ds_obs_end,
+                                                                                          input_met_file_tz = local_tzone,
+                                                                                          weather_uncertainty = TRUE)
+    }else if(met_downscale_uncertainty == FALSE & n_inflow_outflow_members > 1){
+      inflow_met_file_names <- rep(NA, 1+(n_met_members*n_ds_members))
+      inflow_met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder = code_folder,
+                                                                                          noaa_location,
+                                                                                          input_met_file = met_obs_fname_wdir,
+                                                                                          working_directory,
+                                                                                          sim_files_folder = paste0(code_folder, "/", "sim_files"),
+                                                                                          n_ds_members,
+                                                                                          n_met_members,
+                                                                                          file_name,
+                                                                                          local_tzone,
+                                                                                          FIT_PARAMETERS,
+                                                                                          DOWNSCALE_MET,
+                                                                                          met_downscale_uncertainty = TRUE,
+                                                                                          compare_output_to_obs = FALSE,
+                                                                                          VarInfo,
+                                                                                          replaceObsNames,
+                                                                                          downscaling_coeff,
+                                                                                          full_time_local,
+                                                                                          first_obs_date = met_ds_obs_start,
+                                                                                          last_obs_date = met_ds_obs_end,
+                                                                                          input_met_file_tz = local_tzone,
+                                                                                          weather_uncertainty)
+    }else{
+      inflow_met_file_names <- met_file_names
+    }
   }
   
   if(weather_uncertainty == FALSE){
@@ -636,16 +694,26 @@ run_flare<-function(start_day_local,
     n_met_members <- 1
   }
   
+  cleaned_inflow_file <- paste0(working_directory, "/FCRinflow_postQAQC.csv")
+  
+  inflow_qaqc(fname = inflow_file1,
+              cleaned_inflow_file ,
+              local_tzone, 
+              input_file_tz = 'EST',
+              working_directory)
+  
+  
   ##CREATE INFLOW AND OUTFILE FILES
   inflow_outflow_files <- create_inflow_outflow_file(full_time_day_local,
                                                      working_directory, 
-                                                     input_file_tz = "EST5EDT",
+                                                     input_file_tz = "EST",
                                                      start_forecast_step,
-                                                     hold_inflow_outflow_constant,
-                                                     inflow_file1,
+                                                     inflow_file1 = cleaned_inflow_file,
                                                      inflow_file2,
                                                      outflow_file1,
-                                                     local_tzone)
+                                                     chemistry_file,
+                                                     local_tzone,
+                                                     met_file_names)
   
   inflow_file_names <- cbind(inflow1 = inflow_outflow_files$inflow_file_names,
                              inflow2 = inflow_outflow_files$wetland_file_names)
@@ -778,7 +846,7 @@ run_flare<-function(start_day_local,
     NCS_ss1_obs <- array(NA, dim = obs_dims)
     PHS_frp_ads_obs <- array(NA, dim = obs_dims)
     PHY_TCHLA_obs <- obs_chla$obs
-
+    
     z <- cbind(obs_temp$obs,
                OXY_oxy_obs,
                CAR_pH_obs,
@@ -1132,14 +1200,14 @@ run_flare<-function(start_day_local,
   
   x <- array(NA, dim=c(nsteps, nmembers, nstates + npars))
   
-
+  
   
   #Matrix to store essemble specific surface height
   surface_height <- array(NA, dim=c(nsteps, nmembers))
   snow_ice_thickness <- array(NA, dim=c(nsteps, nmembers, 3))
   avg_surf_temp <- array(NA, dim=c(nsteps, nmembers))
   if(include_wq){
-  x_phyto_groups <- array(NA, dim = c(nsteps, nmembers, num_phytos * ndepths_modeled))
+    x_phyto_groups <- array(NA, dim = c(nsteps, nmembers, num_phytos * ndepths_modeled))
   }else{
     x_phyto_groups <- NA
   }
@@ -1370,7 +1438,7 @@ run_flare<-function(start_day_local,
     }
   }
   
-
+  
   
   ####################################################
   #### STEP 12: Run Ensemble Kalman Filter
