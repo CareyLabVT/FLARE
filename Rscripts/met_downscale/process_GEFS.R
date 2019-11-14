@@ -71,15 +71,16 @@ process_GEFS <- function(file_name,
     }else{
       load(file = downscaling_coeff)
     }
-    ds <- downscale_met(forecasts,
+    output <- downscale_met(forecasts,
                         debiased.coefficients,
                         VarInfo,
                         PLOT = FALSE,
                         local_tzone = local_tzone,
                         debiased.covar,
                         n_ds_members,
-                        n_met_members)
-    ds <- ds %>% mutate(AirTemp = AirTemp - 273.15) # from Kelvin to Celsius 
+                        n_met_members,
+                        met_downscale_uncertainty)
+    output <- output %>% mutate(AirTemp = AirTemp - 273.15) # from Kelvin to Celsius 
     
   }else{
     ## "out of box" option

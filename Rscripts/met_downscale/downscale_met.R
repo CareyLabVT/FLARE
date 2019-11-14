@@ -5,8 +5,8 @@
 # --------------------------------------
 # summary: this function spatially downscaled forecasts from GEFS cell size to the specific site location and temporally downscaled from 6-hr resolution to hr-resolution using saved parameters from earlier fitting process (fit_downscaling_parameters.R)
 # --------------------------------------
-
-downscale_met <- function(forecasts, debiased.coefficients, VarInfo, PLOT, local_tzone, debiased.covar, n_ds_members, n_met_members){
+
+downscale_met <- function(forecasts, debiased.coefficients, VarInfo, PLOT, local_tzone, debiased.covar, n_ds_members, n_met_members, met_downscale_uncertainty){
   # -----------------------------------
   # 0. summarize forecasts to ensemble mean if USE_ENSEMBLE_MEAN is TRUE
   # -----------------------------------
@@ -54,7 +54,7 @@ downscale_met <- function(forecasts, debiased.coefficients, VarInfo, PLOT, local
              RelHum = ifelse(RelHum > 100, 100, RelHum),
              WindSpeed = ifelse(WindSpeed <0, 0, WindSpeed),
              Rain = ifelse(Rain <0, 0, Rain)) %>%
-      arrange(NOAA.member, dscale.member, timestamp)
+      arrange(NOAA.member, dscale.member)
     print("noise added")
     
   }else{
@@ -90,7 +90,7 @@ downscale_met <- function(forecasts, debiased.coefficients, VarInfo, PLOT, local
   
   ## convert longwave to hourly (just copy 6 hourly values over past 6-hour time period)
   nonSW.flux.hrly <- redistributed %>%
-    select(timestamp, NOAA.member, VarNames_6hr) %>%
+    select(timestamp, NOAA.member, VarNames_6hr, dscale.member) %>%
     repeat_6hr_to_hrly()
   
   ## downscale shortwave to hourly
@@ -103,10 +103,12 @@ downscale_met <- function(forecasts, debiased.coefficients, VarInfo, PLOT, local
   # 5. join debiased forecasts of different variables into one dataframe
   # -----------------------------------
   
-  joined.ds <- full_join(states.ds.hrly, ShortWave.ds, by = c("timestamp","NOAA.member"), suffix = c(".obs",".ds")) %>%
-    full_join(nonSW.flux.hrly, by = c("timestamp","NOAA.member"), suffix = c(".obs",".ds")) %>%
+  joined.ds <- full_join(states.ds.hrly, ShortWave.ds, by = c("timestamp","NOAA.member","dscale.member"), suffix = c(".obs",".ds")) %>%
+    full_join(nonSW.flux.hrly, by = c("timestamp","NOAA.member","dscale.member"), suffix = c(".obs",".ds")) %>%
     filter(timestamp >= min(forecasts$timestamp) & timestamp <= max(forecasts$timestamp))
   
   return(joined.ds)
   
 }
+
+
