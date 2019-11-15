@@ -36,9 +36,9 @@ inflow_qaqc <- function(fname,
                         working_directory){
   
   ##Step 1: Pull required data from GitHub ##
-  hist1_location <- inflow_file1[2]
-  hist2_location <- inflow_file1[3]
-  diana_location <- inflow_file1[1]
+  diana_location <- fname[1]
+  hist1_location <- fname[2]
+  hist2_location <- fname[3]
   ##Step 2: Read in historical flow data, clean, subset to 2013 - April 22nd 2019, and aggregate to daily mean##
   #reformating timestamp a few times currently required, but I'm working to make that process cleaner.
   
