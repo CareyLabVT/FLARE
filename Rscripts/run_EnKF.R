@@ -155,7 +155,7 @@ run_EnKF <- function(x,
       #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
       
       update_var(curr_met_file, "meteo_fl", working_directory, "glm3.nml")
-      
+    
       if(n_inflow_outflow_members == 1){
         tmp <- file.copy(from = inflow_file_names[1], to = "inflow_file1.csv", overwrite = TRUE)
         tmp <- file.copy(from = inflow_file_names[2], to = "inflow_file2.csv", overwrite = TRUE)
@@ -447,21 +447,12 @@ run_EnKF <- function(x,
         qt <- update_sigma(qt, p_t, h, x_star, pars_star = NA, x_corr, pars_corr = NA, psi_t, zt, npars, qt_pars, include_pars_in_qt_update, nstates, curr_qt_alpha) 
       }
       
-      #old_qt <- qt
-      #qt <- old_qt
-      new_qt <- qt
-      new_qt[,] <- 0.0
-      diag(new_qt) <- diag(qt)
-      new_qt[1:nstates,1:nstates] <- 0.0
-      
-      for(s in 1:nstates){
-        index <- c(s,s+1, s + 2, s + 3)
-        index <- index[which(index > 0 & index <= nstates)]
-        new_qt[s, index] <- qt[s, index]
-        new_qt[index, s] <- qt[s, index]
-      }
-      
-      qt <- new_qt
+      qt <- localization(mat= qt,
+                         nstates,
+                         modeled_depths,
+                         num_wq_vars,
+                         wq_start,
+                         wq_end)
       
     }
     

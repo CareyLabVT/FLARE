@@ -18,6 +18,7 @@ library(tools)
 data_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
 code_folder <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
 forecast_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/test/"
+execute_location <<- "/Users/quinn/Desktop/FLARE_AED_test/"
 
 source(paste0(forecast_location,"/","configure_FLARE.R"))
 source(paste0(code_folder, "/", "Rscripts/run_flare.R"))
@@ -52,6 +53,7 @@ if(is.na(restart_file)){
                    restart_file = restart_file,
                    code_folder = code_folder,
                    forecast_location = forecast_location,
+                   execute_location = execute_location,
                    push_to_git = push_to_git,
                    pull_from_git = pull_from_git,
                    data_location = data_location,
@@ -145,6 +147,7 @@ if(num_forecast_periods > 0){
                         restart_file = restart_file,
                         code_folder = code_folder,
                         forecast_location = forecast_location,
+                        execute_location = execute_location,
                         push_to_git = push_to_git,
                         pull_from_git = pull_from_git,
                         data_location = data_location,
@@ -188,6 +191,7 @@ if(num_forecast_periods > 0){
                         restart_file = restart_file,
                         code_folder = code_folder,
                         forecast_location = forecast_location,
+                        execute_location = execute_location,
                         push_to_git = push_to_git,
                         pull_from_git = pull_from_git,
                         data_location = data_location,

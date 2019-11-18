@@ -19,6 +19,7 @@ downscale_met <- function(forecasts,
   # 0. summarize forecasts to ensemble mean if USE_ENSEMBLE_MEAN is TRUE
   # -----------------------------------
   
+
   time0 <- min(forecasts$timestamp)
   tzone <- attributes(forecasts$timestamp)$tzone
   forecasts <- forecasts %>%
@@ -28,7 +29,7 @@ downscale_met <- function(forecasts,
   # -----------------------------------
   # 1. aggregate forecasts and observations to daily resolution
   # -----------------------------------
-  
+
   daily.forecast <- aggregate_to_daily(forecasts) %>%
     select(-date) # %>% filter(fday.group > 0))
   
@@ -36,8 +37,9 @@ downscale_met <- function(forecasts,
   # 2. load saved parameters and spatially debias at daily scale
   # -----------------------------------
   
+
   debiased <- daily_debias_from_coeff(daily.forecast, debiased.coefficients, VarInfo)
-  
+
   #for(i in 1:nrow(debiased)){
   #  if(!is.na(debiased[i, 6])){
   #  debiased[i,3:7] <- rmvnorm(1, mean = as.numeric(debiased[i,3:7]), sigma = as.matrix(debiased.covar[1:5,1:5]))
@@ -47,7 +49,8 @@ downscale_met <- function(forecasts,
   
   # -----------------------------------
   # 3. create ensembles, add noise
-  # -----------------------------------
+  # ----------------------------------
+
   if(met_downscale_uncertainty == TRUE){
     print("with downscaling noise")
     
@@ -66,15 +69,15 @@ downscale_met <- function(forecasts,
     print("noise added")
     
   }else{
-    "without downscaling noise"
+    print("without downscaling noise")
     debiased <- debiased %>% mutate(dscale.member = 0) %>%
       mutate(ShortWave = ifelse(ShortWave <0, 0, ShortWave),
              RelHum = ifelse(RelHum <0, 0, RelHum),
              RelHum = ifelse(RelHum > 100, 100, RelHum),
              Rain = ifelse(Rain <0, 0, Rain)) %>%
-      arrange(NOAA.member, timestamp)
+      arrange(NOAA.member, dscale.member)
   }
-  
+
   # -----------------------------------
   # 4.a. temporal downscaling step (a): redistribute to 6-hourly resolution
   # -----------------------------------

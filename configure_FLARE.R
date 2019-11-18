@@ -169,7 +169,7 @@ default_blue_ice_thickness_init <<- 0.0
 ##  Ensemble members used
 ##############################
 n_enkf_members <<- 1
-n_ds_members <<- 10
+n_ds_members <<- 21
 n_inflow_outflow_members <<- 21
 #Note: this number is multiplied by 
 # 1) the number of NOAA ensembles (21)
@@ -180,7 +180,8 @@ n_inflow_outflow_members <<- 21
 ### Process uncertainty adaption
 ##################################
 qt_alpha <<- 0.8  #0 - all weight on the new Qt, 1 - all weight on the current Qt
-qt_beta <<- 0.7 # 
+qt_beta <<- 0.6 # 
+localization_distance <- 1 #distance in meters were covariances in the process error are used
 
 #################################
 # Parameter calibration information

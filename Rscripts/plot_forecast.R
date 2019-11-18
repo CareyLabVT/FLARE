@@ -72,10 +72,7 @@ plot_forecast <- function(pdf_file_name,
   
   #PROCESS TEMPERATURE OBSERVATIONS
   
-  
-  working_directory <- paste0(save_location, "/", "working_directory")
-  
-  cleaned_temp_oxy_chla_file <- paste0(working_directory, "/Catwalk_postQAQC.csv")
+  cleaned_temp_oxy_chla_file <- paste0(save_location, "/Catwalk_postQAQC.csv")
   temp_oxy_chla_qaqc(temp_obs_fname[1], 
                      paste0(data_location, '/mia-data/CAT_MaintenanceLog.txt'), 
                      cleaned_temp_oxy_chla_file)
@@ -147,7 +144,7 @@ plot_forecast <- function(pdf_file_name,
     }
   }
   
-  
+  unlink(cleaned_temp_oxy_chla_file)
   
   nsteps <- length(full_time_local)
   if(length(which(forecasted == 1))>0){

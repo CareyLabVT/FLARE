@@ -24,9 +24,9 @@ create_inflow_outflow_file <- function(full_time_day_local,
   wetland_new <- as.data.frame(array(NA, dim = c(length(full_time_day_local), 15)))
   spillway_new <- as.data.frame(array(NA, dim = c(length(full_time_day_local), 2)))
   
-  inflow_file_names <- rep(NA, length(met_file_names))
-  spillway_file_names <- rep(NA, length(met_file_names))
-  wetland_file_names <- rep(NA, length(met_file_names))
+  inflow_file_names <- rep(NA, n_inflow_outflow_members)
+  spillway_file_names <- rep(NA, n_inflow_outflow_members)
+  wetland_file_names <- rep(NA, n_inflow_outflow_members)
   
   forecast_start_day <- day(full_time_day_local[start_forecast_step])
   forecast_start_month <- month(full_time_day_local[start_forecast_step])
@@ -140,20 +140,28 @@ create_inflow_outflow_file <- function(full_time_day_local,
           curr_met_daily <- curr_all_days %>%
             group_by(day) %>% 
             summarize(Precip = mean(Precip),
-                      AirTemp = mean(AitTemp)) %>% 
+                      AirTemp = mean(AirTemp)) %>% 
             filter(day == full_time_day_local[i])
         }
         
         #flow and temperature
-        inflow_new[i,2] <- inflow_new[i - 1,2] * 1 + 0 * curr_met_daily$Precip
-        inflow_new[i,3] <- curr_met_daily$AirTemp
+        if(n_inflow_outflow_members == 1){
+          inflow_error <- 0.0
+          temp_error  <- 0.0
+        }else{
+          inflow_error <- rnorm(1, 0, 0.008067)
+          temp_error <- rnorm(1, 0, 0.5014718)
+        }
+        inflow_new[i,2] <- 0.030346 + 0.939593  * inflow_new[i - 1,2] + 0.003474 * curr_met_daily$Precip + inflow_error
+        inflow_new[i,2] <- max(c(inflow_new[i,2], 0.0))
+        inflow_new[i,3] <- 0.1875   + 0.8038    * inflow_new[i - 1,3] +  0.1815 * curr_met_daily$AirTemp + temp_error
         
         #OVERWRITE FOR NOW UNTIL WE GET AN EQUATION
-        index1 <- which(day(inflow_time) == curr_day & month(inflow_time) == curr_month)
-        inflow_new[i,2] <- rnorm(1, mean(inflow[index1,2], na.rm = TRUE), sd(inflow[index1,2], na.rm = TRUE))
-        inflow_new[i,3]  <- rnorm(1, mean(inflow[index1,3], na.rm = TRUE), sd(inflow[index1,3], na.rm = TRUE))
-        inflow_new[i,2] <- max(inflow_new[i,2], 0.0)
-        inflow_new[i,3] <- max(inflow_new[i,3], 0.0)
+        #index1 <- which(day(inflow_time) == curr_day & month(inflow_time) == curr_month)
+        #inflow_new[i,2] <- rnorm(1, mean(inflow[index1,2], na.rm = TRUE), sd(inflow[index1,2], na.rm = TRUE))
+        #inflow_new[i,3]  <- rnorm(1, mean(inflow[index1,3], na.rm = TRUE), sd(inflow[index1,3], na.rm = TRUE))
+        #inflow_new[i,2] <- max(inflow_new[i,2], 0.0)
+        #inflow_new[i,3] <- max(inflow_new[i,3], 0.0)
         
         index2 <- which(day(wetland_time) == curr_day & month(wetland_time) == curr_month)
         wetland_new[i,2] <- rnorm(1, mean(wetland[index2,2], na.rm = TRUE), sd(wetland[index2,2], na.rm = TRUE))

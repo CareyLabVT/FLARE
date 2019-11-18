@@ -26,6 +26,7 @@ run_flare<-function(start_day_local,
                     restart_file = NA,
                     code_folder, 
                     forecast_location = NA,
+                    execute_location = NA,
                     push_to_git = FALSE,
                     pull_from_git = TRUE, 
                     data_location = NA, 
@@ -56,6 +57,7 @@ run_flare<-function(start_day_local,
   source(paste0(code_folder,"/","Rscripts/met_downscale/process_downscale_GEFS.R")) 
   source(paste0(code_folder,"/","Rscripts/update_qt.R"))
   source(paste0(code_folder,"/","Rscripts/glmtools.R"))
+  source(paste0(code_folder,"/","Rscripts/localization.R")) 
   
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/create_inflow_outflow_file.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/create_obs_met_input.R"))
@@ -70,7 +72,7 @@ run_flare<-function(start_day_local,
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/temp_oxy_chla_qaqc.R")) 
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/met_qaqc.R")) 
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/inflow_qaqc.R"))   
-  
+
   ### METEROLOGY DOWNSCALING OPTIONS
   if(is.na(downscaling_coeff)){
     FIT_PARAMETERS <- TRUE
@@ -427,7 +429,7 @@ run_flare<-function(start_day_local,
   ####################################################
   
   ###CREATE DIRECTORY PATHS AND STRUCTURE
-  working_directory <- paste0(forecast_location, "/", "working_directory")
+  working_directory <- paste0(execute_location, "/", "working_directory")
   if(!dir.exists(working_directory)){
     dir.create(working_directory, showWarnings = FALSE)
   }
