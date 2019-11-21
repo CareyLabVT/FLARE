@@ -28,7 +28,8 @@ run_EnKF <- function(x,
                      management_input,
                      forecast_sss_on,
                      snow_ice_thickness,
-                     avg_surf_temp){
+                     avg_surf_temp,
+                     resid30day){
   
   nsteps <- length(full_time_local)
   nmembers <- dim(x)[2]
@@ -343,7 +344,7 @@ run_EnKF <- function(x,
       #if observation then calucate Kalman adjustment
       zt <- z[i, z_index]
       z_states_t <- z_states[i, z_index]
-      
+
       #Assign which states have obs in the time step
       h <- array(0, dim = c(length(zt) ,nstates))
       h_combined <- array(0, dim = c(length(zt) ,nstates + npars))
@@ -357,6 +358,11 @@ run_EnKF <- function(x,
       
       curr_psi <- psi_intercept[z_index] + psi_slope[z_index] * zt
       
+      #does previous day have an observation
+      previous_day_obs <- FALSE
+      if(length(which(!is.na(z[i-1, ]))) > 0){
+        previous_day_obs <- TRUE
+      }
       
       
       if(length(z_index) > 1){
@@ -369,6 +375,15 @@ run_EnKF <- function(x,
       
       #Ensemble mean
       ens_mean <- apply(x_corr[,], 2, mean)
+      
+      if(previous_day_obs){
+        resid30day[1:29, ] <- resid30day[2:30, ]
+        resid30day[30, z_index] <- ens_mean[z_index] - zt
+        print(resid30day[30, z_index])
+        if(!is.na(resid30day[1, z_index[1]])){
+          qt <- update_qt(resid30day, modeled_depths, qt, include_wq, npars, nstates)
+        }
+      }
       
       if(npars > 0){
         par_mean <- apply(pars_corr, 2, mean)
@@ -426,33 +441,32 @@ run_EnKF <- function(x,
         x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + k_t_pars %*% (d_mat - h %*% t(x_corr)))
       }
       
-      curr_qt_alpha <- qt_alpha
+      curr_qt_alpha <- qt_alpha 
+      # if(npars > 0){
+      #   qt <- update_sigma(qt, 
+      #                      p_t = p_t_combined, 
+      #                      h = h_combined, 
+      #                      x_star, 
+      #                      pars_star, 
+      #                      x_corr, 
+      #                      pars_corr, 
+      #                      psi_t, 
+      #                      zt, 
+      #                      npars, 
+      #                      qt_pars, 
+      #                      include_pars_in_qt_update, 
+      #                      nstates, 
+      #                      curr_qt_alpha)
+      # }else{
+      #   qt <- update_sigma(qt, p_t, h, x_star, pars_star = NA, x_corr, pars_corr = NA, psi_t, zt, npars, qt_pars, include_pars_in_qt_update, nstates, curr_qt_alpha) 
+      # }
       
-      if(npars > 0){
-        qt <- update_sigma(qt, 
-                           p_t = p_t_combined, 
-                           h = h_combined, 
-                           x_star, 
-                           pars_star, 
-                           x_corr, 
-                           pars_corr, 
-                           psi_t, 
-                           zt, 
-                           npars, 
-                           qt_pars, 
-                           include_pars_in_qt_update, 
-                           nstates, 
-                           curr_qt_alpha)
-      }else{
-        qt <- update_sigma(qt, p_t, h, x_star, pars_star = NA, x_corr, pars_corr = NA, psi_t, zt, npars, qt_pars, include_pars_in_qt_update, nstates, curr_qt_alpha) 
-      }
-      
-      qt <- localization(mat= qt,
-                         nstates,
-                         modeled_depths,
-                         num_wq_vars,
-                         wq_start,
-                         wq_end)
+      # qt <- localization(mat= qt,
+      #                    nstates,
+      #                    modeled_depths,
+      #                    num_wq_vars,
+      #                    wq_start,
+      #                    wq_end)
       
     }
     
@@ -557,5 +571,6 @@ run_EnKF <- function(x,
               surface_height = surface_height,
               avg_surf_temp_restart = avg_surf_temp_restart,
               x_phyto_groups_restart = x_phyto_groups_restart,
-              x_phyto_groups = x_phyto_groups))
+              x_phyto_groups = x_phyto_groups,
+              resid30day = resid30day))
 }

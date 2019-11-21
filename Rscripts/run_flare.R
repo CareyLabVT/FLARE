@@ -1118,12 +1118,14 @@ run_flare<-function(start_day_local,
   if(restart_present){
     nc <- nc_open(restart_file)
     qt <- ncvar_get(nc, "qt_restart")
+    resid30day <- ncvar_get(nc, "resid30day")
     qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
     diag(qt_pars) <- par_init_qt
     nc_close(nc)
     qt_init <- qt
   }else{
     qt <- matrix(data = 0, nrow = ndepths_modeled, ncol = ndepths_modeled)
+
     diag(qt) <- rep(temp_process_error,ndepths_modeled )
     qt_init <- matrix(data = 0, nrow = ndepths_modeled, ncol = ndepths_modeled)
     diag(qt_init) <- rep(temp_init_error,ndepths_modeled)
@@ -1177,6 +1179,8 @@ run_flare<-function(start_day_local,
         }
       }
     }
+    
+    resid30day <- array(NA, dim =c(30, nrow(qt)))
     
     #Covariance matrix for parameters
     if(npars > 0){
@@ -1477,7 +1481,8 @@ run_flare<-function(start_day_local,
                           management_input,
                           forecast_sss_on,
                           snow_ice_thickness,
-                          avg_surf_temp)
+                          avg_surf_temp,
+                          resid30day)
   
   x <- enkf_output$x
   x_restart <- enkf_output$x_restart
@@ -1490,6 +1495,7 @@ run_flare<-function(start_day_local,
   avg_surf_temp_restart <- enkf_output$avg_surf_temp_restart
   x_phyto_groups_restart <- enkf_output$x_phyto_groups_restart
   x_phyto_groups <- enkf_output$x_phyto_groups
+  resid30day <- enkf_output$resid30day
   
   ####################################################
   #### STEP 13: PROCESS OUTPUT
@@ -1561,7 +1567,8 @@ run_flare<-function(start_day_local,
                         surface_height,
                         avg_surf_temp_restart,
                         x_phyto_groups_restart,
-                        x_phyto_groups)
+                        x_phyto_groups,
+                        resid30day)
   
   ##ARCHIVE FORECAST
   restart_file_name <- archive_forecast(working_directory = working_directory,

@@ -26,9 +26,10 @@ localization <- function(mat,nstates,modeled_depths,num_wq_vars,wq_start,wq_end)
         mat_new[wq_index, index] <- mat[wq_index, index] #Keep covariances within the localization distance
         mat_new[index, wq_index] <- mat[wq_index, index] #Ensure that covariance matrix is symetric
         mat_new[wq_index, s] <- mat[wq_index, s] #Keep covariance between temperature and water quality variable at that depth
+        mat_new[s, wq_index] <- mat[wq_index, s]
         all_wq_at_same_depth <- wq_start + s - 1
         for(wq2 in 1:length(all_wq_at_same_depth)){  #Keep covariance between all other water quality variables at that depth
-          mat_new[wq_index, all_wq_at_same_depth[wq2]] <- mat[wq_index, all_wq_at_same_depth[wq2]]
+          mat_new[wq_index, c(all_wq_at_same_depth[wq2])] <- mat[wq_index, c(all_wq_at_same_depth[wq2])]
         }
       }
     }

@@ -23,7 +23,8 @@ write_forecast_netcdf <- function(x,
                                   surface_height,
                                   avg_surf_temp_restart,
                                   x_phyto_groups_restart,
-                                  x_phyto_groups){
+                                  x_phyto_groups,
+                                  resid30day){
   
   obs <- z
   
@@ -37,6 +38,7 @@ write_forecast_netcdf <- function(x,
   states <- seq(1,nstates,1)
   states_aug <- seq(1,dim(x)[3],1)
   obs_states <- seq(1,dim(z)[2],1)
+  qt_update_days <- seq(1,dim(resid30day)[1],1)
   if(include_wq){
     phytos_restart <- seq(1, dim(x_phyto_groups_restart)[2],1)
   }
@@ -67,6 +69,8 @@ write_forecast_netcdf <- function(x,
   stateagudim <- ncdim_def("states_aug",units = '', vals = states_aug, longname = 'length of model states plus parameters')
   obsdim <- ncdim_def("obs_dim",units = '', vals = obs_states, longname = 'length of ')
   snow_ice_dim <- ncdim_def("snow_ice_dim",units = "",vals = c(1, 2, 3), longname = 'snow ice dims') 
+  qt_update_days_dim <- ncdim_def("qt_update_days",units = '', vals = qt_update_days, longname = 'Number of running days that qt smooths over')
+  
   if(include_wq){
     phyto_restart_dim <- ncdim_def("phyto_restart_dim",units = "",vals = phytos_restart, longname = 'phyto_restart_dim') 
   }
@@ -89,11 +93,12 @@ write_forecast_netcdf <- function(x,
   def_list[[12]] <- ncvar_def("ice_thickness","m", list(timedim,ensdim),missval = -99,longname = 'Ice Thickness',prec="single")
   def_list[[13]] <- ncvar_def("lake_depth","m",list(timedim,ensdim),missval = -99,longname = 'Depth of lake',prec="single")
   def_list[[14]] <- ncvar_def("avg_surf_temp_restart","deg_C",list(ensdim),missval = -99,longname ='Running Average of Surface Temperature',prec="single")
+  def_list[[15]] <- ncvar_def("resid30day","various",list(qt_update_days_dim,depthdim),fillvalue,longname = "running residual for updating qt",prec="single")
   if(include_wq){
-    index <- 15
+    index <- 16
     def_list[[index]] <- ncvar_def("phyto_restart","mmol/m3",list(ensdim,phyto_restart_dim),missval = -99,longname ='Restart Phyto biomass',prec="single")
   }else{
-    index <- 14
+    index <- 15
   }
   if(npars > 0){
     for(par in 1:npars){
@@ -141,11 +146,12 @@ write_forecast_netcdf <- function(x,
   ncvar_put(ncout,def_list[[12]] ,ice_thickness)
   ncvar_put(ncout,def_list[[13]] ,surface_height)
   ncvar_put(ncout,def_list[[14]] ,avg_surf_temp_restart)
+  ncvar_put(ncout,def_list[[15]] ,resid30day)
   if(include_wq){
-    index <- 15
+    index <- 16
     ncvar_put(ncout,def_list[[index]] ,x_phyto_groups_restart)
   }else{
-    index <- 14
+    index <- 15
   }
   
   if(npars > 0){

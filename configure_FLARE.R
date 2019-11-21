@@ -15,7 +15,7 @@ local_tzone <<- "EST"
 ########################################
 ## Temperature only or include water quality
 #########################################
-include_wq <<- FALSE
+include_wq <<- TRUE
 #TRUE = use AED
 
 ##########################
@@ -169,7 +169,7 @@ default_blue_ice_thickness_init <<- 0.0
 ##  Ensemble members used
 ##############################
 n_enkf_members <<- 1
-n_ds_members <<- 21
+n_ds_members <<- 5  
 n_inflow_outflow_members <<- 21
 #Note: this number is multiplied by 
 # 1) the number of NOAA ensembles (21)
@@ -180,8 +180,9 @@ n_inflow_outflow_members <<- 21
 ### Process uncertainty adaption
 ##################################
 qt_alpha <<- 0.8  #0 - all weight on the new Qt, 1 - all weight on the current Qt
-qt_beta <<- 0.6 # 
-localization_distance <- 1 #distance in meters were covariances in the process error are used
+qt_beta <<- 0.7 # 
+localization_distance <<- 1 #distance in meters were covariances in the process error are used
+use_cov <<- FALSE
 
 #################################
 # Parameter calibration information
@@ -199,14 +200,14 @@ zone1_temp_init_upperbound <<- 20
 zone1_temp_lowerbound <<- -100
 zone1_temp_upperbound <<- 100
 #daily perturbance of parameter value
-zone1temp_init_qt <<- 1^2  #THIS IS THE VARIANCE, NOT THE SD
+zone1temp_init_qt <<- 0.1^2  #THIS IS THE VARIANCE, NOT THE SD
 
 zone2_temp_init_mean <<- 15
 zone2_temp_init_lowerbound <<-  10
 zone2_temp_init_upperbound <<-  20
 zone2_temp_lowerbound <<-  -100
 zone2_temp_upperbound <<-  100
-zone2temp_init_qt <<- 1^2 #THIS IS THE VARIANCE, NOT THE SD
+zone2temp_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Shortwave factor
 swf_init_mean <<- 1.0
@@ -215,7 +216,7 @@ swf_init_upperbound <<- 2.0
 swf_lowerbound <<- -10
 swf_upperbound <<- 10
 #daily perturbance of parameter value
-swf_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
+swf_init_qt <<- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Longwave factor
 lwf_init_mean <<- 1.0
@@ -224,7 +225,7 @@ lwf_init_upperbound <<- 2.0
 lwf_lowerbound <<- -10
 lwf_upperbound <<- 10
 #daily perturbance of parameter value
-lwf_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
+lwf_init_qt <<- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Fsed_oxy
 Fsed_oxy_init_mean <<- -20
@@ -711,7 +712,7 @@ PHY_init_error <<- c(3, 3, 3)
 
 #Pull data from github?
 #Push results to github?
-pull_from_git <<- TRUE
+pull_from_git <<- FALSE
 push_to_git <<- FALSE
 
 #########################################

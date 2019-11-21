@@ -144,7 +144,7 @@ plot_forecast <- function(pdf_file_name,
     }
   }
   
-  unlink(cleaned_temp_oxy_chla_file)
+
   
   nsteps <- length(full_time_local)
   if(length(which(forecasted == 1))>0){
@@ -816,5 +816,7 @@ plot_forecast <- function(pdf_file_name,
       system('git push')
     }
   }
+  
+  unlink(cleaned_temp_oxy_chla_file)
 }
 
