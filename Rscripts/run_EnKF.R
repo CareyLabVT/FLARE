@@ -381,7 +381,7 @@ run_EnKF <- function(x,
         resid30day[30, z_index] <- ens_mean[z_index] - zt
         print(resid30day[30, z_index])
         if(!is.na(resid30day[1, z_index[1]])){
-          qt <- update_qt(resid30day, modeled_depths, qt, include_wq, npars, nstates)
+          qt <- update_qt(resid30day, modeled_depths, qt, include_wq, npars, nstates, wq_start, wq_end, num_wq_vars)
         }
       }
       

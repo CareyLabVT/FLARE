@@ -79,16 +79,18 @@ update_sigma <- function(qt, p_t, h, x_star, pars_star, x_corr, pars_corr, psi_t
   return(qt)
 }
 
-update_qt <- function(resid30day, modeled_depths, qt, include_wq, npars, nstates, wq_start, wq_end){
+update_qt <- function(resid30day, modeled_depths, qt, include_wq, npars, nstates, wq_start, wq_end, num_wq_vars){
   
   old_qt <- qt
   
   ndepths_modeled <- length(modeled_depths)
   
-  index <- which(!is.na(resid30day[1, ]))
-  resid <- resid30day[1:ndepths_modeled, index]
+
   
   if(use_cov){
+    tmp_resid <- resid30day[1, 1:ndepths_modeled]
+    index <- which(!is.na(tmp_resid[1, ]))
+    resid <- tmp_resid[, index]
     Qt <- cov(resid)
     full_Qt <- array(NA,dim=c(ndepths_modeled,ndepths_modeled))
     for(i in 1:length(index)){
@@ -120,7 +122,7 @@ update_qt <- function(resid30day, modeled_depths, qt, include_wq, npars, nstates
   }else{
     Qt <- array(0.0, dim = c(ndepths_modeled, ndepths_modeled))
     for(i in 1:ndepths_modeled){
-      Qt[i,i] <- var(resid30day[i, ], na.rm = TRUE)
+      Qt[i,i] <- var(resid30day[, i], na.rm = TRUE)
     }
     tmp_diag <- diag(Qt)
     inter <- approxfun(modeled_depths[which(!is.na(tmp_diag))],tmp_diag[which(!is.na(tmp_diag))],rule = 2)
@@ -134,8 +136,8 @@ update_qt <- function(resid30day, modeled_depths, qt, include_wq, npars, nstates
       for(j in 1:ndepths_modeled){
         qt <- rbind(qt, rep(0.0, ncol(qt)))
         qt <- cbind(qt, rep(0.0, nrow(qt)))
-        if(length(!is.na(resid30day[wq_start[wq] + j - 1, ])) > 3){
-          qt[ncol(qt),nrow(qt)] <- var(resid30day[wq_start[wq] + j - 1, ], na.rm = TRUE)
+        if(length(!is.na(resid30day[, wq_start[wq] + j - 1])) > 3){
+          qt[ncol(qt),nrow(qt)] <- var(resid30day[ ,wq_start[wq] + j - 1], na.rm = TRUE)
         }
       }
       tmp_diag <- diag(qt)[wq_start[wq]:wq_end[wq]]
