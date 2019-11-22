@@ -85,7 +85,7 @@ update_qt <- function(resid30day, modeled_depths, qt, include_wq, npars, nstates
   
   ndepths_modeled <- length(modeled_depths)
   
-
+  
   
   if(use_cov){
     tmp_resid <- resid30day[1, 1:ndepths_modeled]
@@ -133,18 +133,27 @@ update_qt <- function(resid30day, modeled_depths, qt, include_wq, npars, nstates
   
   if(include_wq){
     for(wq in 1:num_wq_vars){
-      for(j in 1:ndepths_modeled){
-        qt <- rbind(qt, rep(0.0, ncol(qt)))
-        qt <- cbind(qt, rep(0.0, nrow(qt)))
-        if(length(!is.na(resid30day[, wq_start[wq] + j - 1])) > 3){
-          qt[ncol(qt),nrow(qt)] <- var(resid30day[ ,wq_start[wq] + j - 1], na.rm = TRUE)
+      #IF THERE IS SOME DATA FOR THE VARIABLE
+      if(length(!is.na(c(resid30day[, wq_start[wq]:wq_end[wq]]))) > 0){
+        for(j in 1:ndepths_modeled){
+          qt <- rbind(qt, rep(0.0, ncol(qt)))
+          qt <- cbind(qt, rep(0.0, nrow(qt)))
+          if(length(!is.na(resid30day[, wq_start[wq] + j - 1])) > 3){
+            qt[ncol(qt),nrow(qt)] <- var(resid30day[ ,wq_start[wq] + j - 1], na.rm = TRUE)
+          }else{
+            qt[ncol(qt),nrow(qt)] <- NA
+          }
         }
-      }
-      tmp_diag <- diag(qt)[wq_start[wq]:wq_end[wq]]
-      modeled_depths[which(!is.na(tmp_diag))]
-      inter <- approxfun(modeled_depths[which(!is.na(tmp_diag))],tmp_diag[which(!is.na(tmp_diag))],rule = 2)
-      new_diag <- inter(modeled_depths)
-      diag(qt)[wq_start[wq]:wq_end[wq]] <- new_diag
+        tmp_diag <- diag(qt)[wq_start[wq]:wq_end[wq]]
+        modeled_depths[which(!is.na(tmp_diag))]
+        inter <- approxfun(modeled_depths[which(!is.na(tmp_diag))],tmp_diag[which(!is.na(tmp_diag))],rule = 2)
+        new_diag <- inter(modeled_depths)
+        diag(qt)[wq_start[wq]:wq_end[wq]] <- new_diag
+      }else{ #IF THERE IS NO DATA FOR THE VARIABLE
+        for(j in 1:ndepths_modeled){
+          qt[ncol(qt),nrow(qt)] <- old_qt[wq_start[wq] + j - 1, wq_start[wq] + j - 1]
+        }
+      } 
     }
   }
   
