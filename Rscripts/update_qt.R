@@ -1,4 +1,4 @@
-update_sigma <- function(qt, p_t, h, x_star, pars_star, x_corr, pars_corr, psi_t, zt, npars, qt_pars, include_pars_in_qt_update, nstates, curr_qt_alpha){
+update_sigma <- function(qt, p_t, h, x_star, pars_star, x_corr, pars_corr, psi_t, zt, npars, qt_pars, include_pars_in_qt_update, nstates, qt_alpha){
   
   #From:
   #Rastetter, E. B., M. Williams, K. L. Griffin, B. L. Kwiatkowski, 
@@ -67,7 +67,7 @@ update_sigma <- function(qt, p_t, h, x_star, pars_star, x_corr, pars_corr, psi_t
   q_star <- gamma %*% (St - h %*% p_t_star %*% t(h) - psi_t) %*% t(gamma)
   
   
-  qt <- (curr_qt_alpha * old_qt) + ((1 - curr_qt_alpha) *  q_star)
+  qt <- (qt_alpha * old_qt) + ((1 - qt_alpha) *  q_star)
   if(npars > 0 & !include_pars_in_qt_update){
     for(pars in 1:npars){
       qt <- rbind(qt, rep(0.0, ncol(qt)))
@@ -85,13 +85,11 @@ update_qt <- function(resid30day, modeled_depths, qt, include_wq, npars, nstates
   
   ndepths_modeled <- length(modeled_depths)
   
-  
-  
   if(use_cov){
-    tmp_resid <- resid30day[1, 1:ndepths_modeled]
+    tmp_resid <- resid30day[, 1:ndepths_modeled]
     index <- which(!is.na(tmp_resid[1, ]))
     resid <- tmp_resid[, index]
-    Qt <- cov(resid)
+    Qt <- cov(resid, use = "pairwise.complete.obs")
     full_Qt <- array(NA,dim=c(ndepths_modeled,ndepths_modeled))
     for(i in 1:length(index)){
       full_Qt[index[i],index] <- Qt[i,]
@@ -134,7 +132,7 @@ update_qt <- function(resid30day, modeled_depths, qt, include_wq, npars, nstates
   if(include_wq){
     for(wq in 1:num_wq_vars){
       #IF THERE IS SOME DATA FOR THE VARIABLE
-      if(length(!is.na(c(resid30day[, wq_start[wq]:wq_end[wq]]))) > 0){
+      if(length(which(!is.na(c(resid30day[, wq_start[wq]:wq_end[wq]])))) > 0){
         for(j in 1:ndepths_modeled){
           qt <- rbind(qt, rep(0.0, ncol(qt)))
           qt <- cbind(qt, rep(0.0, nrow(qt)))
@@ -145,12 +143,20 @@ update_qt <- function(resid30day, modeled_depths, qt, include_wq, npars, nstates
           }
         }
         tmp_diag <- diag(qt)[wq_start[wq]:wq_end[wq]]
-        modeled_depths[which(!is.na(tmp_diag))]
-        inter <- approxfun(modeled_depths[which(!is.na(tmp_diag))],tmp_diag[which(!is.na(tmp_diag))],rule = 2)
-        new_diag <- inter(modeled_depths)
-        diag(qt)[wq_start[wq]:wq_end[wq]] <- new_diag
+        if(length(which(!is.na(tmp_diag))) > 1){
+          modeled_depths[which(!is.na(tmp_diag))]
+          inter <- approxfun(modeled_depths[which(!is.na(tmp_diag))],tmp_diag[which(!is.na(tmp_diag))],rule = 2)
+          new_diag <- inter(modeled_depths)
+          diag(qt)[wq_start[wq]:wq_end[wq]] <- new_diag
+        }else if(length(which(!is.na(tmp_diag))) == 1){
+          diag(qt)[wq_start[wq]:wq_end[wq]] <- tmp_diag[which(!is.na(tmp_diag))]
+        }else{
+          diag(qt)[wq_start[wq]:wq_end[wq]] <- old_qt[wq_start[wq] + j - 1, wq_start[wq] + j - 1]
+        }
       }else{ #IF THERE IS NO DATA FOR THE VARIABLE
         for(j in 1:ndepths_modeled){
+          qt <- rbind(qt, rep(0.0, ncol(qt)))
+          qt <- cbind(qt, rep(0.0, nrow(qt)))
           qt[ncol(qt),nrow(qt)] <- old_qt[wq_start[wq] + j - 1, wq_start[wq] + j - 1]
         }
       } 

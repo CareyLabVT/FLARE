@@ -24,7 +24,7 @@ write_forecast_netcdf <- function(x,
                                   avg_surf_temp_restart,
                                   x_phyto_groups_restart,
                                   x_phyto_groups,
-                                  resid30day){
+                                  running_residuals){
   
   obs <- z
   
@@ -38,7 +38,7 @@ write_forecast_netcdf <- function(x,
   states <- seq(1,nstates,1)
   states_aug <- seq(1,dim(x)[3],1)
   obs_states <- seq(1,dim(z)[2],1)
-  qt_update_days <- seq(1,dim(resid30day)[1],1)
+  qt_update_days <- seq(1,dim(running_residuals)[1],1)
   if(include_wq){
     phytos_restart <- seq(1, dim(x_phyto_groups_restart)[2],1)
   }
@@ -93,7 +93,7 @@ write_forecast_netcdf <- function(x,
   def_list[[12]] <- ncvar_def("ice_thickness","m", list(timedim,ensdim),missval = -99,longname = 'Ice Thickness',prec="single")
   def_list[[13]] <- ncvar_def("lake_depth","m",list(timedim,ensdim),missval = -99,longname = 'Depth of lake',prec="single")
   def_list[[14]] <- ncvar_def("avg_surf_temp_restart","deg_C",list(ensdim),missval = -99,longname ='Running Average of Surface Temperature',prec="single")
-  def_list[[15]] <- ncvar_def("resid30day","various",list(qt_update_days_dim,depthdim),fillvalue,longname = "running residual for updating qt",prec="single")
+  def_list[[15]] <- ncvar_def("running_residuals","various",list(qt_update_days_dim,statedim),fillvalue,longname = "running residual for updating qt",prec="single")
   if(include_wq){
     index <- 16
     def_list[[index]] <- ncvar_def("phyto_restart","mmol/m3",list(ensdim,phyto_restart_dim),missval = -99,longname ='Restart Phyto biomass',prec="single")
@@ -146,7 +146,7 @@ write_forecast_netcdf <- function(x,
   ncvar_put(ncout,def_list[[12]] ,ice_thickness)
   ncvar_put(ncout,def_list[[13]] ,surface_height)
   ncvar_put(ncout,def_list[[14]] ,avg_surf_temp_restart)
-  ncvar_put(ncout,def_list[[15]] ,resid30day)
+  ncvar_put(ncout,def_list[[15]] ,running_residuals)
   if(include_wq){
     index <- 16
     ncvar_put(ncout,def_list[[index]] ,x_phyto_groups_restart)

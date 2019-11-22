@@ -29,7 +29,7 @@ run_EnKF <- function(x,
                      forecast_sss_on,
                      snow_ice_thickness,
                      avg_surf_temp,
-                     resid30day){
+                     running_residuals){
   
   nsteps <- length(full_time_local)
   nmembers <- dim(x)[2]
@@ -156,7 +156,7 @@ run_EnKF <- function(x,
       #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
       
       update_var(curr_met_file, "meteo_fl", working_directory, "glm3.nml")
-    
+      
       if(n_inflow_outflow_members == 1){
         tmp <- file.copy(from = inflow_file_names[1], to = "inflow_file1.csv", overwrite = TRUE)
         tmp <- file.copy(from = inflow_file_names[2], to = "inflow_file2.csv", overwrite = TRUE)
@@ -344,7 +344,7 @@ run_EnKF <- function(x,
       #if observation then calucate Kalman adjustment
       zt <- z[i, z_index]
       z_states_t <- z_states[i, z_index]
-
+      
       #Assign which states have obs in the time step
       h <- array(0, dim = c(length(zt) ,nstates))
       h_combined <- array(0, dim = c(length(zt) ,nstates + npars))
@@ -358,13 +358,6 @@ run_EnKF <- function(x,
       
       curr_psi <- psi_intercept[z_index] + psi_slope[z_index] * zt
       
-      #does previous day have an observation
-      previous_day_obs <- FALSE
-      if(length(which(!is.na(z[i-1, ]))) > 0){
-        previous_day_obs <- TRUE
-      }
-      
-      
       if(length(z_index) > 1){
         psi_t <- diag(curr_psi)
       }else{
@@ -375,15 +368,6 @@ run_EnKF <- function(x,
       
       #Ensemble mean
       ens_mean <- apply(x_corr[,], 2, mean)
-      
-      if(previous_day_obs){
-        resid30day[1:29, ] <- resid30day[2:30, ]
-        resid30day[30, z_index] <- ens_mean[z_index] - zt
-        print(resid30day[30, z_index])
-        if(!is.na(resid30day[1, z_index[1]])){
-          qt <- update_qt(resid30day, modeled_depths, qt, include_wq, npars, nstates, wq_start, wq_end, num_wq_vars)
-        }
-      }
       
       if(npars > 0){
         par_mean <- apply(pars_corr, 2, mean)
@@ -436,38 +420,58 @@ run_EnKF <- function(x,
       
       #Update states array (transposes are necessary to convert 
       #between the dims here and the dims in the EnKF formulations)
-      x[i, , 1:nstates] <- t(t(x_corr) + k_t %*% (d_mat - h %*% t(x_corr)))
+      update_increment <-  k_t %*% (d_mat - h %*% t(x_corr))
+      x[i, , 1:nstates] <- t(t(x_corr) + update_increment)
       if(npars > 0){
         x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + k_t_pars %*% (d_mat - h %*% t(x_corr)))
       }
       
-      curr_qt_alpha <- qt_alpha 
-      # if(npars > 0){
-      #   qt <- update_sigma(qt, 
-      #                      p_t = p_t_combined, 
-      #                      h = h_combined, 
-      #                      x_star, 
-      #                      pars_star, 
-      #                      x_corr, 
-      #                      pars_corr, 
-      #                      psi_t, 
-      #                      zt, 
-      #                      npars, 
-      #                      qt_pars, 
-      #                      include_pars_in_qt_update, 
-      #                      nstates, 
-      #                      curr_qt_alpha)
-      # }else{
-      #   qt <- update_sigma(qt, p_t, h, x_star, pars_star = NA, x_corr, pars_corr = NA, psi_t, zt, npars, qt_pars, include_pars_in_qt_update, nstates, curr_qt_alpha) 
-      # }
       
-      # qt <- localization(mat= qt,
-      #                    nstates,
-      #                    modeled_depths,
-      #                    num_wq_vars,
-      #                    wq_start,
-      #                    wq_end)
       
+      if(adapt_qt_method == 1){
+        #does previous day have an observation
+        previous_day_obs <- FALSE
+        if(length(which(!is.na(z[i-1, ]))) > 0){
+          previous_day_obs <- TRUE
+        }
+        
+        if(previous_day_obs){
+          running_residuals[1:(num_adapt_days - 1), ] <- running_residuals[2:num_adapt_days, ]
+          running_residuals[num_adapt_days, ] <- NA
+          running_residuals[num_adapt_days, z_index] <- zt - ens_mean[z_index]
+          #running_residuals[num_adapt_days, z_index] <- rowMeans(update_increment[z_index,])
+          if(!is.na(running_residuals[1, z_index[1]])){
+            qt <- update_qt(running_residuals, modeled_depths, qt, include_wq, npars, nstates, wq_start, wq_end, num_wq_vars)
+          }
+        }
+      }else if(adapt_qt_method == 2){
+        
+        if(npars > 0){
+          qt <- update_sigma(qt,
+                             p_t = p_t_combined,
+                             h = h_combined,
+                             x_star,
+                             pars_star,
+                             x_corr,
+                             pars_corr,
+                             psi_t,
+                             zt,
+                             npars,
+                             qt_pars,
+                             include_pars_in_qt_update,
+                             nstates,
+                             qt_alpha)
+        }else{
+          qt <- update_sigma(qt, p_t, h, x_star, pars_star = NA, x_corr, pars_corr = NA, psi_t, zt, npars, qt_pars, include_pars_in_qt_update, nstates, qt_alpha)
+        }
+        
+        qt <- localization(mat= qt,
+                           nstates,
+                           modeled_depths,
+                           num_wq_vars,
+                           wq_start,
+                           wq_end)
+      }
     }
     
     #IF NO INITIAL CONDITION UNCERTAINITY THEN SET EACH ENSEMBLE MEMBER TO THE MEAN
@@ -572,5 +576,5 @@ run_EnKF <- function(x,
               avg_surf_temp_restart = avg_surf_temp_restart,
               x_phyto_groups_restart = x_phyto_groups_restart,
               x_phyto_groups = x_phyto_groups,
-              resid30day = resid30day))
+              running_residuals = running_residuals))
 }

@@ -88,6 +88,9 @@ inflow_qaqc <- function(fname,
   inflow = aggregate(list(flow_cms = inflow$flow_cms, wtr_weir = inflow$wtr_weir), list(TIMESTAMP = cut(inflow$TIMESTAMP, "1 day")), mean);
   inflow$TIMESTAMP <- as.POSIXct(inflow$TIMESTAMP, format = '%Y-%m-%d')
   
+  #Convert flow from the new pressure transducer to the old pressure transducers, which compares better to manual measurements using salt slugs.
+  inflow$flow_cms <-   -0.004732 + 0.713454*inflow$flow_cms #+ rnorm(1, 0, 0.002816)
+  
   
   inflow_clean <- rbind(hist_inflow, inflow)
   
