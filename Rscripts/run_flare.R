@@ -58,6 +58,7 @@ run_flare<-function(start_day_local,
   source(paste0(code_folder,"/","Rscripts/update_qt.R"))
   source(paste0(code_folder,"/","Rscripts/glmtools.R"))
   source(paste0(code_folder,"/","Rscripts/localization.R")) 
+  source(paste0(code_folder,"/","Rscripts/temperature_to_density.R"))
   
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/create_inflow_outflow_file.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/create_obs_met_input.R"))
@@ -1227,6 +1228,17 @@ run_flare<-function(start_day_local,
                                     mean=c(the_temps_init, 
                                            wq_init_vals), 
                                     sigma=as.matrix(qt_init[1:nstates,1:nstates]))
+      
+        for(m in 1:nmembers){
+          orig_temp <-  x[1,m ,1:ndepths_modeled]
+          dens <- rep(NA, ndepths_modeled)
+          for(d in 1:ndepths_modeled){
+            dens[d] <- temperature_to_density(orig_temp[d], the_sals_init[d])
+          }
+          index <- order(dens, decreasing = TRUE)
+          x[1,m ,1:nstates] <- orig_temp[index]
+        }
+        
         if(single_run){
           for(m in 1:nmembers){
             x[1,m ,1:nstates] <- rep(c(the_temps_init, 
@@ -1266,6 +1278,16 @@ run_flare<-function(start_day_local,
                                     mean=c(the_temps_init,wq_init_vals),
                                     sigma=as.matrix(qt))
         
+        for(m in 1:nmembers){
+          orig_temp <-  x[1, m,1:ndepths_modeled]
+          dens <- rep(NA, ndepths_modeled)
+          for(d in 1:ndepths_modeled){
+            dens[d] <- temperature_to_density(orig_temp[d], the_sals_init[d])
+          }
+          index <- order(dens, decreasing = TRUE)
+          x[1,m ,1:nstates] <- orig_temp[index]
+        }
+        
         if(single_run){
           for(m in 1:nmembers){
             x[1,m ,1:nstates] <- rep(c(the_temps_init, 
@@ -1292,6 +1314,16 @@ run_flare<-function(start_day_local,
                                     mean=c(the_temps_init), 
                                     sigma=as.matrix(qt_init[1:nstates,1:nstates]))
         
+        for(m in 1:nmembers){
+          orig_temp <-  x[1,m ,1:ndepths_modeled]
+          dens <- rep(NA, ndepths_modeled)
+          for(d in 1:ndepths_modeled){
+            dens[d] <- temperature_to_density(orig_temp[d], the_sals_init)
+          }
+          index <- order(dens, decreasing = TRUE)
+          x[1,m ,1:nstates] <- orig_temp[index]
+        }
+        
         
         for(par in 1:npars){
           x[1, ,(nstates+par)] <- runif(n=nmembers,par_init_lowerbound[par], par_init_upperbound[par])
@@ -1310,6 +1342,16 @@ run_flare<-function(start_day_local,
         x[1, , ] <- rmvnorm(n=nmembers, 
                             mean=the_temps_init,
                             sigma=as.matrix(qt))
+        
+        for(m in 1:nmembers){
+          orig_temp <-  x[1,m ,1:ndepths_modeled]
+          dens <- rep(NA, ndepths_modeled)
+          for(d in 1:ndepths_modeled){
+            dens[d] <- temperature_to_density(orig_temp[d], the_sals_init[d])
+          }
+          index <- order(dens, decreasing = TRUE)
+          x[1,m ,1:nstates] <- orig_temp[index]
+        }
         
         if(initial_condition_uncertainty == FALSE & hist_days == 0){
           state_means <- colMeans(x[1, , 1:nstates])
@@ -1482,7 +1524,8 @@ run_flare<-function(start_day_local,
                           forecast_sss_on,
                           snow_ice_thickness,
                           avg_surf_temp,
-                          running_residuals)
+                          running_residuals,
+                          the_sals_init)
   
   x <- enkf_output$x
   x_restart <- enkf_output$x_restart

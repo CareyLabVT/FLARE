@@ -29,7 +29,8 @@ run_EnKF <- function(x,
                      forecast_sss_on,
                      snow_ice_thickness,
                      avg_surf_temp,
-                     running_residuals){
+                     running_residuals,
+                     the_sals_init){
   
   nsteps <- length(full_time_local)
   nmembers <- dim(x)[2]
@@ -276,6 +277,16 @@ run_EnKF <- function(x,
     
     #Corruption [nmembers x nstates] 
     x_corr <- x_star + nqt[, 1:nstates]
+    
+    for(m in 1:nmembers){
+      orig_temp <- x_corr[m,1:ndepths_modeled]
+      dens <- rep(NA, ndepths_modeled)
+      for(d in 1:ndepths_modeled){
+      dens[d] <- temperature_to_density(orig_temp[d], the_sals_init)
+      }
+      index <- order(dens, decreasing = TRUE)
+      x_corr[m,1:ndepths_modeled] <- orig_temp[index]
+    }
     
     if(npars > 0){
       pars_corr <- x[i - 1, , (nstates+1):(nstates+npars)] + pqt
