@@ -59,6 +59,12 @@ static int HICE_id,HSNOW_id,HWICE_id, AvgSurfTemp_id;
 static int precip_id,evap_id,rho_id,rad_id,extc_id,i0_id,wnd_id;
 static int temp_id, salt_id, umean_id, uorb_id;
 
+static int dep_mx_id, prev_thick_id, g_prime_two_layer_id ;
+static int     energy_avail_max_id, mass_epi_id, old_slope_id;
+static int     time_end_shear_id, time_start_shear_id, time_count_end_shear_id;
+static int    	time_count_sim_id, half_seiche_period_id, thermocline_height_id;
+static int     f0_id, fsum_id, u_f_id, u0_id, u_avg_id;
+
 #ifdef _WIN32
     char *strndup(const char *s, size_t len);
 #endif
@@ -107,8 +113,26 @@ int init_glm_ncdf(const char *fn, const char *title, AED_REAL lat,
     check_nc_error(nc_def_var(ncid, "hice",  NC_REALTYPE, 1, dims, &HICE_id));
     check_nc_error(nc_def_var(ncid, "hsnow", NC_REALTYPE, 1, dims, &HSNOW_id));
     check_nc_error(nc_def_var(ncid, "hwice", NC_REALTYPE, 1, dims, &HWICE_id));
+    
     check_nc_error(nc_def_var(ncid, "avg_surf_temp", NC_REALTYPE, 1, dims, &AvgSurfTemp_id));
-
+    
+    check_nc_error(nc_def_var(ncid, "dep_mx", NC_REALTYPE, 1, dims, &dep_mx_id));
+    check_nc_error(nc_def_var(ncid, "prev_thick", NC_REALTYPE, 1, dims, &prev_thick_id));
+    check_nc_error(nc_def_var(ncid, "g_prime_two_layer", NC_REALTYPE, 1, dims, &g_prime_two_layer_id));
+    check_nc_error(nc_def_var(ncid, "energy_avail_max", NC_REALTYPE, 1, dims, &energy_avail_max_id));
+    check_nc_error(nc_def_var(ncid, "mass_epi", NC_REALTYPE, 1, dims, &mass_epi_id));
+    check_nc_error(nc_def_var(ncid, "old_slope", NC_REALTYPE, 1, dims, &old_slope_id));
+    check_nc_error(nc_def_var(ncid, "time_end_shear", NC_REALTYPE, 1, dims, &time_end_shear_id));
+    check_nc_error(nc_def_var(ncid, "time_start_shear", NC_REALTYPE, 1, dims, &time_start_shear_id));
+    check_nc_error(nc_def_var(ncid, "time_count_end_shear", NC_REALTYPE, 1, dims, &time_count_end_shear_id));
+    check_nc_error(nc_def_var(ncid, "time_count_sim", NC_REALTYPE, 1, dims, &time_count_sim_id));
+    check_nc_error(nc_def_var(ncid, "half_seiche_period", NC_REALTYPE, 1, dims, &half_seiche_period_id));
+    check_nc_error(nc_def_var(ncid, "thermocline_height", NC_REALTYPE, 1, dims, &thermocline_height_id));
+    check_nc_error(nc_def_var(ncid, "f0", NC_REALTYPE, 1, dims, &f0_id));
+    check_nc_error(nc_def_var(ncid, "fsum", NC_REALTYPE, 1, dims, &fsum_id));
+      check_nc_error(nc_def_var(ncid, "u_f", NC_REALTYPE, 1, dims, &u_f_id));
+      check_nc_error(nc_def_var(ncid, "u0", NC_REALTYPE, 1, dims, &u0_id));
+      check_nc_error(nc_def_var(ncid, "u_avg", NC_REALTYPE, 1, dims, &u_avg_id));      
     /**************************************************************************
      * define variables                                                       *
      **************************************************************************/
@@ -158,7 +182,27 @@ int init_glm_ncdf(const char *fn, const char *title, AED_REAL lat,
     set_nc_attributes(ncid, HICE_id,   "meters",  "Height of Ice"   PARAM_FILLVALUE);
     set_nc_attributes(ncid, HSNOW_id,  "meters",  "Height of Snow"  PARAM_FILLVALUE);
     set_nc_attributes(ncid, HWICE_id,  "meters",  "Height of WhiteIce" PARAM_FILLVALUE);
+    
     set_nc_attributes(ncid, AvgSurfTemp_id,  "celsius",  "Running average surface temperature" PARAM_FILLVALUE);
+    
+    set_nc_attributes(ncid, dep_mx_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, prev_thick_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, g_prime_two_layer_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, energy_avail_max_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, mass_epi_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, old_slope_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, time_end_shear_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, time_start_shear_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, time_count_end_shear_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, time_count_sim_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, half_seiche_period_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, thermocline_height_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, f0_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, fsum_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, u_f_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, u0_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+    set_nc_attributes(ncid, u_avg_id,  "",  "mixing hot start" PARAM_FILLVALUE);
+        
     //# x,y,t
     set_nc_attributes(ncid, precip_id, "m/s",     "precipitation"   PARAM_FILLVALUE);
     set_nc_attributes(ncid, evap_id,   "m/s",     "evaporation"     PARAM_FILLVALUE);
@@ -231,7 +275,26 @@ void write_glm_ncdf(int ncid, int wlev, int nlev, int stepnum, AED_REAL timestep
     store_nc_scalar(ncid, HWICE_id, T_SHAPE, SurfData.delzWhiteIce);
     store_nc_scalar(ncid, HSNOW_id, T_SHAPE, SurfData.delzSnow);
     store_nc_scalar(ncid, AvgSurfTemp_id, T_SHAPE, AvgSurfTemp);
+    
+    store_nc_scalar(ncid, dep_mx_id, T_SHAPE, DepMX);
+    store_nc_scalar(ncid, prev_thick_id, T_SHAPE, PrevThick);    
+    store_nc_scalar(ncid, g_prime_two_layer_id, T_SHAPE, gPrimeTwoLayer);    
+    store_nc_scalar(ncid, energy_avail_max_id, T_SHAPE, Energy_AvailableMix);
+    store_nc_scalar(ncid, mass_epi_id, T_SHAPE, Mass_Epi);
+    store_nc_scalar(ncid, old_slope_id, T_SHAPE, OldSlope);
+    store_nc_scalar(ncid, time_end_shear_id, T_SHAPE, Time_end_shear);
+    store_nc_scalar(ncid, time_start_shear_id, T_SHAPE, Time_start_shear);
+    store_nc_scalar(ncid, time_count_end_shear_id, T_SHAPE, Time_count_end_shear);
+    store_nc_scalar(ncid, time_count_sim_id, T_SHAPE, Time_count_sim);
+    store_nc_scalar(ncid, half_seiche_period_id, T_SHAPE, Half_Seiche_Period);
+    store_nc_scalar(ncid, thermocline_height_id, T_SHAPE, Thermocline_Height);
+    store_nc_scalar(ncid, f0_id, T_SHAPE, FO);
+    store_nc_scalar(ncid, fsum_id, T_SHAPE, FSUM);
+    store_nc_scalar(ncid, u_f_id, T_SHAPE, u_f);
+    store_nc_scalar(ncid, u0_id, T_SHAPE, u0);
+    store_nc_scalar(ncid, u_avg_id, T_SHAPE, u_avg);
 
+        
     store_nc_scalar(ncid, precip_id, XYT_SHAPE, MetData.Rain);
     store_nc_scalar(ncid,   evap_id, XYT_SHAPE, SurfData.Evap);
 

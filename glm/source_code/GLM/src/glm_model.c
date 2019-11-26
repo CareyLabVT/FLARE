@@ -172,7 +172,7 @@ void init_model(int *jstart, int *nsave)
     resize_internals(1, botmLayer);
     check_layer_thickness();   //# Check layers for vmax,vmin
 
-    init_mixer();
+	if(DepMX == 0.0) init_mixer();
 
     Latitude = two_Pi + Latitude * deg2rad; //# Convert latitude from degrees to radians
 }

@@ -1214,6 +1214,9 @@ run_flare<-function(start_day_local,
   surface_height <- array(NA, dim=c(nsteps, nmembers))
   snow_ice_thickness <- array(NA, dim=c(nsteps, nmembers, 3))
   avg_surf_temp <- array(NA, dim=c(nsteps, nmembers))
+  
+  mixing_vars <- array(NA, dim=c(nmembers, 17))
+  
   if(include_wq){
     x_phyto_groups <- array(NA, dim = c(nsteps, nmembers, num_phytos * ndepths_modeled))
   }else{
@@ -1385,6 +1388,8 @@ run_flare<-function(start_day_local,
     surface_height_restart <- ncvar_get(nc, "surface_height_restart")
     snow_ice_thickness_restart <- ncvar_get(nc, "snow_ice_restart")
     avg_surf_temp_restart <- ncvar_get(nc, "avg_surf_temp_restart")
+    mixing_restart <- ncvar_get(nc, "mixing_restart")
+    
     if(include_wq){
       x_phyto_groups_restart <- ncvar_get(nc, "phyto_restart")
     }
@@ -1402,6 +1407,7 @@ run_flare<-function(start_day_local,
       
       surface_height[1, ] <- surface_height_restart[sampled_nmembers]
       avg_surf_temp[1, ] <- avg_surf_temp_restart[sampled_nmembers]
+      mixing_vars <- mixing_restart[sampled_nmembers, ]
       
       if(include_wq){
         for(phyto in 1:num_phytos){
@@ -1422,6 +1428,7 @@ run_flare<-function(start_day_local,
       
       surface_height[1, ] <- surface_height_restart[sampled_nmembers]
       avg_surf_temp[1, ] <- avg_surf_temp_restart[sampled_nmembers]
+      mixing_vars <- mixing_restart[sampled_nmembers, ]
       
       if(include_wq){
         for(phyto in 1:num_phytos){
@@ -1438,6 +1445,7 @@ run_flare<-function(start_day_local,
       
       surface_height[1, ] <- surface_height_restart
       avg_surf_temp[1, ] <- avg_surf_temp_restart
+      mixing_vars <- mixing_restart
       
       if(include_wq){
         for(phyto in 1:num_phytos){
@@ -1462,6 +1470,8 @@ run_flare<-function(start_day_local,
     snow_ice_thickness[1, ,3] <- default_blue_ice_thickness_init
     
     avg_surf_temp[1, ] <- x[1, ,1]
+    
+    mixing_vars[,] <- 0.0
     
   }
   
@@ -1525,7 +1535,9 @@ run_flare<-function(start_day_local,
                           snow_ice_thickness,
                           avg_surf_temp,
                           running_residuals,
-                          the_sals_init)
+                          the_sals_init,
+                          mixing_vars 
+  )
   
   x <- enkf_output$x
   x_restart <- enkf_output$x_restart
@@ -1535,10 +1547,13 @@ run_flare<-function(start_day_local,
   snow_ice_restart <- enkf_output$snow_ice_restart
   snow_ice_thickness <- enkf_output$snow_ice_thickness
   surface_height <- enkf_output$surface_height
-  avg_surf_temp_restart <- enkf_output$avg_surf_temp_restart
+
   x_phyto_groups_restart <- enkf_output$x_phyto_groups_restart
   x_phyto_groups <- enkf_output$x_phyto_groups
   running_residuals <- enkf_output$running_residuals
+  
+  avg_surf_temp_restart <- enkf_output$avg_surf_temp_restart
+  mixing_restart <- enkf_output$mixing_restart
   
   ####################################################
   #### STEP 13: PROCESS OUTPUT
@@ -1611,7 +1626,8 @@ run_flare<-function(start_day_local,
                         avg_surf_temp_restart,
                         x_phyto_groups_restart,
                         x_phyto_groups,
-                        running_residuals)
+                        running_residuals,
+                        mixing_restart)
   
   ##ARCHIVE FORECAST
   restart_file_name <- archive_forecast(working_directory = working_directory,

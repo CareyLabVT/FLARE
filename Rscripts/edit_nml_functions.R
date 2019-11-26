@@ -68,6 +68,27 @@ update_var <- function(var_value,var_name,working_directory, nml){
   write_nml(orig_nml, paste0(working_directory,'/',nml))
 }
 
+update_nml <- function(var_list,var_name_list,working_directory, nml){
+  orig_nml = read_nml(paste0(working_directory,'/',nml))
+  
+  for(k in 1:length(var_list)){
+  index1 = NA; index2 = NA
+  for (g in 1:length(orig_nml)) {
+    for (q in 1:length(orig_nml[[g]])) {
+      if (names(orig_nml[[g]][q]) == var_name_list[k]) {
+        index1 = g; index2 = q; 
+      }
+    }
+  }
+  holder2 = unlist(orig_nml[[index1]][index2])
+  holder2[1:length(var_list[[k]])] = var_list[[k]]
+  holder2 = list(holder2[1:length(var_list[[k]])])
+  orig_nml[[index1]][index2] = holder2
+  }
+  
+  write_nml(orig_nml, paste0(working_directory,'/',nml))
+}
+
 #' Add together two numbers.
 #'
 #' @param x A number.
@@ -209,6 +230,7 @@ get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars){
   ice_blue <- ncvar_get(glm_nc, "hice")[2] 
   avg_surf_temp <- ncvar_get(glm_nc, "avg_surf_temp")[2] 
   
+
   output <- array(NA,dim=c(num_dep,length(vars)))
   for(v in 1:length(vars)){
     temp <- ncvar_get(glm_nc, vars[v])
@@ -221,9 +243,20 @@ get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars){
     }
     
   }
+  
+  mixing_restart_variables <- c("dep_mx","prev_thick", "g_prime_two_layer", "energy_avail_max", "mass_epi", 
+                                "old_slope", "time_end_shear", "time_start_shear", "time_count_end_shear", "time_count_sim", 
+                                "half_seiche_period", "thermocline_height", "f0", "fsum", "u_f", "u0", "u_avg")
+  mixing_vars <- rep(NA, length(mixing_restart_variables))
+    for(v in 1:length(mixing_restart_variables)){
+      mixing_vars[v] <- ncvar_get(glm_nc, mixing_restart_variables[v])[2] 
+    }
+  
+  
   nc_close(glm_nc)
   return(list(output = output,
               surface_height = elev_surf[length(tallest_layer), 2],
               snow_wice_bice = c(snow, ice_white, ice_blue),
-              avg_surf_temp = avg_surf_temp))
+              avg_surf_temp = avg_surf_temp,
+              mixing_vars = mixing_vars))
 }

@@ -1288,6 +1288,23 @@ void initialise_lake(int namlst)
     AED_REAL        white_ice_thickness;
     AED_REAL        blue_ice_thickness;
     AED_REAL        avg_surf_temp;
+  	AED_REAL        dep_mx_init;
+    AED_REAL        prev_thick_init  ;
+    AED_REAL        g_prime_two_layer_init ;
+    AED_REAL        energy_avail_max_init ;
+   	AED_REAL        mass_epi_init;
+    AED_REAL        old_slope_init;
+    AED_REAL        time_end_shear_init;
+    AED_REAL        time_start_shear_init;
+   	AED_REAL        time_count_end_shear_init;
+   	AED_REAL        time_count_sim_init;
+    AED_REAL        half_seiche_period_init;
+    AED_REAL        thermocline_height_init;
+    AED_REAL        f0_init;
+    AED_REAL        fsum_init;
+    AED_REAL        u_f_init;
+    AED_REAL        u0_init;
+    AED_REAL        u_avg_init;
     /*-------------------------------------------*/
 
     NAMELIST init_profiles[] = {
@@ -1306,6 +1323,23 @@ void initialise_lake(int namlst)
           { "white_ice_thickness",  TYPE_DOUBLE,		&white_ice_thickness  },
           { "blue_ice_thickness", 	 TYPE_DOUBLE,		&blue_ice_thickness   },
           { "avg_surf_temp", 	 TYPE_DOUBLE,			&avg_surf_temp   }, 		
+          { "dep_mx_init" , 	 TYPE_DOUBLE,			&dep_mx_init		},
+          { "prev_thick_init", TYPE_DOUBLE,			&prev_thick_init  },
+          { "g_prime_two_layer_init", TYPE_DOUBLE,	&g_prime_two_layer_init }, 
+          { "energy_avail_max_init", TYPE_DOUBLE,	&energy_avail_max_init },
+   		  {	"mass_epi_init", TYPE_DOUBLE,	&mass_epi_init},
+    	  { "old_slope_init", TYPE_DOUBLE,	&old_slope_init},
+    	  {	"time_end_shear_init" , TYPE_DOUBLE,	&time_end_shear_init},
+    	  { "time_start_shear_init", TYPE_DOUBLE,	&time_start_shear_init},
+   		  {"time_count_end_shear_init",TYPE_DOUBLE,	&time_count_end_shear_init},
+   		  {"time_count_sim_init" ,TYPE_DOUBLE,	&time_count_sim_init},
+    	  {"half_seiche_period_init",TYPE_DOUBLE,	&half_seiche_period_init},
+          {"thermocline_height_init",TYPE_DOUBLE,	&thermocline_height_init},
+          {"f0_init",TYPE_DOUBLE,	&f0_init},
+          {"fsum_init",TYPE_DOUBLE,	&fsum_init},
+          {"u_f_init",TYPE_DOUBLE,	&u_f_init},
+          {"u0_init",TYPE_DOUBLE,	&u0_init},
+          {"u_avg_init",TYPE_DOUBLE,	&u_avg_init},
           { NULL,                TYPE_END,              NULL               }
     };
 
@@ -1439,6 +1473,25 @@ void initialise_lake(int namlst)
     }
     
     AvgSurfTemp = avg_surf_temp;
+    
+    
+    DepMX = dep_mx_init;
+    PrevThick =  prev_thick_init; //# mixed layer thickness from previous time step
+    gPrimeTwoLayer =  g_prime_two_layer_init; //# Reduced gravity for int wave estimate
+    Energy_AvailableMix = energy_avail_max_init;  //# Total available energy to mix (carries over from previous timesteps)
+    Mass_Epi =  mass_epi_init;//# Sigma mass of Epilimnion (surface layer after Kelvin-Helmholtz) kg
+    OldSlope = old_slope_init;
+    Time_end_shear =  time_end_shear_init; //# Time left before shear cut off [hours]
+    Time_start_shear =  time_start_shear_init;//# Time count since start of sim for shear period start [hours]
+    Time_count_end_shear =  time_count_end_shear_init; //# Time count since start of sim for shear period end [hours]
+    Time_count_sim = time_count_sim_init;  //# Time count since start of simulation [hours]
+    Half_Seiche_Period = half_seiche_period_init;//# One half the seiche period
+    Thermocline_Height =  thermocline_height_init;//# Height at the top of the metalimnion [m]
+    FO = f0_init;
+    FSUM = fsum_init;
+    u_f = u_f_init;
+    u0 = u0_init;
+    u_avg = u_avg_init;
 
 }
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/

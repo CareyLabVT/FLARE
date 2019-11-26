@@ -43,6 +43,7 @@
 #define XYT_SHAPE     4
 #define XYZT_SHAPE    5
 #define XYNT_SHAPE    6
+#define R_SHAPE       7
 
 #define PATH_MAX  1024
 

@@ -15,7 +15,7 @@ local_tzone <<- "EST"
 ########################################
 ## Temperature only or include water quality
 #########################################
-include_wq <<- TRUE
+include_wq <<- FALSE
 #TRUE = use AED
 
 ##########################
@@ -78,7 +78,7 @@ if(include_wq){
   }
 }else{
   #base_GLM_nml <<- "glm3_woAED.nml"
-  base_GLM_nml <<- "glm3_woAED_constant_sedtemp.nml"
+  base_GLM_nml <<- "glm3_woAED_constant_sedtemp_hotmixing.nml"
 }
 
 #################################
@@ -182,7 +182,9 @@ n_inflow_outflow_members <<- 21
 qt_alpha <<- 0.8  #0 - all weight on the new Qt, 1 - all weight on the current Qt
 qt_beta <<- 0.7 # 
 localization_distance <<- 1 #distance in meters were covariances in the process error are used
-use_cov <<- FALSE
+use_cov <<- TRUE
+adapt_qt_method <<- 1  #0 = no adapt, 1 = variance in residuals, 2 = Rastetter et al 2011
+num_adapt_days <<- 30
 
 #################################
 # Parameter calibration information
@@ -216,7 +218,7 @@ swf_init_upperbound <<- 2.0
 swf_lowerbound <<- -10
 swf_upperbound <<- 10
 #daily perturbance of parameter value
-swf_init_qt <<- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
+swf_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Longwave factor
 lwf_init_mean <<- 1.0
@@ -225,7 +227,7 @@ lwf_init_upperbound <<- 2.0
 lwf_lowerbound <<- -10
 lwf_upperbound <<- 10
 #daily perturbance of parameter value
-lwf_init_qt <<- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
+lwf_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Fsed_oxy
 Fsed_oxy_init_mean <<- -20
@@ -312,7 +314,7 @@ Fsed_doc_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
 if(include_wq){
   par_names <<- c(
     "sed_temp_mean"
-    #,"sed_temp_mean"
+    ,"sed_temp_mean"
     ,"sw_factor"
     ,"lw_factor"
     #,"Fsed_oxy"
@@ -326,7 +328,7 @@ if(include_wq){
   )
   par_names_save <<- c(
     "zone1temp"
-    #,"zone2temp"
+    ,"zone2temp"
     ,"sw_factor"
     ,"lw_factor"
     #,"Fsed_oxy"
@@ -340,7 +342,7 @@ if(include_wq){
   )
   par_nml <<- c(
     "glm3.nml"
-    #,"glm3.nml"
+    ,"glm3.nml"
     ,"glm3.nml"
     ,"glm3.nml"
     #,"aed2.nml"
@@ -354,7 +356,7 @@ if(include_wq){
   ) 
   par_init_mean <<- c(
     zone1_temp_init_mean
-    #,zone2_temp_init_mean
+    ,zone2_temp_init_mean
     ,swf_init_mean
     ,lwf_init_mean
     #,Fsed_oxy_init_mean
@@ -368,7 +370,7 @@ if(include_wq){
   )
   par_init_lowerbound <<- c(
     zone1_temp_init_lowerbound
-    #,zone2_temp_init_lowerbound
+    ,zone2_temp_init_lowerbound
     ,swf_init_lowerbound
     ,lwf_init_lowerbound
     #,Fsed_oxy_init_lowerbound
@@ -382,7 +384,7 @@ if(include_wq){
   )
   par_init_upperbound <<- c(
     zone1_temp_init_upperbound
-    #,zone2_temp_init_upperbound
+    ,zone2_temp_init_upperbound
     ,swf_init_upperbound
     ,lwf_init_upperbound
     #,Fsed_oxy_init_upperbound
@@ -396,7 +398,7 @@ if(include_wq){
   )
   par_lowerbound <<- c(
     zone1_temp_lowerbound
-    #,zone2_temp_lowerbound 
+    ,zone2_temp_lowerbound 
     ,swf_lowerbound
     ,lwf_lowerbound
     #,Fsed_oxy_lowerbound
@@ -410,7 +412,7 @@ if(include_wq){
   )
   par_upperbound <<- c(
     zone1_temp_upperbound
-    #,zone2_temp_upperbound
+    ,zone2_temp_upperbound
     ,swf_upperbound
     ,lwf_upperbound
     #,Fsed_oxy_upperbound
@@ -424,7 +426,7 @@ if(include_wq){
   )
   par_init_qt <<- c(
     zone1temp_init_qt
-    #,zone2temp_init_qt
+    ,zone2temp_init_qt
     ,swf_init_qt
     ,lwf_init_qt
     #,Fsed_oxy_init_qt
@@ -438,7 +440,7 @@ if(include_wq){
   )
   par_units <<- c(
     "deg_C"
-    #,"deg_C"
+    ,"deg_C"
     ,"-"
     ,"-"
     #,"-"
@@ -723,10 +725,10 @@ push_to_git <<- FALSE
 # Depths (meters) that the water quality variables are plotted
 focal_depths_wq <<- c(2,5,9)
 #Depths that are plotted for the manager plot
-focal_depths_manager <<- c(4,16,25) #c(4,16,25)
+focal_depths_manager <<- c(4,16,25) #c(2, 4, 9) #c(4,16,25) #c(4,16,25)
 #Indexes for the depths that are compared to calculate turnover
-turnover_index_1 <<- 4
-turnover_index_2 <<- 25
+turnover_index_1 <<- 4 #1 #4
+turnover_index_2 <<- 25 #8 #25
 
 ####################################
 # Extra options that you will not adjust

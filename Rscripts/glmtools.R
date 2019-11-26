@@ -73,6 +73,10 @@ read_nml  <-	function(nml_file = 'template'){
         }
         # else, line is commented out
         lineVal	  <-	buildVal(textLine, lineNum = j, blckName)
+ 
+        if(names(lineVal) %in% c("start","stop")){
+          lineVal[1] <- paste0(substring(lineVal[1],1,10)," ",substring(lineVal[1],11,15))
+        }
         nml[[i]]	<-	c(nml[[i]], lineVal)
       }
     }
