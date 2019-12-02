@@ -31,14 +31,18 @@ create_inflow_outflow_file <- function(full_time_day_local,
   forecast_start_day <- day(full_time_day_local[start_forecast_step])
   forecast_start_month <- month(full_time_day_local[start_forecast_step])
   
+  first_forecast_day <-  read_csv(paste0(working_directory,"/",met_file_names[1])) %>%
+    mutate(day = as_date(time), hour = hour(time)) %>%
+    filter(day == full_time_day_local[start_forecast_step] & hour < hour[1])
   
   if(forecast_days > 0 & use_future_inflow){
     curr_all_days <- NULL
     for(m in 2:length(met_file_names)){
       curr_met_daily <- read_csv(paste0(working_directory,"/",met_file_names[m])) %>% 
+        #full_join(first_forecast_day) %>% 
         mutate(day = as_date(time)) %>% 
         group_by(day) %>% 
-        summarize(Precip = sum(Rain),
+        summarize(Precip = mean(Rain),
                   AirTemp = mean(AirTemp)) %>% 
         mutate(ensemble = m)
       
@@ -157,11 +161,11 @@ create_inflow_outflow_file <- function(full_time_day_local,
         inflow_new[i,3] <- 0.322264   + 0.775594    * inflow_new[i - 1,3] +  0.192049 * curr_met_daily$AirTemp + temp_error
         
         #OVERWRITE FOR NOW UNTIL WE GET AN EQUATION
-        index1 <- which(day(inflow_time) == curr_day & month(inflow_time) == curr_month)
-        inflow_new[i,2] <- rnorm(1, mean(inflow[index1,2], na.rm = TRUE), sd(inflow[index1,2], na.rm = TRUE))
-        inflow_new[i,3]  <- rnorm(1, mean(inflow[index1,3], na.rm = TRUE), sd(inflow[index1,3], na.rm = TRUE))
-        inflow_new[i,2] <- max(inflow_new[i,2], 0.0)
-        inflow_new[i,3] <- max(inflow_new[i,3], 0.0)
+        #index1 <- which(day(inflow_time) == curr_day & month(inflow_time) == curr_month)
+        #inflow_new[i,2] <- rnorm(1, mean(inflow[index1,2], na.rm = TRUE), sd(inflow[index1,2], na.rm = TRUE))
+        #inflow_new[i,3]  <- rnorm(1, mean(inflow[index1,3], na.rm = TRUE), sd(inflow[index1,3], na.rm = TRUE))
+        #inflow_new[i,2] <- max(inflow_new[i,2], 0.0)
+        #inflow_new[i,3] <- max(inflow_new[i,3], 0.0)
         
         index2 <- which(day(wetland_time) == curr_day & month(wetland_time) == curr_month)
         wetland_new[i,2] <- rnorm(1, mean(wetland[index2,2], na.rm = TRUE), sd(wetland[index2,2], na.rm = TRUE))

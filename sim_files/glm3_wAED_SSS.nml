@@ -20,7 +20,7 @@
    light_extc = 1, 0.5, 2, 4
    energy_frac = 0.51, 0.45, 0.035, 0.005
    Benthic_Imin = 10
-   Kw = 0.30
+   Kw = 0.15
 /
 &mixing
    coef_mix_conv = 0.2
@@ -67,6 +67,23 @@
    white_ice_thickness = 0.0
    blue_ice_thickness = 0.0
    avg_surf_temp = 6.0
+   dep_mx_init = 0.0
+   prev_thick_init = 0.0
+   g_prime_two_layer_init = 0.0
+   energy_avail_max_init = 0.0
+   mass_epi_init = 0.0
+   old_slope_init = 0.0
+   time_end_shear_init = 0.0
+   time_start_shear_init = 0.0
+   time_count_end_shear_init = 0.0
+   time_count_sim_init = 0.0
+   half_seiche_period_init = 0.0
+   thermocline_height_init = 0.0
+   f0_init = 0.0
+   fsum_init = 0.0
+   u_f_init = 0.0
+   u0_init = 0.0
+   u_avg_init = 0.0
 /
 &meteorology
    met_sw = .true.
@@ -125,6 +142,6 @@
    sed_heat_Ksoil = 1.8, 1.8
    sed_temp_depth = 0.5, 0.5
    sed_temp_mean = 12.08, 12.00
-   sed_temp_amplitude = 0, 6
-   sed_temp_peak_doy = 257, 251
+   sed_temp_amplitude = 0, 0
+   sed_temp_peak_doy = 257, 250
 /

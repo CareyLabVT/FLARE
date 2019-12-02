@@ -1232,15 +1232,15 @@ run_flare<-function(start_day_local,
                                            wq_init_vals), 
                                     sigma=as.matrix(qt_init[1:nstates,1:nstates]))
       
-        for(m in 1:nmembers){
-          orig_temp <-  x[1,m ,1:ndepths_modeled]
-          dens <- rep(NA, ndepths_modeled)
-          for(d in 1:ndepths_modeled){
-            dens[d] <- temperature_to_density(orig_temp[d], the_sals_init[d])
-          }
-          index <- order(dens, decreasing = TRUE)
-          x[1,m ,1:nstates] <- orig_temp[index]
-        }
+        #for(m in 1:nmembers){
+        #  orig_temp <-  x[1,m ,1:ndepths_modeled]
+        #  dens <- rep(NA, ndepths_modeled)
+        #  for(d in 1:ndepths_modeled){
+        #    dens[d] <- temperature_to_density(orig_temp[d], the_sals_init[d])
+        #  }
+        #  index <- order(dens, decreasing = TRUE)
+        #  x[1,m ,1:ndepths_modeled] <- orig_temp[index]
+        #}
         
         if(single_run){
           for(m in 1:nmembers){
@@ -1281,15 +1281,15 @@ run_flare<-function(start_day_local,
                                     mean=c(the_temps_init,wq_init_vals),
                                     sigma=as.matrix(qt))
         
-        for(m in 1:nmembers){
-          orig_temp <-  x[1, m,1:ndepths_modeled]
-          dens <- rep(NA, ndepths_modeled)
-          for(d in 1:ndepths_modeled){
-            dens[d] <- temperature_to_density(orig_temp[d], the_sals_init[d])
-          }
-          index <- order(dens, decreasing = TRUE)
-          x[1,m ,1:nstates] <- orig_temp[index]
-        }
+        #for(m in 1:nmembers){
+        #  orig_temp <-  x[1, m,1:ndepths_modeled]
+        #  dens <- rep(NA, ndepths_modeled)
+        #  for(d in 1:ndepths_modeled){
+        #    dens[d] <- temperature_to_density(orig_temp[d], the_sals_init[d])
+        #  }
+        #  index <- order(dens, decreasing = TRUE)
+        #  x[1,m ,1:nstates] <- orig_temp[index]
+        #}
         
         if(single_run){
           for(m in 1:nmembers){
