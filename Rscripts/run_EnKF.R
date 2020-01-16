@@ -372,19 +372,22 @@ run_EnKF <- function(x,
       if(npars > 0){
         
         if(i > (hist_days + 1)){
-          x[i, , ] <- cbind(x_corr, pars_corr)
+          #don't add the noise to parameters in future forecast mode (pars_star doesn't have noise)
+          x[i, , ] <- cbind(x_corr, pars_star)
         }else{
+          #add the noise to parameters if in data assimilation mode
           x[i, , ] <- cbind(x_corr, pars_corr)
         }
         
         if(process_uncertainty == FALSE & i > (hist_days + 1)){
-          x[i, , ] <- cbind(x_star, pars_corr)
+          #don't add process noise if process uncertainty is false (x_star doesn't have noise)
+          #don't add the noise to parameters in future forecast mode ()
+          x[i, , ] <- cbind(x_star, pars_star)
         }
         
         if(i == (hist_days + 1) & initial_condition_uncertainty == FALSE){
           for(m in 1:nmembers){
             x[i, m, ] <- c(colMeans(x_star), pars_star[m, ]) 
-            x[i, m, ] <- c(colMeans(x_star), pars_corr[m, ]) 
           }
         }
         
