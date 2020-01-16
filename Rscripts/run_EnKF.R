@@ -41,7 +41,9 @@ run_EnKF <- function(x,
   
   if(include_wq){
     num_wq_vars <- length(wq_start)
-    num_phytos <- length(tchla_components_vars)
+    if("PHY_TCHLA" %in% wq_names){
+      num_phytos <- length(tchla_components_vars)
+    }
   }
   
   full_time_day_local <- strftime(full_time_local,
@@ -70,7 +72,7 @@ run_EnKF <- function(x,
     x_star <- array(NA, dim = c(nmembers, nstates))
     x_corr <- array(NA, dim = c(nmembers, nstates))
     
-    if(include_wq){
+    if(include_wq & "PHY_TCHLA" %in% wq_names){
       phyto_groups_star <-  array(NA, dim = c(nmembers, length(modeled_depths), num_phytos))
     }
     
@@ -125,12 +127,12 @@ run_EnKF <- function(x,
       # RETURNS;
       # x_star[m, ], 
       
-    update_glm_nml_list <- list()
-    update_aed_nml_list <- list()
-    update_glm_nml_names <- c()
-    update_aed_nml_names <- c()
-    list_index <- 1
-    
+      update_glm_nml_list <- list()
+      update_aed_nml_list <- list()
+      update_glm_nml_names <- c()
+      update_aed_nml_names <- c()
+      list_index <- 1
+      
       if(npars > 0){
         
         sed_temp_mean_index <- which(par_names == "sed_temp_mean")
@@ -139,7 +141,7 @@ run_EnKF <- function(x,
           update_glm_nml_list[[list_index]] <-  c(curr_pars[sed_temp_mean_index],zone2_temp_init_mean) 
           update_glm_nml_names[list_index] <- "sed_temp_mean"
           list_index <- list_index + 1
-        
+          
         }else if(length(sed_temp_mean_index) == 2){
           update_glm_nml_list[[list_index]] <-  c(curr_pars[sed_temp_mean_index[1]],curr_pars[sed_temp_mean_index[2]])
           update_glm_nml_names[list_index] <- "sed_temp_mean"
@@ -152,9 +154,9 @@ run_EnKF <- function(x,
         if(length(non_sed_temp_mean_index) > 0){
           for(par in non_sed_temp_mean_index){
             if(par_nml[par] == "glm3.nml"){
-            update_glm_nml_list[[list_index]] <- (curr_pars[par])
-            update_glm_nml_names[list_index] <- par_names[par]
-            list_index <- list_index + 1
+              update_glm_nml_list[[list_index]] <- (curr_pars[par])
+              update_glm_nml_names[list_index] <- par_names[par]
+              list_index <- list_index + 1
             }else{
               update_var(curr_pars[par], par_names[par], working_directory, par_nml[par])
             }
@@ -163,8 +165,13 @@ run_EnKF <- function(x,
       }
       
       if(include_wq){
-        non_tchla_states <- c(wq_start[1]:wq_end[16])
-        wq_init_vals <- round(c(x[i - 1, m, non_tchla_states], x_phyto_groups[i-1,m ,]), 3)
+        if("PHY_TCHLA" %in% wq_names){
+          non_tchla_states <- c(wq_start[1]:wq_end[16])
+          wq_init_vals <- round(c(x[i - 1, m, non_tchla_states], x_phyto_groups[i-1,m ,]), 3)
+        }else{
+          non_tchla_states <- c(wq_start[1]:wq_end[num_wq_vars])
+          wq_init_vals <- round(c(x[i - 1, m, non_tchla_states]), 3)
+        }
         update_glm_nml_list[[list_index]] <- wq_init_vals
         update_glm_nml_names[list_index] <- "wq_init_vals"
         list_index <- list_index + 1
@@ -197,7 +204,7 @@ run_EnKF <- function(x,
       update_glm_nml_list[[list_index]] <- avg_surf_temp[i - 1, m]
       update_glm_nml_names[list_index] <- "avg_surf_temp"
       list_index <- list_index + 1
-
+      
       
       #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
       
@@ -244,7 +251,7 @@ run_EnKF <- function(x,
           if(length(ncvar_get(nc, "time")) > 1){
             nc_close(nc)
             
-            if(include_wq){
+            if(include_wq & "PHY_TCHLA" %in% wq_names){
               output_vars <- c(glm_output_vars, tchla_components_vars)
             }else{
               output_vars <- c(glm_output_vars)
@@ -264,7 +271,7 @@ run_EnKF <- function(x,
             
             mixing_vars[m, ] <- GLM_temp_wq_out$mixing_vars
             
-            if(include_wq){
+            if(include_wq & "PHY_TCHLA" %in% wq_names){
               phyto_groups_star[m, , ] <- round(GLM_temp_wq_out$output[ , (length(glm_output_vars) + 1): (length(glm_output_vars)+ num_phytos)], 3)
             }
             
@@ -579,7 +586,7 @@ run_EnKF <- function(x,
       }
     }
     
-    if(include_wq){
+    if(include_wq & "PHY_TCHLA" %in% wq_names){
       phyto_proportions <- array(NA, dim = c(nmembers, ndepths_modeled, num_phytos))
       for(m in 1:nmembers){
         phyto_groups_chla <- phyto_groups_star[m, ,] / biomass_to_chla
@@ -624,7 +631,7 @@ run_EnKF <- function(x,
       avg_surf_temp_restart <- avg_surf_temp[i, ]
       mixing_restart <- mixing_vars
       
-      if(include_wq){
+      if(include_wq & "PHY_TCHLA" %in% wq_names){
         x_phyto_groups_restart <- x_phyto_groups[i, ,]
       }else{
         x_phyto_groups_restart <- NA

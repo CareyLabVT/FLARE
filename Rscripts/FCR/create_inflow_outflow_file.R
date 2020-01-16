@@ -10,6 +10,8 @@ create_inflow_outflow_file <- function(full_time_day_local,
                                        met_file_names,
                                        forecast_days){
   
+  min_baseflow <- 0.0
+  
   inflow <- read.csv(inflow_file1)
   spillway <- read.csv(outflow_file1)
   wetland <- read.csv(inflow_file2)
@@ -77,7 +79,7 @@ create_inflow_outflow_file <- function(full_time_day_local,
               inflow_new[i,j] <- mean(inflow[index1,j], na.rm = TRUE)
             }else{
               inflow_new[i,j] <- rnorm(1, mean(inflow[index1,j], na.rm = TRUE), sd(inflow[index1,j], na.rm = TRUE))
-              inflow_new[i,j] <- max(inflow_new[i,j], 0.0)
+              inflow_new[i,j] <- max(inflow_new[i,j], min_baseflow)
             }
           }else{
             index1 <- which(inflow_time == full_time_day_local[i])
@@ -93,7 +95,7 @@ create_inflow_outflow_file <- function(full_time_day_local,
               wetland_new[i,j] <- mean(wetland[index1,j], na.rm = TRUE)
             }else{
               wetland_new[i,j] <- rnorm(1, mean(wetland[index1,j], na.rm = TRUE), sd(wetland[index1,j], na.rm = TRUE))
-              wetland_new[i,j] <- max(wetland_new[i,j], 0.0)
+              wetland_new[i,j] <- max(wetland_new[i,j], min_baseflow)
             }
           }else{
             index1 <- which(wetland_time == full_time_day_local[i])
@@ -156,8 +158,9 @@ create_inflow_outflow_file <- function(full_time_day_local,
           inflow_error <- rnorm(1, 0, 0.009416283)
           temp_error <- rnorm(1, 0, 0.7173)
         }
+        
         inflow_new[i,2] <- 0.9483  * inflow_new[i - 1,2] + 0.7093 * curr_met_daily$Precip + inflow_error
-        inflow_new[i,2] <- max(c(inflow_new[i,2], 0.0))
+        inflow_new[i,2] <- max(c(inflow_new[i,2], min_baseflow))
         inflow_new[i,3] <- 0.322264   + 0.775594    * inflow_new[i - 1,3] +  0.192049 * curr_met_daily$AirTemp + temp_error
         
         #OVERWRITE FOR NOW UNTIL WE GET AN EQUATION

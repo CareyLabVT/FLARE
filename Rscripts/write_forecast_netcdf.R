@@ -74,7 +74,7 @@ write_forecast_netcdf <- function(x,
   qt_update_days_dim <- ncdim_def("qt_update_days",units = '', vals = qt_update_days, longname = 'Number of running days that qt smooths over')
   mixing_restart_vars_dim <- ncdim_def("mixing_restart_vars_dim",units = '', vals = mixing_restart_vars, longname = 'number of mixing restart variables')
   
-  if(include_wq){
+  if(include_wq & "PHY_TCHLA" %in% wq_names){
     phyto_restart_dim <- ncdim_def("phyto_restart_dim",units = "",vals = phytos_restart, longname = 'phyto_restart_dim') 
   }
   
@@ -99,7 +99,7 @@ write_forecast_netcdf <- function(x,
   def_list[[15]] <- ncvar_def("running_residuals","various",list(qt_update_days_dim,statedim),fillvalue,longname = "running residual for updating qt",prec="single")
   def_list[[16]] <- ncvar_def("mixing_restart","various",list(ensdim,mixing_restart_vars_dim),fillvalue,longname = "variables required to restart mixing",prec="single")
   
-    if(include_wq){
+    if(include_wq & "PHY_TCHLA" %in% wq_names){
     index <- 17
     def_list[[index]] <- ncvar_def("phyto_restart","mmol/m3",list(ensdim,phyto_restart_dim),missval = -99,longname ='Restart Phyto biomass',prec="single")
   }else{
@@ -113,6 +113,7 @@ write_forecast_netcdf <- function(x,
   
   if(include_wq){
     def_list[[index+npars+1]] <- ncvar_def("OXY_oxy","mmol/m3",list(timedim,ensdim,depthdim),fillvalue,'OXY_oxy',prec="single")
+    if("PHY_TCHLA" %in% wq_names){
     def_list[[index+npars+2]]<- ncvar_def("CAR_pH","-",list(timedim,ensdim,depthdim),fillvalue,'CAR_pH',prec="single")
     def_list[[index+npars+3]] <- ncvar_def("CAR_dic","mmol/m3",list(timedim,ensdim,depthdim),fillvalue,'CAR_dic',prec="single")
     def_list[[index+npars+4]] <- ncvar_def("CAR_ch4","mmol/m3",list(timedim,ensdim,depthdim),fillvalue,'CAR_ch4',prec="single")
@@ -131,6 +132,7 @@ write_forecast_netcdf <- function(x,
     def_list[[index+npars+17]] <- ncvar_def("PHY_TCHLA","mg/L",list(timedim,ensdim,depthdim),fillvalue,'PHY_TCHLA',prec="single")
     for(phyto in 1:length(tchla_components_vars)){
       def_list[[index+npars +17 +phyto]] <- ncvar_def(tchla_components_vars[phyto],"mmol/m3",list(timedim,ensdim,depthdim),fillvalue,tchla_components_vars[phyto],prec="single")
+    }
     }
   }
   
@@ -153,7 +155,7 @@ write_forecast_netcdf <- function(x,
   ncvar_put(ncout,def_list[[14]] ,avg_surf_temp_restart)
   ncvar_put(ncout,def_list[[15]] ,running_residuals)
   ncvar_put(ncout,def_list[[16]] ,mixing_restart)
-  if(include_wq){
+  if(include_wq & "PHY_TCHLA" %in% wq_names){
     index <- 17
     ncvar_put(ncout,def_list[[index]] ,x_phyto_groups_restart)
   }else{
@@ -168,6 +170,7 @@ write_forecast_netcdf <- function(x,
   
   if(include_wq){
     ncvar_put(ncout,def_list[[index+npars+1]],x[,,wq_start[1]:wq_end[1]])
+    if("PHY_TCHLA" %in% wq_names){
     ncvar_put(ncout,def_list[[index+npars+2]],x[,,wq_start[2]:wq_end[2]])
     ncvar_put(ncout,def_list[[index+npars+3]],x[,,wq_start[3]:wq_end[3]])
     ncvar_put(ncout,def_list[[index+npars+4]],x[,,wq_start[4]:wq_end[4]])
@@ -188,6 +191,7 @@ write_forecast_netcdf <- function(x,
     for(phyto in 1:length(tchla_components_vars)){
       ncvar_put(ncout,def_list[[index+npars+17 + phyto]],x_phyto_groups[, , ((phyto-1)* ndepths + 1):(phyto*ndepths)])
     }
+  }
   }
   
   

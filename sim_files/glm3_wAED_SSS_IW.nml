@@ -116,7 +116,7 @@
    strm_hf_angle = 55, 55, -15
    strmbd_slope = 0.05, 0.05, 15
    strmbd_drag = 0.03, 0.016, 0.009
-   inflow_factor = 1.0, 1.0, 0.5
+   inflow_factor = 0.5, 0.5, 0.5
    inflow_fl = 'inflow_file1.csv','inflow_file2.csv','sss_inflow.csv'
    inflow_varnum = 14
    inflow_vars = 'FLOW','TEMP','SALT','OXY_oxy','NIT_amm','NIT_nit','PHS_frp','OGM_doc','OGM_poc','OGM_don','OGM_dop','OGM_pop','PHS_frp_ads','OGM_pon'
@@ -128,7 +128,7 @@
    bsn_len_outl = 711.699, 100
    bsn_wid_outl = 226.03, 10
    outflow_fl = 'outflow_file1.csv','sss_outflow.csv'
-   outflow_factor = 1.0, 0.5
+   outflow_factor = 0.5, 0.5
 /
 &snowice
    snow_albedo_factor = 1

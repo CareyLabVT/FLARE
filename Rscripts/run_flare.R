@@ -197,6 +197,16 @@ run_flare<-function(start_day_local,
     initial_condition_uncertainty <- FALSE
     parameter_uncertainty <- FALSE
     met_downscale_uncertainty <- FALSE
+  }else if(uncert_mode == 11){
+    #All sources of uncertainty and data used to constrain 
+    use_obs_constraint <- FALSE
+    #SOURCES OF uncertainty
+    observation_uncertainty <- TRUE
+    process_uncertainty <- TRUE
+    weather_uncertainty <- TRUE
+    initial_condition_uncertainty <- TRUE
+    parameter_uncertainty <- TRUE
+    met_downscale_uncertainty <- TRUE
   }
   
   if(observation_uncertainty == FALSE){
@@ -851,6 +861,7 @@ run_flare<-function(start_day_local,
     PHS_frp_ads_obs <- array(NA, dim = obs_dims)
     PHY_TCHLA_obs <- obs_chla$obs
     
+    if("PHY_TCHLA" %in% wq_names){
     z <- cbind(obs_temp$obs,
                OXY_oxy_obs,
                CAR_pH_obs,
@@ -869,6 +880,10 @@ run_flare<-function(start_day_local,
                NCS_ss1_obs,
                PHS_frp_ads_obs,
                PHY_TCHLA_obs)
+    }else{
+    z <- cbind(obs_temp$obs,
+               OXY_oxy_obs)
+    }
   }else{
     z <- cbind(obs_temp$obs) 
   }
@@ -1025,6 +1040,7 @@ run_flare<-function(start_day_local,
     NCS_ss1_init_depth <- rep(NCS_ss1_init, ndepths_modeled)
     PHS_frp_ads_init_depth <- rep(PHS_frp_ads_init, ndepths_modeled)
     
+    if("PHY_TCHLA" %in% wq_names){
     wq_init_vals <- c(OXY_oxy_init_depth,
                       CAR_pH_init_depth,
                       CAR_dic_init_depth,
@@ -1043,6 +1059,9 @@ run_flare<-function(start_day_local,
                       PHS_frp_ads_init_depth,
                       PHY_TCHLA_init_depth
     )
+    }else{
+    wq_init_vals <- c(OXY_oxy_init_depth)
+    }
     
     #UPDATE NML WITH INITIAL CONDITIONS
     
@@ -1066,6 +1085,8 @@ run_flare<-function(start_day_local,
   #update_var(wq_init_vals, "wq_init_vals", working_directory, "glm3.nml") #GLM SPECIFIC
   if(include_wq){
     update_var(num_wq_vars - 1 + length(tchla_components_vars), "num_wq_vars", working_directory, "glm3.nml") #GLM SPECIFIC
+    file.copy(from = paste0(working_directory, "/", base_AED_nml), 
+              to = paste0(working_directory, "/", "aed2.nml"), overwrite = TRUE)
   }else{
     update_var(0, "num_wq_vars", working_directory, "glm3.nml") #GLM SPECIFIC
   }
@@ -1132,6 +1153,8 @@ run_flare<-function(start_day_local,
     diag(qt_init) <- rep(temp_init_error,ndepths_modeled)
     
     if(include_wq){
+      
+      if("PHY_TCHLA" %in% wq_names){
       wq_var_error <- c(OXY_oxy_process_error,
                         CAR_pH_process_error,
                         CAR_dic_process_error,
@@ -1167,6 +1190,12 @@ run_flare<-function(start_day_local,
                              NCS_ss1_init_error,
                              PHS_frp_ads_init_error,
                              PHY_TCHLA_init_error) 
+      
+      }else{
+      wq_var_error <- c(OXY_oxy_process_error)
+      
+      wq_var_init_error <- c(OXY_oxy_init_error) 
+      }
       
       for(i in 1:num_wq_vars){
         for(j in 1:ndepths_modeled){
@@ -1390,7 +1419,7 @@ run_flare<-function(start_day_local,
     avg_surf_temp_restart <- ncvar_get(nc, "avg_surf_temp_restart")
     mixing_restart <- ncvar_get(nc, "mixing_restart")
     
-    if(include_wq){
+    if(include_wq & "PHY_TCHLA" %in% wq_names){
       x_phyto_groups_restart <- ncvar_get(nc, "phyto_restart")
     }
     if(restart_nmembers > nmembers){
@@ -1409,7 +1438,7 @@ run_flare<-function(start_day_local,
       avg_surf_temp[1, ] <- avg_surf_temp_restart[sampled_nmembers]
       mixing_vars <- mixing_restart[sampled_nmembers, ]
       
-      if(include_wq){
+      if(include_wq & "PHY_TCHLA" %in% wq_names){
         for(phyto in 1:num_phytos){
           x_phyto_groups[1, ,((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)] <- x_phyto_groups_restart[sampled_nmembers , ((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)]
         }
@@ -1430,7 +1459,7 @@ run_flare<-function(start_day_local,
       avg_surf_temp[1, ] <- avg_surf_temp_restart[sampled_nmembers]
       mixing_vars <- mixing_restart[sampled_nmembers, ]
       
-      if(include_wq){
+      if(include_wq & "PHY_TCHLA" %in% wq_names){
         for(phyto in 1:num_phytos){
           x_phyto_groups[1, ,((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)] <- x_phyto_groups_restart[sampled_nmembers , ((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)]
         }
@@ -1447,7 +1476,7 @@ run_flare<-function(start_day_local,
       avg_surf_temp[1, ] <- avg_surf_temp_restart
       mixing_vars <- mixing_restart
       
-      if(include_wq){
+      if(include_wq & "PHY_TCHLA" %in% wq_names){
         for(phyto in 1:num_phytos){
           x_phyto_groups[1, ,((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)] <- x_phyto_groups_restart[ , ((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)]
         }

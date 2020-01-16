@@ -13,13 +13,13 @@
 &aed2_models
    models = 'aed2_tracer',
             'aed2_noncohesive',
-            'aed2_oxygen',
-            'aed2_carbon',
-            'aed2_silica',
-            'aed2_nitrogen',
-            'aed2_phosphorus',
-            'aed2_organic_matter',
-            'aed2_phytoplankton'
+            'aed2_oxygen'
+            !'aed2_carbon',
+            !'aed2_silica',
+            !'aed2_nitrogen',
+            !'aed2_phosphorus',
+            !'aed2_organic_matter',
+            !'aed2_phytoplankton'
            ! 'aed2_zooplankton' !, Matt said to remove totals
 !            'aed2_totals'
 /
@@ -144,7 +144,7 @@
 !-------------------------------------------------------------------------------
 &aed2_oxygen
    oxy_initial = 225.0 !overwritten by GLM nml
-   Fsed_oxy = -25 !-15!-11.39271!-21.27753257!-24.21938847!-16.92136875 !-9.52843 !-21 intermediate for Mendota and Sunapee
+   Fsed_oxy = -30 !-15!-11.39271!-21.27753257!-24.21938847!-16.92136875 !-9.52843 !-21 intermediate for Mendota and Sunapee
    Ksed_oxy = 6.342157805!9.898986425!7.650863!7.05059507!8.385887191!8.573749872 !4.98461 !6.8 is same for Mendota and FCR
    theta_sed_oxy = 1.08 !going to go for the same theta throughout
 /
