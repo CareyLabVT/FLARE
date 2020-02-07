@@ -18,6 +18,12 @@ local_tzone <<- "EST"
 include_wq <<- FALSE
 #TRUE = use AED
 
+####################################
+### Use null model (Persistance)
+#############################
+
+use_null_model <<- FALSE
+
 ##########################
 # Management Options
 ###########################

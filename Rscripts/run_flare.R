@@ -199,14 +199,14 @@ run_flare<-function(start_day_local,
     met_downscale_uncertainty <- FALSE
   }else if(uncert_mode == 11){
     #All sources of uncertainty and data used to constrain 
-    use_obs_constraint <- FALSE
+    use_obs_constraint <- TRUE
     #SOURCES OF uncertainty
     observation_uncertainty <- TRUE
     process_uncertainty <- TRUE
-    weather_uncertainty <- TRUE
+    weather_uncertainty <- FALSE
     initial_condition_uncertainty <- TRUE
-    parameter_uncertainty <- TRUE
-    met_downscale_uncertainty <- TRUE
+    parameter_uncertainty <- FALSE
+    met_downscale_uncertainty <- FALSE
   }
   
   if(observation_uncertainty == FALSE){

@@ -52,9 +52,6 @@ run_EnKF <- function(x,
   
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
   
-  
-  old_DYLD_LIBRARY_PATH <- Sys.getenv("DYLD_FALLBACK_LIBRARY_PATH")
-  Sys.setenv(DYLD_FALLBACK_LIBRARY_PATH = paste(old_DYLD_LIBRARY_PATH, working_directory, sep = ":"))
   ###START EnKF
   
   for(i in 2:nsteps){
@@ -118,6 +115,8 @@ run_EnKF <- function(x,
         curr_pars <- x[i - 1, m , (nstates+1):(nstates+npars)]
       }
       
+      if(!use_null_model){
+      
       ########################################
       #BEGIN GLM SPECIFIC PART
       ########################################
@@ -154,9 +153,27 @@ run_EnKF <- function(x,
         if(length(non_sed_temp_mean_index) > 0){
           for(par in non_sed_temp_mean_index){
             if(par_nml[par] == "glm3.nml"){
-              update_glm_nml_list[[list_index]] <- (curr_pars[par])
-              update_glm_nml_names[list_index] <- par_names[par]
-              list_index <- list_index + 1
+              if(par_names[par] == "inflow_factor"){
+                if(include_wq){
+                  update_glm_nml_list[[list_index]] <- c(curr_pars[par], curr_pars[par], 0.5)
+                  update_glm_nml_names[list_index] <- par_names[par]
+                  list_index <- list_index + 1
+                  update_glm_nml_list[[list_index]] <- c(curr_pars[par], 0.5)
+                  update_glm_nml_names[list_index] <- "outflow_factor"
+                  list_index <- list_index + 1
+                }else{
+                  update_glm_nml_list[[list_index]] <- (curr_pars[par])
+                  update_glm_nml_names[list_index] <- par_names[par]
+                  list_index <- list_index + 1
+                  update_glm_nml_list[[list_index]] <- (curr_pars[par])
+                  update_glm_nml_names[list_index] <- "outflow_factor"
+                  list_index <- list_index + 1
+                }
+              }else{
+                update_glm_nml_list[[list_index]] <- (curr_pars[par])
+                update_glm_nml_names[list_index] <- par_names[par]
+                list_index <- list_index + 1
+              }
             }else{
               update_var(curr_pars[par], par_names[par], working_directory, par_nml[par])
             }
@@ -230,14 +247,14 @@ run_EnKF <- function(x,
       pass <- FALSE
       num_reruns <- 0
       
-      #Sys.setenv(DYLD_LIBRARY_PATH="/opt/intel/lib")
-      #Sys.setenv(DYLD_LIBRARY_PATH=working_directory)
-      
       while(!pass){
         unlink(paste0(working_directory, "/output.nc")) 
         
         if(machine == "unix" | machine == "mac"){
-          system2(paste0(working_directory, "/", "glm"), stdout = print_glm2screen, stderr = print_glm2screen)
+          system2(paste0(working_directory, "/", "glm"), 
+                  stdout = print_glm2screen, 
+                  stderr = print_glm2screen,
+                  env = paste0("DYLD_LIBRARY_PATH=",working_directory))
         }else if(machine == "windows"){
           system2(paste0(working_directory, "/", "glm.exe"), invisible = print_glm2screen)
         }else{
@@ -304,6 +321,10 @@ run_EnKF <- function(x,
       inflow_outflow_index <- inflow_outflow_index + 1
       if(inflow_outflow_index > n_inflow_outflow_members){
         inflow_outflow_index <- 1
+      }
+      
+      }else{
+        x_star[m, 1:nstates] <- x[i - 1, m ,1:nstates]
       }
       
     } # END ENSEMBLE LOOP
