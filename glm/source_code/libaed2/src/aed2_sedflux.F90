@@ -18,12 +18,11 @@
 !#                                                                             #
 !#  Developed by :                                                             #
 !#      AquaticEcoDynamics (AED) Group                                         #
-!#      School of Agriculture and Environment                                  #
 !#      The University of Western Australia                                    #
 !#                                                                             #
 !#      http://aquatic.science.uwa.edu.au/                                     #
 !#                                                                             #
-!#  Copyright 2013 - 2018 -  The University of Western Australia               #
+!#  Copyright 2013 - 2019 -  The University of Western Australia               #
 !#                                                                             #
 !#   GLM is free software: you can redistribute it and/or modify               #
 !#   it under the terms of the GNU General Public License as published by      #
@@ -40,7 +39,8 @@
 !#                                                                             #
 !#   -----------------------------------------------------------------------   #
 !#                                                                             #
-!# Created May 2012                                                            #
+!#   Created May 2012                                                          #
+!#   Track changes on GitHub @ https://github.com/AquaticEcoDynamics/libaed2   #
 !#                                                                             #
 !###############################################################################
 
@@ -72,7 +72,7 @@ MODULE aed2_sedflux
       INTEGER  :: id_Fsed_frp, id_Fsed_pon, id_Fsed_don
       INTEGER  :: id_Fsed_pop, id_Fsed_dop, id_Fsed_poc, id_Fsed_doc
       INTEGER  :: id_Fsed_dic, id_Fsed_ch4, id_Fsed_feii
-      INTEGER  :: id_Fsed_n2o
+      INTEGER  :: id_Fsed_n2o, id_Fsed_oxy_pel
       INTEGER  :: id_zones
 
       !# Model parameters
@@ -93,8 +93,11 @@ MODULE aed2_sedflux
 !        PROCEDURE :: light_extinction  => aed2_light_extinction_sedflux
 !        PROCEDURE :: delete            => aed2_delete_sedflux
    END TYPE
-!===============================================================================
 
+! MODULE GLOBALS
+   INTEGER :: diag_level = 10
+
+!===============================================================================
 CONTAINS
 
 
@@ -108,18 +111,104 @@ SUBROUTINE load_sed_zone_data(data,namlst)
 !LOCALS
    INTEGER  :: status
 
-!  AED_REAL :: FsedA_initial=0.01
-!  AED_REAL :: FsedN_initial=0.01
-
-   INTEGER  :: n_zones=0
-   AED_REAL :: Fsed_oxy(_MAX_ZONES_) = MISVAL, Fsed_rsi(_MAX_ZONES_) = MISVAL, &
-               Fsed_amm(_MAX_ZONES_) = MISVAL, Fsed_nit(_MAX_ZONES_) = MISVAL, &
-               Fsed_frp(_MAX_ZONES_) = MISVAL, Fsed_pon(_MAX_ZONES_) = MISVAL, &
-               Fsed_don(_MAX_ZONES_) = MISVAL, Fsed_pop(_MAX_ZONES_) = MISVAL, &
-               Fsed_dop(_MAX_ZONES_) = MISVAL, Fsed_poc(_MAX_ZONES_) = MISVAL, &
-               Fsed_doc(_MAX_ZONES_) = MISVAL, Fsed_dic(_MAX_ZONES_) = MISVAL, &
-               Fsed_ch4(_MAX_ZONES_) = MISVAL, Fsed_feii(_MAX_ZONES_) = MISVAL,&
-               Fsed_n2o(_MAX_ZONES_) = MISVAL
+!  %% NAMELIST
+   INTEGER  :: n_zones=0                       !% number of sediment zones active in the domain
+                                               !% -
+                                               !% integer
+                                               !% 0
+                                               !% 0-100
+                                               !% Match to GLM or TUFLOW-FV sediment/material zones
+   AED_REAL :: Fsed_oxy(_MAX_ZONES_)  = MISVAL !% sediment oxygen flux in each sediment zone
+                                               !% $$mmol/,m^{-2}/s$$
+                                               !% float
+                                               !% 0
+                                               !% -100 - 20
+                                               !% Use if benthic_mode=2 for GLM, or using TUFLOW-FV
+   AED_REAL :: Fsed_rsi(_MAX_ZONES_)  = MISVAL !% reaective silica flux in each sediment zone
+                                               !% $$mmol/,m^{-2}/s$$
+                                               !% float
+                                               !% 0
+                                               !% 0 - 20
+                                               !% Use if benthic_mode=2 for GLM, or using TUFLOW-FV
+   AED_REAL :: Fsed_amm(_MAX_ZONES_)  = MISVAL !% reaective ammonium flux in each sediment zone
+                                               !% $$mmol/,m^{-2}/s$$
+                                               !% float
+                                               !% 0
+                                               !% 0 - XX
+                                               !% Use if benthic_mode=2 for GLM, or using TUFLOW-FV
+   AED_REAL :: Fsed_nit(_MAX_ZONES_)  = MISVAL !% reaective nitrate flux in each sediment zone
+                                               !% $$mmol/,m^{-2}/s$$
+                                               !% float
+                                               !% 0
+                                               !% -XX - YY
+                                               !% Use if benthic_mode=2 for GLM, or using TUFLOW-FV
+   AED_REAL :: Fsed_frp(_MAX_ZONES_)  = MISVAL !% reaective phosphate flux in each sediment zone
+                                               !% $$mmol/,m^{-2}/s$$
+                                               !% float
+                                               !% 0
+                                               !% 0 - XX
+                                               !% Use if benthic_mode=2 for GLM, or using TUFLOW-FV
+   AED_REAL :: Fsed_pon(_MAX_ZONES_)  = MISVAL !% particulate organic nitrogen flux in each sediment zone
+                                               !% $$mmol/,m^{-2}/s$$
+                                               !% float
+                                               !% 0
+                                               !% 0 - XX
+                                               !% Use if benthic_mode=2 for GLM, or using TUFLOW-FV
+   AED_REAL :: Fsed_don(_MAX_ZONES_)  = MISVAL !% dissolved organic nitrogen flux in each sediment zone
+                                               !% $$mmol/,m^{-2}/s$$
+                                               !% float
+                                               !% 0
+                                               !% 0 - XX
+                                               !% Use if benthic_mode=2 for GLM, or using TUFLOW-FV
+   AED_REAL :: Fsed_pop(_MAX_ZONES_)  = MISVAL !% particulate organic phosphorus flux in each sediment zone
+                                               !% $$mmol/,m^{-2}/s$$
+                                               !% float
+                                               !% 0
+                                               !% 0 - XX
+                                               !% Use if benthic_mode=2 for GLM, or using TUFLOW-FV
+   AED_REAL :: Fsed_dop(_MAX_ZONES_)  = MISVAL !% dissolved organic phosphorus flux in each sediment zone
+                                               !% $$mmol/,m^{-2}/s$$
+                                               !% float
+                                               !% 0
+                                               !% 0 - XX
+                                               !% Use if benthic_mode=2 for GLM, or using TUFLOW-FV
+   AED_REAL :: Fsed_poc(_MAX_ZONES_)  = MISVAL !% particulate organic carbon flux in each sediment zone
+                                               !% $$mmol/,m^{-2}/s$$
+                                               !% float
+                                               !% 0
+                                               !% 0 - XX
+                                               !% Use if benthic_mode=2 for GLM, or using TUFLOW-FV
+   AED_REAL :: Fsed_doc(_MAX_ZONES_)  = MISVAL !% dissolved organic carbon flux in each sediment zone
+                                               !% $$mmol/,m^{-2}/s$$
+                                               !% float
+                                               !% 0
+                                               !% 0 - XX
+                                               !% Use if benthic_mode=2 for GLM, or using TUFLOW-FV
+   AED_REAL :: Fsed_dic(_MAX_ZONES_)  = MISVAL !% dissolved inorganic carbon flux in each sediment zone
+                                               !% $$mmol/,m^{-2}/s$$
+                                               !% float
+                                               !% 0
+                                               !% 0 - XX
+                                               !% Use if benthic_mode=2 for GLM, or using TUFLOW-FV
+   AED_REAL :: Fsed_ch4(_MAX_ZONES_)  = MISVAL !% dissolved methane flux in each sediment zone
+                                               !% $$mmol/,m^{-2}/s$$
+                                               !% float
+                                               !% 0
+                                               !% 0 - XX
+                                               !% Use if benthic_mode=2 for GLM, or using TUFLOW-FV
+   AED_REAL :: Fsed_feii(_MAX_ZONES_)  = MISVAL !% dissolved reduced iron in each sediment zone
+                                               !% $$mmol/,m^{-2}/s$$
+                                               !% float
+                                               !% 0
+                                               !% 0 - XX
+                                               !% Use if benthic_mode=2 for GLM, or using TUFLOW-FV
+   AED_REAL :: Fsed_n2o(_MAX_ZONES_)  = MISVAL !% dissolved n2o in each sediment zone
+                                               !% $$mmol/,m^{-2}/s$$
+                                               !% float
+                                               !% 0
+                                               !% 0 - XX
+                                               !% Use if benthic_mode=2 for GLM, or using TUFLOW-FV
+!  %% END NAMELIST
 
    NAMELIST /aed2_sed_const2d/ n_zones, &
                               Fsed_oxy, Fsed_rsi, Fsed_amm, Fsed_nit, Fsed_frp,&
@@ -216,14 +305,32 @@ SUBROUTINE aed2_define_sedflux(data, namlst)
 !
 !LOCALS
    INTEGER  :: status
+
+!  %% NAMELIST
    CHARACTER(len=64) :: sedflux_model=''
-   INTEGER  :: nzones = 1
-   AED_REAL :: Fsed_oxy = MISVAL, Fsed_rsi = MISVAL, Fsed_amm = MISVAL, Fsed_nit = MISVAL, &
-               Fsed_pon = MISVAL, Fsed_don = MISVAL, Fsed_pop = MISVAL, Fsed_dop = MISVAL, &
-               Fsed_poc = MISVAL, Fsed_doc = MISVAL, Fsed_dic = MISVAL, Fsed_frp = MISVAL, &
-               Fsed_ch4 = MISVAL, Fsed_feii = MISVAL, Fsed_n2o = MISVAL
+!  %% END NAMELIST
 
    NAMELIST /aed2_sedflux/ sedflux_model
+
+!  %% NAMELIST
+   INTEGER  :: nzones = 1
+   AED_REAL :: Fsed_oxy  = MISVAL
+   AED_REAL :: Fsed_rsi  = MISVAL
+   AED_REAL :: Fsed_amm  = MISVAL
+   AED_REAL :: Fsed_nit  = MISVAL
+   AED_REAL :: Fsed_pon  = MISVAL
+   AED_REAL :: Fsed_don  = MISVAL
+   AED_REAL :: Fsed_pop  = MISVAL
+   AED_REAL :: Fsed_dop  = MISVAL
+   AED_REAL :: Fsed_poc  = MISVAL
+   AED_REAL :: Fsed_doc  = MISVAL
+   AED_REAL :: Fsed_dic  = MISVAL
+   AED_REAL :: Fsed_frp  = MISVAL
+   AED_REAL :: Fsed_ch4  = MISVAL
+   AED_REAL :: Fsed_feii = MISVAL
+   AED_REAL :: Fsed_n2o  = MISVAL
+!  %% END NAMELIST
+
    NAMELIST /aed2_sed_constant/ nzones,                                           &
                                 Fsed_oxy, Fsed_rsi, Fsed_amm, Fsed_nit, Fsed_frp, &
                                 Fsed_pon, Fsed_don, Fsed_pop, Fsed_dop, Fsed_n2o, &
@@ -298,54 +405,74 @@ SUBROUTINE aed2_define_sedflux(data, namlst)
    ELSE
       PRINT*,"**ERROR : Unknown sedflux model type :", TRIM(sedflux_model)
    ENDIF
+   
+   data%id_Fsed_oxy = 0
+   data%id_Fsed_rsi = 0
+   data%id_Fsed_amm = 0
+   data%id_Fsed_nit = 0
+   data%id_Fsed_frp = 0
+   data%id_Fsed_pon = 0
+   data%id_Fsed_don = 0
+   data%id_Fsed_pop = 0
+   data%id_Fsed_dop = 0
+   data%id_Fsed_poc = 0
+   data%id_Fsed_doc = 0
+   data%id_Fsed_dic = 0
+   data%id_Fsed_ch4 = 0
+   data%id_Fsed_feii = 0
+   data%id_Fsed_n2o = 0
+
 
    ! Register state variables
    ! NOTE the "_sheet_"  which specifies the variable is benthic.
    IF ( data%Fsed_oxy .GT. MISVAL ) &
       data%id_Fsed_oxy = aed2_define_sheet_diag_variable('Fsed_oxy','mmol/m**2',   &
-                                          'sedimentation rate of oxygen')
+                                          'flux rate of oxygen across the swi')
    IF ( Fsed_rsi .GT. MISVAL ) &
       data%id_Fsed_rsi = aed2_define_sheet_diag_variable('Fsed_rsi','mmol/m**2',   &
-                                          'sedimentation rate of silica')
+                                          'flux rate of rsi across the swi')
    IF ( Fsed_amm .GT. MISVAL ) &
       data%id_Fsed_amm = aed2_define_sheet_diag_variable('Fsed_amm','mmol/m**2',   &
-                                          'sedimentation rate of ammonia')
+                                          'flux rate of amm across the swi')
    IF ( Fsed_nit .GT. MISVAL ) &
       data%id_Fsed_nit = aed2_define_sheet_diag_variable('Fsed_nit','mmol/m**2',   &
-                                          'sedimentation rate of nitrate')
+                                          'flux rate of nit across the swi')
    IF ( Fsed_n2o .GT. MISVAL ) &
       data%id_Fsed_n2o = aed2_define_sheet_diag_variable('Fsed_n2o','mmol/m**2',   &
-                                          'sedimentation rate of n2o')
+                                          'flux rate of n2o across the swi')
    IF ( Fsed_frp .GT. MISVAL ) &
       data%id_Fsed_frp = aed2_define_sheet_diag_variable('Fsed_frp','mmol/m**2',   &
-                                          'sedimentation rate of phosphorus')
+                                          'flux rate of frp across the swi')
    IF ( Fsed_pon .GT. MISVAL ) &
       data%id_Fsed_pon = aed2_define_sheet_diag_variable('Fsed_pon','mmol/m**2',   &
                                           'sedimentation rate of pon')
    IF ( Fsed_don .GT. MISVAL ) &
       data%id_Fsed_don = aed2_define_sheet_diag_variable('Fsed_don','mmol/m**2',   &
-                                          'sedimentation rate of don')
+                                          'flux rate of don across the swi')
    IF ( Fsed_pop .GT. MISVAL ) &
       data%id_Fsed_pop = aed2_define_sheet_diag_variable('Fsed_pop','mmol/m**2',   &
                                           'sedimentation rate of pop')
    IF ( Fsed_dop .GT. MISVAL ) &
       data%id_Fsed_dop = aed2_define_sheet_diag_variable('Fsed_dop','mmol/m**2',   &
-                                          'sedimentation rate of dop')
+                                          'flux rate of dop across the swi')
    IF ( Fsed_poc .GT. MISVAL ) &
       data%id_Fsed_poc = aed2_define_sheet_diag_variable('Fsed_poc','mmol/m**2',   &
                                           'sedimentation rate of poc')
    IF ( Fsed_doc .GT. MISVAL ) &
       data%id_Fsed_doc = aed2_define_sheet_diag_variable('Fsed_doc','mmol/m**2',   &
-                                          'sedimentation rate of doc')
+                                          'flux rate of doc across the swi')
    IF ( Fsed_dic .GT. MISVAL ) &
       data%id_Fsed_dic = aed2_define_sheet_diag_variable('Fsed_dic','mmol/m**2',   &
-                                          'sedimentation rate of carbon')
+                                          'flux rate of dic across the swi')
    IF ( Fsed_ch4 .GT. MISVAL ) &
       data%id_Fsed_ch4 = aed2_define_sheet_diag_variable('Fsed_ch4','mmol/m**2',   &
-                                          'sedimentation rate of ch4')
+                                          'flux rate of ch4 across the swi')
    IF ( Fsed_feii .GT. MISVAL ) &
       data%id_Fsed_feii = aed2_define_sheet_diag_variable('Fsed_feii','mmol/m**2', &
-                                          'sedimentation rate of iron')
+                                          'flux rate of feii across the swi')
+
+   !data%id_Fsed_oxy_pel = aed2_define_diag_variable('Fsed_oxy_pel','mmol/m**2',&
+   !                                          'sedimentation rate of oxygen')
 
 END SUBROUTINE aed2_define_sedflux
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -447,8 +574,7 @@ END SUBROUTINE aed2_initialize_sedflux
 !###############################################################################
 SUBROUTINE aed2_calculate_benthic_sedflux(data,column,layer_idx)
 !-------------------------------------------------------------------------------
-! Calculate pelagic bottom fluxes and benthic sink and source terms of AED sedflux
-! Everything in units per surface area (not volume!) per time.
+! Set the bottom fluxes into the pelagic/water layers
 !-------------------------------------------------------------------------------
 !ARGUMENTS
    CLASS (aed2_sedflux_data_t),INTENT(in) :: data
@@ -459,6 +585,8 @@ SUBROUTINE aed2_calculate_benthic_sedflux(data,column,layer_idx)
 !
    IF ( data%sed_modl .EQ. SED_CONSTANT .OR. data%sed_modl .EQ. SED_CONSTANT_2D ) &
       CALL aed2_initialize_sedflux(data, column, layer_idx)
+
+   !_DIAG_VAR_(data%id_Fsed_oxy_pel) =   _DIAG_VAR_S_(data%id_Fsed_oxy)* secs_per_day
 END SUBROUTINE aed2_calculate_benthic_sedflux
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

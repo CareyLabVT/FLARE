@@ -2,14 +2,14 @@
  *                                                                            *
  * xbasic.c                                                                   *
  *                                                                            *
- *   A simple X Windows example.                                              *
+ *   A very basic X Windows example.                                          *
  *                                                                            *
  * Developed by :                                                             *
  *     AquaticEcoDynamics (AED) Group                                         *
  *     School of Agriculture and Environment                                  *
  *     The University of Western Australia                                    *
  *                                                                            *
- * Copyright 2013 - 2018 -  The University of Western Australia               *
+ * Copyright 2013-2019 -  The University of Western Australia                 *
  *                                                                            *
  *  This file is part of libplot - the plotting library used in GLM           *
  *                                                                            *
@@ -36,6 +36,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
@@ -141,6 +142,7 @@ typedef struct _menu_info {
     int    width, height;
     char **items;
     char  *flags;
+    char  *key;
     Window win;
     int    win_itm;
 } Menu;
@@ -192,7 +194,9 @@ void _invert_round_rect(int left, int top, int width, int height,
 
 /******************************************************************************/
 int Alert(const char *message, const char *but1, const char *but2);
+void About(const char *message);
 
+extern char *short_progname, *about_message;
 extern char *progname;
 static Display *display = NULL;
 static Window  _window = 0L;
@@ -985,9 +989,13 @@ int CheckUI()
     ret = _check_event();
 
     if ( ret < 0 ) {
-        // quit item selected
-        if ( Alert("Are you sure you want to quit?", "OK", "Cancel") )
-            exit(1);
+        if ( ret == -1 ) {
+            About(about_message);
+        } else {
+            // quit item selected
+            if ( Alert("Are you sure you want to quit?", "OK", "Cancel") )
+                exit(1);
+        }
     }
 
     return ret;
@@ -1284,6 +1292,20 @@ static void _draw_mbar(MenuBar *mbar)
 }
 
 /******************************************************************************/
+static void _draw_menu_item(Menu *menu, int item, int v)
+{
+    char    keyStr[12] = "Ctrl+_";
+
+    _draw_string(6, v, font_b, menu->items[item]);
+    if ( menu->key[item] != 0 ) {
+        int tkl;
+        keyStr[5] = toupper(menu->key[item]);
+        tkl = XTextWidth(XQueryFont(display, font_b), keyStr, 6);
+        _draw_string(menu->width-tkl-6, v, font_b, keyStr);
+    }
+}
+
+/******************************************************************************/
 static void _hilite_menu(Menu *menu, int state)
 {
     int h, l;
@@ -1315,14 +1337,26 @@ static void _hilite_menu_item(Menu *menu, int item, int state)
 
     l = menu->width;
     v = (item-1)*MENU_ITEM_HEIGHT;
-    XClearArea(display, menu->win, 1, v, l-2, MENU_ITEM_HEIGHT, False);
-    _draw_string(6, v, font_b, menu->items[item]);
+
+    XSetFunction(display, _gc, GXcopy);
     if ( state != 0 ) {
-        XSetFunction(display, _gc, GXnor);
-        XFillRectangle(display, menu->win, _gc, 1, v+1, l-2, MENU_ITEM_HEIGHT-2);
+        XSetForeground(display, _gc, Black);
         menu->last = item;
+    } else {
+        XSetForeground(display, _gc, White);
+        menu->last = 0;
     }
-    else menu->last = 0;
+    XFillRectangle(display, menu->win, _gc, 1, v+1, l-2, MENU_ITEM_HEIGHT-2);
+
+    XSetFunction(display, _gc, GXnor);
+    if ( strcmp(menu->items[item], "-") == 0 )
+        XDrawLine(display, menu->win, _gc, 3, v+10, menu->width-6, v+10);
+    else
+        _draw_menu_item(menu, item, v+16);
+
+    XSetFunction(display, _gc, GXcopy);
+    XSetForeground(display, _gc, Black);
+
     _set_window(twin);
 }
 
@@ -1341,7 +1375,7 @@ static void _draw_menu(Menu *menu)
         if ( strcmp(str, "-") == 0 )
             XDrawLine(display, menu->win, _gc, 3, v-6, menu->width-6, v-6);
         else
-            _draw_string(6, v, font_b, str);
+            _draw_menu_item(menu, i, v);
         XSetForeground(display, _gc, Black);
         v += MENU_ITEM_HEIGHT;
     }
@@ -1470,18 +1504,27 @@ static int _check_track_menu()
 }
 
 /******************************************************************************/
-void _add_menu_item(Menu *menu, const char *item, int enabled)
+void _add_menu_item(Menu *menu, const char *item, int enabled, char key)
 {
+    static char keyStr[8] = " Ctrl+_";
     int sl = XTextWidth(XQueryFont(display, font_b), item, strlen(item)) + 20;
+    int slen = strlen(item);
 
     menu->items = realloc(menu->items, sizeof(char*)*(menu->nItems+1));
-    menu->items[menu->nItems] = malloc(strlen(item) + 1);
-    strncpy(menu->items[menu->nItems], item, strlen(item)+1);
-    (menu->items[menu->nItems])[strlen(item)] = 0;
+    menu->items[menu->nItems] = malloc(slen + 1);
+    strncpy(menu->items[menu->nItems], item, slen+1);
+    (menu->items[menu->nItems])[slen] = 0;
 
     menu->flags = realloc(menu->flags, sizeof(char)*(menu->nItems+1));
     menu->flags[menu->nItems] = (!enabled) ? 0x00 : 0x0F;
 
+    menu->key = realloc(menu->key, sizeof(char)*(menu->nItems+1));
+    menu->key[menu->nItems] = key;
+
+    if ( menu->key[menu->nItems] != 0 ) {
+        keyStr[6] = menu->key[menu->nItems];
+        sl += XTextWidth(XQueryFont(display, font_b), keyStr, 7);
+    }
     if ( sl > menu->width ) menu->width = sl;
 
     menu->nItems++;
@@ -1529,6 +1572,7 @@ Menu *_new_menu(const char *title)
     menu->menuID = mbar->nMenus;
     menu->items = NULL;
     menu->flags = NULL;
+    menu->key   = NULL;
     menu->width = 0;
 
     menu->win = _window;
@@ -1536,33 +1580,40 @@ Menu *_new_menu(const char *title)
 
     menu->tsize = XTextWidth(XQueryFont(display, font_b), title, strlen(title)) + 12;
 
-    _add_menu_item(menu, title, True);
+    _add_menu_item(menu, title, True, 0);
     return menu;
 }
 
 /******************************************************************************/
 void _append_menu(Menu * menu, const char*idata)
 {
+    char key = 0;
     char *data = strdup(idata);
     char *bt = data;
 
     while (*data) {
-        char *s, *t, meta;
+        char *s, *t, *ts, meta;
         int l;
 
         meta = *data;
         t = (char*)data;
-        if ( (meta = ( *t == '(' ) ) ) t++;
+        if ( meta == '(' ) t++;
         else meta = 0;
         s = strchr(t, ';');
 
         if ( s != NULL ) { *s = 0; l = s - t; }
         else l = strlen(t);
 
-        _add_menu_item(menu, t, (meta!='('));
+        if ( (ts = strchr(t, '/')) != NULL ) {
+            *ts++ = 0; // terminate item string at first meta
+            key = *ts;
+        }
+
         data += l;
         if ( meta == '(' ) data++;
         if ( s != NULL ) { *s = 0; data++; }
+
+        _add_menu_item(menu, t, (meta!='('), key);
     }
     free(bt);
 }
@@ -1572,7 +1623,8 @@ int _add_menu(Menu * menu)
 {
     Window  twin = _window;
 
-    menu->height = MENU_ITEM_HEIGHT * (menu->nItems - 1);
+    menu->height = MENU_ITEM_HEIGHT * (menu->nItems - 1); // item 0 is the title
+    if (menu->height <= 0) menu->height = 1;
     menu->win = (Window)_new_window(menu->h, MENU_BAR_HEIGHT,
                                                menu->width, menu->height, True);
     _set_window(menu->win);
@@ -1609,8 +1661,8 @@ static int _check_event()
     }
 
     if ( _trking_mbar != NULL ) {
-        if ( _check_track_menu() == 1 && _finish_track_menu() ) {
-            return -1;
+        if ( _check_track_menu() == 1 && (ret = _finish_track_menu()) ) {
+            return -ret;
         }
         return 0;
     }
@@ -1652,6 +1704,8 @@ unsigned long int MakeColour(int red, int green, int blue)
 /******************************************************************************/
 int InitUI(int *width, int *height)
 {
+    char AboutMnu[128];
+    char *mnuTitle = NULL;
     display = XOpenDisplay(NULL);  /* open the default display */
     if ( display == NULL ) {
         fprintf(stderr, "Cannot open default display\n");
@@ -1691,7 +1745,18 @@ int InitUI(int *width, int *height)
     _window = _new_window(10, 10, *width, *height, False);
     _main_window = _window;
 
-    create_menu("File", "Quit");
+    if (short_progname != NULL)
+        mnuTitle = strdup(short_progname);
+    else
+        mnuTitle = strdup(progname);
+    mnuTitle[0] = toupper(mnuTitle[0]);
+//  create_menu("File", "Quit");
+    if (short_progname != NULL) {
+        snprintf(AboutMnu, 126, "About %s;(-;Quit/q", short_progname);
+        create_menu(mnuTitle, AboutMnu);
+    } else
+        create_menu(mnuTitle, "About;(-;Quit/q");
+    free(mnuTitle);
     return 0;
 }
 
@@ -1744,4 +1809,44 @@ int Alert(const char *message, const char *but1, const char *but2)
     _set_window(twin);
 
     return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
+ ******************************************************************************/
+void About(const char *message)
+{
+    Window twin, dwin;
+    int b1 = -1, b2 = -1, ret = -1;
+
+    twin = _window;
+    dwin = _new_window(100, 100, 400, 200, True);
+    XMapWindow(display, dwin);
+    _set_window(dwin);
+
+    b1 = NewControl(pushButton, "OK", 330, 170, 60, 20);
+
+    char *k, *m, *s = strdup(message);
+    int v = 20;
+    k = s;
+
+    while (*s) {
+        m = s;
+        while (*s && (*s != '\n') ) s++;
+        if (*s == '\n') *s++ = 0;
+        _add_item(TXT_ITEM, strdup(m), 60, v, 180, 20);
+        v+=20;
+    }
+    free(k);
+
+    while (1) {
+        if ( (ret = _check_event()) > 0 ) {
+            if ( ret == b1 ) ret = 1;
+            else if ( ret == b2 ) ret = 0;
+            break;
+        }
+    }
+
+    _delete_window(dwin);
+    _set_window(twin);
 }

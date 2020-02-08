@@ -9,7 +9,7 @@
 !#                                                                             #
 !#      http://aquatic.science.uwa.edu.au/                                     #
 !#                                                                             #
-!#  Copyright 2013 - 2018 -  The University of Western Australia               #
+!#  Copyright 2013 - 2019 -  The University of Western Australia               #
 !#                                                                             #
 !#   GLM is free software: you can redistribute it and/or modify               #
 !#   it under the terms of the GNU General Public License as published by      #
@@ -34,7 +34,7 @@
 
 MODULE ufz_oxygen
 !-------------------------------------------------------------------------------
-! aed2_oxygen --- oxygen biogeochemical model
+! ufz2_oxygen --- oxygen biogeochemical model
 !
 ! The AED module oxygen contains equations that describe exchange of
 ! oxygen across the air/water interface and sediment flux.
@@ -74,6 +74,8 @@ MODULE ufz_oxygen
 
    END TYPE
 
+! MODULE GLOBALS
+   INTEGER :: diag_level = 10
 
 !===============================================================================
 CONTAINS
@@ -95,7 +97,9 @@ SUBROUTINE aed2_define_oxygen(data, namlst)
 !
 !LOCALS
    INTEGER  :: status
+   AED_REAL,PARAMETER :: secs_pr_day = 86400.
 
+!  %% NAMELIST VARS
    LOGICAL  :: use_LImod_oxygen_model = .FALSE.
    AED_REAL :: BOD_oxy = -1.0
    AED_REAL :: SOD_oxy = -10.0
@@ -108,8 +112,8 @@ SUBROUTINE aed2_define_oxygen(data, namlst)
    AED_REAL :: theta_BOD_oxy = 1.0
    AED_REAL :: theta_SOD_oxy = 1.0
    CHARACTER(len=64) :: Fsed_oxy_variable=''
+!  %% END NAMELIST VARS
 
-   AED_REAL,PARAMETER :: secs_pr_day = 86400.
    NAMELIST /ufz_oxygen/ use_LImod_oxygen_model,BOD_oxy, SOD_oxy,  &
                          oxy_initial,oxy_min,oxy_max,Fsed_oxy,Ksed_oxy,theta_sed_oxy,  &
                          theta_BOD_oxy,theta_SOD_oxy,Fsed_oxy_variable

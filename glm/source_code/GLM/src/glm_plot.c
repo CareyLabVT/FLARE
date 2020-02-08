@@ -170,6 +170,8 @@ void init_plots(int jstart, int ndays, AED_REAL crest)
     maxy = height;
 
     set_progname(glm_vers);
+    set_shortprogname("GLM");
+    set_aboutmessage("General Lake Model\n(C) The University of Western Australia\nhttp://aquatic.science.uwa.edu.au/");
 #ifdef PLOTS
 #ifdef XPLOTS
     if ( xdisp ) {
@@ -226,7 +228,7 @@ void init_plots(int jstart, int ndays, AED_REAL crest)
         set_plot_varname(theplots[i], vars[i]);
         if ( n_zones > 0 ) {
             int j;
-            for (j = 0; j < n_zones; j++) show_h_line(i, zone_heights[j]);
+            for (j = 0; j < n_zones; j++) show_h_line(i, theZones[j].zheight);
         } else {
             show_h_line(i, CrestHeight);
         }

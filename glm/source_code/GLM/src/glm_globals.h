@@ -67,8 +67,7 @@ extern int ncid;
 
 /* from glm_surf.F90 */
 extern int ice;
-extern AED_REAL AvgSurfTemp ;
-
+extern AED_REAL AvgSurfTemp;
 /*----------------------------------------------------------------------------*/
 extern int MaxLayers;   //# Maximum number of layers in this sim
 extern int NumLayers;   //# current number of layers
@@ -90,8 +89,8 @@ extern int Num_WQ_Ben;         //# number of benthic water quality variables
 extern AED_REAL *WQ_Vars;      //# water quality array : nlayers, nvars
 
 extern int       n_zones;      //# number of sediment zones
-extern AED_REAL *zone_heights; //# heights for sed_zones
-extern AED_REAL *zone_area;    //# areas for sed_zones
+//extern AED_REAL *zone_heights; //# heights for sed_zones
+extern ZoneType *theZones;
 
 /*----------------------------------------------------------------------------*/
 
@@ -230,10 +229,28 @@ extern AED_REAL u_avg;
 extern AED_REAL snow_albedo_factor;
 extern AED_REAL snow_rho_max;
 extern AED_REAL snow_rho_min;
+extern AED_REAL snow_water_equivalent;
+extern AED_REAL snow_rain_compact;
+extern AED_REAL  K_ice_white;
+extern AED_REAL  K_ice_blue;
+extern AED_REAL  K_water;
+extern AED_REAL  f_sw_wl1;
+extern AED_REAL  f_sw_wl2;
+extern AED_REAL  attn_ice_blue_wl1;
+extern AED_REAL  attn_ice_blue_wl2;
+extern AED_REAL  attn_ice_white_wl1;
+extern AED_REAL  attn_ice_white_wl2;
+extern AED_REAL  attn_snow_wl1;
+extern AED_REAL  attn_snow_wl2;
+extern AED_REAL  rho_ice_blue;
+extern AED_REAL  rho_ice_white;
+extern AED_REAL  min_ice_thickness;
+extern AED_REAL  dt_iceon_avg;
 
 /*----------------------------------------------------------------------------*/
 // SEDIMENT
 extern CLOGICAL sed_heat_sw;
+extern int      sed_heat_model;
 extern AED_REAL sed_heat_Ksoil;
 extern AED_REAL sed_temp_depth;
 extern AED_REAL *sed_temp_mean;
@@ -271,6 +288,7 @@ extern int noSecs;
 // DEBUGGING
 extern CLOGICAL dbg_mix;   //# debug output from mixer
 extern CLOGICAL no_evap;   //# turn off evaporation
+extern int      quiet;     //# turn down output messages
 
 
 /******************************************************************************/

@@ -35,7 +35,7 @@
 #endif
 #define USE_FILLVALUE 1
 
-#define GLM_VERSION  "3.0.5"
+#define GLM_VERSION  "3.1.0a1"
 
 #define POINT         0
 #define Z_SHAPE       1
@@ -43,7 +43,7 @@
 #define XYT_SHAPE     4
 #define XYZT_SHAPE    5
 #define XYNT_SHAPE    6
-#define R_SHAPE       7
+#define R_SHAPE       1
 
 #define PATH_MAX  1024
 

@@ -93,6 +93,8 @@ static int tfu = 0, tfd = 0, lfu = 0, lfd = 0;
 static char *label_font = NULL;
 static int label_size = 16;
 char *progname = "Plot Window";
+char *short_progname = NULL, *about_message = NULL;
+
 
 /******************************************************************************/
 /* The fortran interfaces */
@@ -143,6 +145,32 @@ void set_progname_(const char *n, int *len)
 /*----------------------------------------------------------------------------*/
 void set_progname(const char *name)
 { progname = strdup(name); }
+/*----------------------------------------------------------------------------*/
+
+/******************************************************************************/
+void set_shortprogname_(const char *n, int *len)
+{
+    char *s = malloc(*len+1);
+    strncpy(s, n, *len);
+    s[*len] = 0;
+    short_progname = s;
+}
+/*----------------------------------------------------------------------------*/
+void set_shortprogname(const char *name)
+{ short_progname = strdup(name); }
+/*----------------------------------------------------------------------------*/
+
+/******************************************************************************/
+void set_aboutmessage_(const char *n, int *len)
+{
+    char *s = malloc(*len+1);
+    strncpy(s, n, *len);
+    s[*len] = 0;
+    about_message = s;
+}
+/*----------------------------------------------------------------------------*/
+void set_aboutmessage(const char *name)
+{ about_message = strdup(name); }
 /*----------------------------------------------------------------------------*/
 
 static int _s_maxx = 0;

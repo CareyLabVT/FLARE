@@ -47,7 +47,7 @@ typedef void (*wq_set_flags_t)(int *split_factor, CLOGICAL *mobility, CLOGICAL *
                  CLOGICAL *repair_state, int *ode_method, int *benthic_mode, CLOGICAL *do_plots,
                       CLOGICAL *c_link_rain_loss, CLOGICAL *c_link_solar_shade, CLOGICAL *c_link_bottom_drag);
 typedef int (*wq_is_var_t)(int *id, const char *v, size_t *len);
-typedef void (*wq_set_glm_zones_t)(AED_REAL *z_heights, int *numZones, int *numVars, int *numBenV);
+typedef void (*wq_set_glm_zones_t)(ZoneType *zones, int *numZones, int *numVars, int *numBenV);
 
 
 extern wq_init_glm_t        p_wq_init_glm;
@@ -114,9 +114,17 @@ void aed2_set_flags(int *split_factor, CLOGICAL *mobility, CLOGICAL *bioshade, C
                       int *ode_method, int *benthic_mode, CLOGICAL *do_plots,
                       CLOGICAL *c_link_rain_loss, CLOGICAL *c_link_solar_shade, CLOGICAL *c_link_bottom_drag);
 int aed2_is_var(int *id, const char *v, size_t *len);
+
+void InitialTemp(int *m, const AED_REAL *depth, const AED_REAL *wv,
+                         const AED_REAL *topTemp, const AED_REAL *botTemp,
+                         const AED_REAL *nSPinUpDays, AED_REAL *tNew);
+void ZSoilTemp(ZoneType *zone);
+void SoilTemp(int *m, const AED_REAL *depth, const AED_REAL *wv,
+                      const AED_REAL *topTemp, AED_REAL *temp, const AED_REAL *heatflux);
+
 #endif
 
-void wq_set_glm_zones(AED_REAL *z_heights, int *numZones, int *numVars, int *numBenV);
+void wq_set_glm_zones(ZoneType *zones, int *numZones, int *numVars, int *numBenV);
 
 extern int ode_method;
 extern int split_factor;

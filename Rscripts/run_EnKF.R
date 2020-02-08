@@ -91,13 +91,8 @@ run_EnKF <- function(x,
       }
     }
     
-    mixing_restart_variables <- c("dep_mx_init","prev_thick_init", "g_prime_two_layer_init", "energy_avail_max_init", "mass_epi_init", 
-                                  "old_slope_init", "time_end_shear_init", "time_start_shear_init", "time_count_end_shear_init", "time_count_sim_init", 
-                                  "half_seiche_period_init", "thermocline_height_init", "f0_init", "fsum_init", "u_f_init", "u0_init", "u_avg_init")
-    
-    for(v in 1:length(mixing_restart_variables)){
-      update_var(mean(mixing_vars[ ,v]), mixing_restart_variables[v], working_directory, "glm3.nml") 
-    }
+    update_var(colMeans(mixing_vars), "restart_variables", working_directory, "glm3.nml") 
+
     
     update_var(curr_start, "start", working_directory, "glm3.nml")
     update_var(curr_stop, "stop", working_directory, "glm3.nml")

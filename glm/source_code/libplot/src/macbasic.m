@@ -2,14 +2,14 @@
  *                                                                            *
  * macbasic.m                                                                 *
  *                                                                            *
- *   A simple Mac OS-X GUI example.                                           *
+ *   A very basic Mac OS-X GUI example.                                       *
  *                                                                            *
  * Developed by :                                                             *
  *     AquaticEcoDynamics (AED) Group                                         *
  *     School of Agriculture and Environment                                  *
  *     The University of Western Australia                                    *
  *                                                                            *
- * Copyright 2015 - 2018 -  The University of Western Australia               *
+ * Copyright 2015-2019 -  The University of Western Australia                 *
  *                                                                            *
  *  This file is part of libplot - the plotting library used in GLM           *
  *                                                                            *
@@ -48,6 +48,7 @@
 #endif
 #endif
 
+extern char *progname, *short_progname, *about_message;
 int Alert(const char *message, const char *but1, const char*but2);
 
 /******************************************************************************/
@@ -91,6 +92,7 @@ static int stopit = 0;
     id window;
 }
 - (id)init;
+- (void) applicationDidFinishLaunching:(NSNotification *)notification;
 - (void)runUIEvents:(NSDate*) wait;
 - (void)cleanUp;
 - (void)addMenus;
@@ -123,6 +125,13 @@ static id my_window;
 }
 
 /*----------------------------------------------------------------------------*/
+- (void) applicationDidFinishLaunching:(NSNotification *)notification
+{
+//  NSLog(@"%@ %s", self, __func__);
+    [NSApp activateIgnoringOtherApps:YES];
+}
+
+/*----------------------------------------------------------------------------*/
 - (IBAction) endProgram:(id)sender
 {
 //  NSLog(@"%@ %s", self, __func__);
@@ -138,6 +147,22 @@ static id my_window;
 }
 
 /*----------------------------------------------------------------------------*/
+- (IBAction) About:(id)sender
+{
+    NSAlert *alert = [[NSAlert alloc] init];
+    [alert addButtonWithTitle:@"OK"];
+
+    [alert setMessageText:[NSString stringWithUTF8String:about_message]];
+
+    [alert setAlertStyle:NSAlertStyleInformational];
+
+    if ([alert runModal] == NSAlertFirstButtonReturn) {
+        // OK clicked, delete the record
+    }
+    [alert release];
+}
+
+/*----------------------------------------------------------------------------*/
 - (void) addMenus
 {
     id menuItem;
@@ -150,9 +175,19 @@ static id my_window;
 
     id appMenu = [[NSMenu new] autorelease];
 
-    menuItem = [[[NSMenuItem alloc] initWithTitle:[@"About " stringByAppendingString:appName]
-                                           action:@selector(orderFrontStandardAboutPanel:)
+    if (short_progname != NULL) {
+        menuItem = [[[NSMenuItem alloc] initWithTitle:[@"About " stringByAppendingString:
+                                               [NSString stringWithUTF8String:short_progname]]
+//                                         action:@selector(orderFrontStandardAboutPanel:)
+                                           action:@selector(About:)
                                     keyEquivalent:@""] autorelease];
+    } else {
+        menuItem = [[[NSMenuItem alloc] initWithTitle:[@"About " stringByAppendingString:appName]
+//                                         action:@selector(orderFrontStandardAboutPanel:)
+                                           action:@selector(About:)
+                                    keyEquivalent:@""] autorelease];
+    }
+
     [appMenu addItem:menuItem];
 
     [appMenu addItem:[NSMenuItem separatorItem]];
@@ -212,7 +247,10 @@ static id my_window;
     }
 
     [window cascadeTopLeftFromPoint:NSMakePoint(20,20)];
-    [window setTitle:appName];
+    if (progname != NULL)
+        [window setTitle:[NSString stringWithUTF8String:progname]];
+    else
+        [window setTitle:appName];
     [window makeKeyAndOrderFront:self];
     [window retain];
     my_window = window;
@@ -228,6 +266,8 @@ static id my_window;
     [button setTitle:title];
     [button setTarget:self];
     [button setAction:@selector(buttonPressed:)];
+    [button setBezelStyle:NSBezelStyleRounded];
+
     [button retain];
 
     [[window contentView] addSubview:button];
@@ -475,6 +515,7 @@ int NewControl(int type, const char*title,
     id button = [sharedController addButton:left ypos:top
                                    width:width height:height
                                    title:[NSString stringWithUTF8String:title]];
+    [button setBezelStyle:NSBezelStyleRounded];
 
     id_no = _add_item(CTL_ITEM, button, left, top, width, height);
     ((NSButton*)button).tag = id_no;

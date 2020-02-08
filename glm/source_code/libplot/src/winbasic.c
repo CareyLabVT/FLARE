@@ -2,14 +2,14 @@
  *                                                                            *
  * winbasic.c                                                                 *
  *                                                                            *
- *   A simple MS Windows interface.                                           *
+ *   A very basic MS Windows interface.                                       *
  *                                                                            *
  * Developed by :                                                             *
  *     AquaticEcoDynamics (AED) Group                                         *
  *     School of Agriculture and Environment                                  *
  *     The University of Western Australia                                    *
  *                                                                            *
- * Copyright 2013 - 2019 -  The University of Western Australia               *
+ * Copyright 2013-2019 - The University of Western Australia                  *
  *                                                                            *
  *  This file is part of libplot - the plotting library used in GLM           *
  *                                                                            *
@@ -37,6 +37,7 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -116,6 +117,7 @@ typedef struct _menu_info {
     int    width, height;
     char **items;
     char  *flags;
+    char  *key;
 } Menu;
 
 typedef struct _bar_item {
@@ -124,10 +126,12 @@ typedef struct _bar_item {
     Menu *menus;
 } MenuBar;
 
+
 /******************************************************************************/
 static Window _new_window(int left, int top,
                                           int width, int height, int transient);
 static int Alert(const char *message, const char *but1, const char*but2);
+static int About(const char *message);
 static int _check_event(void);
 
 static void _add_window(Window win);
@@ -153,6 +157,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 /******************************************************************************/
 extern char *progname;
+extern char *short_progname, *about_message;
 static Window  _window = 0L;
 static WindowPtr    _win_lst = NULL;
 static HDC hdc;
@@ -291,16 +296,19 @@ int InitUI(int *width, int *height) {
     WndClass.hIcon = LoadIcon (NULL, MAKEINTRESOURCE( APP_ICON ));
     WndClass.hInstance = hInstance;
     WndClass.lpfnWndProc = (WNDPROC) WndProc;
-    WndClass.lpszClassName = PLOT_CLASS;
+    if (progname != NULL)
+        WndClass.lpszClassName = progname;
+    else
+        WndClass.lpszClassName = PLOT_CLASS;
     WndClass.lpszMenuName = NULL;
     WndClass.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
 
     if (!RegisterClass(&WndClass)){
-        MessageBox(NULL, "Registration of WinClass Failed!", PLOT_CLASS, MB_OK);
+        MessageBox(NULL, "Registration of WinClass Failed!", WndClass.lpszClassName, MB_OK);
         return 0;
     }
 
-    hWnd = CreateWindow(PLOT_CLASS, PLOT_CLASS,
+    hWnd = CreateWindow(WndClass.lpszClassName, WndClass.lpszClassName,
                   WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
                     10, 10, *width+10, *height+20+MENU_BAR_HEIGHT,
                         NULL, NULL, hInstance, NULL);
@@ -341,6 +349,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage,
                          WPARAM wParam, LPARAM lParam)
 {
     PAINTSTRUCT ps;
+    char *mnuTitle = NULL;
+    char AboutMnu[128];
 
 //fprintf(stderr, "WndProc(%u, %d, %ld)\n", iMessage, wParam, lParam);
     switch (iMessage) {
@@ -350,10 +360,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage,
             hMenu = CreateMenu();
 
             hSubMenu = CreatePopupMenu();
-//          AppendMenu(hSubMenu, MF_STRING, APP_ABOUT, "A&bout");
-//          AppendMenu(hSubMenu, MF_SEPARATOR, 0, "-");
-            AppendMenu(hSubMenu, MF_STRING, APP_EXIT, "E&xit");
-            AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT_PTR)hSubMenu, "F&ile");
+            if (short_progname != NULL) {
+                snprintf(AboutMnu, 126, "A&bout %s", short_progname);
+                AppendMenu(hSubMenu, MF_STRING, APP_ABOUT, AboutMnu);
+            } else
+                AppendMenu(hSubMenu, MF_STRING, APP_ABOUT, "A&bout");
+            AppendMenu(hSubMenu, MF_SEPARATOR, 0, "-");
+            AppendMenu(hSubMenu, MF_STRING, APP_EXIT, "Q&uit");
+            if (short_progname != NULL)
+                mnuTitle = strdup(short_progname);
+            else
+                mnuTitle = strdup(progname);
+            mnuTitle[0] = toupper(mnuTitle[0]);
+
+            AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT_PTR)hSubMenu, mnuTitle);
 
             SetMenu(hWnd, hMenu);
             }
@@ -366,7 +386,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage,
 /*
             switch ( LOWORD(wParam) ) {
                 case APP_ABOUT:
-                    fprintf(stderr, "About GLM ?\n");
+                    fprintf(stderr, "About %s ?\n", short_progname);
                 //  GoModalDialogBoxParam( GETHINST( hWnd ),
                 //                         MAKEINTRESOURCE( ABOUTDLGBOX ),
                 //                         hWnd,
@@ -445,11 +465,12 @@ static int _check_event()
 
                 switch ( LOWORD(Message.wParam) ) {
                     case APP_ABOUT:
-                        fprintf(stderr, "About GLM ?\n");
-                //      GoModalDialogBoxParam( GETHINST( hWnd ),
-                //                             MAKEINTRESOURCE( ABOUTDLGBOX ),
-                //                             hWnd,
-                //                             (DLGPROC) AboutDlgProc, 0L ) ;
+                        fprintf(stderr, "About %s ?\n", short_progname);
+                        About(about_message);
+                 //     GoModalDialogBoxParam( GETHINST( hWnd ),
+                 //                            MAKEINTRESOURCE( ABOUTDLGBOX ),
+                 //                            hWnd,
+                 //                            (DLGPROC) AboutDlgProc, 0L ) ;
                         break;
                     case APP_EXIT:
                         //PostMessage( hWnd, WM_CLOSE, 0, 0L ) ;
@@ -763,6 +784,7 @@ static void _draw_mbar(MenuBar *mbar)
 {
 }
 
+/******************************************************************************/
 static void _draw_menu(Menu *menu)
 {
 }
@@ -772,7 +794,7 @@ static void _draw_menu(Menu *menu)
  * This is probably not quite what I want, but it works for now.              *
  *                                                                            *
  *============================================================================*/
-int Alert(const char *message, const char *but1, const char*but2)
+static int Alert(const char *message, const char *but1, const char*but2)
 {
     HINSTANCE hInstance = NULL;
     MSGBOXPARAMS params;
@@ -839,4 +861,28 @@ int Alert(const char *message, const char *but1, const char*but2)
     free((void*)params.lpszCaption);
 
     return ret;
+}
+
+/******************************************************************************/
+static int About(const char *message)
+{
+    HINSTANCE hInstance = NULL;
+    MSGBOXPARAMS params;
+
+    memset(&params, 0, sizeof(params));
+    params.cbSize = sizeof(MSGBOXPARAMS);
+    params.hwndOwner = _window;
+    params.hInstance = hInstance;
+    params.lpszText = (LPCTSTR)convstr(message);
+    params.lpszCaption = (LPCTSTR)convstr("");
+
+    params.dwStyle = MB_ICONINFORMATION | MB_OK;
+
+    switch (MessageBoxIndirect(&params)) {
+    case IDOK:        //  1 The OK button was selected.
+        break;
+    }
+
+    free((void*)params.lpszText);
+    free((void*)params.lpszCaption);
 }

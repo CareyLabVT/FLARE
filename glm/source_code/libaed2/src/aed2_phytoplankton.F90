@@ -23,7 +23,7 @@
 !#                                                                             #
 !#      http://aquatic.science.uwa.edu.au/                                     #
 !#                                                                             #
-!#  Copyright 2013 - 2018 -  The University of Western Australia               #
+!#  Copyright 2013 - 2019 -  The University of Western Australia               #
 !#                                                                             #
 !#   GLM is free software: you can redistribute it and/or modify               #
 !#   it under the terms of the GNU General Public License as published by      #
@@ -113,6 +113,8 @@ MODULE aed2_phytoplankton
 
    END TYPE
 
+! MODULE GLOBALS
+   INTEGER :: diag_level = 10
    AED_REAL :: dtlim = 0.9 * 3600
    LOGICAL  :: extra_diag = .false.
 
@@ -296,7 +298,7 @@ SUBROUTINE aed2_phytoplankton_load_params(data, dbase, count, list, settling, re
           ! Register vertical velocity diagnostic, where relevant
           IF (data%phytos(i)%settling == _MOB_STOKES_ .OR. &
                                    data%phytos(i)%settling == _MOB_MOTILE_) THEN
-            data%id_vvel(i) = aed2_define_diag_variable( TRIM(data%phytos(i)%p_name)//'_vvel', 'm/s', 'vertical velocity')
+            data%id_vvel(i) = aed2_define_diag_variable( TRIM(data%phytos(i)%p_name)//'_vvel', 'm/day', 'vertical velocity')
           ENDIF
        ENDIF
     ENDDO
@@ -319,36 +321,45 @@ SUBROUTINE aed2_define_phytoplankton(data, namlst)
 !LOCALS
    INTEGER  :: status,i
 
-   INTEGER  :: num_phytos
-   INTEGER  :: the_phytos(MAX_PHYTO_TYPES)
-   INTEGER  :: settling(MAX_PHYTO_TYPES)
-   AED_REAL :: resuspension(MAX_PHYTO_TYPES)
-   CHARACTER(len=64)  :: resus_link=''
-   CHARACTER(len=64)  :: p_excretion_target_variable=''
-   CHARACTER(len=64)  :: p_mortality_target_variable=''
-   CHARACTER(len=64)  :: p1_uptake_target_variable=''
+!  %% NAMELIST
+   ! Default settings
+   INTEGER            :: num_phytos = 0
+   INTEGER            :: the_phytos(MAX_PHYTO_TYPES) = 0
+   INTEGER            :: settling(MAX_PHYTO_TYPES)     = _MOB_CONST_
+   AED_REAL           :: resuspension(MAX_PHYTO_TYPES) = 0.
+   CHARACTER(len=64)  :: resus_link='NCS_resus'
+   CHARACTER(len=64)  :: p_excretion_target_variable='OGM_dop'
+   CHARACTER(len=64)  :: p_mortality_target_variable='OGM_pop'
+   CHARACTER(len=64)  :: p1_uptake_target_variable='PHS_frp'
    CHARACTER(len=64)  :: p2_uptake_target_variable=''
-   CHARACTER(len=64)  :: n_excretion_target_variable=''
-   CHARACTER(len=64)  :: n_mortality_target_variable=''
-   CHARACTER(len=64)  :: n1_uptake_target_variable=''
-   CHARACTER(len=64)  :: n2_uptake_target_variable=''
+   CHARACTER(len=64)  :: n_excretion_target_variable='OGM_don'
+   CHARACTER(len=64)  :: n_mortality_target_variable='OGM_pon'
+   CHARACTER(len=64)  :: n1_uptake_target_variable='NIT_nit'
+   CHARACTER(len=64)  :: n2_uptake_target_variable='NIT_amm'
    CHARACTER(len=64)  :: n3_uptake_target_variable=''
    CHARACTER(len=64)  :: n4_uptake_target_variable=''
-   CHARACTER(len=64)  :: c_excretion_target_variable=''
-   CHARACTER(len=64)  :: c_mortality_target_variable=''
+   CHARACTER(len=64)  :: c_excretion_target_variable='OGM_doc'
+   CHARACTER(len=64)  :: c_mortality_target_variable='OGM_poc'
    CHARACTER(len=64)  :: c_uptake_target_variable=''
-   CHARACTER(len=64)  :: do_uptake_target_variable=''
+   CHARACTER(len=64)  :: do_uptake_target_variable='OXY_oxy'
    CHARACTER(len=64)  :: si_excretion_target_variable=''
    CHARACTER(len=64)  :: si_mortality_target_variable=''
    CHARACTER(len=64)  :: si_uptake_target_variable=''
    CHARACTER(len=128) :: dbase='aed2_phyto_pars.nml'
    AED_REAL           :: zerolimitfudgefactor = 0.9 * 3600
-   AED_REAL           :: R_mpbg, R_mpbr, I_Kmpb, mpb_max
-   AED_REAL           :: theta_mpb_growth,theta_mpb_resp
-   AED_REAL           :: min_rho, max_rho
+   AED_REAL           :: R_mpbg = 0.
+   AED_REAL           :: R_mpbr = 0.
+   AED_REAL           :: I_Kmpb = 100.
+   AED_REAL           :: mpb_max = 1000.
+   AED_REAL           :: theta_mpb_growth = 1.05
+   AED_REAL           :: theta_mpb_resp   = 1.05
+   AED_REAL           :: min_rho = 900.
+   AED_REAL           :: max_rho = 1200.
    LOGICAL            :: extra_debug = .false.
-   INTEGER            :: do_mpb, n_zones = 0
-   AED_REAL           :: active_zones(1000)
+   INTEGER            :: do_mpb = 0
+   INTEGER            :: n_zones = 0
+   AED_REAL           :: active_zones(1000) = 0
+!  %% END NAMELIST
 
    NAMELIST /aed2_phytoplankton/ num_phytos, the_phytos, settling,resuspension,&
                     p_excretion_target_variable,p_mortality_target_variable,   &
@@ -362,18 +373,11 @@ SUBROUTINE aed2_define_phytoplankton(data, namlst)
                       si_uptake_target_variable,                               &
                     dbase, zerolimitfudgefactor, extra_debug, extra_diag,      &
                     do_mpb, R_mpbg, R_mpbr, I_Kmpb, mpb_max, min_rho, max_rho, &
-                    resus_link, n_zones, active_zones,                         &
+                    resus_link, n_zones, active_zones, diag_level,             &
                     theta_mpb_growth,theta_mpb_resp
 !-----------------------------------------------------------------------
 !BEGIN
    print *,"        aed2_phytoplankton initialization"
-
-   ! Default settings
-   settling = _MOB_CONST_
-   resuspension = zero_
-   theta_mpb_growth = 1.05 ;  theta_mpb_resp = 1.05
-   R_mpbg = 0.; R_mpbr =0.; I_Kmpb=100.; mpb_max=1000.;
-   min_rho = 900; max_rho=1200
 
    ! Read the namelist, and set module parameters
    read(namlst,nml=aed2_phytoplankton,iostat=status)
@@ -513,8 +517,8 @@ SUBROUTINE aed2_define_phytoplankton(data, namlst)
    data%id_CUP = aed2_define_diag_variable('CUP','mmol/m**3/d','carbon uptake')
 
    IF (extra_diag) data%id_dPAR = aed2_define_diag_variable('PAR','W/m**2', 'photosynthetically active radiation')
-   IF (extra_diag) data%id_TCHLA = aed2_define_diag_variable('TCHLA','ug/L', 'total chlorophyll-a')
-   data%id_TPHY = aed2_define_diag_variable('TPHYS','mmol/m**3', 'total phytoplankton')
+   data%id_TCHLA = aed2_define_diag_variable('TCHLA','ug/L', 'total chlorophyll-a')
+   IF (extra_diag) data%id_TPHY = aed2_define_diag_variable('TPHYS','mmol/m**3', 'total phytoplankton')
    data%id_TIN = aed2_define_diag_variable('IN','mmol/m**3', 'total phy nitrogen')
    data%id_TIP = aed2_define_diag_variable('IP','mmol/m**3', 'total phy phosphorus')
    IF(do_mpb>0) THEN
@@ -982,8 +986,8 @@ SUBROUTINE aed2_calculate_phytoplankton(data,column,layer_idx)
    _DIAG_VAR_(data%id_CUP) =  sum(cuptake)*secs_per_day
 
    IF (extra_diag) _DIAG_VAR_(data%id_dPAR) =  par
-   IF (extra_diag) _DIAG_VAR_(data%id_TCHLA)=  tchla
-   _DIAG_VAR_(data%id_TPHY) =  tphy
+   _DIAG_VAR_(data%id_TCHLA)=  tchla
+   IF (extra_diag) _DIAG_VAR_(data%id_TPHY) =  tphy
    _DIAG_VAR_(data%id_TIN)  =  tin
    _DIAG_VAR_(data%id_TIP)  =  tip
 
@@ -1169,10 +1173,10 @@ SUBROUTINE aed2_mobility_phytoplankton(data,column,layer_idx,mobility)
       ! set global mobility array
       mobility(data%id_p(phy_i)) = vvel
       IF(extra_diag .AND. data%id_vvel(phy_i)>0) &
-            _DIAG_VAR_(data%id_vvel(phy_i)) = vvel
+              _DIAG_VAR_(data%id_vvel(phy_i)) = vvel * secs_per_day
       ! set sedimentation flux (mmmol/m2) for later use/reporting
       _DIAG_VAR_(data%id_Psed_phy) =   &
-            _DIAG_VAR_(data%id_Psed_phy) + vvel*_STATE_VAR_(data%id_p(phy_i))
+              _DIAG_VAR_(data%id_Psed_phy) + vvel*_STATE_VAR_(data%id_p(phy_i))
     ENDDO
 END SUBROUTINE aed2_mobility_phytoplankton
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

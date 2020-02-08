@@ -76,13 +76,13 @@ inflow_qaqc <- function(fname,
   inflow_pre <- inflow[inflow$TIMESTAMP< as.POSIXct('2019-06-06 09:30:00'),]  
   inflow_pre <- inflow_pre %>% mutate(inflow1 = (psi_corr )*0.70324961490205 - 0.1603375 + 0.03048) %>% 
     mutate(flow_cfs = (0.62 * (2/3) * (1.1) * 4.43 * (inflow1 ^ 1.5) * 35.3147)) %>% 
-    mutate(flow_cms = flow_cfs*0.028316847   )%>% 
-    select(TIMESTAMP, flow_cms, wtr_weir) 
+    mutate(flow_cms = flow_cfs*0.028316847) %>% 
+    dplyr::select(TIMESTAMP, flow_cms, wtr_weir) 
   
   inflow_post <- inflow[inflow$TIMESTAMP > as.POSIXct('2019-06-07 00:00:00'),]  
   inflow_post <- inflow_post %>%  mutate(head = (0.149*psi_corr)/0.293) %>% 
     mutate(flow_cms = 2.391* (head^2.5)) %>% 
-    select(TIMESTAMP, flow_cms, wtr_weir)
+    dplyr::select(TIMESTAMP, flow_cms, wtr_weir)
   inflow <- rbind(inflow_pre, inflow_post)
   
   inflow = aggregate(list(flow_cms = inflow$flow_cms, wtr_weir = inflow$wtr_weir), list(TIMESTAMP = cut(inflow$TIMESTAMP, "1 day")), mean);

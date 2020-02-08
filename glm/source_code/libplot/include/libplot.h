@@ -28,7 +28,7 @@
 #ifndef _LIB_PLOT_H_
 #define _LIB_PLOT_H_
 
-#define LIB_PLOT_VERSION "1.0.20"
+#define LIB_PLOT_VERSION "1.0.23"
 
 #define PF_TITLE  1
 #define PF_LABEL  2
@@ -129,6 +129,8 @@
 
 
    void set_progname(const char *name);
+   void set_shortprogname(const char *name);
+   void set_aboutmessage(const char *name);
    void init_plotter_no_gui(void);
    int init_plotter(int *maxx, int *maxy);
    int init_plotter_max(int max_plots, int *maxx, int *maxy);

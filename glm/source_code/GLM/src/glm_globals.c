@@ -173,23 +173,41 @@ AED_REAL lw_offset   = 0.0;
 
 //------------------------------------------------------------------------------
 // SNOWICE
-AED_REAL snow_albedo_factor = 1.0;
-AED_REAL snow_rho_max       = 300.;
-AED_REAL snow_rho_min       = 50.;
+AED_REAL snow_albedo_factor = 1.0;    //# scaling multiplier for computed albedo
+AED_REAL snow_rho_max       = 300.;   //# maximum snow density allowed
+AED_REAL snow_rho_min       = 50.;    //# minimum snow density allowed
+AED_REAL snow_water_equivalent = 0.1; //# snow volume to water equivalent, 10:1
+AED_REAL snow_rain_compact = 1.;      //# set at module level
+AED_REAL K_ice_white = 2.3;           //# thermal conductivity of white ice
+AED_REAL K_ice_blue = 2.0;            //# thermal conductivity of blue ice
+AED_REAL K_water = 0.57;              //# molecular thermal conductivity of water
+AED_REAL f_sw_wl1 = 0.7;              //# fraction of short wave radiation in first wavelength band
+AED_REAL f_sw_wl2 = 0.3;              //# fraction of short wave radiation in second wavelength band
+AED_REAL attn_ice_blue_wl1 = 1.5;     //# attenuation coefficient of the ice in the first spectral band
+AED_REAL attn_ice_blue_wl2 = 20.;     //# attenuation coefficient of the ice in the second spectral band
+AED_REAL attn_ice_white_wl1 = 6.0;    //# attenuation coefficient of the white ice in the first spectral band
+AED_REAL attn_ice_white_wl2 = 20.;    //# attenuation coefficient of the white ice in the second spectral band
+AED_REAL attn_snow_wl1 = 6.0;         //# attenuation coefficient of the snow in the first spectral band
+AED_REAL attn_snow_wl2 = 20.;         //# attenuation coefficient of the snow in the second spectral band
+AED_REAL rho_ice_blue = 917.0;        //# density of blue ice
+AED_REAL rho_ice_white = 890.0;       //# density of white ice
+AED_REAL min_ice_thickness = 0.05;    //# threshold thickness for new ice-on, or ice-off
+AED_REAL dt_iceon_avg = 0.5;          //# moving average time-scale of water temp to identify ice-on transition
 
 //------------------------------------------------------------------------------
-// SED_HEAT
+// SEDIMENT
 CLOGICAL sed_heat_sw        = FALSE;
-//AED_REAL sed_temp_mean      = 9.7;
-//AED_REAL sed_temp_amplitude = 2.7;
-//AED_REAL sed_temp_peak_doy  = 151.;
-AED_REAL  sed_heat_Ksoil     = 5.0;
-AED_REAL  sed_temp_depth     = 0.1;
-AED_REAL *sed_temp_mean = NULL;
+int      sed_heat_model     = 0;
+//AED_REAL sed_temp_mean        = 9.7;
+//AED_REAL sed_temp_amplitude   = 2.7;
+//AED_REAL sed_temp_peak_doy    = 151.;
+AED_REAL  sed_heat_Ksoil    = 5.0;
+AED_REAL  sed_temp_depth    = 0.1;
+AED_REAL *sed_temp_mean     = NULL;
 AED_REAL *sed_temp_amplitude = NULL;
 AED_REAL *sed_temp_peak_doy = NULL;
-AED_REAL *sed_reflectivity = NULL;
-AED_REAL *sed_roughness = NULL;
+AED_REAL *sed_reflectivity  = NULL;
+AED_REAL *sed_roughness     = NULL;
 
 //------------------------------------------------------------------------------
 // FETCH
@@ -223,9 +241,9 @@ int noSecs;
 
 AED_REAL *WQ_Vars = NULL;  //# water quality array, nlayers, nvars
 
-int       n_zones;
-AED_REAL *zone_heights = NULL;
-AED_REAL *zone_area = NULL;
+int       n_zones = 0;
+//AED_REAL *zone_heights = NULL;
+ZoneType *theZones = NULL;
 
 
 //------------------------------------------------------------------------------
@@ -233,6 +251,7 @@ AED_REAL *zone_area = NULL;
 //------------------------------------------------------------------------------
 CLOGICAL dbg_mix = FALSE;   //# debug output from mixer
 CLOGICAL no_evap = FALSE;   //# turn off evaporation
+int      quiet   = 0;       //# turn down output messages
 
 void set_c_wqvars_ptr(AED_REAL *iwqv) { WQ_Vars = iwqv; }
 
