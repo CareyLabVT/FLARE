@@ -31,7 +31,8 @@ run_EnKF <- function(x,
                      avg_surf_temp,
                      running_residuals,
                      the_sals_init,
-                     mixing_vars){
+                     mixing_vars,
+                     glm_depths){
   
   nsteps <- length(full_time_local)
   nmembers <- dim(x)[2]
@@ -51,6 +52,9 @@ run_EnKF <- function(x,
                                   tz = local_tzone)
   
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
+  
+
+  glm_salt <- array(NA, dim = c(nmembers, 500))
   
   ###START EnKF
   
@@ -92,7 +96,7 @@ run_EnKF <- function(x,
     }
     
     update_var(colMeans(mixing_vars), "restart_variables", working_directory, "glm3.nml") 
-
+    
     
     update_var(curr_start, "start", working_directory, "glm3.nml")
     update_var(curr_stop, "stop", working_directory, "glm3.nml")
@@ -111,213 +115,268 @@ run_EnKF <- function(x,
       }
       
       if(!use_null_model){
-      
-      ########################################
-      #BEGIN GLM SPECIFIC PART
-      ########################################
-      # REQUIRES:
-      #curr_met_file, curr_pars, par_names, par_nml, x[i - 1, m, ], surface_height[i - 1, m],
-      # curr_start, curr_stop
-      # RETURNS;
-      # x_star[m, ], 
-      
-      update_glm_nml_list <- list()
-      update_aed_nml_list <- list()
-      update_glm_nml_names <- c()
-      update_aed_nml_names <- c()
-      list_index <- 1
-      
-      if(npars > 0){
         
-        sed_temp_mean_index <- which(par_names == "sed_temp_mean")
-        non_sed_temp_mean_index <- which(par_names != "sed_temp_mean")
-        if(length(sed_temp_mean_index) == 1){
-          update_glm_nml_list[[list_index]] <-  c(curr_pars[sed_temp_mean_index],zone2_temp_init_mean) 
-          update_glm_nml_names[list_index] <- "sed_temp_mean"
-          list_index <- list_index + 1
-          
-        }else if(length(sed_temp_mean_index) == 2){
-          update_glm_nml_list[[list_index]] <-  c(curr_pars[sed_temp_mean_index[1]],curr_pars[sed_temp_mean_index[2]])
-          update_glm_nml_names[list_index] <- "sed_temp_mean"
-          list_index <- list_index + 1
-          
-        }else if(length(sed_temp_mean_index) > 2){
-          stop(paste0("Too many sediment temperature zones"))
-        }
+        ########################################
+        #BEGIN GLM SPECIFIC PART
+        ########################################
+        # REQUIRES:
+        #curr_met_file, curr_pars, par_names, par_nml, x[i - 1, m, ], surface_height[i - 1, m],
+        # curr_start, curr_stop
+        # RETURNS;
+        # x_star[m, ], 
         
-        if(length(non_sed_temp_mean_index) > 0){
-          for(par in non_sed_temp_mean_index){
-            if(par_nml[par] == "glm3.nml"){
-              if(par_names[par] == "inflow_factor"){
-                if(include_wq){
-                  update_glm_nml_list[[list_index]] <- c(curr_pars[par], curr_pars[par], 0.5)
-                  update_glm_nml_names[list_index] <- par_names[par]
-                  list_index <- list_index + 1
-                  update_glm_nml_list[[list_index]] <- c(curr_pars[par], 0.5)
-                  update_glm_nml_names[list_index] <- "outflow_factor"
-                  list_index <- list_index + 1
+        update_glm_nml_list <- list()
+        update_aed_nml_list <- list()
+        update_glm_nml_names <- c()
+        update_aed_nml_names <- c()
+        list_index <- 1
+        
+        if(npars > 0){
+          
+          sed_temp_mean_index <- which(par_names == "sed_temp_mean")
+          non_sed_temp_mean_index <- which(par_names != "sed_temp_mean")
+          if(length(sed_temp_mean_index) == 1){
+            update_glm_nml_list[[list_index]] <-  c(curr_pars[sed_temp_mean_index],zone2_temp_init_mean) 
+            update_glm_nml_names[list_index] <- "sed_temp_mean"
+            list_index <- list_index + 1
+            
+          }else if(length(sed_temp_mean_index) == 2){
+            update_glm_nml_list[[list_index]] <-  c(curr_pars[sed_temp_mean_index[1]],curr_pars[sed_temp_mean_index[2]])
+            update_glm_nml_names[list_index] <- "sed_temp_mean"
+            list_index <- list_index + 1
+            
+          }else if(length(sed_temp_mean_index) > 2){
+            stop(paste0("Too many sediment temperature zones"))
+          }
+          
+          if(length(non_sed_temp_mean_index) > 0){
+            for(par in non_sed_temp_mean_index){
+              if(par_nml[par] == "glm3.nml"){
+                if(par_names[par] == "inflow_factor"){
+                  if(include_wq){
+                    update_glm_nml_list[[list_index]] <- c(curr_pars[par], curr_pars[par], 1.0)
+                    update_glm_nml_names[list_index] <- par_names[par]
+                    list_index <- list_index + 1
+                    update_glm_nml_list[[list_index]] <- c(curr_pars[par], 1.0)
+                    update_glm_nml_names[list_index] <- "outflow_factor"
+                    list_index <- list_index + 1
+                  }else{
+                    update_glm_nml_list[[list_index]] <- (curr_pars[par])
+                    update_glm_nml_names[list_index] <- par_names[par]
+                    list_index <- list_index + 1
+                    update_glm_nml_list[[list_index]] <- (curr_pars[par])
+                    update_glm_nml_names[list_index] <- "outflow_factor"
+                    list_index <- list_index + 1
+                  }
                 }else{
                   update_glm_nml_list[[list_index]] <- (curr_pars[par])
                   update_glm_nml_names[list_index] <- par_names[par]
                   list_index <- list_index + 1
-                  update_glm_nml_list[[list_index]] <- (curr_pars[par])
-                  update_glm_nml_names[list_index] <- "outflow_factor"
-                  list_index <- list_index + 1
                 }
               }else{
-                update_glm_nml_list[[list_index]] <- (curr_pars[par])
-                update_glm_nml_names[list_index] <- par_names[par]
-                list_index <- list_index + 1
+                update_var(curr_pars[par], par_names[par], working_directory, par_nml[par])
               }
-            }else{
-              update_var(curr_pars[par], par_names[par], working_directory, par_nml[par])
             }
           }
         }
-      }
-      
-      if(include_wq){
-        if("PHY_TCHLA" %in% wq_names){
-          non_tchla_states <- c(wq_start[1]:wq_end[16])
-          wq_init_vals <- round(c(x[i - 1, m, non_tchla_states], x_phyto_groups[i-1,m ,]), 3)
-        }else{
-          non_tchla_states <- c(wq_start[1]:wq_end[num_wq_vars])
-          wq_init_vals <- round(c(x[i - 1, m, non_tchla_states]), 3)
+        
+        
+        glm_depths_tmp <- glm_depths[i-1, m,!is.na(glm_depths[i-1, m,])]
+        
+        if(include_wq){
+          if("PHY_TCHLA" %in% wq_names){
+ 
+            wq_init_vals <- c()
+            
+            for(wq in 1:16){
+              wq_enkf_tmp <- x[i - 1, m, wq_start[i]:wq_end[i]]
+              wq_init_vals <- c(wq_init_vals, spline(modeled_depths,wq_enkf_tmp,xout = glm_depths_tmp, method = "fmm")$y)
+            }
+            for(wq in 1:num_phytos){
+              wq_enkf_tmp <- x_phyto_groups[i-1,m ,wq]
+              wq_init_vals <- c(wq_init_vals, spline(modeled_depths,wq_enkf_tmp,xout = glm_depths_tmp, method = "fmm")$y)
+            }
+          }else{
+            wq_init_vals <- c()
+            
+            for(wq in 1:num_wq_vars){
+              wq_enkf_tmp <- x[i - 1, m, wq_start[wq]:wq_end[wq]]
+              wq_init_vals <- c(wq_init_vals, spline(modeled_depths,wq_enkf_tmp,xout = glm_depths_tmp, method = "fmm")$y)
+            }
+          }
+          update_glm_nml_list[[list_index]] <- wq_init_vals
+          update_glm_nml_names[list_index] <- "wq_init_vals"
+          list_index <- list_index + 1
+          
+          if(simulate_SSS){
+            create_sss_input_output(x, i, m, full_time_day_local, working_directory, wq_start, management_input, hist_days, forecast_sss_on)
+          }
         }
-        update_glm_nml_list[[list_index]] <- wq_init_vals
-        update_glm_nml_names[list_index] <- "wq_init_vals"
+        
+
+        
+        the_temps_enkf_tmp <- x[i - 1, m, 1:ndepths_modeled]
+        the_temps_glm <- spline(modeled_depths,the_temps_enkf_tmp,xout = glm_depths_tmp, method = "fmm")$y
+        
+        update_glm_nml_list[[list_index]] <- the_temps_glm
+        update_glm_nml_names[list_index] <- "the_temps"
         list_index <- list_index + 1
         
-        if(simulate_SSS){
-          create_sss_input_output(x, i, m, full_time_day_local, working_directory, wq_start, management_input, hist_days, forecast_sss_on)
-        }
-      }
-      
-      update_glm_nml_list[[list_index]] <- round(x[i - 1, m, 1:length(modeled_depths)], 3)
-      update_glm_nml_names[list_index] <- "the_temps"
-      list_index <- list_index + 1
-      
-      update_glm_nml_list[[list_index]] <- surface_height[i - 1, m]
-      update_glm_nml_names[list_index] <- "lake_depth"
-      list_index <- list_index + 1
-      
-      update_glm_nml_list[[list_index]] <- 0.0
-      update_glm_nml_names[list_index] <- "snow_thickness"
-      list_index <- list_index + 1
-      
-      update_glm_nml_list[[list_index]] <- snow_ice_thickness[i - 1, m, 2]
-      update_glm_nml_names[list_index] <- "white_ice_thickness"
-      list_index <- list_index + 1
-      
-      update_glm_nml_list[[list_index]] <- snow_ice_thickness[i - 1, m, 3]
-      update_glm_nml_names[list_index] <- "blue_ice_thickness"
-      list_index <- list_index + 1
-      
-      update_glm_nml_list[[list_index]] <- avg_surf_temp[i - 1, m]
-      update_glm_nml_names[list_index] <- "avg_surf_temp"
-      list_index <- list_index + 1
-      
-      
-      #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
-      
-      update_glm_nml_list[[list_index]] <- curr_met_file
-      update_glm_nml_names[list_index] <- "meteo_fl"
-      list_index <- list_index + 1
-      
-      if(n_inflow_outflow_members == 1){
-        tmp <- file.copy(from = inflow_file_names[1], to = "inflow_file1.csv", overwrite = TRUE)
-        tmp <- file.copy(from = inflow_file_names[2], to = "inflow_file2.csv", overwrite = TRUE)
-        tmp <- file.copy(from = outflow_file_names, to = "outflow_file1.csv", overwrite = TRUE)
-      }else{
-        tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 1], to = "inflow_file1.csv", overwrite = TRUE)
-        tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 2], to = "inflow_file2.csv", overwrite = TRUE)
-        tmp <- file.copy(from = outflow_file_names[inflow_outflow_index], to = "outflow_file1.csv", overwrite = TRUE)      
-      }
-      
-      
-      update_nml(update_glm_nml_list, update_glm_nml_names, working_directory, "glm3.nml")
-      #Use GLM NML files to run GLM for a day
-      # Only allow simulations without NaN values in the output to proceed. 
-      #Necessary due to random Nan in AED output
-      pass <- FALSE
-      num_reruns <- 0
-      
-      while(!pass){
-        unlink(paste0(working_directory, "/output.nc")) 
+        update_glm_nml_list[[list_index]] <- rep(0.0,length(the_temps_glm))
+        update_glm_nml_names[list_index] <- "the_sals"
+        list_index <- list_index + 1
         
-        if(machine == "unix" | machine == "mac"){
-          system2(paste0(working_directory, "/", "glm"), 
-                  stdout = print_glm2screen, 
-                  stderr = print_glm2screen,
-                  env = paste0("DYLD_LIBRARY_PATH=",working_directory))
-        }else if(machine == "windows"){
-          system2(paste0(working_directory, "/", "glm.exe"), invisible = print_glm2screen)
+        update_glm_nml_list[[list_index]] <- glm_depths_tmp
+        update_glm_nml_names[list_index] <- "the_depths"
+        list_index <- list_index + 1
+        
+        update_glm_nml_list[[list_index]] <- length(glm_depths_tmp)
+        update_glm_nml_names[list_index] <- "num_depths"
+        list_index <- list_index + 1
+        
+        update_glm_nml_list[[list_index]] <- surface_height[i - 1, m]
+        update_glm_nml_names[list_index] <- "lake_depth"
+        list_index <- list_index + 1
+        
+        update_glm_nml_list[[list_index]] <- 0.0
+        update_glm_nml_names[list_index] <- "snow_thickness"
+        list_index <- list_index + 1
+        
+        update_glm_nml_list[[list_index]] <- snow_ice_thickness[i - 1, m, 2]
+        update_glm_nml_names[list_index] <- "white_ice_thickness"
+        list_index <- list_index + 1
+        
+        update_glm_nml_list[[list_index]] <- snow_ice_thickness[i - 1, m, 3]
+        update_glm_nml_names[list_index] <- "blue_ice_thickness"
+        list_index <- list_index + 1
+        
+        update_glm_nml_list[[list_index]] <- avg_surf_temp[i - 1, m]
+        update_glm_nml_names[list_index] <- "avg_surf_temp"
+        list_index <- list_index + 1
+        
+        
+        #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
+        
+        update_glm_nml_list[[list_index]] <- curr_met_file
+        update_glm_nml_names[list_index] <- "meteo_fl"
+        list_index <- list_index + 1
+        
+        if(n_inflow_outflow_members == 1){
+          tmp <- file.copy(from = inflow_file_names[1], to = "inflow_file1.csv", overwrite = TRUE)
+          tmp <- file.copy(from = inflow_file_names[2], to = "inflow_file2.csv", overwrite = TRUE)
+          tmp <- file.copy(from = outflow_file_names, to = "outflow_file1.csv", overwrite = TRUE)
         }else{
-          print("Machine not identified")
-          stop()
+          tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 1], to = "inflow_file1.csv", overwrite = TRUE)
+          tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 2], to = "inflow_file2.csv", overwrite = TRUE)
+          tmp <- file.copy(from = outflow_file_names[inflow_outflow_index], to = "outflow_file1.csv", overwrite = TRUE)      
         }
         
-        if(file.exists(paste0(working_directory, "/output.nc")) & 
-           !has_error(nc <- nc_open(paste0(working_directory, "/output.nc")))){
+        
+        update_nml(update_glm_nml_list, update_glm_nml_names, working_directory, "glm3.nml")
+        #Use GLM NML files to run GLM for a day
+        # Only allow simulations without NaN values in the output to proceed. 
+        #Necessary due to random Nan in AED output
+        pass <- FALSE
+        num_reruns <- 0
+        
+        if(i == 2 & m == 1){
+          file.copy(from = paste0(working_directory, "/", "glm3.nml"), #GLM SPECIFIC
+                    to = paste0(working_directory, "/", "glm3_initial.nml"), overwrite = TRUE) #GLM SPECIFIC
+        }
+        
+        while(!pass){
+          unlink(paste0(working_directory, "/output.nc")) 
           
-          if(length(ncvar_get(nc, "time")) > 1){
-            nc_close(nc)
+          if(machine == "unix" | machine == "mac"){
+            system2(paste0(working_directory, "/", "glm"), 
+                    stdout = print_glm2screen, 
+                    stderr = print_glm2screen,
+                    env = paste0("DYLD_LIBRARY_PATH=",working_directory))
+          }else if(machine == "windows"){
+            system2(paste0(working_directory, "/", "glm.exe"), invisible = print_glm2screen)
+          }else{
+            print("Machine not identified")
+            stop()
+          }
+          
+          if(file.exists(paste0(working_directory, "/output.nc")) & 
+             !has_error(nc <- nc_open(paste0(working_directory, "/output.nc")))){
             
-            if(include_wq & "PHY_TCHLA" %in% wq_names){
-              output_vars <- c(glm_output_vars, tchla_components_vars)
-            }else{
-              output_vars <- c(glm_output_vars)
-            }
-            GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "/output.nc",
-                                                     working_dir = working_directory,
-                                                     z_out = modeled_depths,
-                                                     vars = output_vars)
-            
-            x_star[m, 1:nstates] <- round(c(GLM_temp_wq_out$output)[1:nstates], 3)
-            
-            surface_height[i, m] <- round(GLM_temp_wq_out$surface_height, 3) 
-            
-            snow_ice_thickness[i, m, ] <- round(GLM_temp_wq_out$snow_wice_bice, 3)
-            
-            avg_surf_temp[i, m] <- round(GLM_temp_wq_out$avg_surf_temp, 3)
-            
-            mixing_vars[m, ] <- GLM_temp_wq_out$mixing_vars
-            
-            if(include_wq & "PHY_TCHLA" %in% wq_names){
-              phyto_groups_star[m, , ] <- round(GLM_temp_wq_out$output[ , (length(glm_output_vars) + 1): (length(glm_output_vars)+ num_phytos)], 3)
-            }
-            
-            if(length(which(is.na(x_star[m, ]))) == 0){
-              pass = TRUE
+            if(length(ncvar_get(nc, "time")) > 1){
+              nc_close(nc)
+              
+              if(include_wq & "PHY_TCHLA" %in% wq_names){
+                output_vars <- c(glm_output_vars, tchla_components_vars)
+              }else{
+                output_vars <- c(glm_output_vars)
+              }
+              GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "/output.nc",
+                                                       working_dir = working_directory,
+                                                       z_out = modeled_depths,
+                                                       vars = output_vars)
+              
+              num_glm_depths <- length(GLM_temp_wq_out$depths_enkf)
+              glm_temps <- rev(GLM_temp_wq_out$output[ ,1])
+              glm_depths[i,m,1:num_glm_depths] <- GLM_temp_wq_out$depths_enkf
+              
+              
+              x_star[m, 1:ndepths_modeled] <- spline(x = c(glm_depths[i,m,1:num_glm_depths],GLM_temp_wq_out$surface_height), 
+                                                     y = c(glm_temps,glm_temps[num_glm_depths]), 
+                                                     xout = modeled_depths, 
+                                                     method = "fmm")$y
+              if(include_wq){
+                for(wq in 1:num_wq_vars){
+                  glm_wq <-  rev(GLM_temp_wq_out$output[ ,1+wq])
+                  x_star[m, wq_start[wq]:wq_end[wq]] <- spline(x = c(glm_depths[i,m,1:num_glm_depths],GLM_temp_wq_out$surface_height),
+                                                               y = c(glm_wq,glm_wq[num_glm_depths]), 
+                                                               xout = modeled_depths, 
+                                                               method = "fmm")$y
+                }
+              }
+              
+              surface_height[i, m] <- GLM_temp_wq_out$surface_height
+              
+              snow_ice_thickness[i, m, ] <- GLM_temp_wq_out$snow_wice_bice
+              
+              avg_surf_temp[i, m] <- GLM_temp_wq_out$avg_surf_temp
+              
+              mixing_vars[m, ] <- GLM_temp_wq_out$mixing_vars
+              
+              if(include_wq & "PHY_TCHLA" %in% wq_names){
+                phyto_groups_star[m, , ] <- GLM_temp_wq_out$output[ , (length(glm_output_vars) + 1): (length(glm_output_vars)+ num_phytos)]
+              }
+              
+              if(length(which(is.na(x_star[m, ]))) == 0){
+                pass = TRUE
+              }else{
+                num_reruns <- num_reruns + 1
+              }
             }else{
               num_reruns <- num_reruns + 1
             }
           }else{
             num_reruns <- num_reruns + 1
           }
-        }else{
-          num_reruns <- num_reruns + 1
+          if(num_reruns > 1000){
+            stop(paste0("Too many re-runs (> 1000) due to NaN values in output"))
+          }
         }
-        if(num_reruns > 1000){
-          stop(paste0("Too many re-runs (> 1000) due to NaN values in output"))
+        
+        ########################################
+        #END GLM SPECIFIC PART
+        ########################################
+        
+        #INCREMENT ThE MET_INDEX TO MOVE TO ThE NEXT NOAA ENSEMBLE
+        met_index <- met_index + 1
+        if(met_index > n_met_members){
+          met_index <- 1
         }
-      }
-      
-      ########################################
-      #END GLM SPECIFIC PART
-      ########################################
-      
-      #INCREMENT ThE MET_INDEX TO MOVE TO ThE NEXT NOAA ENSEMBLE
-      met_index <- met_index + 1
-      if(met_index > n_met_members){
-        met_index <- 1
-      }
-      
-      inflow_outflow_index <- inflow_outflow_index + 1
-      if(inflow_outflow_index > n_inflow_outflow_members){
-        inflow_outflow_index <- 1
-      }
-      
+        
+        inflow_outflow_index <- inflow_outflow_index + 1
+        if(inflow_outflow_index > n_inflow_outflow_members){
+          inflow_outflow_index <- 1
+        }
+        
       }else{
         x_star[m, 1:nstates] <- x[i - 1, m ,1:nstates]
       }
@@ -634,6 +693,7 @@ run_EnKF <- function(x,
       snow_ice_restart <- snow_ice_thickness[i, , ]
       avg_surf_temp_restart <- avg_surf_temp[i, ]
       mixing_restart <- mixing_vars
+      glm_depths_restart <- glm_depths[i, , ]
       
       
       
@@ -649,6 +709,7 @@ run_EnKF <- function(x,
       snow_ice_restart <- snow_ice_thickness[i, , ]
       avg_surf_temp_restart <- avg_surf_temp[i, ]
       mixing_restart <- mixing_vars
+      glm_depths_restart <- glm_depths[i, , ]
       
       if(include_wq & "PHY_TCHLA" %in% wq_names){
         x_phyto_groups_restart <- x_phyto_groups[i, ,]
@@ -670,5 +731,6 @@ run_EnKF <- function(x,
               surface_height = surface_height,
               avg_surf_temp_restart = avg_surf_temp_restart,
               running_residuals = running_residuals,
-              mixing_restart = mixing_restart))
+              mixing_restart = mixing_restart,
+              glm_depths_restart = glm_depths_restart))
 }

@@ -25,7 +25,8 @@ write_forecast_netcdf <- function(x,
                                   x_phyto_groups_restart,
                                   x_phyto_groups,
                                   running_residuals,
-                                  mixing_restart){
+                                  mixing_restart,
+                                  glm_depths_restart){
   
   obs <- z
   
@@ -44,6 +45,8 @@ write_forecast_netcdf <- function(x,
   if(include_wq){
     phytos_restart <- seq(1, dim(x_phyto_groups_restart)[2],1)
   }
+  
+  restart_depths <- seq(1, dim(glm_depths_restart)[2])
   
   #Set variable that states whether value is forecasted
   forecasted <- rep(1,length(t))
@@ -73,6 +76,8 @@ write_forecast_netcdf <- function(x,
   snow_ice_dim <- ncdim_def("snow_ice_dim",units = "",vals = c(1, 2, 3), longname = 'snow ice dims') 
   qt_update_days_dim <- ncdim_def("qt_update_days",units = '', vals = qt_update_days, longname = 'Number of running days that qt smooths over')
   mixing_restart_vars_dim <- ncdim_def("mixing_restart_vars_dim",units = '', vals = mixing_restart_vars, longname = 'number of mixing restart variables')
+  depth_restart_vars_dim <- ncdim_def("depth_restart_vars_dim",units = '', vals = restart_depths, longname = 'number of possible depths that are simulated in GLM')
+  
   
   if(include_wq & "PHY_TCHLA" %in% wq_names){
     phyto_restart_dim <- ncdim_def("phyto_restart_dim",units = "",vals = phytos_restart, longname = 'phyto_restart_dim') 
@@ -98,12 +103,13 @@ write_forecast_netcdf <- function(x,
   def_list[[14]] <- ncvar_def("avg_surf_temp_restart","deg_C",list(ensdim),missval = -99,longname ='Running Average of Surface Temperature',prec="single")
   def_list[[15]] <- ncvar_def("running_residuals","various",list(qt_update_days_dim,statedim),fillvalue,longname = "running residual for updating qt",prec="single")
   def_list[[16]] <- ncvar_def("mixing_restart","various",list(ensdim,mixing_restart_vars_dim),fillvalue,longname = "variables required to restart mixing",prec="single")
+  def_list[[17]] <- ncvar_def("depths_restart","various",list(ensdim,depth_restart_vars_dim),fillvalue,longname = "depths simulated by glm that are required to restart ",prec="single")
   
     if(include_wq & "PHY_TCHLA" %in% wq_names){
-    index <- 17
+    index <- 18
     def_list[[index]] <- ncvar_def("phyto_restart","mmol/m3",list(ensdim,phyto_restart_dim),missval = -99,longname ='Restart Phyto biomass',prec="single")
   }else{
-    index <- 16
+    index <- 17
   }
   if(npars > 0){
     for(par in 1:npars){
@@ -155,11 +161,12 @@ write_forecast_netcdf <- function(x,
   ncvar_put(ncout,def_list[[14]] ,avg_surf_temp_restart)
   ncvar_put(ncout,def_list[[15]] ,running_residuals)
   ncvar_put(ncout,def_list[[16]] ,mixing_restart)
+  ncvar_put(ncout,def_list[[17]] ,glm_depths_restart)
   if(include_wq & "PHY_TCHLA" %in% wq_names){
-    index <- 17
+    index <- 18
     ncvar_put(ncout,def_list[[index]] ,x_phyto_groups_restart)
   }else{
-    index <- 16
+    index <- 17
   }
   
   if(npars > 0){

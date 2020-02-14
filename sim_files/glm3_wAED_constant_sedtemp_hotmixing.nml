@@ -61,24 +61,7 @@
    snow_thickness = 0.0
    white_ice_thickness = 0.0
    blue_ice_thickness = 0.0
-   avg_surf_temp = 6.0
-   dep_mx_init = 0.0
-   prev_thick_init = 0.0
-   g_prime_two_layer_init = 0.0
-   energy_avail_max_init = 0.0
-   mass_epi_init = 0.0
-   old_slope_init = 0.0
-   time_end_shear_init = 0.0
-   time_start_shear_init = 0.0
-   time_count_end_shear_init = 0.0
-   time_count_sim_init = 0.0
-   half_seiche_period_init = 0.0
-   thermocline_height_init = 0.0
-   f0_init = 0.0
-   fsum_init = 0.0
-   u_f_init = 0.0
-   u0_init = 0.0
-   u_avg_init = 0.0
+   restart_variables = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 /
 &meteorology
    met_sw = .true.

@@ -2,8 +2,8 @@
    sim_name = 'FCR'
    max_layers = 500
    min_layer_vol = 0.025
-   min_layer_thick = 0.5
-   max_layer_thick = 1.5
+   min_layer_thick = 1.0
+   max_layer_thick = 2.0
    non_avg = .true.
 /
 &wq_setup
@@ -20,7 +20,7 @@
    light_extc = 1, 0.5, 2, 4
    energy_frac = 0.51, 0.45, 0.035, 0.005
    Benthic_Imin = 10
-   Kw = 0.15
+   Kw = 0.85
 /
 &mixing
    coef_mix_conv = 0.2
@@ -100,7 +100,7 @@
    strm_hf_angle = 55, 55, -15
    strmbd_slope = 0.05, 0.05, 15
    strmbd_drag = 0.03, 0.016, 0.009
-   inflow_factor = 0.5, 0.5, 0.5
+   inflow_factor = 0.5, 0.5, 1.0
    inflow_fl = 'inflow_file1.csv','inflow_file2.csv','sss_inflow.csv'
    inflow_varnum = 14
    inflow_vars = 'FLOW','TEMP','SALT','OXY_oxy','NIT_amm','NIT_nit','PHS_frp','OGM_doc','OGM_poc','OGM_don','OGM_dop','OGM_pop','PHS_frp_ads','OGM_pon'
@@ -112,7 +112,7 @@
    bsn_len_outl = 711.699, 100
    bsn_wid_outl = 226.03, 10
    outflow_fl = 'outflow_file1.csv','sss_outflow.csv'
-   outflow_factor = 0.5, 0.5
+   outflow_factor = 0.5, 1.0
 /
 &snowice
    snow_albedo_factor = 1

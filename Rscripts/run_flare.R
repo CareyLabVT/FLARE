@@ -295,18 +295,18 @@ run_flare<-function(start_day_local,
     system(paste0("git pull"))
     
     if(length(met_obs_fname) > 1 & !file.exists(met_obs_fname[2])){
-      inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/389/2/63808664f8feda6a703ef42601207d2e" 
+      inUrl1  <- "https://pasta.lternet.edu/package/eml/edi/389/ea47ae493c7025d61245287649895e6" 
       download.file(inUrl1,met_obs_fname[2],method="curl")
     }
     
     if(length(temp_obs_fname) > 1 & !file.exists(temp_obs_fname[2])){
-      inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/271/2/ea8d89aa2804fb4657acb5b2dbdcc944" 
+      inUrl1  <- "https://pasta.lternet.edu/package/eml/edi/271/4/b888ac006ef4ca601f63e2703d7476b9" 
       download.file(inUrl1,temp_obs_fname[2],method="curl")
       
     }
     
     if(!is.na(ctd_fname) & !file.exists(ctd_fname)){
-      inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/200/6/2143055cdfad2e5bd99c2b0b2670cc56" 
+      inUrl1  <- "https://pasta.lternet.edu/package/eml/edi/200/10/1fc7d2a5c69c6a651793dba06d375ae2" 
       download.file(inUrl1,ctd_fname,method="curl")
     }
     
@@ -1246,6 +1246,8 @@ run_flare<-function(start_day_local,
   
   mixing_vars <- array(NA, dim=c(nmembers, 17))
   
+  glm_depths <- array(NA, dim = c(nsteps, nmembers, 500))
+  
   if(include_wq){
     x_phyto_groups <- array(NA, dim = c(nsteps, nmembers, num_phytos * ndepths_modeled))
   }else{
@@ -1346,15 +1348,15 @@ run_flare<-function(start_day_local,
                                     mean=c(the_temps_init), 
                                     sigma=as.matrix(qt_init[1:nstates,1:nstates]))
         
-        for(m in 1:nmembers){
-          orig_temp <-  x[1,m ,1:ndepths_modeled]
-          dens <- rep(NA, ndepths_modeled)
-          for(d in 1:ndepths_modeled){
-            dens[d] <- temperature_to_density(orig_temp[d], the_sals_init)
-          }
-          index <- order(dens, decreasing = TRUE)
-          x[1,m ,1:nstates] <- orig_temp[index]
-        }
+        #for(m in 1:nmembers){
+        #  orig_temp <-  x[1,m ,1:ndepths_modeled]
+        #  dens <- rep(NA, ndepths_modeled)
+        #  for(d in 1:ndepths_modeled){
+        #    dens[d] <- temperature_to_density(orig_temp[d], the_sals_init)
+        #  }
+        #  index <- order(dens, decreasing = TRUE)
+        #  x[1,m ,1:nstates] <- orig_temp[index]
+        #}
         
         
         for(par in 1:npars){
@@ -1367,7 +1369,7 @@ run_flare<-function(start_day_local,
         if(initial_condition_uncertainty == FALSE){
           state_means <- colMeans(x[1, , 1:nstates])
           for(m in 1:nmembers){
-            x[1, m, ] <- state_means
+            x[1, m,1:nstates] <- state_means
           }
         }
       }else{
@@ -1375,15 +1377,15 @@ run_flare<-function(start_day_local,
                             mean=the_temps_init,
                             sigma=as.matrix(qt))
         
-        for(m in 1:nmembers){
-          orig_temp <-  x[1,m ,1:ndepths_modeled]
-          dens <- rep(NA, ndepths_modeled)
-          for(d in 1:ndepths_modeled){
-            dens[d] <- temperature_to_density(orig_temp[d], the_sals_init[d])
-          }
-          index <- order(dens, decreasing = TRUE)
-          x[1,m ,1:nstates] <- orig_temp[index]
-        }
+        #for(m in 1:nmembers){
+        #  orig_temp <-  x[1,m ,1:ndepths_modeled]
+        #  dens <- rep(NA, ndepths_modeled)
+        #  for(d in 1:ndepths_modeled){
+        #    dens[d] <- temperature_to_density(orig_temp[d], the_sals_init[d])
+        #  }
+        #  index <- order(dens, decreasing = TRUE)
+        #  x[1,m ,1:nstates] <- orig_temp[index]
+        #}
         
         if(initial_condition_uncertainty == FALSE & hist_days == 0){
           state_means <- colMeans(x[1, , 1:nstates])
@@ -1418,6 +1420,7 @@ run_flare<-function(start_day_local,
     snow_ice_thickness_restart <- ncvar_get(nc, "snow_ice_restart")
     avg_surf_temp_restart <- ncvar_get(nc, "avg_surf_temp_restart")
     mixing_restart <- ncvar_get(nc, "mixing_restart")
+    glm_depths_restart  <- ncvar_get(nc, "depths_restart")
     
     if(include_wq & "PHY_TCHLA" %in% wq_names){
       x_phyto_groups_restart <- ncvar_get(nc, "phyto_restart")
@@ -1437,6 +1440,11 @@ run_flare<-function(start_day_local,
       surface_height[1, ] <- surface_height_restart[sampled_nmembers]
       avg_surf_temp[1, ] <- avg_surf_temp_restart[sampled_nmembers]
       mixing_vars <- mixing_restart[sampled_nmembers, ]
+      
+
+      for(m in 1:nmembers){
+        glm_depths[1,m ,1:dim(glm_depths_restart)[2]] <- glm_depths_restart[sampled_nmembers[m], ]
+      }
       
       if(include_wq & "PHY_TCHLA" %in% wq_names){
         for(phyto in 1:num_phytos){
@@ -1459,6 +1467,10 @@ run_flare<-function(start_day_local,
       avg_surf_temp[1, ] <- avg_surf_temp_restart[sampled_nmembers]
       mixing_vars <- mixing_restart[sampled_nmembers, ]
       
+      for(m in 1:nmembers){
+        glm_depths[1,m ,1:dim(glm_depths_restart)[2]] <- glm_depths_restart[sampled_nmembers[m], ]
+      }
+      
       if(include_wq & "PHY_TCHLA" %in% wq_names){
         for(phyto in 1:num_phytos){
           x_phyto_groups[1, ,((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)] <- x_phyto_groups_restart[sampled_nmembers , ((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)]
@@ -1475,6 +1487,10 @@ run_flare<-function(start_day_local,
       surface_height[1, ] <- surface_height_restart
       avg_surf_temp[1, ] <- avg_surf_temp_restart
       mixing_vars <- mixing_restart
+      
+      for(m in 1:nmembers){
+        glm_depths[1,m ,1:dim(glm_depths_restart)[2]] <- glm_depths_restart[m, ]
+      }
       
       if(include_wq & "PHY_TCHLA" %in% wq_names){
         for(phyto in 1:num_phytos){
@@ -1501,6 +1517,10 @@ run_flare<-function(start_day_local,
     avg_surf_temp[1, ] <- x[1, ,1]
     
     mixing_vars[,] <- 0.0
+    
+    for(m in 1:nmembers){
+      glm_depths[1, m, 1:ndepths_modeled] <- modeled_depths
+    }
     
   }
   
@@ -1565,7 +1585,8 @@ run_flare<-function(start_day_local,
                           avg_surf_temp,
                           running_residuals,
                           the_sals_init,
-                          mixing_vars 
+                          mixing_vars,
+                          glm_depths
   )
   
   x <- enkf_output$x
@@ -1583,6 +1604,7 @@ run_flare<-function(start_day_local,
   
   avg_surf_temp_restart <- enkf_output$avg_surf_temp_restart
   mixing_restart <- enkf_output$mixing_restart
+  glm_depths_restart <- enkf_output$glm_depths_restart
   
   ####################################################
   #### STEP 13: PROCESS OUTPUT
@@ -1656,7 +1678,8 @@ run_flare<-function(start_day_local,
                         x_phyto_groups_restart,
                         x_phyto_groups,
                         running_residuals,
-                        mixing_restart)
+                        mixing_restart,
+                        glm_depths_restart)
   
   ##ARCHIVE FORECAST
   restart_file_name <- archive_forecast(working_directory = working_directory,
