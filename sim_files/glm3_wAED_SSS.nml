@@ -2,8 +2,8 @@
    sim_name = 'FCR'
    max_layers = 500
    min_layer_vol = 0.025
-   min_layer_thick = 0.5
-   max_layer_thick = 1.5
+   min_layer_thick = 1.0
+   max_layer_thick = 2.0
    non_avg = .true.
 /
 &wq_setup

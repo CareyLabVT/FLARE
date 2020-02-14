@@ -2,8 +2,8 @@
    sim_name = 'FCR'
    max_layers = 500
    min_layer_vol = 0.025
-   min_layer_thick = 0.5
-   max_layer_thick = 1.5
+   min_layer_thick = 1.0
+   max_layer_thick = 2.0
    non_avg = .true.
 /
 &light
@@ -54,6 +54,7 @@
    white_ice_thickness = 0.0
    blue_ice_thickness = 0.0
    avg_surf_temp = 6.0
+   restart_variables = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 /
 &meteorology
    met_sw = .true.
@@ -80,7 +81,7 @@
    time_fmt = 'YYYY-MM-DD hh:mm:ss'
 /
 &inflow
-   num_inflows = 2
+   num_inflows = 1
    names_of_strms = 'weir','wetland'
    subm_flag = .false., .false.
    strm_hf_angle = 55, 55
@@ -112,6 +113,6 @@
    sed_heat_Ksoil = 1.8, 1.8
    sed_temp_depth = 0.5, 0.5
    sed_temp_mean = 12.08, 12.00
-   sed_temp_amplitude = 0, 6
+   sed_temp_amplitude = 0, 0
    sed_temp_peak_doy = 257, 251
 /

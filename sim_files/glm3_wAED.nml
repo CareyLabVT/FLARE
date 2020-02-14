@@ -2,8 +2,8 @@
    sim_name = 'FCR'
    max_layers = 500
    min_layer_vol = 0.025
-   min_layer_thick = 0.5
-   max_layer_thick = 1.5
+   min_layer_thick = 1.0
+   max_layer_thick = 2.0
    non_avg = .true.
 /
 &wq_setup
@@ -67,23 +67,7 @@
    white_ice_thickness = 0.0
    blue_ice_thickness = 0.0
    avg_surf_temp = 6.0
-   dep_mx_init = 0.0
-   prev_thick_init = 0.0
-   g_prime_two_layer_init = 0.0
-   energy_avail_max_init = 0.0
-   mass_epi_init = 0.0
-   old_slope_init = 0.0
-   time_end_shear_init = 0.0
-   time_start_shear_init = 0.0
-   time_count_end_shear_init = 0.0
-   time_count_sim_init = 0.0
-   half_seiche_period_init = 0.0
-   thermocline_height_init = 0.0
-   f0_init = 0.0
-   fsum_init = 0.0
-   u_f_init = 0.0
-   u0_init = 0.0
-   u_avg_init = 0.0
+   restart_variables = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 /
 &meteorology
    met_sw = .true.
@@ -140,8 +124,8 @@
    n_zones = 2
    zone_heights = 5, 9.5
    sed_heat_Ksoil = 1.8, 1.8
-   sed_temp_depth = 0.2, 0.2
-   sed_temp_mean = 12.08, 15.17
-   sed_temp_amplitude = 2.84, 5.35
-   sed_temp_peak_doy = 257, 251
+   sed_temp_depth = 0.5, 0.5
+   sed_temp_mean = 12.08, 12.00
+   sed_temp_amplitude = 0, 0
+   sed_temp_peak_doy = 257, 250
 /

@@ -83,8 +83,7 @@ if(include_wq){
     base_GLM_nml <<- "glm3_wAED.nml"  
   }
 }else{
-  #base_GLM_nml <<- "glm3_woAED.nml"
-  base_GLM_nml <<- "glm3_woAED_constant_sedtemp_hotmixing.nml"
+  base_GLM_nml <<- "glm3_woAED.nml"
 }
 
 #################################
@@ -114,54 +113,7 @@ single_run <<- FALSE
 #Init depth of lake
 lake_depth_init <<- 9.4  #not a modeled state
 
-if(!include_wq){
-  modeled_depths <<- c(0.1, 0.33, 0.66, 
-                       1.00, 1.33, 1.66,
-                       2.00, 2.33, 2.66,
-                       3.0, 3.33, 3.66,
-                       4.0, 4.33, 4.66,
-                       5.0, 5.33, 5.66,
-                       6.0, 6.33, 6.66,
-                       7.00, 7.33, 7.66,
-                       8.0, 8.33, 8.66,
-                       9.00)
-  
-  #modeled_depths <<- c(0.1, 0.5, 
-  #                     1.00, 1.5,
-  #                     2.00, 2.5,
-  #                     3.0, 3.5,
-  #                     4.0, 4.5,
-  #                     5.0, 5.5,
-  #                     6.0, 6.5,
-  #                     7.00, 7.5,
-  #                     8.0, 8.5,
-  #                     9.00)
-  
-  
-  #modeled_depths <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
-}else{
-  modeled_depths <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
-  #modeled_depths <<- c(0.1, 0.5, 
-  #                     1, 2.5, 
-  #                     2, 2.5, 
-  #                     3, 3.5,
-  #                     4, 4.5, 
-  #                     5, 5.5, 
-  #                     6, 6.5, 
-  #                     7, 7.5,
-  #                     8, 8.5, 
-  #                     9) 
-  #modeled_depths <<- c(0.1, 0.33, 0.66, 
-  #                     1.00, 1.33, 1.66,
-  #                     2.00, 2.33, 2.66,
-  #                     3.0, 3.33, 3.66,
-  #                     4.0, 4.33, 4.66,
-  #                     5.0, 5.33, 5.66,
-  #                     6.0, 6.33, 6.66,
-  #                     7.00, 7.33, 7.66,
-  #                     8.0, 8.33, 8.66,
-  #                     9.00)
-}
+modeled_depths <<- c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
 
 default_temp_init <<- c(6.2, 5.7, 5.5, 5.5, 5.4, 5.3, 5.3, 5.3, 5.2, 5.0)
 default_temp_init_depths <<-  c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9) 
@@ -188,9 +140,9 @@ n_inflow_outflow_members <<- 21
 qt_alpha <<- 0.8  #0 - all weight on the new Qt, 1 - all weight on the current Qt
 qt_beta <<- 0.7 # 
 localization_distance <<- 1 #distance in meters were covariances in the process error are used
-use_cov <<- TRUE
+use_cov <<- FALSE
 adapt_qt_method <<- 1  #0 = no adapt, 1 = variance in residuals, 2 = Rastetter et al 2011
-num_adapt_days <<- 30
+num_adapt_days <<- 15
 
 #################################
 # Parameter calibration information
