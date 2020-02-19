@@ -1469,6 +1469,7 @@ void initialise_lake(int namlst)
     if (min_layers > 50) min_layers = 50;
     if (min_layers < 3) min_layers = 3;
 
+	if(restart_variables[0] == MISVAL){
     // Now interpolate into at least min_layers
     while (NumLayers <= min_layers) {
         for (i = botmLayer; i < NumLayers; i++) {
@@ -1492,6 +1493,9 @@ void initialise_lake(int namlst)
         }
         NumLayers = 2*NumLayers - 1;
         if ( NumLayers * 2 >= MaxLayers ) break;
+    }
+    }else{
+    NumLayers = num_depths;
     }
 
     // And free the temporary index map
