@@ -30,6 +30,7 @@
    coef_mix_KH = 0.3
    coef_mix_hyp = 0.5
    deep_mixing = .true.
+   coef_mix_shreq = 0.0
 /
 &morphometry
    lake_name = 'FallingCreek'

@@ -596,6 +596,26 @@ plot_forecast <- function(pdf_file_name,
                         "blue2",
                         "blue4")
       
+    }else if(length(depths) == 19){
+      depth_colors <- c("firebrick4",
+                        NA,
+                        "firebrick1",
+                        NA,
+                        "DarkOrange1",
+                        NA,
+                        "gold",
+                        NA,
+                        "greenyellow",
+                        NA,
+                        "medium sea green",
+                        NA,
+                        "sea green",
+                        NA,
+                        "DeepSkyBlue4",
+                        NA,
+                        "blue2",
+                        NA,
+                        "blue4")
     }else{
       depth_colors <- c("firebrick4",
                         NA,
