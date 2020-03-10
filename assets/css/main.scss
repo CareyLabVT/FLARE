@@ -6,3 +6,7 @@
 
 @import "minimal-mistakes/skins/{{ site.minimal_mistakes_skin | default: 'default' }}"; // skin
 @import "minimal-mistakes"; // main partials
+
+.masthead {
+    border-bottom: 5px solid #0092ca;
+}
