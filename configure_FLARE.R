@@ -76,14 +76,9 @@ FLAREversion <<- "v1.0_beta.1"
 #GLM and FLARE version; the code adds these to the output files
 
 #GLM NML used as base 
+base_GLM_nml <- paste0(forecast_location,"/glm3_woAED.nml" )
 if(include_wq){
-  if(simulate_SSS){
-    base_GLM_nml <<- "glm3_wAED_SSS.nml"
-  }else{
-    base_GLM_nml <<- "glm3_wAED.nml"  
-  }
-}else{
-  base_GLM_nml <<- "glm3_woAED.nml"
+  base_AED_nml <<- paste0(forecast_location,"/aed2_only_Oxy.nml") 
 }
 
 #################################

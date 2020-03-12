@@ -695,9 +695,7 @@ run_EnKF <- function(x,
       mixing_restart <- mixing_vars
       glm_depths_restart <- glm_depths[i, , ]
       
-      
-      
-      if(include_wq){
+      if(include_wq & "PHY_TCHLA" %in% wq_names){
         x_phyto_groups_restart <- x_phyto_groups[i, ,]
       }else{
         x_phyto_groups_restart <- NA

@@ -87,10 +87,10 @@ void init_glm(int *jstart, char *outp_dir, char *outp_fn, int *nsave)
 
     /*-- %%NAMELIST glm_setup ------------------------------------------------*/
     char           *sim_name = NULL;
-    int             max_layers;
-    AED_REAL        min_layer_vol;
-    AED_REAL        min_layer_thick;
-    AED_REAL        max_layer_thick;
+    int             max_layers = 500;
+    AED_REAL        min_layer_vol = 0.1;
+    AED_REAL        min_layer_thick = 0.1;
+    AED_REAL        max_layer_thick = 0.1;
 //  extern int      density_model;
 //  extern CLOGICAL littoral_sw;
 //  extern CLOGICAL non_avg;
@@ -138,8 +138,8 @@ void init_glm(int *jstart, char *outp_dir, char *outp_fn, int *nsave)
     /*-- %%NAMELIST wq_setup -------------------------------------------------*/
     char           *twq_lib = NULL;
     char           *wq_nml_file = DEFAULT_WQ_NML;
-    int             lode_method;
-    int             lsplit_factor;
+    int             lode_method = -1;
+    int             lsplit_factor = 1;
 //  LOGICAL         bioshade_feedback;
 //  LOGICAL         repair_state;
 //  CLOGICAL        mobility_off;
@@ -161,8 +161,8 @@ void init_glm(int *jstart, char *outp_dir, char *outp_fn, int *nsave)
     int             timefmt;
     char           *start = NULL;
     char           *stop  = NULL;
-    AED_REAL        dt;        // timestep
-    int             num_days;  // number of days to run the sim
+    AED_REAL        dt = 0.0;      // timestep
+    int             num_days = 0;  // number of days to run the sim
 //  AED_REAL        timezone_r;
     //==========================================================================
     NAMELIST time[] = {
@@ -217,10 +217,10 @@ void init_glm(int *jstart, char *outp_dir, char *outp_fn, int *nsave)
     /*-- %%END NAMELIST ------------------------------------------------------*/
 
     /*-- * %%NAMELIST meteorology --------------------------------------------*/
-    LOGICAL         met_sw;          // Include surface meteorological forcing
+    LOGICAL         met_sw = FALSE;  // Include surface meteorological forcing
     char           *lw_type = NULL;  // Type LW measurement (LW_IN/LW_CC/LW_NET)
-    LOGICAL         rain_sw;         // Rainfall composition
-    LOGICAL         snow_sw;         // Snowfall
+    LOGICAL         rain_sw = FALSE; // Rainfall composition
+    LOGICAL         snow_sw = FALSE; // Snowfall
     char           *meteo_fl = NULL; // Name of meteorology input file
 //  int             lw_ind;          // type of longwave radiation - now in glm_input
 //  LOGICAL         atm_stab;        // Account for non-neutral atmospheric stability
@@ -315,7 +315,7 @@ void init_glm(int *jstart, char *outp_dir, char *outp_fn, int *nsave)
     /*-- %%END NAMELIST ------------------------------------------------------*/
 
     /*-- %%NAMELIST inflow ---------------------------------------------------*/
-    int             num_inflows;
+    int             num_inflows    = 0;
     LOGICAL        *subm_flag      = NULL;
     char          **names_of_strms = NULL;
     AED_REAL       *strm_hf_angle  = NULL;
@@ -323,9 +323,9 @@ void init_glm(int *jstart, char *outp_dir, char *outp_fn, int *nsave)
     AED_REAL       *strmbd_drag    = NULL;
     AED_REAL       *inflow_factor  = NULL;
     char          **inflow_fl      = NULL;
-    int             inflow_varnum;
+    int             inflow_varnum  = 0;
     char          **inflow_vars    = NULL;
-    AED_REAL        coef_inf_entrain;
+    AED_REAL        coef_inf_entrain = 0.0;
     char           *timefmt_i      = NULL;
     extern AED_REAL timezone_i;
     //==========================================================================
@@ -349,7 +349,7 @@ void init_glm(int *jstart, char *outp_dir, char *outp_fn, int *nsave)
     /*-- %%END NAMELIST ------------------------------------------------------*/
 
     /*-- %%NAMELIST outflow --------------------------------------------------*/
-    int             num_outlet;
+    int             num_outlet     = 0;
     LOGICAL        *flt_off_sw     = NULL;
     int            *outlet_type    = NULL;
     int             crit_O2        = -1;
@@ -359,11 +359,11 @@ void init_glm(int *jstart, char *outp_dir, char *outp_fn, int *nsave)
     char          **O2name         = NULL;
     int             O2idx          = 0;
     AED_REAL       *target_temp    = NULL;
-    AED_REAL        min_lake_temp;
-    LOGICAL         mix_withdraw;
+    AED_REAL        min_lake_temp  = 0.0;
+    LOGICAL         mix_withdraw   = FALSE;
     extern AED_REAL outflow_thick_limit;
     extern LOGICAL  single_layer_draw;
-    LOGICAL         coupl_oxy_sw;
+    LOGICAL         coupl_oxy_sw   = FALSE;
     extern AED_REAL fac_range_upper;
     extern AED_REAL fac_range_lower;
     AED_REAL       *outl_elvs    = NULL;
@@ -1358,7 +1358,7 @@ void initialise_lake(int namlst)
     AED_REAL        white_ice_thickness = 0.0;
     AED_REAL        blue_ice_thickness = 0.0;
     AED_REAL        avg_surf_temp = 6.0;
-    AED_REAL		*restart_variables;
+    AED_REAL       *restart_variables;
 
     //==========================================================================
     NAMELIST init_profiles[] = {
@@ -1468,34 +1468,35 @@ void initialise_lake(int namlst)
     if (min_layers > (MaxLayers-1)/2) min_layers = (MaxLayers-1)/2;
     if (min_layers > 50) min_layers = 50;
     if (min_layers < 3) min_layers = 3;
-
-	if(restart_variables[0] == MISVAL){
+    
+    if(restart_variables[0] == MISVAL){
     // Now interpolate into at least min_layers
-    while (NumLayers <= min_layers) {
-        for (i = botmLayer; i < NumLayers; i++) {
-            nx = 2 * (surfLayer - i);
-            np = surfLayer - i;
-            Lake[nx].Height = Lake[np].Height;
-            Lake[nx].Temp = Lake[np].Temp;
-            Lake[nx].Salinity = Lake[np].Salinity;
-            for (j = 0; j < num_wq_vars; j++)
-                if ( idx[j] >= 0 ) _WQ_Vars(idx[j],nx) = _WQ_Vars(idx[j],np);
+        while (NumLayers <= min_layers) {
+            for (i = botmLayer; i < NumLayers; i++) {
+                nx = 2 * (surfLayer - i);
+                np = surfLayer - i;
+                Lake[nx].Height = Lake[np].Height;
+                Lake[nx].Temp = Lake[np].Temp;
+                Lake[nx].Salinity = Lake[np].Salinity;
+                for (j = 0; j < num_wq_vars; j++)
+                    if ( idx[j] >= 0 ) _WQ_Vars(idx[j],nx) = _WQ_Vars(idx[j],np);
+            }
+            for (i = botmLayer+1; i < NumLayers; i++) {
+                nx = 2 * i - 1;
+                np = 2 * i - 2;
+                nz = 2 * i - 0;
+                Lake[nx].Temp = (Lake[np].Temp + Lake[nz].Temp) / 2.0;
+                Lake[nx].Height = (Lake[np].Height + Lake[nz].Height) / 2.0;
+                Lake[nx].Salinity = (Lake[np].Salinity + Lake[nz].Salinity) / 2.0;
+                for (j = 0; j < num_wq_vars; j++)
+                    if ( idx[j] >= 0 ) _WQ_Vars(idx[j],nx) = (_WQ_Vars(idx[j],np) + _WQ_Vars(idx[j],nz)) / 2.0;
+            }
+            NumLayers = 2*NumLayers - 1;
+            if ( NumLayers * 2 >= MaxLayers ) break;
         }
-        for (i = botmLayer+1; i < NumLayers; i++) {
-            nx = 2 * i - 1;
-            np = 2 * i - 2;
-            nz = 2 * i - 0;
-            Lake[nx].Temp = (Lake[np].Temp + Lake[nz].Temp) / 2.0;
-            Lake[nx].Height = (Lake[np].Height + Lake[nz].Height) / 2.0;
-            Lake[nx].Salinity = (Lake[np].Salinity + Lake[nz].Salinity) / 2.0;
-            for (j = 0; j < num_wq_vars; j++)
-                if ( idx[j] >= 0 ) _WQ_Vars(idx[j],nx) = (_WQ_Vars(idx[j],np) + _WQ_Vars(idx[j],nz)) / 2.0;
-        }
-        NumLayers = 2*NumLayers - 1;
-        if ( NumLayers * 2 >= MaxLayers ) break;
-    }
     }else{
-    NumLayers = num_depths;
+        // Use the layers exactly as provided in the nml (used in restarting)
+        NumLayers = num_depths;
     }
 
     // And free the temporary index map
@@ -1521,29 +1522,27 @@ void initialise_lake(int namlst)
     }
 
     AvgSurfTemp = avg_surf_temp;
-    
-   
-    if(restart_variables[0] != MISVAL){
-    	DepMX = restart_variables[0];
-    	PrevThick =  restart_variables[1]; //# mixed layer thickness from previous time step
-    	gPrimeTwoLayer =  restart_variables[2]; //# Reduced gravity for int wave estimate
-    	Energy_AvailableMix = restart_variables[3];  //# Total available energy to mix (carries over from previous timesteps)
-    	Mass_Epi =  restart_variables[4];//# Sigma mass of Epilimnion (surface layer after Kelvin-Helmholtz) kg
-    	OldSlope = restart_variables[5];
-    	Time_end_shear =  restart_variables[6]; //# Time left before shear cut off [hours]
-    	Time_start_shear =  restart_variables[7];//# Time count since start of sim for shear period start [hours]
-    	Time_count_end_shear =  restart_variables[8]; //# Time count since start of sim for shear period end [hours]
-    	Time_count_sim = restart_variables[9];  //# Time count since start of simulation [hours]
-    	Half_Seiche_Period = restart_variables[10];//# One half the seiche period
-    	Thermocline_Height =  restart_variables[11];//# Height at the top of the metalimnion [m]
-    	FO = restart_variables[12];
-    	FSUM = restart_variables[13];
-    	u_f = restart_variables[14];
-    	u0 = restart_variables[15];
-    	u_avg = restart_variables[16];
+
+    if (restart_variables[0] != MISVAL) {
+        DepMX = restart_variables[0];
+        PrevThick =  restart_variables[1]; //# mixed layer thickness from previous time step
+        gPrimeTwoLayer =  restart_variables[2]; //# Reduced gravity for int wave estimate
+        Energy_AvailableMix = restart_variables[3];  //# Total available energy to mix (carries over from previous timesteps)
+        Mass_Epi =  restart_variables[4];//# Sigma mass of Epilimnion (surface layer after Kelvin-Helmholtz) kg
+        OldSlope = restart_variables[5];
+        Time_end_shear =  restart_variables[6]; //# Time left before shear cut off [hours]
+        Time_start_shear =  restart_variables[7];//# Time count since start of sim for shear period start [hours]
+        Time_count_end_shear =  restart_variables[8]; //# Time count since start of sim for shear period end [hours]
+        Time_count_sim = restart_variables[9];  //# Time count since start of simulation [hours]
+        Half_Seiche_Period = restart_variables[10];//# One half the seiche period
+        Thermocline_Height =  restart_variables[11];//# Height at the top of the metalimnion [m]
+        FO = restart_variables[12];
+        FSUM = restart_variables[13];
+        u_f = restart_variables[14];
+        u0 = restart_variables[15];
+        u_avg = restart_variables[16];
     }
-    
-    
+
     free(restart_variables);
     
 }

@@ -42,7 +42,8 @@ write_forecast_netcdf <- function(x,
   obs_states <- seq(1,dim(z)[2],1)
   qt_update_days <- seq(1,dim(running_residuals)[1],1)
   mixing_restart_vars <- seq(1, dim(mixing_restart)[2], 1)
-  if(include_wq){
+  
+  if(include_wq & "PHY_TCHLA" %in% wq_names){
     phytos_restart <- seq(1, dim(x_phyto_groups_restart)[2],1)
   }
   
@@ -208,9 +209,8 @@ write_forecast_netcdf <- function(x,
   ncatt_put(ncout,0,"GLM_version",as.character(GLMversion), prec =  "text")
   ncatt_put(ncout,0,"FLARE_version",as.character(FLAREversion), prec =  "text")
   ncatt_put(ncout,0,"time_zone_of_simulation",as.character(local_tzone), prec =  "text")
-  #ncatt_put(ncout,0,"references",references$value)
-  history <- paste('Run date:',time_of_forecast, sep=", ")
-  ncatt_put(ncout,0,"history",history, prec =  "text")
+  ncatt_put(ncout,0,"forecast_issue_time",as.character(time_of_forecast), 
+            prec =  "text")
   #ncatt_put(ncout,0,"Conventions",)
   
   nc_close(ncout)

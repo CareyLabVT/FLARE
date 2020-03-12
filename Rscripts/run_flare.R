@@ -251,32 +251,26 @@ run_flare<-function(start_day_local,
   
   temperature_location <- paste0(data_location, "/", "mia-data") #FCR SPECIFIC
   met_station_location <- paste0(data_location, "/", "carina-data") #FCR SPECIFIC
-  noaa_location <- paste0(data_location, "/", "noaa-data") #FCR SPECIFIC
+  #noaa_location <- paste0(data_location, "/", "noaa-data") #FCR SPECIFIC
   manual_data_location <- paste0(data_location, "/", "manual-data") #FCR SPECIFIC
   diana_data_location <- paste0(data_location, "/", "diana-data") #FCR SPECIFIC
   if(pull_from_git){
     
     if(!file.exists(temperature_location)){
-      setwd(data_location)
-      system("git clone -b mia-data --single-branch https://github.com/CareyLabVT/SCCData.git mia-data")
+      stop("Missing temperature data GitHub repo")
     }
     if(!file.exists(met_station_location)){
-      setwd(data_location)
-      system("git clone -b carina-data --single-branch https://github.com/CareyLabVT/SCCData.git carina-data")
+      stop("Missing met station data GitHub repo")
     }
     if(!file.exists(noaa_location)){
-      setwd(data_location)
-      system("git clone -b noaa-data --single-branch https://github.com/CareyLabVT/SCCData.git noaa-data")
+      stop("Missing NOAA forecast GitHub repo")
     }
-    
     if(!file.exists(manual_data_location)){
-      setwd(data_location)
-      system("git clone -b manual-data --single-branch https://github.com/CareyLabVT/SCCData.git manual-data")
+      stop("Missing Manual data GitHub repo")
     }
     
     if(!file.exists(diana_data_location)){
-      setwd(data_location)
-      system("git clone -b diana-data --single-branch https://github.com/CareyLabVT/SCCData.git diana-data")
+      stop("Missing Inflow data GitHub repo")
     }
     
     setwd(temperature_location)
@@ -447,16 +441,18 @@ run_flare<-function(start_day_local,
   ####Clear out temp GLM working directory
   unlink(paste0(working_directory, "/*"), recursive = FALSE)   
   
-  forecast_base_name <- paste0(year(forecast_start_time_GMT),
+  forecast_base_name <- paste0(lake_name,"_",
+                               year(forecast_start_time_GMT),
                                forecast_month_GMT,
-                               forecast_day_GMT,
+                               forecast_day_GMT,"_",
                                "gep_all_",
                                noaa_hour,
                                "z")
   
-  forecast_base_name_past <- paste0(year(forecast_start_time_GMT_past),
+  forecast_base_name_past <- paste0(lake_name,"_",
+                                    year(forecast_start_time_GMT_past),
                                     forecast_month_GMT_past,
-                                    forecast_day_GMT_past,
+                                    forecast_day_GMT_past,"_",
                                     "gep_all_",
                                     noaa_hour,
                                     "z")
@@ -1079,13 +1075,13 @@ run_flare<-function(start_day_local,
   fl <- c(list.files(GLM_folder, full.names = TRUE))
   tmp <- file.copy(from = fl, to = working_directory, overwrite = TRUE)
   
-  file.copy(from = paste0(working_directory, "/", base_GLM_nml), 
+  file.copy(from = paste0(base_GLM_nml), 
             to = paste0(working_directory, "/", "glm3.nml"), overwrite = TRUE)
   
   #update_var(wq_init_vals, "wq_init_vals", working_directory, "glm3.nml") #GLM SPECIFIC
   if(include_wq){
     update_var(num_wq_vars - 1 + length(tchla_components_vars), "num_wq_vars", working_directory, "glm3.nml") #GLM SPECIFIC
-    file.copy(from = paste0(working_directory, "/", base_AED_nml), 
+    file.copy(from = paste0(base_AED_nml), 
               to = paste0(working_directory, "/", "aed2.nml"), overwrite = TRUE)
   }else{
     update_var(0, "num_wq_vars", working_directory, "glm3.nml") #GLM SPECIFIC

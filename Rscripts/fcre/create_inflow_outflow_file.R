@@ -46,7 +46,9 @@ create_inflow_outflow_file <- function(full_time_day_local,
         group_by(day) %>% 
         summarize(Precip = mean(Rain),
                   AirTemp = mean(AirTemp)) %>% 
-        mutate(ensemble = m)
+        mutate(AirTemp_lag = lag(AirTemp, n = 1),
+                AirTemp_change = AirTemp - AirTemp_lag,
+               ensemble = m)
       
       curr_all_days <- rbind(curr_all_days,curr_met_daily)
     }
@@ -147,6 +149,8 @@ create_inflow_outflow_file <- function(full_time_day_local,
             group_by(day) %>% 
             summarize(Precip = mean(Precip),
                       AirTemp = mean(AirTemp)) %>% 
+            mutate(AirTemp_lag = lag(AirTemp, n = 1),
+                   AirTemp_change = AirTemp - AirTemp_lag) %>% 
             filter(day == full_time_day_local[i])
         }
         
@@ -156,12 +160,21 @@ create_inflow_outflow_file <- function(full_time_day_local,
           temp_error  <- 0.0
         }else{
           inflow_error <- rnorm(1, 0, 0.009416283)
-          temp_error <- rnorm(1, 0, 0.7173)
+          temp_error <- rnorm(1, 0, 0.6294369)
         }
         
         inflow_new[i,2] <- 0.9483  * inflow_new[i - 1,2] + 0.7093 * curr_met_daily$Precip + inflow_error
         inflow_new[i,2] <- max(c(inflow_new[i,2], min_baseflow))
-        inflow_new[i,3] <- 0.322264   + 0.775594    * inflow_new[i - 1,3] +  0.192049 * curr_met_daily$AirTemp + temp_error
+        #inflow_new[i,3] <- 0.797373    * inflow_new[i - 1,3] +  0.188219 * curr_met_daily$AirTemp + temp_error
+        
+        
+        inflow_new[i,3] <- 0.999160 * inflow_new[i - 1,3] +  0.227172 * curr_met_daily$AirTemp_change + temp_error
+        
+        #inflow_new[i,3] <- 0.995261 * inflow_new[i - 1,3] +  
+        #                   0.102463 * (curr_met_daily$AirTemp_lag - inflow_new[i - 1,3]) +
+        #                   0.255484 * curr_met_daily$AirTemp_change +
+        #                   temp_error
+        
         
         #OVERWRITE FOR NOW UNTIL WE GET AN EQUATION
         #index1 <- which(day(inflow_time) == curr_day & month(inflow_time) == curr_month)

@@ -17,27 +17,29 @@ library(tools)
 
 data_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
 code_folder <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
-forecast_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/test/"
-execute_location <<- "/Users/quinn/Desktop/FLARE_AED_test/"
+forecast_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/test_forecast_launch_aed/"
+execute_location <<- "/Volumes/ramdisk2/"
 
 source(paste0(forecast_location,"/","configure_FLARE.R"))
 source(paste0(code_folder, "/", "Rscripts/run_flare.R"))
-source(paste0(code_folder, "/", "Rscripts/plot_forecast.R"))
+source(paste0(code_folder, "/", "Rscripts/visualization_analysis/plot_forecast.R"))
+source(paste0(code_folder, "/", "Rscripts/visualization_analysis/combined_oxygen_plot.R"))
 
-start_day_local <- "2019-09-20" 
-restart_file <- NA #"
+start_day_local <- "2020-03-09" #"2019-09-20" 
+restart_file <- NA
+restart_file <- "/Users/quinn/Dropbox (VTFRS)/Research/SSC_forecasting/test_forecast_launch_aed/testing_sim_H_2019_09_20_2020_03_09_F_0_3122020_8_29.nc"
 
 sim_name <- "testing_sim"
 start_time_local <- "07:00:00"
-forecast_start_day_local <- "2019-09-22" 
+forecast_start_day_local <- "2020-03-10" 
 spin_up_days <- 0
 days_between_forecasts <- 1
 forecast_days <- 16
 num_forecast_periods <- 1000
 wait_time <- 60*60
 
-start_day_local <- as.POSIXct(start_day_local, format = "%Y-%m-%d")
-forecast_start_day_local <- as.POSIXct(forecast_start_day_local, format = "%Y-%m-%d")
+start_day_local <- as_date(start_day_local)
+forecast_start_day_local <- as_date(forecast_start_day_local)
 
 if(is.na(restart_file)){
   
@@ -87,7 +89,7 @@ if(is.na(restart_file)){
                 modeled_depths = modeled_depths)
   
   #ADVANCE TO NEXT DAY
-  start_day_local <- start_day_local + days(hist_days)
+  start_day_local <- as_date(start_day_local) + days(hist_days)
   restart_file <- unlist(out)[1]
 }
 
@@ -107,20 +109,45 @@ if(num_forecast_periods > 0){
       #LOOP TO KEEP CHECKING FOR A NOAA FORECAST
       forecast_avialable = FALSE
       while(forecast_avialable == FALSE){
-        forecast_start_day_local <- start_day_local + days(hist_days)
-        if(day(forecast_start_day_local) < 10){
-          forecast_day <- paste0('0',day(forecast_start_day_local))
-        }else{
-          forecast_day <- paste0(day(forecast_start_day_local))
-        }
-        if(month(forecast_start_day_local) < 10){
-          forecast_month <- paste0('0',month(forecast_start_day_local))
-        }else{
-          forecast_month <- paste0(month(forecast_start_day_local))
-        }
-        forecast_base_name <- paste0(year(forecast_start_day_local),forecast_month,forecast_day,'gep_all_12z.csv')
         
-        noaa_location <- paste0(data_location,'/','noaa-data')
+        forecast_start_day <- as_date(start_day_local)  + days(hist_days)
+        forecast_start_time_local <- ymd_hms(paste0(start_day_local,"T",start_time_local), 
+                                             tz = local_tzone) + days(hist_days)
+        
+        forecast_start_time_GMT <- with_tz(forecast_start_time_local, 
+                                           tzone = "GMT")
+        
+        if(day(forecast_start_time_GMT) < 10){
+          forecast_day <- paste0('0',day(forecast_start_time_GMT))
+        }else{
+          forecast_day <- paste0(day(forecast_start_time_GMT))
+        }
+        if(month(forecast_start_time_GMT) < 10){
+          forecast_month <- paste0('0',month(forecast_start_time_GMT))
+        }else{
+          forecast_month <- paste0(month(forecast_start_time_GMT))
+        }
+        if(hour(forecast_start_time_GMT) == 0){
+          noaa_hour <- "00"
+        }
+        if(hour(forecast_start_time_GMT) == 6){
+          noaa_hour <- "06"
+        }
+        if(hour(forecast_start_time_GMT) == 12){
+          noaa_hour <- "12"
+        }
+        if(hour(forecast_start_time_GMT) == 18){
+          noaa_hour <- "18"
+        }
+        
+        forecast_base_name <- paste0(lake_name,"_",
+                                     year(forecast_start_time_GMT),
+                                     forecast_month,
+                                     forecast_day,"_",
+                                     "gep_all_",
+                                     noaa_hour,
+                                     "z.csv")
+        
         setwd(noaa_location)
         system(paste0('git pull'))
         
@@ -137,10 +164,12 @@ if(num_forecast_periods > 0){
     
     if(forecast_no_SSS){
       
+      
+      
       out1 <- run_flare(start_day_local,
                         start_time_local,
                         forecast_start_day_local,
-                        sim_name = sim_name,
+                        sim_name = paste0(sim_name, "_NOSSS"),
                         hist_days = hist_days,
                         forecast_days = forecast_days,
                         spin_up_days = spin_up_days,
@@ -181,14 +210,19 @@ if(num_forecast_periods > 0){
     }
     
     if(forecast_SSS){
-      out2 <- run_flare(start_day_local,
+      
+      sss_start_day_local <- start_day_local + days(hist_days)
+      sss_forecast_start_day_local <- sss_start_day_local
+      restart_file_sss <- unlist(out1)[1]
+      
+      out2 <- run_flare(start_day_local = sss_start_day_local,
                         start_time_local,
-                        forecast_start_day_local,
+                        forecast_start_day_local = sss_forecast_start_day_local,
                         sim_name = paste0(sim_name, "_SSS"),
-                        hist_days = hist_days,
+                        hist_days = 0,
                         forecast_days = forecast_days,
                         spin_up_days = spin_up_days,
-                        restart_file = restart_file,
+                        restart_file = restart_file_sss,
                         code_folder = code_folder,
                         forecast_location = forecast_location,
                         execute_location = execute_location,
@@ -222,6 +256,11 @@ if(num_forecast_periods > 0){
                     pull_from_git = pull_from_git,
                     use_ctd = use_ctd,
                     modeled_depths = modeled_depths)
+      
+      
+      combined_oxygen_plot(with_oxy = unlist(out2[[1]]), 
+                           without_oxy = unlist(out1[[1]]), 
+                           forecast_location)
     }
     
     
