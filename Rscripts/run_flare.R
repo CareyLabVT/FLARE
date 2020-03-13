@@ -489,11 +489,10 @@ run_flare<-function(start_day_local,
   met_qaqc(fname = met_obs_fname,
            cleaned_met_file,
            input_file_tz = "EST",
-           local_tzone)
+           local_tzone,
+           full_time_local)
   
-  met_obs_fname_wdir <- cleaned_met_file
-  
-  missing_met <- create_obs_met_input(fname = met_obs_fname_wdir,
+  missing_met <- create_obs_met_input(fname = cleaned_met_file,
                                       outfile=obs_met_outfile,
                                       full_time_hour_local, 
                                       local_tzone,
@@ -551,7 +550,7 @@ run_flare<-function(start_day_local,
     
     temp_met_file<- process_downscale_GEFS(folder = code_folder,
                                            noaa_location,
-                                           input_met_file = met_obs_fname_wdir,
+                                           input_met_file = cleaned_met_file,
                                            working_directory,
                                            sim_files_folder = paste0(code_folder, "/", "sim_files"),
                                            n_ds_members,
@@ -621,7 +620,7 @@ run_flare<-function(start_day_local,
     
     met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder = code_folder,
                                                                                  noaa_location,
-                                                                                 input_met_file = met_obs_fname_wdir,
+                                                                                 input_met_file = cleaned_met_file,
                                                                                  working_directory,
                                                                                  sim_files_folder = paste0(code_folder, "/", "sim_files"),
                                                                                  n_ds_members,
@@ -651,7 +650,7 @@ run_flare<-function(start_day_local,
       inflow_met_file_names <- rep(NA, 1+(n_met_members*n_ds_members))
       inflow_met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder = code_folder,
                                                                                           noaa_location,
-                                                                                          input_met_file = met_obs_fname_wdir,
+                                                                                          input_met_file = cleaned_met_file,
                                                                                           working_directory,
                                                                                           sim_files_folder = paste0(code_folder, "/", "sim_files"),
                                                                                           n_ds_members,
@@ -743,46 +742,38 @@ run_flare<-function(start_day_local,
   #Inputs: temperature_location, temp_obs_fname, full_time_local, modeled_depths,
   # observed_depths_temp, local_tzone, observed_depths_do, exo_2_ctd_chla, use_ctd
   
-  #Extract observations, 
-  temp_obs_fname_wdir <- temp_obs_fname
   
   cleaned_temp_oxy_chla_file <- paste0(working_directory, "/Catwalk_postQAQC.csv")
-  temp_oxy_chla_qaqc(temp_obs_fname_wdir[1], 
-                     paste0(data_location, '/mia-data/CAT_MaintenanceLog.txt'), 
-                     cleaned_temp_oxy_chla_file)
-  
-  new_temp_obs_fname_wdir <- temp_obs_fname_wdir
-  new_temp_obs_fname_wdir[1] <- cleaned_temp_oxy_chla_file
+  temp_oxy_chla_qaqc(data_file = temp_obs_fname, 
+                     maintenance_file = paste0(data_location, '/mia-data/CAT_MaintenanceLog.txt'), 
+                     output_file = cleaned_temp_oxy_chla_file,
+                     input_file_tz = "EST")
   
   #PROCESS TEMPERATURE OBSERVATIONS
-  obs_temp <- extract_temp_chain(fname = new_temp_obs_fname_wdir,
+  obs_temp <- extract_temp_chain(fname = cleaned_temp_oxy_chla_file,
                                  full_time_local,
                                  modeled_depths = modeled_depths,
                                  observed_depths_temp = observed_depths_temp,
-                                 input_file_tz = "EST5EDT",
                                  local_tzone)
   
   if(include_wq){
     #PROCESS DO OBSERVATIONS
-    obs_do <- extract_do_chain(fname = new_temp_obs_fname_wdir,
+    obs_do <- extract_do_chain(fname = cleaned_temp_oxy_chla_file,
                                full_time_local,
                                modeled_depths = modeled_depths,
                                observed_depths_do= observed_depths_do,
-                               input_file_tz = "EST5EDT", 
                                local_tzone)
     
-    obs_chla <- extract_chla_chain(fname = new_temp_obs_fname_wdir,
+    obs_chla <- extract_chla_chain(fname = cleaned_temp_oxy_chla_file,
                                    full_time_local,
                                    modeled_depths = modeled_depths,
                                    observed_depths_chla_fdom,
-                                   input_file_tz = "EST5EDT", 
                                    local_tzone)
     
-    obs_fdom <- extract_do_chain(fname = new_temp_obs_fname_wdir,
+    obs_fdom <- extract_do_chain(fname = cleaned_temp_oxy_chla_file,
                                  full_time_local,
                                  modeled_depths = modeled_depths,
                                  observed_depths_chla_fdom,
-                                 input_file_tz = "EST5EDT", 
                                  local_tzone)
     
     if(use_nutrient_data){

@@ -81,43 +81,38 @@ plot_forecast <- function(pdf_file_name,
   #PROCESS TEMPERATURE OBSERVATIONS
   
   cleaned_temp_oxy_chla_file <- paste0(save_location, "/Catwalk_postQAQC.csv")
-  temp_oxy_chla_qaqc(temp_obs_fname[1], 
-                     paste0(data_location, '/mia-data/CAT_MaintenanceLog.txt'), 
-                     cleaned_temp_oxy_chla_file)
   
-  new_temp_obs_fname_wdir <- temp_obs_fname
-  new_temp_obs_fname_wdir[1] <- cleaned_temp_oxy_chla_file
-  #PROCESS TEMPERATURE OBSERVATIONS
+  temp_oxy_chla_qaqc(data_file = temp_obs_fname, 
+                     maintenance_file = paste0(data_location, '/mia-data/CAT_MaintenanceLog.txt'), 
+                     output_file = cleaned_temp_oxy_chla_file,
+                     input_file_tz = "EST")
+  
   
   #PROCESS TEMPERATURE OBSERVATIONS
-  obs_temp <- extract_temp_chain(fname = new_temp_obs_fname_wdir,
+  obs_temp <- extract_temp_chain(fname = cleaned_temp_oxy_chla_file,
                                  full_time_local,
                                  modeled_depths = modeled_depths,
                                  observed_depths_temp = observed_depths_temp,
-                                 input_file_tz = "EST5EDT",
                                  local_tzone)
   
-  #PROCESS DO OBSERVATIONS
-  obs_do <- extract_do_chain(fname = new_temp_obs_fname_wdir,
-                             full_time_local,
-                             modeled_depths = modeled_depths,
-                             observed_depths_do= observed_depths_do,
-                             input_file_tz = "EST5EDT", 
-                             local_tzone)
-  
-  obs_chla <- extract_chla_chain(fname = new_temp_obs_fname_wdir,
+    #PROCESS DO OBSERVATIONS
+    obs_do <- extract_do_chain(fname = cleaned_temp_oxy_chla_file,
+                               full_time_local,
+                               modeled_depths = modeled_depths,
+                               observed_depths_do= observed_depths_do,
+                               local_tzone)
+    
+    obs_chla <- extract_chla_chain(fname = cleaned_temp_oxy_chla_file,
+                                   full_time_local,
+                                   modeled_depths = modeled_depths,
+                                   observed_depths_chla_fdom,
+                                   local_tzone)
+    
+    obs_fdom <- extract_do_chain(fname = cleaned_temp_oxy_chla_file,
                                  full_time_local,
                                  modeled_depths = modeled_depths,
                                  observed_depths_chla_fdom,
-                                 input_file_tz = "EST5EDT", 
                                  local_tzone)
-  
-  obs_fdom <- extract_do_chain(fname = new_temp_obs_fname_wdir,
-                               full_time_local,
-                               modeled_depths = modeled_depths,
-                               observed_depths_chla_fdom,
-                               input_file_tz = "EST5EDT", 
-                               local_tzone)
   
   obs_nutrients <- extract_nutrients(fname = nutrients_fname,
                                      full_time_day_local,
@@ -546,12 +541,12 @@ plot_forecast <- function(pdf_file_name,
     full_time_local_combined <- seq(full_time_local_past[1], full_time_local[length(full_time_local)], by = "1 day")
     full_time_local_plotting <- seq(full_time_local_past[1]-days(3), full_time_local[length(full_time_local)]+days(5), by = "1 day")
     
-    obs_temp <- extract_temp_chain(fname = new_temp_obs_fname_wdir,
+    obs_temp <- extract_temp_chain(fname = cleaned_temp_oxy_chla_file,
                                    full_time_local = full_time_local_past,
                                    modeled_depths = modeled_depths,
                                    observed_depths_temp = observed_depths_temp,
-                                   input_file_tz = "EST5EDT",
                                    local_tzone)
+    
     for(i in 1:length(obs_temp$obs[,1])){
       for(j in 1:length(obs_temp$obs[1,])){
         if(obs_temp$obs[i,j] == 0 | is.na(obs_temp$obs[i,j]) | is.nan(obs_temp$obs[i,j])){

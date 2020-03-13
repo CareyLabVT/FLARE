@@ -1,4 +1,4 @@
-temp_oxy_chla_qaqc <- function(data_file, maintenance_file, output_file)
+temp_oxy_chla_qaqc <- function(data_file, maintenance_file, output_file, input_file_tz)
 {
   CATDATA_COL_NAMES = c("DateTime", "RECORD", "CR6_Batt_V", "CR6Panel_Temp_C", "ThermistorTemp_C_surface",
                         "ThermistorTemp_C_1", "ThermistorTemp_C_2", "ThermistorTemp_C_3", "ThermistorTemp_C_4",
@@ -29,7 +29,7 @@ temp_oxy_chla_qaqc <- function(data_file, maintenance_file, output_file)
   
   # read catwalk data and maintenance log
   # NOTE: date-times throughout this script are processed as UTC
-  catdata <- read_csv(data_file, skip = 4, col_names = CATDATA_COL_NAMES,
+  catdata <- read_csv(data_file[1], skip = 4, col_names = CATDATA_COL_NAMES,
                       col_types = cols(.default = col_double(), DateTime = col_datetime()))
   
   log <- read_csv(maintenance_file, col_types = cols(
@@ -205,12 +205,13 @@ temp_oxy_chla_qaqc <- function(data_file, maintenance_file, output_file)
   catdata <- catdata %>% select(-EXO_Date, -EXO_Time)
   
   # add Reservoir and Site columns
-  catdata$Reservoir <- "FCR"
-  catdata$Site <- "50"
+  #catdata$Reservoir <- "FCR"
+  #catdata$Site <- "50"
   
   # reorder columns
-  catdata <- catdata %>% select(Reservoir, Site, -RECORD, -CR6_Batt_V, -CR6Panel_Temp_C, -Flag_All, -Flag_DO_1, -Flag_DO_5,
-                                -Flag_DO_9, -Flag_Chla, -Flag_Phyco, -Flag_TDS, everything())
+  catdata <- catdata %>% select(-RECORD, -CR6_Batt_V, -CR6Panel_Temp_C, -Flag_All, -Flag_DO_1, -Flag_DO_5,
+                                -Flag_DO_9, -Flag_Chla, -Flag_Phyco, -Flag_TDS, -EXO_wiper, -EXO_cablepower,
+                                -EXO_battery,-EXO_pressure)
   
   # replace NaNs with NAs
   catdata[is.na(catdata)] <- NA
@@ -218,8 +219,83 @@ temp_oxy_chla_qaqc <- function(data_file, maintenance_file, output_file)
   # convert datetimes to characters so that they are properly formatted in the output file
   catdata$DateTime <- as.character(catdata$DateTime)
   
+  
+  if(length(data_file) > 1){
+    #Different lakes are going to have to modify this for their temperature data format
+    
+    d1 <- catdata
+    
+    d2 <- read.csv(data_file[2], na.strings = 'NA', stringsAsFactors = FALSE)
+    
+    TIMESTAMP_in <- as_datetime(d1$DateTime,tz = input_file_tz)
+    d1$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = local_tzone)
+    
+    TIMESTAMP_in <- as_datetime(d2$DateTime,tz = input_file_tz)
+    d2$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = local_tzone)
+    
+    d1 <- d1[which(d1$TIMESTAMP > d2$TIMESTAMP[nrow(d2)] | d1$TIMESTAMP < d2$TIMESTAMP[1]), ]
+    
+    #d3 <- data.frame(TIMESTAMP = d1$TIMESTAMP, wtr_surface = d1$wtr_surface, wtr_1 = d1$wtr_1, wtr_2 = d1$wtr_2, wtr_3 = d1$wtr_3, wtr_4 = d1$wtr_4,
+    #                 wtr_5 = d1$wtr_5, wtr_6 = d1$wtr_6, wtr_7 = d1$wtr_7, wtr_8 = d1$wtr_8, wtr_9 = d1$wtr_9, wtr_1_exo = d1$EXO_wtr_1, wtr_5_do = d1$dotemp_5, wtr_9_do = d1$dotemp_9)
+    
+    d3 <-  data.frame(TIMESTAMP = d1$TIMESTAMP, wtr_surface = d1$ThermistorTemp_C_surface, 
+                      wtr_1 = d1$ThermistorTemp_C_1, wtr_2 = d1$ThermistorTemp_C_2, 
+                      wtr_3 = d1$ThermistorTemp_C_3, wtr_4 = d1$ThermistorTemp_C_4,
+                      wtr_5 = d1$ThermistorTemp_C_5, wtr_6 = d1$ThermistorTemp_C_6, 
+                      wtr_7 = d1$ThermistorTemp_C_7, wtr_8 = d1$ThermistorTemp_C_8, 
+                      wtr_9 = d1$ThermistorTemp_C_9, wtr_1_exo = d1$EXOTemp_C_1, 
+                      wtr_5_do = d1$RDOTemp_C_5, wtr_9_do = d1$RDOTemp_C_9,
+                      Chla_1 = d1$EXOChla_ugL_1, doobs_1 = d1$EXODO_mgL_1, 
+                      doobs_5 = d1$RDO_mgL_5, doobs_9 = d1$RDO_mgL_9,
+                      fDOM_1 = d1$EXOfDOM_QSU_1, bgapc_1 = d1$EXOBGAPC_ugL_1)
+    
+    d4 <- data.frame(TIMESTAMP = d2$TIMESTAMP, wtr_surface = d2$ThermistorTemp_C_surface, 
+                     wtr_1 = d2$ThermistorTemp_C_1, wtr_2 = d2$ThermistorTemp_C_2, 
+                     wtr_3 = d2$ThermistorTemp_C_3, wtr_4 = d2$ThermistorTemp_C_4,
+                     wtr_5 = d2$ThermistorTemp_C_5, wtr_6 = d2$ThermistorTemp_C_6, 
+                     wtr_7 = d2$ThermistorTemp_C_7, wtr_8 = d2$ThermistorTemp_C_8, 
+                     wtr_9 = d2$ThermistorTemp_C_9, wtr_1_exo = d2$EXOTemp_C_1, 
+                     wtr_5_do = d2$RDOTemp_C_5, wtr_9_do = d2$RDOTemp_C_9,
+                     Chla_1 = d2$EXOChla_ugL_1, doobs_1 = d2$EXODO_mgL_1, 
+                     doobs_5 = d2$RDO_mgL_5, doobs_9 = d2$RDO_mgL_9,
+                     fDOM_1 = d2$EXOfDOM_QSU_1, bgapc_1 = d2$EXOBGAPC_ugL_1)
+    
+    d <- rbind(d3,d4)
+    
+  }else{
+    #Different lakes are going to have to modify this for their temperature data format
+    d1 <- catdata
+    
+    TIMESTAMP_in <- as_datetime(d1$DateTime,tz = input_file_tz)
+    d1$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = local_tzone)
+    
+    d <-  data.frame(TIMESTAMP = d1$TIMESTAMP, wtr_surface = d1$ThermistorTemp_C_surface, 
+                     wtr_1 = d1$ThermistorTemp_C_1, wtr_2 = d1$ThermistorTemp_C_2, 
+                     wtr_3 = d1$ThermistorTemp_C_3, wtr_4 = d1$ThermistorTemp_C_4,
+                     wtr_5 = d1$ThermistorTemp_C_5, wtr_6 = d1$ThermistorTemp_C_6, 
+                     wtr_7 = d1$ThermistorTemp_C_7, wtr_8 = d1$ThermistorTemp_C_8, 
+                     wtr_9 = d1$ThermistorTemp_C_9, wtr_1_exo = d1$EXOTemp_C_1, 
+                     wtr_5_do = d1$RDOTemp_C_5, wtr_9_do = d1$RDOTemp_C_9,
+                     Chla_1 = d1$EXOChla_ugL_1, doobs_1 = d1$EXODO_mgL_1, 
+                     doobs_5 = d1$RDO_mgL_5, doobs_9 = d1$RDO_mgL_9,
+                     fDOM_1 = d1$EXOfDOM_QSU_1, bgapc_1 = d1$EXOBGAPC_ugL_1)
+  }
+  
+  #DIRRRRTY qsu -> mg/L ->  mmol/m3
+  #From Mary Lofton Sept 8, Model_w/o_Oct_2018 (R2 = 0.593)
+  d$fDOM_1 <- -98.147 + 26.101* d$fDOM_1
+  
+  #oxygen unit conversion
+  d$doobs_1 <- d$doobs_1*1000/32  #mg/L (obs units) -> mmol/m3 (glm units)
+  d$doobs_5 <- d$doobs_5*1000/32  #mg/L (obs units) -> mmol/m3 (glm units)
+  d$doobs_9 <- d$doobs_9*1000/32  #mg/L (obs units) -> mmol/m3 (glm units)
+
+  
+  d <- d %>% 
+    arrange(TIMESTAMP)
+  
   # write to output file
-  write_csv(catdata, output_file)
+  write_csv(d, output_file)
 }
 
 # example usage

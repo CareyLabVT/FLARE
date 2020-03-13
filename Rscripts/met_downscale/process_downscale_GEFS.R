@@ -55,13 +55,13 @@ process_downscale_GEFS <- function(folder,
     dplyr::mutate(AirTemp = AirTemp + 273.15,# convert from C to Kelvin
                   Rain = Rain* 60 * 24/1000)
     
-  observations$RelHum <- na.interpolation(observations$RelHum)
-  observations$AirTemp <- na.interpolation(observations$AirTemp)
-  observations$LongWave <- na.interpolation(observations$LongWave)
-  observations$WindSpeed <- na.interpolation(observations$WindSpeed)
+  #observations$RelHum <- na.interpolation(observations$RelHum)
+  #observations$AirTemp <- na.interpolation(observations$AirTemp)
+  #observations$LongWave <- na.interpolation(observations$LongWave)
+  #observations$WindSpeed <- na.interpolation(observations$WindSpeed)
 
   rm(obs.data)
-  hrly.obs <- observations %>% aggregate_obs_to_hrly()
+  hrly.obs <- observations #%>% aggregate_obs_to_hrly()
   
   # -----------------------------------
   # 1. Fit Parameters

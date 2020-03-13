@@ -1,4 +1,4 @@
-met_qaqc <- function(fname, cleaned_met_file,input_file_tz,local_tzone,working_directory){
+met_qaqc <- function(fname, cleaned_met_file,input_file_tz,local_tzone,full_time_local){
 
   if(length(fname) > 1){
     d1 <- read_csv(fname[1], skip = 3)
@@ -69,7 +69,29 @@ met_qaqc <- function(fname, cleaned_met_file,input_file_tz,local_tzone,working_d
                   WindSpeed = ifelse(WindSpeed < 0, 0, WindSpeed)) %>%
     filter(is.na(timestamp) == FALSE)
   
-
+  first_day <- as_date(as.POSIXct(first(full_time_local),tz = local_tzone))
+  last_day <-  as_date(as.POSIXct(last(full_time_local),tz = local_tzone))
   
-  write.csv(d, cleaned_met_file)
+  d <- d %>% 
+    mutate(day = day(timestamp),
+           year = year(timestamp),
+           hour = hour(timestamp),
+           month = month(timestamp)) %>%
+    group_by(day, year, hour, month) %>% 
+    summarize(ShortWave = mean(ShortWave, na.rm = TRUE),
+              LongWave = mean(LongWave, na.rm = TRUE),
+              AirTemp = mean(AirTemp, na.rm = TRUE),
+              RelHum = mean(RelHum, na.rm = TRUE),
+              WindSpeed = mean(WindSpeed, na.rm = TRUE),
+              Rain = sum(Rain)) %>% 
+    ungroup() %>% 
+    mutate(day = as.numeric(day),
+           hour = as.numeric(hour)) %>% 
+    mutate(day = ifelse(as.numeric(day) < 10, paste0("0",day),day),
+           hour = ifelse(as.numeric(hour) < 10, paste0("0",hour),hour)) %>% 
+    mutate(timestamp = as_datetime(paste0(year,"-",month,"-",day," ",hour,":00:00"),tz = local_tzone)) %>% 
+    select(timestamp,ShortWave,LongWave,AirTemp,RelHum,WindSpeed,Rain) %>% 
+    arrange(timestamp)
+  
+  write.csv(d, cleaned_met_file, row.names = FALSE)
 }
