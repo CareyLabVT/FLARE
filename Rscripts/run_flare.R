@@ -59,21 +59,19 @@ run_flare<-function(start_day_local,
   source(paste0(code_folder,"/","Rscripts/glmtools.R"))
   source(paste0(code_folder,"/","Rscripts/localization.R")) 
   source(paste0(code_folder,"/","Rscripts/temperature_to_density.R"))
+  source(paste0(code_folder,"/","Rscripts/extract_observations.R"))
   
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/create_inflow_outflow_file.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/create_obs_met_input.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/create_sss_input_output.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_chla_chain.R"))
+  
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_CTD.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_do_chain.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_fdom_chain.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_temp_chain.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/read_sss_files.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_nutrients.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/temp_oxy_chla_qaqc.R")) 
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/met_qaqc.R")) 
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/inflow_qaqc.R"))   
-
+  
   ### METEROLOGY DOWNSCALING OPTIONS
   if(is.na(downscaling_coeff)){
     FIT_PARAMETERS <- TRUE
@@ -492,6 +490,8 @@ run_flare<-function(start_day_local,
            local_tzone,
            full_time_local)
   
+  
+  
   missing_met <- create_obs_met_input(fname = cleaned_met_file,
                                       outfile=obs_met_outfile,
                                       full_time_hour_local, 
@@ -743,80 +743,96 @@ run_flare<-function(start_day_local,
   # observed_depths_temp, local_tzone, observed_depths_do, exo_2_ctd_chla, use_ctd
   
   
-  cleaned_temp_oxy_chla_file <- paste0(working_directory, "/Catwalk_postQAQC.csv")
-  temp_oxy_chla_qaqc(data_file = temp_obs_fname, 
-                     maintenance_file = paste0(data_location, '/mia-data/CAT_MaintenanceLog.txt'), 
-                     output_file = cleaned_temp_oxy_chla_file,
-                     input_file_tz = "EST")
+  cleaned_observations_file_long <- paste0(working_directory, "/observations_postQAQC_long.csv")
   
-  #PROCESS TEMPERATURE OBSERVATIONS
-  obs_temp <- extract_temp_chain(fname = cleaned_temp_oxy_chla_file,
-                                 full_time_local,
-                                 modeled_depths = modeled_depths,
-                                 observed_depths_temp = observed_depths_temp,
-                                 local_tzone)
+  d <- temp_oxy_chla_qaqc(data_file = temp_obs_fname, 
+                          maintenance_file = paste0(data_location, '/mia-data/CAT_MaintenanceLog.txt'), 
+                          input_file_tz = "EST")
   
-  if(include_wq){
-    #PROCESS DO OBSERVATIONS
-    obs_do <- extract_do_chain(fname = cleaned_temp_oxy_chla_file,
-                               full_time_local,
-                               modeled_depths = modeled_depths,
-                               observed_depths_do= observed_depths_do,
-                               local_tzone)
-    
-    obs_chla <- extract_chla_chain(fname = cleaned_temp_oxy_chla_file,
-                                   full_time_local,
-                                   modeled_depths = modeled_depths,
-                                   observed_depths_chla_fdom,
-                                   local_tzone)
-    
-    obs_fdom <- extract_do_chain(fname = cleaned_temp_oxy_chla_file,
-                                 full_time_local,
-                                 modeled_depths = modeled_depths,
-                                 observed_depths_chla_fdom,
-                                 local_tzone)
-    
-    if(use_nutrient_data){
-      obs_nutrients <- extract_nutrients(fname = nutrients_fname,
-                                         full_time_day_local,
-                                         modeled_depths = modeled_depths,
-                                         input_file_tz = "EST5EDT", 
-                                         local_tzone)
-      
-      #Combine fdom and nutrients
-      for(i in 1:length(full_time_day_local)){
-        if(length(which(!is.na(obs_nutrients$DOC[i,]))) > 0){
-          obs_fdom$obs[i,which(is.na(obs_fdom$obs[i,]))] <- obs_nutrients$DOC[i,which(is.na(obs_fdom$obs[i,]))]
-        }
-      }
-    }else{
-      obs_nutrients <- NULL
-      obs_nutrients$NH4 <- array(NA, dim = dim(obs_fdom$obs))
-      obs_nutrients$NO3 <- array(NA, dim = dim(obs_fdom$obs))
-      obs_nutrients$SRP <- array(NA, dim = dim(obs_fdom$obs))
-    }
+  
+  if(use_ctd){
+    d_ctd <- extract_CTD(fname = ctd_fname,
+                         input_file_tz = "EST",
+                         local_tzone)
+    d <- rbind(d,d_ctd)
   }
   
-  #Use the CTD observation rather than the sensor string when CTD data is avialable
-  if(use_ctd){
+  if(use_nutrient_data){
+    d_nutrients <- extract_nutrients(fname = nutrients_fname,
+                                     full_time_day_local,
+                                     modeled_depths = modeled_depths,
+                                     input_file_tz = "EST", 
+                                     local_tzone)
+    d <- rbind(d,d_nutrients)
+  }
+  
+  write_csv(d, cleaned_observations_file_long)
+  
+  #####
+  
+  obs_temp <- extract_observations(fname = cleaned_observations_file_long,
+                                   full_time_local,
+                                   modeled_depths = modeled_depths,
+                                   local_tzone,
+                                   target_variable = "temperature",
+                                   time_threshold_seconds = 60,
+                                   distance_threshold_meter = 0.2,
+                                   methods = c("thermistor","do_sensor","exo_sensor"))
+  
+  if(include_wq){
+    obs_do <- extract_observations(fname = cleaned_observations_file_long,
+                                   full_time_local,
+                                   modeled_depths = modeled_depths,
+                                   local_tzone,
+                                   target_variable = "oxygen",
+                                   time_threshold_seconds = 60,
+                                   distance_threshold_meter = 0.2,
+                                   methods = c("do_sensor","CTD"))
     
-    #NEED TO DOUBLE CHECK TIME ZONE
-    obs_ctd <- extract_CTD(fname = ctd_fname,
-                           full_time_day_local,
-                           modeled_depths = modeled_depths,
-                           input_file_tz = "EST5EDT",
-                           local_tzone)
+    obs_chla <- extract_observations(fname = cleaned_observations_file_long,
+                                     full_time_local,
+                                     modeled_depths = modeled_depths,
+                                     local_tzone,
+                                     target_variable = "chla",
+                                     time_threshold_seconds = 60*60*12,
+                                     distance_threshold_meter = 0.2,
+                                     methods = c("exo_sensor","CTD"))
     
-    #Merge CTD with other sensor data
-    for(i in 1:length(full_time_day_local)){
-      if(!is.na(obs_ctd$obs_temp[i, 1])){
-        obs_temp$obs[i,which(is.na(obs_temp$obs[i,]))] <- obs_ctd$obs_temp[i,which(is.na(obs_temp$obs[i,]))]
-        if(include_wq){
-          obs_do$obs[i,which(is.na(obs_do$obs[i,]))] <- obs_ctd$obs_do[i,which(is.na(obs_do$obs[i,])) ]
-          obs_chla$obs[i,which(is.na(obs_chla$obs[i,]))] <- obs_ctd$obs_chla[i, which(is.na(obs_chla$obs[i,])) ]
-        }
-      }
-    }
+    obs_fdom <- extract_observations(fname = cleaned_observations_file_long,
+                                     full_time_local,
+                                     modeled_depths = modeled_depths,
+                                     local_tzone,
+                                     target_variable = "fdom",
+                                     time_threshold_seconds = 60*60*12,
+                                     distance_threshold_meter = 0.2,
+                                     methods = c("exo_sensor","grab_sample"))
+    
+    obs_NH4 <- extract_observations(fname = cleaned_observations_file_long,
+                                    full_time_local,
+                                    modeled_depths = modeled_depths,
+                                    local_tzone,
+                                    target_variable = "NH4",
+                                    time_threshold_seconds = 60*60*24,
+                                    distance_threshold_meter = 0.2,
+                                    methods = "grab_sample")
+    
+    obs_NO3 <- extract_observations(fname = cleaned_observations_file_long,
+                                    full_time_local,
+                                    modeled_depths = modeled_depths,
+                                    local_tzone,
+                                    target_variable = "NO3NO2",
+                                    time_threshold_seconds = 60*60*24,
+                                    distance_threshold_meter = 0.2,
+                                    methods = "grab_sample")
+    
+    obs_SRP <- extract_observations(fname = cleaned_observations_file_long,
+                                    full_time_local,
+                                    modeled_depths = modeled_depths,
+                                    local_tzone,
+                                    target_variable = "SRP",
+                                    time_threshold_seconds = 60*60*24,
+                                    distance_threshold_meter = 0.2,
+                                    methods = "grab_sample")
   }
   
   ####################################################
@@ -828,17 +844,17 @@ run_flare<-function(start_day_local,
   #observation in a time-step gets assigned an NA
   
   if(include_wq){
-    obs_dims <- dim(obs_do$obs)
+    obs_dims <- dim(obs_do)
     
-    OXY_oxy_obs <- obs_do$obs
+    OXY_oxy_obs <- obs_do
     CAR_pH_obs <- array(NA, dim = obs_dims)
     CAR_dic_obs <- array(NA, dim = obs_dims)
     CAR_ch4_obs <- array(NA, dim = obs_dims)
     SIL_rsi_obs <- array(NA, dim = obs_dims)
-    NIT_amm_obs <- obs_nutrients$NH4
-    NIT_nit_obs <- obs_nutrients$NO3
-    PHS_frp_obs <- obs_nutrients$SRP
-    OGM_doc_obs <- obs_fdom$obs
+    NIT_amm_obs <- obs_NH4
+    NIT_nit_obs <- obs_NO3
+    PHS_frp_obs <- obs_SRP
+    OGM_doc_obs <- obs_fdom
     OGM_poc_obs <- array(NA, dim = obs_dims)
     OGM_don_obs <- array(NA, dim = obs_dims)
     OGM_pon_obs <- array(NA, dim = obs_dims)
@@ -846,33 +862,33 @@ run_flare<-function(start_day_local,
     OGM_pop_obs <- array(NA, dim = obs_dims)
     NCS_ss1_obs <- array(NA, dim = obs_dims)
     PHS_frp_ads_obs <- array(NA, dim = obs_dims)
-    PHY_TCHLA_obs <- obs_chla$obs
+    PHY_TCHLA_obs <- obs_chla
     
     if("PHY_TCHLA" %in% wq_names){
-    z <- cbind(obs_temp$obs,
-               OXY_oxy_obs,
-               CAR_pH_obs,
-               CAR_dic_obs,
-               CAR_ch4_obs,
-               SIL_rsi_obs,
-               NIT_amm_obs,
-               NIT_nit_obs,
-               PHS_frp_obs,
-               OGM_doc_obs,
-               OGM_poc_obs,
-               OGM_don_obs,
-               OGM_pon_obs,
-               OGM_dop_obs,
-               OGM_pop_obs,
-               NCS_ss1_obs,
-               PHS_frp_ads_obs,
-               PHY_TCHLA_obs)
+      z <- cbind(obs_temp,
+                 OXY_oxy_obs,
+                 CAR_pH_obs,
+                 CAR_dic_obs,
+                 CAR_ch4_obs,
+                 SIL_rsi_obs,
+                 NIT_amm_obs,
+                 NIT_nit_obs,
+                 PHS_frp_obs,
+                 OGM_doc_obs,
+                 OGM_poc_obs,
+                 OGM_don_obs,
+                 OGM_pon_obs,
+                 OGM_dop_obs,
+                 OGM_pop_obs,
+                 NCS_ss1_obs,
+                 PHS_frp_ads_obs,
+                 PHY_TCHLA_obs)
     }else{
-    z <- cbind(obs_temp$obs,
-               OXY_oxy_obs)
+      z <- cbind(obs_temp,
+                 OXY_oxy_obs)
     }
   }else{
-    z <- cbind(obs_temp$obs) 
+    z <- cbind(obs_temp) 
   }
   
   z_obs <- z
@@ -889,27 +905,27 @@ run_flare<-function(start_day_local,
   #### STEP 8: SET UP INITIAL CONDITIONS
   ####################################################
   
-  init_temps_obs <- obs_temp$obs[1, which(!is.na(obs_temp$obs[1, ]))]
-  init_obs_temp_depths <- modeled_depths[which(!is.na(obs_temp$obs[1, ]))]
+  init_temps_obs <- obs_temp[1, which(!is.na(obs_temp[1, ]))]
+  init_obs_temp_depths <- modeled_depths[which(!is.na(obs_temp[1, ]))]
   
   if(include_wq){
-    init_do_obs <- obs_do$obs[1, which(!is.na(obs_do$obs[1, ]))]
-    init_obs_do_depths <- modeled_depths[which(!is.na(obs_do$obs[1, ]))]
+    init_do_obs <- obs_do[1, which(!is.na(obs_do[1, ]))]
+    init_obs_do_depths <- modeled_depths[which(!is.na(obs_do[1, ]))]
     
-    init_chla_obs <- obs_chla$obs[1, which(!is.na(obs_chla$obs[1, ]))]
-    init_chla_obs_depths <- modeled_depths[which(!is.na(obs_chla$obs[1, ]))]
+    init_chla_obs <- obs_chla[1, which(!is.na(obs_chla[1, ]))]
+    init_chla_obs_depths <- modeled_depths[which(!is.na(obs_chla[1, ]))]
     
-    init_doc_obs <- obs_fdom$obs[1, which(!is.na(obs_fdom$obs[1, ]))]
-    init_doc_obs_depths <- modeled_depths[which(!is.na(obs_fdom$obs[1, ]))]
+    init_doc_obs <- obs_fdom[1, which(!is.na(obs_fdom[1, ]))]
+    init_doc_obs_depths <- modeled_depths[which(!is.na(obs_fdom[1, ]))]
     
-    init_nit_amm_obs <- obs_nutrients$NH4[1, which(!is.na(obs_nutrients$NH4[1, ]))]
-    init_nit_amm_obs_depths <- modeled_depths[which(!is.na(obs_nutrients$NH4[1, ]))]
+    init_nit_amm_obs <- obs_NH4[1, which(!is.na(obs_NH4[1, ]))]
+    init_nit_amm_obs_depths <- modeled_depths[which(!is.na(obs_NH4[1, ]))]
     
-    init_nit_nit_obs <- obs_nutrients$NO3[1, which(!is.na(obs_nutrients$NO3[1, ]))]
-    init_nit_nit_obs_depths <- modeled_depths[which(!is.na(obs_nutrients$NO3[1, ]))]
+    init_nit_nit_obs <- obs_NO3[1, which(!is.na(obs_NO3[1, ]))]
+    init_nit_nit_obs_depths <- modeled_depths[which(!is.na(obs_NO3[1, ]))]
     
-    init_phs_frp_obs <- obs_nutrients$SRP[1, which(!is.na(obs_nutrients$SRP[1, ]))]
-    init_phs_frp_obs_depths <- modeled_depths[which(!is.na(obs_nutrients$SRP[1, ]))]
+    init_phs_frp_obs <- obs_SRP[1, which(!is.na(obs_SRP[1, ]))]
+    init_phs_frp_obs_depths <- modeled_depths[which(!is.na(obs_SRP[1, ]))]
   }
   
   
@@ -1028,26 +1044,26 @@ run_flare<-function(start_day_local,
     PHS_frp_ads_init_depth <- rep(PHS_frp_ads_init, ndepths_modeled)
     
     if("PHY_TCHLA" %in% wq_names){
-    wq_init_vals <- c(OXY_oxy_init_depth,
-                      CAR_pH_init_depth,
-                      CAR_dic_init_depth,
-                      CAR_ch4_init_depth,
-                      SIL_rsi_init_depth,
-                      NIT_amm_init_depth,
-                      NIT_nit_init_depth,
-                      PHS_frp_init_depth,
-                      OGM_doc_init_depth,
-                      OGM_poc_init_depth,
-                      OGM_don_init_depth,
-                      OGM_pon_init_depth,
-                      OGM_dop_init_depth,
-                      OGM_pop_init_depth,
-                      NCS_ss1_init_depth,
-                      PHS_frp_ads_init_depth,
-                      PHY_TCHLA_init_depth
-    )
+      wq_init_vals <- c(OXY_oxy_init_depth,
+                        CAR_pH_init_depth,
+                        CAR_dic_init_depth,
+                        CAR_ch4_init_depth,
+                        SIL_rsi_init_depth,
+                        NIT_amm_init_depth,
+                        NIT_nit_init_depth,
+                        PHS_frp_init_depth,
+                        OGM_doc_init_depth,
+                        OGM_poc_init_depth,
+                        OGM_don_init_depth,
+                        OGM_pon_init_depth,
+                        OGM_dop_init_depth,
+                        OGM_pop_init_depth,
+                        NCS_ss1_init_depth,
+                        PHS_frp_ads_init_depth,
+                        PHY_TCHLA_init_depth
+      )
     }else{
-    wq_init_vals <- c(OXY_oxy_init_depth)
+      wq_init_vals <- c(OXY_oxy_init_depth)
     }
     
     #UPDATE NML WITH INITIAL CONDITIONS
@@ -1056,7 +1072,6 @@ run_flare<-function(start_day_local,
     #UPDATE NML WITH INITIAL CONDITIONS
     wq_init_vals <- c(" ")
   }
-  
   
   ########################################
   #BEGIN GLM SPECIFIC PART
@@ -1134,7 +1149,7 @@ run_flare<-function(start_day_local,
     qt_init <- qt
   }else{
     qt <- matrix(data = 0, nrow = ndepths_modeled, ncol = ndepths_modeled)
-
+    
     diag(qt) <- rep(temp_process_error,ndepths_modeled )
     qt_init <- matrix(data = 0, nrow = ndepths_modeled, ncol = ndepths_modeled)
     diag(qt_init) <- rep(temp_init_error,ndepths_modeled)
@@ -1142,46 +1157,46 @@ run_flare<-function(start_day_local,
     if(include_wq){
       
       if("PHY_TCHLA" %in% wq_names){
-      wq_var_error <- c(OXY_oxy_process_error,
-                        CAR_pH_process_error,
-                        CAR_dic_process_error,
-                        CAR_ch4_process_error,
-                        SIL_rsi_process_error,
-                        NIT_amm_process_error,
-                        NIT_nit_process_error,
-                        PHS_frp_process_error,
-                        OGM_doc_process_error,
-                        OGM_poc_process_error, 
-                        OGM_don_process_error,
-                        OGM_pon_process_error,
-                        OGM_dop_process_error,
-                        OGM_pop_process_error,
-                        NCS_ss1_process_error,
-                        PHS_frp_ads_process_error,
-                        PHY_TCHLA_process_error)
-      
-      wq_var_init_error <- c(OXY_oxy_init_error,
-                             CAR_pH_init_error,
-                             CAR_dic_init_error,
-                             CAR_ch4_init_error,
-                             SIL_rsi_init_error,
-                             NIT_amm_init_error,
-                             NIT_nit_init_error,
-                             PHS_frp_init_error,
-                             OGM_doc_init_error,
-                             OGM_poc_init_error, 
-                             OGM_don_init_error,
-                             OGM_pon_init_error,
-                             OGM_dop_init_error,
-                             OGM_pop_init_error,
-                             NCS_ss1_init_error,
-                             PHS_frp_ads_init_error,
-                             PHY_TCHLA_init_error) 
-      
+        wq_var_error <- c(OXY_oxy_process_error,
+                          CAR_pH_process_error,
+                          CAR_dic_process_error,
+                          CAR_ch4_process_error,
+                          SIL_rsi_process_error,
+                          NIT_amm_process_error,
+                          NIT_nit_process_error,
+                          PHS_frp_process_error,
+                          OGM_doc_process_error,
+                          OGM_poc_process_error, 
+                          OGM_don_process_error,
+                          OGM_pon_process_error,
+                          OGM_dop_process_error,
+                          OGM_pop_process_error,
+                          NCS_ss1_process_error,
+                          PHS_frp_ads_process_error,
+                          PHY_TCHLA_process_error)
+        
+        wq_var_init_error <- c(OXY_oxy_init_error,
+                               CAR_pH_init_error,
+                               CAR_dic_init_error,
+                               CAR_ch4_init_error,
+                               SIL_rsi_init_error,
+                               NIT_amm_init_error,
+                               NIT_nit_init_error,
+                               PHS_frp_init_error,
+                               OGM_doc_init_error,
+                               OGM_poc_init_error, 
+                               OGM_don_init_error,
+                               OGM_pon_init_error,
+                               OGM_dop_init_error,
+                               OGM_pop_init_error,
+                               NCS_ss1_init_error,
+                               PHS_frp_ads_init_error,
+                               PHY_TCHLA_init_error) 
+        
       }else{
-      wq_var_error <- c(OXY_oxy_process_error)
-      
-      wq_var_init_error <- c(OXY_oxy_init_error) 
+        wq_var_error <- c(OXY_oxy_process_error)
+        
+        wq_var_init_error <- c(OXY_oxy_init_error) 
       }
       
       for(i in 1:num_wq_vars){
@@ -1249,7 +1264,7 @@ run_flare<-function(start_day_local,
                                     mean=c(the_temps_init, 
                                            wq_init_vals), 
                                     sigma=as.matrix(qt_init[1:nstates,1:nstates]))
-      
+        
         #for(m in 1:nmembers){
         #  orig_temp <-  x[1,m ,1:ndepths_modeled]
         #  dens <- rep(NA, ndepths_modeled)
@@ -1428,7 +1443,7 @@ run_flare<-function(start_day_local,
       avg_surf_temp[1, ] <- avg_surf_temp_restart[sampled_nmembers]
       mixing_vars <- mixing_restart[sampled_nmembers, ]
       
-
+      
       for(m in 1:nmembers){
         glm_depths[1,m ,1:dim(glm_depths_restart)[2]] <- glm_depths_restart[sampled_nmembers[m], ]
       }
@@ -1584,7 +1599,7 @@ run_flare<-function(start_day_local,
   snow_ice_restart <- enkf_output$snow_ice_restart
   snow_ice_thickness <- enkf_output$snow_ice_thickness
   surface_height <- enkf_output$surface_height
-
+  
   x_phyto_groups_restart <- enkf_output$x_phyto_groups_restart
   x_phyto_groups <- enkf_output$x_phyto_groups
   running_residuals <- enkf_output$running_residuals

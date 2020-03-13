@@ -13,11 +13,8 @@ plot_forecast <- function(pdf_file_name,
                           modeled_depths){
   
   
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_chla_chain.R"))
+  source(paste0(code_folder,"/","Rscripts/extract_observations.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_CTD.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_do_chain.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_fdom_chain.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_temp_chain.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_nutrients.R"))
   
   npars <- length(par_names)
@@ -54,18 +51,18 @@ plot_forecast <- function(pdf_file_name,
   
   if(include_wq ){
     if("PHY_TCHLA" %in% wq_names){
-    wq_output <- array(NA,dim = c(length(wq_names_w_phytos),dim(temp)[1],dim(temp)[2],dim(temp)[3]))
-    for(i in 1:length(wq_names_w_phytos)){
-      wq_output[i,,,] <- ncvar_get(nc,wq_names_w_phytos[i])
-    }
-    
-    OXY_oxy <- wq_output[which(wq_names_w_phytos == 'OXY_oxy'),,,]
-    PHY_TCHLA <- wq_output[which(wq_names_w_phytos == 'PHY_TCHLA'),,,]
-    OGM_doc <- wq_output[which(wq_names_w_phytos == 'OGM_doc'),,,]
-    
-    NIT_amm <- wq_output[which(wq_names_w_phytos == 'NIT_amm'),,,]
-    NIT_nit <- wq_output[which(wq_names_w_phytos == 'NIT_nit'),,,]
-    PHS_frp <- wq_output[which(wq_names_w_phytos == 'PHS_frp'),,,]
+      wq_output <- array(NA,dim = c(length(wq_names_w_phytos),dim(temp)[1],dim(temp)[2],dim(temp)[3]))
+      for(i in 1:length(wq_names_w_phytos)){
+        wq_output[i,,,] <- ncvar_get(nc,wq_names_w_phytos[i])
+      }
+      
+      OXY_oxy <- wq_output[which(wq_names_w_phytos == 'OXY_oxy'),,,]
+      PHY_TCHLA <- wq_output[which(wq_names_w_phytos == 'PHY_TCHLA'),,,]
+      OGM_doc <- wq_output[which(wq_names_w_phytos == 'OGM_doc'),,,]
+      
+      NIT_amm <- wq_output[which(wq_names_w_phytos == 'NIT_amm'),,,]
+      NIT_nit <- wq_output[which(wq_names_w_phytos == 'NIT_nit'),,,]
+      PHS_frp <- wq_output[which(wq_names_w_phytos == 'PHS_frp'),,,]
     }else{
       wq_output <- array(NA,dim = c(length(wq_names),dim(temp)[1],dim(temp)[2],dim(temp)[3]))
       for(i in 1:length(wq_names)){
@@ -80,75 +77,96 @@ plot_forecast <- function(pdf_file_name,
   
   #PROCESS TEMPERATURE OBSERVATIONS
   
-  cleaned_temp_oxy_chla_file <- paste0(save_location, "/Catwalk_postQAQC.csv")
+  cleaned_observations_file_long <- paste0(save_location, "/observations_postQAQC_long.csv")
   
-  temp_oxy_chla_qaqc(data_file = temp_obs_fname, 
-                     maintenance_file = paste0(data_location, '/mia-data/CAT_MaintenanceLog.txt'), 
-                     output_file = cleaned_temp_oxy_chla_file,
-                     input_file_tz = "EST")
+  d <- temp_oxy_chla_qaqc(data_file = temp_obs_fname, 
+                          maintenance_file = paste0(data_location, '/mia-data/CAT_MaintenanceLog.txt'), 
+                          input_file_tz = "EST")
   
   
-  #PROCESS TEMPERATURE OBSERVATIONS
-  obs_temp <- extract_temp_chain(fname = cleaned_temp_oxy_chla_file,
-                                 full_time_local,
-                                 modeled_depths = modeled_depths,
-                                 observed_depths_temp = observed_depths_temp,
-                                 local_tzone)
+  if(use_ctd){
+    d_ctd <- extract_CTD(fname = ctd_fname,
+                         input_file_tz = "EST",
+                         local_tzone)
+    d <- rbind(d,d_ctd)
+  }
   
-    #PROCESS DO OBSERVATIONS
-    obs_do <- extract_do_chain(fname = cleaned_temp_oxy_chla_file,
-                               full_time_local,
-                               modeled_depths = modeled_depths,
-                               observed_depths_do= observed_depths_do,
-                               local_tzone)
-    
-    obs_chla <- extract_chla_chain(fname = cleaned_temp_oxy_chla_file,
-                                   full_time_local,
-                                   modeled_depths = modeled_depths,
-                                   observed_depths_chla_fdom,
-                                   local_tzone)
-    
-    obs_fdom <- extract_do_chain(fname = cleaned_temp_oxy_chla_file,
-                                 full_time_local,
-                                 modeled_depths = modeled_depths,
-                                 observed_depths_chla_fdom,
-                                 local_tzone)
-  
-  obs_nutrients <- extract_nutrients(fname = nutrients_fname,
+  if(use_nutrient_data){
+    d_nutrients <- extract_nutrients(fname = nutrients_fname,
                                      full_time_day_local,
                                      modeled_depths = modeled_depths,
-                                     input_file_tz = "EST5EDT", 
+                                     input_file_tz = "EST", 
                                      local_tzone)
-  
-  #Combine fdom and nutrients
-  for(i in 1:length(full_time_day_local)){
-    if(length(which(!is.na(obs_nutrients$DOC[i,]))) > 0){
-      obs_fdom$obs[i,which(is.na(obs_fdom$obs[i,]))] <- obs_nutrients$DOC[i,which(is.na(obs_fdom$obs[i,]))]
-    }
+    d <- rbind(d,d_nutrients)
   }
   
-  #Use the CTD observation rather than the sensor string when CTD data is avialable
-  if(use_ctd){
-    ## LOOK AT CTD DATA
+  write_csv(d, cleaned_observations_file_long)
+  
+  #####
+  
+  obs_temp <- extract_observations(fname = cleaned_observations_file_long,
+                                   full_time_local,
+                                   modeled_depths = modeled_depths,
+                                   local_tzone,
+                                   target_variable = "temperature",
+                                   time_threshold_seconds = 60,
+                                   distance_threshold_meter = 0.2,
+                                   methods = c("thermistor","do_sensor","exo_sensor"))
+
+    obs_do <- extract_observations(fname = cleaned_observations_file_long,
+                                   full_time_local,
+                                   modeled_depths = modeled_depths,
+                                   local_tzone,
+                                   target_variable = "oxygen",
+                                   time_threshold_seconds = 60,
+                                   distance_threshold_meter = 0.2,
+                                   methods = c("do_sensor","CTD"))
     
-    #NEED TO DOUBLE CHECK TIME ZONE
-    obs_ctd <- extract_CTD(fname = ctd_fname,
-                           full_time_day_local,
-                           modeled_depths = modeled_depths,
-                           input_file_tz = "EST5EDT",
-                           local_tzone)
+    obs_chla <- extract_observations(fname = cleaned_observations_file_long,
+                                     full_time_local,
+                                     modeled_depths = modeled_depths,
+                                     local_tzone,
+                                     target_variable = "chla",
+                                     time_threshold_seconds = 60*60*12,
+                                     distance_threshold_meter = 0.2,
+                                     methods = c("exo_sensor","CTD"))
     
-    for(i in 1:length(full_time_day_local)){
-      if(!is.na(obs_ctd$obs_temp[i, 1])){
-        obs_temp$obs[i,which(is.na(obs_temp$obs[i,]))] <- obs_ctd$obs_temp[i,which(is.na(obs_temp$obs[i,]))]
-        obs_do$obs[i,which(is.na(obs_do$obs[i,]))] <- obs_ctd$obs_do[i,which(is.na(obs_do$obs[i,])) ]
-        obs_chla$obs[i,which(is.na(obs_chla$obs[i,]))] <- obs_ctd$obs_chla[i, which(is.na(obs_chla$obs[i,])) ]
-      }
-    }
-  }
-  
-  
-  
+    obs_fdom <- extract_observations(fname = cleaned_observations_file_long,
+                                     full_time_local,
+                                     modeled_depths = modeled_depths,
+                                     local_tzone,
+                                     target_variable = "fdom",
+                                     time_threshold_seconds = 60*60*12,
+                                     distance_threshold_meter = 0.2,
+                                     methods = c("exo_sensor","grab_sample"))
+    
+    obs_NH4 <- extract_observations(fname = cleaned_observations_file_long,
+                                    full_time_local,
+                                    modeled_depths = modeled_depths,
+                                    local_tzone,
+                                    target_variable = "NH4",
+                                    time_threshold_seconds = 60*60*24,
+                                    distance_threshold_meter = 0.2,
+                                    methods = "grab_sample")
+    
+    obs_NO3 <- extract_observations(fname = cleaned_observations_file_long,
+                                    full_time_local,
+                                    modeled_depths = modeled_depths,
+                                    local_tzone,
+                                    target_variable = "NO3NO2",
+                                    time_threshold_seconds = 60*60*24,
+                                    distance_threshold_meter = 0.2,
+                                    methods = "grab_sample")
+    
+    obs_SRP <- extract_observations(fname = cleaned_observations_file_long,
+                                    full_time_local,
+                                    modeled_depths = modeled_depths,
+                                    local_tzone,
+                                    target_variable = "SRP",
+                                    time_threshold_seconds = 60*60*24,
+                                    distance_threshold_meter = 0.2,
+                                    methods = "grab_sample")
+    
   nsteps <- length(full_time_local)
   if(length(which(forecasted == 1))>0){
     forecast_index <- which(forecasted == 1)[1]
@@ -171,9 +189,9 @@ plot_forecast <- function(pdf_file_name,
   #z <- t(matrix(rep(NA,nobs), nrow = nobs, ncol = nsteps))
   
   if(include_wq){
-    z <- cbind(obs_temp$obs,obs_do$obs, obs_fdom$obs, obs_chla$obs)
+    z <- cbind(obs_temp,obs_do, obs_fdom, obs_chla)
   }else{
-    z <- cbind(obs_temp$obs) 
+    z <- cbind(obs_temp) 
   }
   
   num_wq_vars <- length(wq_names) 
@@ -265,7 +283,7 @@ plot_forecast <- function(pdf_file_name,
     for(i in 1:nlayers){
       model = i
       
-      obs <- obs_do$obs[,i]
+      obs <- obs_do[,i]
       ylim = range(c(OXY_oxy[,,]),na.rm = TRUE) 
       if(plot_summaries){
         mean_oxy <- array(NA,dim=c(length(t),length(depths)))
@@ -305,7 +323,7 @@ plot_forecast <- function(pdf_file_name,
       PHY_TCHLA[,,] <- PHY_TCHLA[,,]
       for(i in 1:nlayers){
         model = i
-        obs <- obs_chla$obs[,i]
+        obs <- obs_chla[,i]
         
         ylim = range(c(PHY_TCHLA[,,]),na.rm = TRUE) 
         if(plot_summaries){
@@ -343,7 +361,7 @@ plot_forecast <- function(pdf_file_name,
       
       for(i in 1:nlayers){
         model = i
-        obs <- obs_fdom$obs[,i]
+        obs <- obs_fdom[,i]
         ylim = range(c(OGM_doc[,,]),na.rm = TRUE) 
         
         if(plot_summaries){
@@ -381,7 +399,7 @@ plot_forecast <- function(pdf_file_name,
       
       for(i in 1:nlayers){
         model = i
-        obs <- obs_nutrients$NO3[,i]
+        obs <- obs_NO3[,i]
         ylim = range(c(NIT_nit[,,]),na.rm = TRUE) 
         
         if(plot_summaries){
@@ -419,7 +437,7 @@ plot_forecast <- function(pdf_file_name,
       
       for(i in 1:nlayers){
         model = i
-        obs <- obs_nutrients$NH4[,i]
+        obs <- obs_NH4[,i]
         ylim = range(c(NIT_amm[,,]),na.rm = TRUE) 
         
         if(plot_summaries){
@@ -457,7 +475,7 @@ plot_forecast <- function(pdf_file_name,
       
       for(i in 1:nlayers){
         model = i
-        obs <- obs_nutrients$SRP[,i]
+        obs <- obs_SRP[,i]
         ylim = range(c(PHS_frp[,,]),na.rm = TRUE) 
         
         if(plot_summaries){
@@ -541,16 +559,19 @@ plot_forecast <- function(pdf_file_name,
     full_time_local_combined <- seq(full_time_local_past[1], full_time_local[length(full_time_local)], by = "1 day")
     full_time_local_plotting <- seq(full_time_local_past[1]-days(3), full_time_local[length(full_time_local)]+days(5), by = "1 day")
     
-    obs_temp <- extract_temp_chain(fname = cleaned_temp_oxy_chla_file,
-                                   full_time_local = full_time_local_past,
-                                   modeled_depths = modeled_depths,
-                                   observed_depths_temp = observed_depths_temp,
-                                   local_tzone)
+    obs_temp <- extract_observations(fname = cleaned_observations_file_long,
+                                     full_time_local,
+                                     modeled_depths = modeled_depths,
+                                     local_tzone,
+                                     target_variable = "temperature",
+                                     time_threshold_seconds = 60,
+                                     distance_threshold_meter = 0.2,
+                                     methods = c("thermistor","do_sensor","exo_sensor"))
     
-    for(i in 1:length(obs_temp$obs[,1])){
-      for(j in 1:length(obs_temp$obs[1,])){
-        if(obs_temp$obs[i,j] == 0 | is.na(obs_temp$obs[i,j]) | is.nan(obs_temp$obs[i,j])){
-          obs_temp$obs[i,j] = NA
+    for(i in 1:length(obs_temp[,1])){
+      for(j in 1:length(obs_temp[1,])){
+        if(obs_temp[i,j] == 0 | is.na(obs_temp[i,j]) | is.nan(obs_temp[i,j])){
+          obs_temp[i,j] = NA
         }
       }
     }
@@ -652,7 +673,7 @@ plot_forecast <- function(pdf_file_name,
     for(i in 1:length(depths)){
       if(length(which(depths[i]  == observed_depths_temp)) >= 1 ){
         depth_colors_index <- i
-        points(full_time_local_past, obs_temp$obs[1:length(full_time_local_past),i],type='l',col=depth_colors[depth_colors_index],lwd=1.5)
+        points(full_time_local_past, obs_temp[1:length(full_time_local_past),i],type='l',col=depth_colors[depth_colors_index],lwd=1.5)
         index <- which(focal_depths == obs_index[i])
         if(length(index) == 1){
           points(full_time_local[-1], temp_mean[-1,obs_index[i]],type='l',lty='dashed',col=depth_colors[depth_colors_index],lwd=1.5)
@@ -704,7 +725,7 @@ plot_forecast <- function(pdf_file_name,
       for(i in 1:nlayers){
         model = i
         if(i %in% c(2, 6, 10)){
-          obs <- obs_do$obs[,i]
+          obs <- obs_do[,i]
           
           ylim = range(c(OXY_oxy[,,c(2, 6, 10)]),na.rm = TRUE) 
           if(plot_summaries){
@@ -745,7 +766,7 @@ plot_forecast <- function(pdf_file_name,
           model = i
           
           if(i %in% c(2)){
-            obs <- obs_chla$obs[,i]
+            obs <- obs_chla[,i]
             obs <- obs/biomass_to_chla
             
             
@@ -786,7 +807,7 @@ plot_forecast <- function(pdf_file_name,
         for(i in 1:nlayers){
           model = i
           if(i %in% c(2)){
-            obs <- obs_fdom$obs[,i]
+            obs <- obs_fdom[,i]
             ylim = range(c(OGM_doc[,,2]),na.rm = TRUE) 
             
             if(plot_summaries){
@@ -844,6 +865,6 @@ plot_forecast <- function(pdf_file_name,
     }
   }
   
-  unlink(cleaned_temp_oxy_chla_file)
+  unlink(cleaned_observations_file_long)
 }
 

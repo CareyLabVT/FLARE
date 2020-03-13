@@ -1,4 +1,4 @@
-temp_oxy_chla_qaqc <- function(data_file, maintenance_file, output_file, input_file_tz)
+temp_oxy_chla_qaqc <- function(data_file, maintenance_file, input_file_tz)
 {
   CATDATA_COL_NAMES = c("DateTime", "RECORD", "CR6_Batt_V", "CR6Panel_Temp_C", "ThermistorTemp_C_surface",
                         "ThermistorTemp_C_1", "ThermistorTemp_C_2", "ThermistorTemp_C_3", "ThermistorTemp_C_4",
@@ -289,13 +289,100 @@ temp_oxy_chla_qaqc <- function(data_file, maintenance_file, output_file, input_f
   d$doobs_1 <- d$doobs_1*1000/32  #mg/L (obs units) -> mmol/m3 (glm units)
   d$doobs_5 <- d$doobs_5*1000/32  #mg/L (obs units) -> mmol/m3 (glm units)
   d$doobs_9 <- d$doobs_9*1000/32  #mg/L (obs units) -> mmol/m3 (glm units)
-
   
   d <- d %>% 
-    arrange(TIMESTAMP)
+  mutate(day = day(TIMESTAMP),
+         year = year(TIMESTAMP),
+         hour = hour(TIMESTAMP),
+         month = month(TIMESTAMP)) %>%
+    group_by(day, year, hour, month) %>% 
+    select(-TIMESTAMP) %>% 
+    summarise_all(mean, na.rm = TRUE) %>% 
+    ungroup() %>% 
+    mutate(day = as.numeric(day),
+           hour = as.numeric(hour)) %>% 
+    mutate(day = ifelse(as.numeric(day) < 10, paste0("0",day),day),
+           hour = ifelse(as.numeric(hour) < 10, paste0("0",hour),hour)) %>% 
+    mutate(timestamp = as_datetime(paste0(year,"-",month,"-",day," ",hour,":00:00"),tz = local_tzone)) %>% 
+    arrange(timestamp) 
   
+  
+  
+  d_therm <- d %>% 
+    select(timestamp, wtr_surface, wtr_1, wtr_2, wtr_3, wtr_4, wtr_5, wtr_6, 
+           wtr_7,wtr_8, wtr_9) %>% 
+    rename("0.0" = wtr_surface,
+           "1.0" = wtr_1,
+           "2.0" = wtr_2,
+           "3.0" = wtr_3,
+           "4.0" = wtr_4,
+           "5.0" = wtr_5,
+           "6.0" = wtr_6,
+           "7.0" = wtr_7,
+           "8.0" = wtr_8,
+           "9.0" = wtr_9) %>% 
+    pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
+    mutate(variable = "temperature",
+           method = "thermistor")
+  
+  
+  d_do_temp <- d %>% 
+    select(timestamp, wtr_5_do, wtr_9_do) %>% 
+    rename("5.0" = wtr_5_do,
+           "9.0" = wtr_9_do) %>% 
+    pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
+    mutate(variable = "temperature",
+           method = "do_sensor")
+  
+  d_exo_temp <- d %>% 
+    select(timestamp, wtr_1_exo) %>% 
+    rename("1.0" = wtr_1_exo) %>% 
+    pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
+    mutate(variable = "temperature",
+           method = "exo_sensor")
+  
+  
+  d_do_do <- d %>% 
+    select(timestamp, doobs_5, doobs_9) %>% 
+    rename("5.0" = doobs_5,
+           "9.0" = doobs_9) %>% 
+    pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
+    mutate(variable = "oxygen",
+           method = "do_sensor")
+  
+  d_exo_do <- d %>% 
+    select(timestamp, doobs_1) %>% 
+    rename("1.0" = doobs_1) %>% 
+    pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
+    mutate(variable = "oxygen",
+           method = "exo_sensor")
+  
+  d_exo_fdom <- d %>% 
+    select(timestamp, fDOM_1) %>% 
+    rename("1.0" = fDOM_1) %>% 
+    pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
+    mutate(variable = "fdom",
+           method = "exo_sensor")
+  
+  d_exo_chla <- d %>% 
+    select(timestamp, Chla_1) %>% 
+    rename("1.0" = Chla_1) %>% 
+    pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
+    mutate(variable = "chla",
+           method = "exo_sensor")
+  
+  d_exo_bgapc <- d %>% 
+    select(timestamp, bgapc_1) %>% 
+    rename("1.0" = bgapc_1) %>% 
+    pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
+    mutate(variable = "bgapc",
+           method = "exo_sensor")
+  
+  d <- rbind(d_therm,d_do_temp,d_exo_temp,d_do_do,d_exo_do,d_exo_fdom,
+             d_exo_chla,d_exo_bgapc)
+
   # write to output file
-  write_csv(d, output_file)
+  return(d)
 }
 
 # example usage

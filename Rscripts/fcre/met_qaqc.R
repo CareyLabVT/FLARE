@@ -1,7 +1,7 @@
 met_qaqc <- function(fname, cleaned_met_file,input_file_tz,local_tzone,full_time_local){
 
   if(length(fname) > 1){
-    d1 <- read_csv(fname[1], skip = 3)
+    d1 <- read_csv(fname[1], skip = 3, guess_max = 100000)
     d_names <- read_csv(fname[1], skip = 1, n_max = 3)
     names(d1) <- names(d_names)
     
@@ -11,7 +11,7 @@ met_qaqc <- function(fname, cleaned_met_file,input_file_tz,local_tzone,full_time
     
     d1$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = local_tzone)
     
-    d2 <- read_csv(fname[2])
+    d2 <- read_csv(fname[2], guess_max = 100000)
     
     TIMESTAMP_in <- force_tz(d2$DateTime, tzone = input_file_tz)
     
