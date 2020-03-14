@@ -483,7 +483,7 @@ run_flare<-function(start_day_local,
   met_file_names <- rep(NA, 1+(n_met_members*n_ds_members))
   obs_met_outfile <- "met_historical.csv"
   
-  cleaned_met_file <- paste0(working_directory, "/FCRMet_postQAQC.csv")
+  cleaned_met_file <- paste0(working_directory, "/met_full_postQAQC.csv")
   met_qaqc(fname = met_obs_fname,
            cleaned_met_file,
            input_file_tz = "EST",
