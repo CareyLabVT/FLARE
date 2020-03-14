@@ -785,9 +785,9 @@ run_flare<-function(start_day_local,
                                    modeled_depths = modeled_depths,
                                    local_tzone,
                                    target_variable = "oxygen",
-                                   time_threshold_seconds = 60,
+                                   time_threshold_seconds = 60*60,
                                    distance_threshold_meter = 0.2,
-                                   methods = c("do_sensor","CTD"))
+                                   methods = c("do_sensor","exo_sensor"))
     
     obs_chla <- extract_observations(fname = cleaned_observations_file_long,
                                      full_time_local,
