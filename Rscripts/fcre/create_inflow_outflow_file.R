@@ -1,4 +1,4 @@
-create_inflow_outflow_file <- function(full_time_day_local,
+create_inflow_outflow_file <- function(full_time_local,
                                        working_directory,
                                        input_file_tz = 'EST5EDT', 
                                        start_forecast_step,
@@ -11,6 +11,8 @@ create_inflow_outflow_file <- function(full_time_day_local,
                                        forecast_days){
   
   min_baseflow <- 0.0
+  
+  full_time_day_local <- as_date(full_time_local)
   
   inflow <- read.csv(inflow_file1)
   spillway <- read.csv(outflow_file1)

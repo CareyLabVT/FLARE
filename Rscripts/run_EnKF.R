@@ -47,9 +47,9 @@ run_EnKF <- function(x,
     }
   }
   
-  full_time_day_local <- strftime(full_time_local,
-                                  format="%Y-%m-%d",
-                                  tz = local_tzone)
+  full_time_local_char <- strftime(full_time_local,
+                                   format="%Y-%m-%d %H:%M",
+                                   tz = local_tzone)
   
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
   
@@ -60,12 +60,15 @@ run_EnKF <- function(x,
   
   for(i in 2:nsteps){
     
-    print(paste0("Running time step ", i-1, " : ", full_time_local[i - 1], " - ", full_time_local[i]))
+    print(paste0("Running time step ", i-1, " : ", 
+                 full_time_local_char[i - 1], " - ",
+                 full_time_local_char[i]))
+    
     met_index <- 1
     inflow_outflow_index <- 1
     
-    curr_start <- (full_time_local[i - 1])
-    curr_stop <- (full_time_local[i])
+    curr_start <- (full_time_local_char[i - 1])
+    curr_stop <- (full_time_local_char[i])
     
     setwd(working_directory)
     
@@ -74,7 +77,10 @@ run_EnKF <- function(x,
     x_corr <- array(NA, dim = c(nmembers, nstates))
     
     if(include_wq & "PHY_TCHLA" %in% wq_names){
-      phyto_groups_star <-  array(NA, dim = c(nmembers, length(modeled_depths), num_phytos))
+      phyto_groups_star <-  array(NA, 
+                                  dim = c(nmembers, 
+                                          length(modeled_depths), 
+                                          num_phytos))
     }
     
     #Matrix to store calculated ensemble specific deviations and innovations
@@ -95,8 +101,10 @@ run_EnKF <- function(x,
       }
     }
     
-    update_var(colMeans(mixing_vars), "restart_variables", working_directory, "glm3.nml") 
-    
+    update_var(colMeans(mixing_vars), 
+               "restart_variables", 
+               working_directory, 
+               "glm3.nml") 
     
     update_var(curr_start, "start", working_directory, "glm3.nml")
     update_var(curr_stop, "stop", working_directory, "glm3.nml")
@@ -120,7 +128,8 @@ run_EnKF <- function(x,
         #BEGIN GLM SPECIFIC PART
         ########################################
         # REQUIRES:
-        #curr_met_file, curr_pars, par_names, par_nml, x[i - 1, m, ], surface_height[i - 1, m],
+        #curr_met_file, curr_pars, par_names, par_nml, 
+        #x[i - 1, m, ], surface_height[i - 1, m],
         # curr_start, curr_stop
         # RETURNS;
         # x_star[m, ], 
@@ -136,12 +145,14 @@ run_EnKF <- function(x,
           sed_temp_mean_index <- which(par_names == "sed_temp_mean")
           non_sed_temp_mean_index <- which(par_names != "sed_temp_mean")
           if(length(sed_temp_mean_index) == 1){
-            update_glm_nml_list[[list_index]] <-  c(curr_pars[sed_temp_mean_index],zone2_temp_init_mean) 
+            update_glm_nml_list[[list_index]] <- c(curr_pars[sed_temp_mean_index],
+                                                   zone2_temp_init_mean) 
             update_glm_nml_names[list_index] <- "sed_temp_mean"
             list_index <- list_index + 1
             
           }else if(length(sed_temp_mean_index) == 2){
-            update_glm_nml_list[[list_index]] <-  c(curr_pars[sed_temp_mean_index[1]],curr_pars[sed_temp_mean_index[2]])
+            update_glm_nml_list[[list_index]] <-  c(curr_pars[sed_temp_mean_index[1]],
+                                                    curr_pars[sed_temp_mean_index[2]])
             update_glm_nml_names[list_index] <- "sed_temp_mean"
             list_index <- list_index + 1
             
@@ -154,7 +165,8 @@ run_EnKF <- function(x,
               if(par_nml[par] == "glm3.nml"){
                 if(par_names[par] == "inflow_factor"){
                   if(include_wq){
-                    update_glm_nml_list[[list_index]] <- c(curr_pars[par], curr_pars[par], 1.0)
+                    update_glm_nml_list[[list_index]] <- c(curr_pars[par], 
+                                                           curr_pars[par], 1.0)
                     update_glm_nml_names[list_index] <- par_names[par]
                     list_index <- list_index + 1
                     update_glm_nml_list[[list_index]] <- c(curr_pars[par], 1.0)
@@ -174,7 +186,10 @@ run_EnKF <- function(x,
                   list_index <- list_index + 1
                 }
               }else{
-                update_var(curr_pars[par], par_names[par], working_directory, par_nml[par])
+                update_var(curr_pars[par], 
+                           par_names[par], 
+                           working_directory, 
+                           par_nml[par])
               }
             }
           }
@@ -190,18 +205,28 @@ run_EnKF <- function(x,
             
             for(wq in 1:16){
               wq_enkf_tmp <- x[i - 1, m, wq_start[i]:wq_end[i]]
-              wq_init_vals <- c(wq_init_vals, spline(modeled_depths,wq_enkf_tmp,xout = glm_depths_tmp, method = "fmm")$y)
+              wq_init_vals <- c(wq_init_vals, 
+                                spline(modeled_depths,  
+                                       wq_enkf_tmp,
+                                       xout = glm_depths_tmp, 
+                                       method = "fmm")$y)
             }
             for(wq in 1:num_phytos){
               wq_enkf_tmp <- x_phyto_groups[i-1,m ,wq]
-              wq_init_vals <- c(wq_init_vals, spline(modeled_depths,wq_enkf_tmp,xout = glm_depths_tmp, method = "fmm")$y)
+              wq_init_vals <- c(wq_init_vals, spline(modeled_depths,
+                                                     wq_enkf_tmp,
+                                                     xout = glm_depths_tmp, 
+                                                     method = "fmm")$y)
             }
           }else{
             wq_init_vals <- c()
             
             for(wq in 1:num_wq_vars){
               wq_enkf_tmp <- x[i - 1, m, wq_start[wq]:wq_end[wq]]
-              wq_init_vals <- c(wq_init_vals, spline(modeled_depths,wq_enkf_tmp,xout = glm_depths_tmp, method = "fmm")$y)
+              wq_init_vals <- c(wq_init_vals, spline(modeled_depths,
+                                                     wq_enkf_tmp,
+                                                     xout = glm_depths_tmp, 
+                                                     method = "fmm")$y)
             }
           }
           update_glm_nml_list[[list_index]] <- wq_init_vals
@@ -209,14 +234,19 @@ run_EnKF <- function(x,
           list_index <- list_index + 1
           
           if(simulate_SSS){
-            create_sss_input_output(x, i, m, full_time_day_local, working_directory, wq_start, management_input, hist_days, forecast_sss_on)
+            create_sss_input_output(x, i, m, full_time_local, working_directory, 
+                                    wq_start, management_input, hist_days, 
+                                    forecast_sss_on)
           }
         }
         
 
         
         the_temps_enkf_tmp <- x[i - 1, m, 1:ndepths_modeled]
-        the_temps_glm <- spline(modeled_depths,the_temps_enkf_tmp,xout = glm_depths_tmp, method = "fmm")$y
+        the_temps_glm <- spline(modeled_depths,
+                                the_temps_enkf_tmp,
+                                xout = glm_depths_tmp, 
+                                method = "fmm")$y
         
         update_glm_nml_list[[list_index]] <- the_temps_glm
         update_glm_nml_names[list_index] <- "the_temps"
@@ -262,17 +292,27 @@ run_EnKF <- function(x,
         list_index <- list_index + 1
         
         if(n_inflow_outflow_members == 1){
-          tmp <- file.copy(from = inflow_file_names[1], to = "inflow_file1.csv", overwrite = TRUE)
-          tmp <- file.copy(from = inflow_file_names[2], to = "inflow_file2.csv", overwrite = TRUE)
-          tmp <- file.copy(from = outflow_file_names, to = "outflow_file1.csv", overwrite = TRUE)
+          tmp <- file.copy(from = inflow_file_names[1], 
+                           to = "inflow_file1.csv", overwrite = TRUE)
+          tmp <- file.copy(from = inflow_file_names[2], 
+                           to = "inflow_file2.csv", overwrite = TRUE)
+          tmp <- file.copy(from = outflow_file_names, 
+                           to = "outflow_file1.csv", overwrite = TRUE)
         }else{
-          tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 1], to = "inflow_file1.csv", overwrite = TRUE)
-          tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 2], to = "inflow_file2.csv", overwrite = TRUE)
-          tmp <- file.copy(from = outflow_file_names[inflow_outflow_index], to = "outflow_file1.csv", overwrite = TRUE)      
+          tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 1], 
+                           to = "inflow_file1.csv", overwrite = TRUE)
+          tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 2], 
+                           to = "inflow_file2.csv", overwrite = TRUE)
+          tmp <- file.copy(from = outflow_file_names[inflow_outflow_index], 
+                           to = "outflow_file1.csv", overwrite = TRUE)      
         }
         
         
-        update_nml(update_glm_nml_list, update_glm_nml_names, working_directory, "glm3.nml")
+        update_nml(update_glm_nml_list, 
+                   update_glm_nml_names, 
+                   working_directory, 
+                   "glm3.nml")
+        
         #Use GLM NML files to run GLM for a day
         # Only allow simulations without NaN values in the output to proceed. 
         #Necessary due to random Nan in AED output
@@ -281,7 +321,8 @@ run_EnKF <- function(x,
         
         if(i == 2 & m == 1){
           file.copy(from = paste0(working_directory, "/", "glm3.nml"), #GLM SPECIFIC
-                    to = paste0(working_directory, "/", "glm3_initial.nml"), overwrite = TRUE) #GLM SPECIFIC
+                    to = paste0(working_directory, "/", "glm3_initial.nml"), 
+                    overwrite = TRUE) #GLM SPECIFIC
         }
         
         while(!pass){
@@ -293,7 +334,8 @@ run_EnKF <- function(x,
                     stderr = print_glm2screen,
                     env = paste0("DYLD_LIBRARY_PATH=",working_directory))
           }else if(machine == "windows"){
-            system2(paste0(working_directory, "/", "glm.exe"), invisible = print_glm2screen)
+            system2(paste0(working_directory, "/", "glm.exe"), 
+                    invisible = print_glm2screen)
           }else{
             print("Machine not identified")
             stop()
@@ -442,7 +484,10 @@ run_EnKF <- function(x,
     
     #if no observations at a time step then just propogate model uncertainity
     
-    if(length(z_index) == 0 | i > (hist_days + 1) | i < (spin_up_days+1) | hist_days == 0){
+    if(length(z_index) == 0 | 
+       i > (hist_days + 1) | 
+       i < (spin_up_days+1) | 
+       hist_days == 0){
       
       if(npars > 0){
         
@@ -546,7 +591,8 @@ run_EnKF <- function(x,
           p_it <- dit[m, ] %*% t(dit[m, ]) +  p_it 
           if(npars > 0){
             p_it_pars <- dit_pars[m, ] %*% t(dit[m, ]) + p_it_pars
-            p_it_combined <- dit_combined[m, ] %*% t(dit_combined[m, ]) + p_it_combined
+            p_it_combined <- dit_combined[m, ] %*% t(dit_combined[m, ]) + 
+              p_it_combined
           }
         }
       }
@@ -561,7 +607,8 @@ run_EnKF <- function(x,
       k_t <- p_t %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t)
       if(npars > 0){
         k_t_pars <- p_t_pars %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t)
-        k_t_combined <- p_t_combined %*% t(h_combined) %*% solve(h_combined %*% p_t_combined %*% t(h_combined) + psi_t)
+        k_t_combined <- p_t_combined %*% t(h_combined) %*% 
+          solve(h_combined %*% p_t_combined %*% t(h_combined) + psi_t)
       }
       
       #Update states array (transposes are necessary to convert 
@@ -569,7 +616,8 @@ run_EnKF <- function(x,
       update_increment <-  k_t %*% (d_mat - h %*% t(x_corr))
       x[i, , 1:nstates] <- t(t(x_corr) + update_increment)
       if(npars > 0){
-        x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + k_t_pars %*% (d_mat - h %*% t(x_corr)))
+        x[i, , (nstates+1):(nstates+npars)] <- t(t(pars_corr) + 
+                                                   k_t_pars %*% (d_mat - h %*% t(x_corr)))
       }
       
       
@@ -587,7 +635,14 @@ run_EnKF <- function(x,
           running_residuals[num_adapt_days, z_index] <- zt - ens_mean[z_index]
           #running_residuals[num_adapt_days, z_index] <- rowMeans(update_increment[z_index,])
           if(!is.na(running_residuals[1, z_index[1]])){
-            qt <- update_qt(running_residuals, modeled_depths, qt, include_wq, npars, nstates, wq_start, wq_end, num_wq_vars)
+            qt <- update_qt(running_residuals, 
+                            modeled_depths, 
+                            qt, 
+                            include_wq, 
+                            npars, nstates, 
+                            wq_start, 
+                            wq_end, 
+                            num_wq_vars)
           }
         }
       }else if(adapt_qt_method == 2){
@@ -608,7 +663,19 @@ run_EnKF <- function(x,
                              nstates,
                              qt_alpha)
         }else{
-          qt <- update_sigma(qt, p_t, h, x_star, pars_star = NA, x_corr, pars_corr = NA, psi_t, zt, npars, qt_pars, include_pars_in_qt_update, nstates, qt_alpha)
+          qt <- update_sigma(qt, 
+                             p_t, 
+                             h, 
+                             x_star, 
+                             pars_star = NA, 
+                             x_corr, 
+                             pars_corr = NA, 
+                             psi_t, zt, 
+                             npars, 
+                             qt_pars, 
+                             include_pars_in_qt_update, 
+                             nstates, 
+                             qt_alpha)
         }
         
         qt <- localization(mat= qt,
@@ -681,7 +748,9 @@ run_EnKF <- function(x,
     #Print parameters to screen
     if(npars > 0){
       for(par in 1:npars){
-        print(paste0(par_names_save[par],": mean ", round(mean(pars_corr[,par]),4)," sd ", round(sd(pars_corr[,par]),4)))
+        print(paste0(par_names_save[par],": mean ", 
+                     round(mean(pars_corr[,par]),4)," sd ", 
+                     round(sd(pars_corr[,par]),4)))
       }
     }
     

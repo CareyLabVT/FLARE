@@ -1,4 +1,10 @@
-create_sss_input_output <- function(x, i, m, full_time_day_local, working_directory, wq_start, management_input, hist_days, forecast_sss_on){
+create_sss_input_output <- function(x, i, m, full_time_local, 
+                                    working_directory, wq_start, 
+                                    management_input, hist_days, 
+                                    forecast_sss_on){
+  
+  full_time_day_local <- as_date(full_time_local)
+  
   sss_depth <- 8
   depth_index <- which.min(abs(modeled_depths - sss_depth))
   

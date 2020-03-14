@@ -1,8 +1,10 @@
-read_sss_files <-  function(full_time_day_local,
+read_sss_files <-  function(full_time_local,
                             working_directory,
                             input_file_tz = 'EST5EDT', 
                             sss_file,
                             local_tzone){
+  
+  full_time_day_local <- as_date(full_time_local)
   
   d <- read.csv(sss_file)
   

@@ -69,8 +69,8 @@ met_qaqc <- function(fname, cleaned_met_file,input_file_tz,local_tzone,full_time
                   WindSpeed = ifelse(WindSpeed < 0, 0, WindSpeed)) %>%
     filter(is.na(timestamp) == FALSE)
   
-  first_day <- as_date(as.POSIXct(first(full_time_local),tz = local_tzone))
-  last_day <-  as_date(as.POSIXct(last(full_time_local),tz = local_tzone))
+  first_day <- as_date(first(full_time_local))
+  last_day <-  as_date(last(full_time_local))
   
   d <- d %>% 
     mutate(day = day(timestamp),

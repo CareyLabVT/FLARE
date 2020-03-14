@@ -15,7 +15,7 @@ extract_CTD <- function(fname,
     mutate(oxygen = oxygen*1000/32,
            chla = ctd_2_exo_chla[1] + ctd_2_exo_chla[2] * chla) %>% 
     pivot_longer(cols = c("temperature","oxygen","chla"), names_to = "variable", values_to = "value") %>% 
-    mutate(method = "CTD") %>% 
+    mutate(method = "ctd") %>% 
     select(timestamp , depth, value, variable, method) %>% 
     mutate(timestamp = as_datetime(timestamp, tz = local_tzone))
   return(d)

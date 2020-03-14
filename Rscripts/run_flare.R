@@ -224,9 +224,7 @@ run_flare<-function(start_day_local,
     spin_up_days <- hist_days + 2
     n_enkf_members <- 3
   }
-  
-  #met_downscale_uncertainty <- FALSE
-  
+
   ####################################################
   #### DETECT PLATFORM  
   ####################################################
@@ -242,10 +240,90 @@ run_flare<-function(start_day_local,
     Sys.setenv(LD_LIBRARY_PATH=paste("../glm/unix/", Sys.getenv("LD_LIBRARY_PATH"),sep=":"))
   }
   
-  #################################################
-  ### STEP 1: GRAB DATA FROM REPO OR SERVER
-  #################################################
+  ####################################################
+  #### STEP 1: CREATE TIME VECTORS
+  ####################################################
   
+  total_days <- hist_days + forecast_days
+  start_forecast_step <- hist_days + 1
+  
+  start_datetime_local <- as_datetime(paste0(start_day_local," ",start_time_local), tz = local_tzone)
+  end_datetime_local <- start_datetime_local + total_days*24*60*60
+  forecast_start_time_local <- start_datetime_local + hist_days*24*60*60
+  
+  full_time_local <- seq(start_datetime_local, end_datetime_local, by = "1 day")
+
+  ####################################################
+  #### STEP 2: SET ARRAY DIMENSIONS
+  ####################################################
+  
+  nsteps <- length(full_time_local)
+  if(spin_up_days > nsteps){
+    spin_up_days <- nsteps
+  }
+  
+  ndepths_modeled <- length(modeled_depths)
+  num_wq_vars <- length(wq_names)
+  if(include_wq){
+    glm_output_vars <- c("temp", wq_names)
+  }else{
+    glm_output_vars <- "temp"
+  }
+  npars <- length(par_names)
+  
+  # SET UP NUMBER OF ENSEMBLE MEMBERS
+  n_met_members <- 21
+  if(single_run){
+    n_met_members <- 3
+    n_ds_members <- 1
+  }
+  
+  if(include_wq){
+    nstates <- ndepths_modeled*(1+num_wq_vars)
+  }else{
+    nstates <- ndepths_modeled
+  }
+  
+  num_phytos <- length(tchla_components_vars)
+  
+  ###CREATE HISTORICAL MET FILE
+  if(met_downscale_uncertainty == FALSE){
+    n_enkf_members <- n_enkf_members * n_ds_members
+    n_ds_members <- 1
+  }
+  
+  ####################################################
+  #### STEP 3: ORGANIZE FILES
+  ####################################################
+  
+  ###CREATE DIRECTORY PATHS AND STRUCTURE
+  working_directory <- paste0(execute_location, "/", "working_directory")
+  if(!dir.exists(working_directory)){
+    dir.create(working_directory, showWarnings = FALSE)
+  }
+  ####Clear out temp GLM working directory
+  unlink(paste0(working_directory, "/*"), recursive = FALSE)   
+  
+  
+  if(is.na(sim_name)){
+    sim_name <- paste0(year(full_time_local[1]), "_",
+                       month(full_time_local[1]), "_",
+                       day(full_time_local[1]))
+  }
+  
+  sim_files_folder <- paste0(code_folder, "/", "sim_files")
+  fl <- c(list.files(sim_files_folder, full.names = TRUE))
+  tmp <- file.copy(from = fl, to = working_directory, overwrite = TRUE)
+  
+  if(!is.na(restart_file)){
+    tmp <- file.copy(from = restart_file, to = working_directory, overwrite = TRUE)
+  }
+  
+  ####################################################
+  #### STEP 4: PROCESS RAW INPUT AND OBSERVATION DATA
+  ####################################################
+  
+  #### START QAQC CONTAINER ####
   
   temperature_location <- paste0(data_location, "/", "mia-data") #FCR SPECIFIC
   met_station_location <- paste0(data_location, "/", "carina-data") #FCR SPECIFIC
@@ -309,20 +387,56 @@ run_flare<-function(start_day_local,
     
   }
   
+  cleaned_met_file <- paste0(working_directory, "/met_full_postQAQC.csv")
+  met_qaqc(fname = met_obs_fname,
+           cleaned_met_file,
+           input_file_tz = "EST",
+           local_tzone,
+           full_time_local)
+  
+  cleaned_inflow_file <- paste0(working_directory, "/inflow_postQAQC.csv")
+  
+  inflow_qaqc(fname = inflow_file1,
+              cleaned_inflow_file ,
+              local_tzone, 
+              input_file_tz = 'EST',
+              working_directory)
+  
+  cleaned_observations_file_long <- paste0(working_directory, "/observations_postQAQC_long.csv")
+  
+  d <- temp_oxy_chla_qaqc(data_file = temp_obs_fname, 
+                          maintenance_file = paste0(data_location, '/mia-data/CAT_MaintenanceLog.txt'), 
+                          input_file_tz = "EST")
+  
+  
+  if(use_ctd){
+    d_ctd <- extract_CTD(fname = ctd_fname,
+                         input_file_tz = "EST",
+                         local_tzone)
+    d <- rbind(d,d_ctd)
+  }
+  
+  if(use_nutrient_data){
+    d_nutrients <- extract_nutrients(fname = nutrients_fname,
+                                     modeled_depths = modeled_depths,
+                                     input_file_tz = "EST", 
+                                     local_tzone)
+    d <- rbind(d,d_nutrients)
+  }
+  
+  write_csv(d, cleaned_observations_file_long)
+  
+  #### END QAQC CONTAINER ####
+  
   ####################################################
-  #### STEP 2: CREATE TIME VECTORS
+  #### STEP 5: PROCESS DRIVER DATA INTO MODEL FORMAT
   ####################################################
   
-  total_days <- hist_days + forecast_days
-  start_forecast_step <- hist_days + 1
+  #### START DRIVER CONTAINER ####
   
-  start_datetime_local <- as_datetime(paste0(start_day_local," ",start_time_local), tz = local_tzone)
-  end_datetime_local <- start_datetime_local + total_days*24*60*60
-  forecast_start_time_local <- start_datetime_local + hist_days*24*60*60
-  
-  
-  start_datetime_GMT <- with_tz(start_datetime_local, tzone = "GMT")
-  end_datetime_GMT <- with_tz(end_datetime_local, tzone = "GMT")
+  ### All of this is for working with the NOAA data #####
+  start_datetime_GMT <- with_tz(first(full_time_local), tzone = "GMT")
+  end_datetime_GMT <- with_tz(last(full_time_local), tzone = "GMT")
   forecast_start_time_GMT<- with_tz(forecast_start_time_local, tzone = "GMT")
   
   forecast_start_time_GMT_past <- forecast_start_time_GMT - days(1)
@@ -368,77 +482,6 @@ run_flare<-function(start_day_local,
     forecast_month_GMT_past <- paste0(month(forecast_start_time_GMT_past))
   }
   
-  full_time_GMT <- seq(start_datetime_GMT, end_datetime_GMT, by = "1 day")
-  full_time_local <- seq(start_datetime_local, end_datetime_local, by = "1 day")
-  full_time_GMT <- strftime(full_time_GMT, 
-                            format="%Y-%m-%d %H:%M",
-                            tz = "GMT")
-  full_time_local <- strftime(full_time_local,
-                              format="%Y-%m-%d %H:%M",
-                              tz = local_tzone)
-  full_time_day_GMT <- strftime(full_time_GMT,
-                                format="%Y-%m-%d",
-                                tz = "GMT")
-  full_time_day_local <- strftime(full_time_local,
-                                  format="%Y-%m-%d",
-                                  tz = local_tzone)
-  full_time_hour_local <- seq(as.POSIXct(full_time_local[1],
-                                         tz = local_tzone), 
-                              as.POSIXct(full_time_local[length(full_time_local)],
-                                         tz = local_tzone),
-                              by = "1 hour")
-  
-  ####################################################
-  #### STEP 3: SET ARRAY DIMENSIONS
-  ####################################################
-  
-  nsteps <- length(full_time_local)
-  if(spin_up_days > nsteps){
-    spin_up_days <- nsteps
-  }
-  
-  ndepths_modeled <- length(modeled_depths)
-  num_wq_vars <- length(wq_names)
-  if(include_wq){
-    glm_output_vars <- c("temp", wq_names)
-  }else{
-    glm_output_vars <- "temp"
-  }
-  npars <- length(par_names)
-  
-  # SET UP NUMBER OF ENSEMBLE MEMBERS
-  n_met_members <- 21
-  if(single_run){
-    n_met_members <- 3
-    n_ds_members <- 1
-  }
-  
-  if(include_wq){
-    nstates <- ndepths_modeled*(1+num_wq_vars)
-  }else{
-    nstates <- ndepths_modeled
-  }
-  
-  num_phytos <- length(tchla_components_vars)
-  
-  ###CREATE HISTORICAL MET FILE
-  if(met_downscale_uncertainty == FALSE){
-    n_enkf_members <- n_enkf_members * n_ds_members
-    n_ds_members <- 1
-  }
-  
-  ####################################################
-  #### STEP 4: ORGANIZE FILES
-  ####################################################
-  
-  ###CREATE DIRECTORY PATHS AND STRUCTURE
-  working_directory <- paste0(execute_location, "/", "working_directory")
-  if(!dir.exists(working_directory)){
-    dir.create(working_directory, showWarnings = FALSE)
-  }
-  ####Clear out temp GLM working directory
-  unlink(paste0(working_directory, "/*"), recursive = FALSE)   
-  
   forecast_base_name <- paste0(lake_name,"_",
                                year(forecast_start_time_GMT),
                                forecast_month_GMT,
@@ -455,46 +498,16 @@ run_flare<-function(start_day_local,
                                     noaa_hour,
                                     "z")
   
-  met_obs_fname_wdir <- met_obs_fname
-  
   met_forecast_base_file_name <- paste0("met_hourly_",
                                         forecast_base_name,
                                         "_ens")
-  if(is.na(sim_name)){
-    sim_name <- paste0(year(full_time_local[1]), "_",
-                       month(full_time_local[1]), "_",
-                       day(full_time_local[1]))
-  }
-  
-  sim_files_folder <- paste0(code_folder, "/", "sim_files")
-  fl <- c(list.files(sim_files_folder, full.names = TRUE))
-  tmp <- file.copy(from = fl, to = working_directory, overwrite = TRUE)
-  
-  if(!is.na(restart_file)){
-    tmp <- file.copy(from = restart_file, to = working_directory, overwrite = TRUE)
-  }
-  
-  
-  
-  ####################################################
-  #### STEP 5: PROCESS AND ORGANIZE DRIVER DATA
-  ####################################################
-  
+
   met_file_names <- rep(NA, 1+(n_met_members*n_ds_members))
   obs_met_outfile <- "met_historical.csv"
   
-  cleaned_met_file <- paste0(working_directory, "/met_full_postQAQC.csv")
-  met_qaqc(fname = met_obs_fname,
-           cleaned_met_file,
-           input_file_tz = "EST",
-           local_tzone,
-           full_time_local)
-  
-  
-  
   missing_met <- create_obs_met_input(fname = cleaned_met_file,
-                                      outfile=obs_met_outfile,
-                                      full_time_hour_local, 
+                                      outfile = obs_met_outfile,
+                                      full_time_local, 
                                       local_tzone,
                                       working_directory,
                                       hist_days)
@@ -503,7 +516,8 @@ run_flare<-function(start_day_local,
     met_file_names[1] <- obs_met_outfile
   }else{
     if(hist_days > 1){
-      stop(paste0("Running more than 1 hist_day but met data has ",missing_met," values"))
+      stop(paste0("Running more than 1 hist_day but met data has ",
+                  missing_met," values"))
     }
     in_directory <- paste0(noaa_location)
     out_directory <- working_directory
@@ -617,28 +631,28 @@ run_flare<-function(start_day_local,
                          "ShortWave" = "ShortWave",
                          "LongWave" = "LongWave",
                          "Rain" = "Rain")
-    
-    met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder = code_folder,
-                                                                                 noaa_location,
-                                                                                 input_met_file = cleaned_met_file,
-                                                                                 working_directory,
-                                                                                 sim_files_folder = paste0(code_folder, "/", "sim_files"),
-                                                                                 n_ds_members,
-                                                                                 n_met_members,
-                                                                                 file_name,
-                                                                                 local_tzone,
-                                                                                 FIT_PARAMETERS,
-                                                                                 DOWNSCALE_MET,
-                                                                                 met_downscale_uncertainty,
-                                                                                 compare_output_to_obs = FALSE,
-                                                                                 VarInfo,
-                                                                                 replaceObsNames,
-                                                                                 downscaling_coeff,
-                                                                                 full_time_local,
-                                                                                 first_obs_date = met_ds_obs_start,
-                                                                                 last_obs_date = met_ds_obs_end,
-                                                                                 input_met_file_tz = local_tzone,
-                                                                                 weather_uncertainty)
+    index <- (1+(n_met_members*n_ds_members))
+    met_file_names[2:index] <- process_downscale_GEFS(folder = code_folder,
+                                                      noaa_location,
+                                                      input_met_file = cleaned_met_file,
+                                                      working_directory,
+                                                      sim_files_folder = paste0(code_folder, "/", "sim_files"),
+                                                      n_ds_members,
+                                                      n_met_members,
+                                                      file_name,
+                                                      local_tzone,
+                                                      FIT_PARAMETERS,
+                                                      DOWNSCALE_MET,
+                                                      met_downscale_uncertainty,
+                                                      compare_output_to_obs = FALSE,
+                                                      VarInfo,
+                                                      replaceObsNames,
+                                                      downscaling_coeff,
+                                                      full_time_local,
+                                                      first_obs_date = met_ds_obs_start,
+                                                      last_obs_date = met_ds_obs_end,
+                                                      input_met_file_tz = local_tzone,
+                                                      weather_uncertainty)
     
     if(weather_uncertainty == FALSE & met_downscale_uncertainty == TRUE){
       met_file_names <- met_file_names[1:(1+(1*n_ds_members))]
@@ -647,51 +661,54 @@ run_flare<-function(start_day_local,
     }
     
     if(weather_uncertainty == FALSE & n_inflow_outflow_members > 1){
-      inflow_met_file_names <- rep(NA, 1+(n_met_members*n_ds_members))
-      inflow_met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder = code_folder,
-                                                                                          noaa_location,
-                                                                                          input_met_file = cleaned_met_file,
-                                                                                          working_directory,
-                                                                                          sim_files_folder = paste0(code_folder, "/", "sim_files"),
-                                                                                          n_ds_members,
-                                                                                          n_met_members,
-                                                                                          file_name,
-                                                                                          local_tzone,
-                                                                                          FIT_PARAMETERS,
-                                                                                          DOWNSCALE_MET,
-                                                                                          met_downscale_uncertainty,
-                                                                                          compare_output_to_obs = FALSE,
-                                                                                          VarInfo,
-                                                                                          replaceObsNames,
-                                                                                          downscaling_coeff,
-                                                                                          full_time_local,
-                                                                                          first_obs_date = met_ds_obs_start,
-                                                                                          last_obs_date = met_ds_obs_end,
-                                                                                          input_met_file_tz = local_tzone,
-                                                                                          weather_uncertainty = TRUE)
+      index <- 1+(n_met_members*n_ds_members)
+      inflow_met_file_names <- rep(NA, index)
+      inflow_met_file_names[2:index] <- process_downscale_GEFS(folder = code_folder,
+                                                               noaa_location,
+                                                               input_met_file = cleaned_met_file,
+                                                               working_directory,
+                                                               sim_files_folder = paste0(code_folder, "/", "sim_files"),
+                                                               n_ds_members,
+                                                               n_met_members,
+                                                               file_name,
+                                                               local_tzone,
+                                                               FIT_PARAMETERS,
+                                                               DOWNSCALE_MET,
+                                                               met_downscale_uncertainty,
+                                                               compare_output_to_obs = FALSE,
+                                                               VarInfo,
+                                                               replaceObsNames,
+                                                               downscaling_coeff,
+                                                               full_time_local,
+                                                               first_obs_date = met_ds_obs_start,
+                                                               last_obs_date = met_ds_obs_end,
+                                                               input_met_file_tz = local_tzone,
+                                                               weather_uncertainty = TRUE)
+      
     }else if(met_downscale_uncertainty == FALSE & n_inflow_outflow_members > 1){
-      inflow_met_file_names <- rep(NA, 1+(n_met_members*n_ds_members))
-      inflow_met_file_names[2:(1+(n_met_members*n_ds_members))] <- process_downscale_GEFS(folder = code_folder,
-                                                                                          noaa_location,
-                                                                                          input_met_file = met_obs_fname_wdir,
-                                                                                          working_directory,
-                                                                                          sim_files_folder = paste0(code_folder, "/", "sim_files"),
-                                                                                          n_ds_members,
-                                                                                          n_met_members,
-                                                                                          file_name,
-                                                                                          local_tzone,
-                                                                                          FIT_PARAMETERS,
-                                                                                          DOWNSCALE_MET,
-                                                                                          met_downscale_uncertainty = TRUE,
-                                                                                          compare_output_to_obs = FALSE,
-                                                                                          VarInfo,
-                                                                                          replaceObsNames,
-                                                                                          downscaling_coeff,
-                                                                                          full_time_local,
-                                                                                          first_obs_date = met_ds_obs_start,
-                                                                                          last_obs_date = met_ds_obs_end,
-                                                                                          input_met_file_tz = local_tzone,
-                                                                                          weather_uncertainty)
+      index <- 1+(n_met_members*n_ds_members)
+      inflow_met_file_names <- rep(NA, index)
+      inflow_met_file_names[2:index] <- process_downscale_GEFS(folder = code_folder,
+                                                               noaa_location,
+                                                               input_met_file = cleaned_met_file,
+                                                               working_directory,
+                                                               sim_files_folder = paste0(code_folder, "/", "sim_files"),
+                                                               n_ds_members,
+                                                               n_met_members,
+                                                               file_name,
+                                                               local_tzone,
+                                                               FIT_PARAMETERS,
+                                                               DOWNSCALE_MET,
+                                                               met_downscale_uncertainty = TRUE,
+                                                               compare_output_to_obs = FALSE,
+                                                               VarInfo,
+                                                               replaceObsNames,
+                                                               downscaling_coeff,
+                                                               full_time_local,
+                                                               first_obs_date = met_ds_obs_start,
+                                                               last_obs_date = met_ds_obs_end,
+                                                               input_met_file_tz = local_tzone,
+                                                               weather_uncertainty)
     }else{
       inflow_met_file_names <- met_file_names
     }
@@ -702,17 +719,10 @@ run_flare<-function(start_day_local,
     n_met_members <- 1
   }
   
-  cleaned_inflow_file <- paste0(working_directory, "/FCRinflow_postQAQC.csv")
-  
-  inflow_qaqc(fname = inflow_file1,
-              cleaned_inflow_file ,
-              local_tzone, 
-              input_file_tz = 'EST',
-              working_directory)
-  
+
   
   ##CREATE INFLOW AND OUTFILE FILES
-  inflow_outflow_files <- create_inflow_outflow_file(full_time_day_local,
+  inflow_outflow_files <- create_inflow_outflow_file(full_time_local,
                                                      working_directory, 
                                                      input_file_tz = "EST",
                                                      start_forecast_step,
@@ -728,47 +738,22 @@ run_flare<-function(start_day_local,
                              inflow2 = inflow_outflow_files$wetland_file_names)
   outflow_file_names <- cbind(inflow_outflow_files$spillway_file_names)
   
-  management_input <- read_sss_files(full_time_day_local,
+  management_input <- read_sss_files(full_time_local,
                                      working_directory,
                                      input_file_tz = 'EST5EDT', 
                                      sss_file = sss_fname,
                                      local_tzone)
   
   
+  #### END DRIVER CONTAINER ####
+  
+  
+  #### START GLM ENKF CONTAINER ####
+  
+  
   ####################################################
-  #### STEP 6: PROCESS AND ORGANIZE STATE DATA
+  #### STEP 6: PROCESS OBSERVATIONS DATA FOR ENKF
   ####################################################
-  
-  #Inputs: temperature_location, temp_obs_fname, full_time_local, modeled_depths,
-  # observed_depths_temp, local_tzone, observed_depths_do, exo_2_ctd_chla, use_ctd
-  
-  
-  cleaned_observations_file_long <- paste0(working_directory, "/observations_postQAQC_long.csv")
-  
-  d <- temp_oxy_chla_qaqc(data_file = temp_obs_fname, 
-                          maintenance_file = paste0(data_location, '/mia-data/CAT_MaintenanceLog.txt'), 
-                          input_file_tz = "EST")
-  
-  
-  if(use_ctd){
-    d_ctd <- extract_CTD(fname = ctd_fname,
-                         input_file_tz = "EST",
-                         local_tzone)
-    d <- rbind(d,d_ctd)
-  }
-  
-  if(use_nutrient_data){
-    d_nutrients <- extract_nutrients(fname = nutrients_fname,
-                                     full_time_day_local,
-                                     modeled_depths = modeled_depths,
-                                     input_file_tz = "EST", 
-                                     local_tzone)
-    d <- rbind(d,d_nutrients)
-  }
-  
-  write_csv(d, cleaned_observations_file_long)
-  
-  #####
   
   obs_temp <- extract_observations(fname = cleaned_observations_file_long,
                                    full_time_local,
@@ -796,7 +781,7 @@ run_flare<-function(start_day_local,
                                      target_variable = "chla",
                                      time_threshold_seconds = 60*60*12,
                                      distance_threshold_meter = 0.2,
-                                     methods = c("exo_sensor","CTD"))
+                                     methods = c("exo_sensor","ctd"))
     
     obs_fdom <- extract_observations(fname = cleaned_observations_file_long,
                                      full_time_local,
@@ -1103,16 +1088,7 @@ run_flare<-function(start_day_local,
   ########################################
   #END GLM SPECIFIC PART
   ########################################
-  
-  if(include_wq){
-    nobs <- length(observed_depths_temp) + 
-      length(observed_depths_do) + 
-      length(observed_depths_chla_fdom) + 
-      length(observed_depths_chla_fdom) 
-  }else{
-    nobs <- length(observed_depths_temp)
-  }
-  
+
   #######################################################
   #### STEP 9: CREATE THE PSI VECTOR (DATA uncertainty)  
   #######################################################
@@ -1265,16 +1241,6 @@ run_flare<-function(start_day_local,
                                            wq_init_vals), 
                                     sigma=as.matrix(qt_init[1:nstates,1:nstates]))
         
-        #for(m in 1:nmembers){
-        #  orig_temp <-  x[1,m ,1:ndepths_modeled]
-        #  dens <- rep(NA, ndepths_modeled)
-        #  for(d in 1:ndepths_modeled){
-        #    dens[d] <- temperature_to_density(orig_temp[d], the_sals_init[d])
-        #  }
-        #  index <- order(dens, decreasing = TRUE)
-        #  x[1,m ,1:ndepths_modeled] <- orig_temp[index]
-        #}
-        
         if(single_run){
           for(m in 1:nmembers){
             x[1,m ,1:nstates] <- rep(c(the_temps_init, 
@@ -1305,7 +1271,9 @@ run_flare<-function(start_day_local,
         
         for(phyto in 1:num_phytos){
           for(m in 1:nmembers){
-            x_phyto_groups[1,m , ((phyto-1)*ndepths_modeled + 1):(phyto*ndepths_modeled)] <- x[1, m,wq_start[num_wq_vars]:wq_end[num_wq_vars]] * biomass_to_chla[phyto] * init_phyto_proportion[phyto]
+            x_phyto_groups[1, m , ((phyto-1)*ndepths_modeled + 1):(phyto*ndepths_modeled)] <- 
+              x[1, m,wq_start[num_wq_vars]:wq_end[num_wq_vars]] * 
+              biomass_to_chla[phyto] * init_phyto_proportion[phyto]
           }
         }
         
@@ -1313,16 +1281,6 @@ run_flare<-function(start_day_local,
         x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
                                     mean=c(the_temps_init,wq_init_vals),
                                     sigma=as.matrix(qt))
-        
-        #for(m in 1:nmembers){
-        #  orig_temp <-  x[1, m,1:ndepths_modeled]
-        #  dens <- rep(NA, ndepths_modeled)
-        #  for(d in 1:ndepths_modeled){
-        #    dens[d] <- temperature_to_density(orig_temp[d], the_sals_init[d])
-        #  }
-        #  index <- order(dens, decreasing = TRUE)
-        #  x[1,m ,1:nstates] <- orig_temp[index]
-        #}
         
         if(single_run){
           for(m in 1:nmembers){
@@ -1341,7 +1299,10 @@ run_flare<-function(start_day_local,
       
       for(phyto in 1:num_phytos){
         for(m in 1:nmembers){
-          x_phyto_groups[1,m , ((phyto-1)*ndepths_modeled + 1):(phyto*ndepths_modeled)] <- x[1, m,wq_start[num_wq_vars]:wq_end[num_wq_vars]] * biomass_to_chla[phyto] * init_phyto_proportion[phyto]
+          x_phyto_groups[1, m , ((phyto-1)*ndepths_modeled + 1):(phyto*ndepths_modeled)] <- 
+            x[1, m,wq_start[num_wq_vars]:wq_end[num_wq_vars]] *
+            biomass_to_chla[phyto] * 
+            init_phyto_proportion[phyto]
         }
       }
     }else{
@@ -1349,17 +1310,6 @@ run_flare<-function(start_day_local,
         x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
                                     mean=c(the_temps_init), 
                                     sigma=as.matrix(qt_init[1:nstates,1:nstates]))
-        
-        #for(m in 1:nmembers){
-        #  orig_temp <-  x[1,m ,1:ndepths_modeled]
-        #  dens <- rep(NA, ndepths_modeled)
-        #  for(d in 1:ndepths_modeled){
-        #    dens[d] <- temperature_to_density(orig_temp[d], the_sals_init)
-        #  }
-        #  index <- order(dens, decreasing = TRUE)
-        #  x[1,m ,1:nstates] <- orig_temp[index]
-        #}
-        
         
         for(par in 1:npars){
           x[1, ,(nstates+par)] <- runif(n=nmembers,par_init_lowerbound[par], par_init_upperbound[par])
@@ -1378,16 +1328,6 @@ run_flare<-function(start_day_local,
         x[1, , ] <- rmvnorm(n=nmembers, 
                             mean=the_temps_init,
                             sigma=as.matrix(qt))
-        
-        #for(m in 1:nmembers){
-        #  orig_temp <-  x[1,m ,1:ndepths_modeled]
-        #  dens <- rep(NA, ndepths_modeled)
-        #  for(d in 1:ndepths_modeled){
-        #    dens[d] <- temperature_to_density(orig_temp[d], the_sals_init[d])
-        #  }
-        #  index <- order(dens, decreasing = TRUE)
-        #  x[1,m ,1:nstates] <- orig_temp[index]
-        #}
         
         if(initial_condition_uncertainty == FALSE & hist_days == 0){
           state_means <- colMeans(x[1, , 1:nstates])
@@ -1450,7 +1390,8 @@ run_flare<-function(start_day_local,
       
       if(include_wq & "PHY_TCHLA" %in% wq_names){
         for(phyto in 1:num_phytos){
-          x_phyto_groups[1, ,((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)] <- x_phyto_groups_restart[sampled_nmembers , ((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)]
+          x_phyto_groups[1, ,((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)] <- 
+            x_phyto_groups_restart[sampled_nmembers , ((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)]
         }
       }
       
@@ -1475,7 +1416,8 @@ run_flare<-function(start_day_local,
       
       if(include_wq & "PHY_TCHLA" %in% wq_names){
         for(phyto in 1:num_phytos){
-          x_phyto_groups[1, ,((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)] <- x_phyto_groups_restart[sampled_nmembers , ((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)]
+          x_phyto_groups[1, ,((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)] <- 
+            x_phyto_groups_restart[sampled_nmembers , ((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)]
         }
       }
       
@@ -1496,7 +1438,8 @@ run_flare<-function(start_day_local,
       
       if(include_wq & "PHY_TCHLA" %in% wq_names){
         for(phyto in 1:num_phytos){
-          x_phyto_groups[1, ,((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)] <- x_phyto_groups_restart[ , ((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)]
+          x_phyto_groups[1, ,((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)] <- 
+            x_phyto_groups_restart[ , ((phyto-1)*ndepths_modeled):(phyto*ndepths_modeled)]
         }
       }
       
@@ -1547,8 +1490,6 @@ run_flare<-function(start_day_local,
       }
     }
   }
-  
-  
   
   ####################################################
   #### STEP 12: Run Ensemble Kalman Filter
@@ -1683,7 +1624,11 @@ run_flare<-function(start_day_local,
                         mixing_restart,
                         glm_depths_restart)
   
-  ##ARCHIVE FORECAST
+  #### END GLM ENKF CONTAINER ####
+  
+  
+  #### START ARCHIVE CONTAINER
+  
   restart_file_name <- archive_forecast(working_directory = working_directory,
                                         folder = code_folder, 
                                         forecast_base_name = forecast_base_name, 
@@ -1691,6 +1636,8 @@ run_flare<-function(start_day_local,
                                         push_to_git = push_to_git,
                                         save_file_name = save_file_name, 
                                         time_of_forecast_string = time_of_forecast_string)
+  
+  #### END START ARCHIVE CONTAINER
   
   return(list(restart_file_name <- restart_file_name,
               sim_name <- paste0(save_file_name, "_", time_of_forecast_string)))

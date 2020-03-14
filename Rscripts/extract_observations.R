@@ -12,8 +12,7 @@ extract_observations <- function(fname,
   d$timestamp <- force_tz(d$timestamp, tzone = local_tzone)
   
   obs <- array(NA,dim=c(length(full_time_local),length(modeled_depths)))
-  full_time_local <- as.POSIXct(full_time_local,tz = local_tzone)
-  
+
   for(i in 1:length(full_time_local)){
     for(j in 1:length(modeled_depths)){
       d1 <- d %>% 
