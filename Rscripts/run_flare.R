@@ -396,11 +396,12 @@ run_flare<-function(start_day_local,
   
   cleaned_inflow_file <- paste0(working_directory, "/inflow_postQAQC.csv")
   
-  inflow_qaqc(fname = inflow_file1,
+  inflow_qaqc(realtime_file = inflow_file1[1],
+              qaqc_file = inflow_file1[2],
+              nutrients_file = nutrients_fname,
               cleaned_inflow_file ,
               local_tzone, 
-              input_file_tz = 'EST',
-              working_directory)
+              input_file_tz = 'EST')
   
   cleaned_observations_file_long <- paste0(working_directory, "/observations_postQAQC_long.csv")
   
@@ -729,7 +730,7 @@ run_flare<-function(start_day_local,
                                                      inflow_file1 = cleaned_inflow_file,
                                                      inflow_file2,
                                                      outflow_file1,
-                                                     chemistry_file,
+                                                     chemistry_file = cleaned_inflow_file,
                                                      local_tzone,
                                                      met_file_names,
                                                      forecast_days)

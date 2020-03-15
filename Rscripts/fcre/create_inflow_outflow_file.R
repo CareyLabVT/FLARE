@@ -15,6 +15,7 @@ create_inflow_outflow_file <- function(full_time_local,
   full_time_day_local <- as_date(full_time_local)
   
   inflow <- read.csv(inflow_file1)
+  inflow_names <- names(inflow)
   spillway <- read.csv(outflow_file1)
   wetland <- read.csv(inflow_file2)
   inflow_chemistry <- read.csv(chemistry_file)
@@ -232,10 +233,9 @@ create_inflow_outflow_file <- function(full_time_local,
     spillway_new[,1] <- full_time_day_local
     wetland_new[,1] <- full_time_day_local
     
-    names(inflow_new) <- c("time","FLOW","TEMP","SALT","OXY_oxy","NIT_amm","NIT_nit", "PHS_frp", "OGM_doc", "OGM_poc",
-                           "OGM_don","OGM_dop","OGM_pop", "PHS_frp_ads","OGM_pon")    
-    names(wetland_new) <- c("time","FLOW","TEMP","SALT","NIT_amm","NIT_nit", "PHS_frp", "OGM_doc", "OGM_poc",
-                            "OGM_don","OGM_dop","OGM_pop", "PHS_frp_ads","OGM_pon","OXY_oxy")   
+    names(inflow_new) <- inflow_names    
+    names(wetland_new) <- c("time","FLOW","TEMP","SALT","OXY_oxy","NIT_amm","NIT_nit", "PHS_frp", "OGM_doc", "OGM_poc",
+                            "OGM_don","OGM_dop","OGM_pop","OGM_pon","PHS_frp_ads")   
     names(spillway_new) <- c("time","FLOW")   
     
     write.csv(inflow_new,
