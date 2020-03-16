@@ -68,8 +68,8 @@ inflow_qaqc <- function(realtime_file,
     mutate(TEMP = ifelse(is.na(VT_Temp_C), WVWA_Temp_C, VT_Temp_C),
            FLOW = ifelse(time > as_date("2019-06-07"), VT_Flow_cms, WVWA_Flow_cms),
            SALT = 0) %>% 
-    mutate(TEMP = na.interpolation(TEMP),
-           FLOW = na.interpolation(FLOW)) %>% 
+    mutate(TEMP = na_interpolation(TEMP),
+           FLOW = na_interpolation(FLOW)) %>% 
     select(time, FLOW, TEMP, SALT)
   
   ##Step 3: Read in diana data, convert flow from PSI to CSM, calculations to 
@@ -136,16 +136,16 @@ inflow_qaqc <- function(realtime_file,
                                            bar.press = NULL, bar.units = NULL,
                                            out.DO.meas = "mg/L",
                                            salinity = 0, salinity.units = "pp.thou"))*1000*(1/32)) %>% 
-     mutate(NIT_amm = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na.interpolation(NIT_amm), NA),
-            NIT_nit = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na.interpolation(NIT_nit), NA),
-            PHS_frp = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na.interpolation(PHS_frp), NA),
-            OGM_doc = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na.interpolation(OGM_doc), NA),
-            OGM_poc = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na.interpolation(OGM_poc), NA),
-            OGM_don = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na.interpolation(OGM_don), NA),
-            OGM_dop = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na.interpolation(OGM_dop), NA),
-            OGM_pop = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na.interpolation(OGM_pop), NA),
-            OGM_pon = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na.interpolation(OGM_pon), NA),
-            PHS_frp_ads = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na.interpolation(PHS_frp_ads), NA)) %>% 
+     mutate(NIT_amm = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(NIT_amm), NA),
+            NIT_nit = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(NIT_nit), NA),
+            PHS_frp = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(PHS_frp), NA),
+            OGM_doc = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(OGM_doc), NA),
+            OGM_poc = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(OGM_poc), NA),
+            OGM_don = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(OGM_don), NA),
+            OGM_dop = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(OGM_dop), NA),
+            OGM_pop = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(OGM_pop), NA),
+            OGM_pon = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(OGM_pon), NA),
+            PHS_frp_ads = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(PHS_frp_ads), NA)) %>% 
      mutate(OGM_dop = ifelse(time > as_date("2013-09-01") & time < as_date("2015-01-01"), NA, OGM_dop), 
             OGM_pop = ifelse(time > as_date("2013-09-01") & time < as_date("2015-01-01"), NA, OGM_pop))
    

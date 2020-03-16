@@ -57,7 +57,6 @@ run_EnKF <- function(x,
   glm_salt <- array(NA, dim = c(nmembers, 500))
   
   ###START EnKF
-  
   for(i in 2:nsteps){
     
     print(paste0("Running time step ", i-1, " : ", 
