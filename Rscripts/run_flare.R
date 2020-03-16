@@ -364,26 +364,26 @@ run_flare<-function(start_day_local,
     setwd(diana_data_location)
     system(paste0("git pull"))
     
-    if(length(met_obs_fname) > 1 & !file.exists(met_obs_fname[2])){
-      inUrl1  <- "https://pasta.lternet.edu/package/eml/edi/389/ea47ae493c7025d61245287649895e6" 
-      download.file(inUrl1,met_obs_fname[2],method="curl")
-    }
+    #if(length(met_obs_fname) > 1 & !file.exists(met_obs_fname[2])){
+    #  inUrl1  <- "https://pasta.lternet.edu/package/eml/edi/389/ea47ae493c7025d61245287649895e6" 
+    #  download.file(inUrl1,met_obs_fname[2],method="curl")
+    #}
     
-    if(length(temp_obs_fname) > 1 & !file.exists(temp_obs_fname[2])){
-      inUrl1  <- "https://pasta.lternet.edu/package/eml/edi/271/4/b888ac006ef4ca601f63e2703d7476b9" 
-      download.file(inUrl1,temp_obs_fname[2],method="curl")
-      
-    }
+    #if(length(temp_obs_fname) > 1 & !file.exists(temp_obs_fname[2])){
+    #  inUrl1  <- "https://pasta.lternet.edu/package/eml/edi/271/4/b888ac006ef4ca601f63e2703d7476b9" 
+    #  download.file(inUrl1,temp_obs_fname[2],method="curl")
+    #  
+    #}
     
-    if(!is.na(ctd_fname) & !file.exists(ctd_fname)){
-      inUrl1  <- "https://pasta.lternet.edu/package/eml/edi/200/10/1fc7d2a5c69c6a651793dba06d375ae2" 
-      download.file(inUrl1,ctd_fname,method="curl")
-    }
+    #if(!is.na(ctd_fname) & !file.exists(ctd_fname)){
+    #  inUrl1  <- "https://pasta.lternet.edu/package/eml/edi/200/10/1fc7d2a5c69c6a651793dba06d375ae2" 
+    #  download.file(inUrl1,ctd_fname,method="curl")
+    #}
     
-    if(!is.na(nutrients_fname) & !file.exists(nutrients_fname)){
-      inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/199/5/2b3dc84ae6b12d10bd5485f1c300af13" 
-      download.file(inUrl1,nutrients_fname,method="curl")
-    }
+    #if(!is.na(nutrients_fname) & !file.exists(nutrients_fname)){
+    #  inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/199/5/2b3dc84ae6b12d10bd5485f1c300af13" 
+    #  download.file(inUrl1,nutrients_fname,method="curl")
+    #}
     
   }
   
@@ -1072,7 +1072,11 @@ run_flare<-function(start_day_local,
   
   #update_var(wq_init_vals, "wq_init_vals", working_directory, "glm3.nml") #GLM SPECIFIC
   if(include_wq){
+    if("PHY_TCHLA" %in% wq_names){
     update_var(num_wq_vars - 1 + length(tchla_components_vars), "num_wq_vars", working_directory, "glm3.nml") #GLM SPECIFIC
+    }else{
+      update_var(num_wq_vars, "num_wq_vars", working_directory, "glm3.nml") #GLM SPECIFIC
+    }
     file.copy(from = paste0(base_AED_nml), 
               to = paste0(working_directory, "/", "aed2.nml"), overwrite = TRUE)
   }else{

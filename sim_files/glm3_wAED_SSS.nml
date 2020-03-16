@@ -104,7 +104,7 @@
    inflow_factor = 1.0, 1.0, 0.5
    inflow_fl = 'inflow_file1.csv','inflow_file2.csv','sss_inflow.csv'
    inflow_varnum = 14
-   inflow_vars = 'FLOW','TEMP','SALT','OXY_oxy','NIT_amm','NIT_nit','PHS_frp','OGM_doc','OGM_poc','OGM_don','OGM_dop','OGM_pop','PHS_frp_ads','OGM_pon'
+   inflow_vars = 'FLOW','TEMP','SALT','OXY_oxy','NIT_amm','NIT_nit','PHS_frp','OGM_doc','OGM_poc','OGM_don','OGM_dop','OGM_pop','OGM_pon','PHS_frp_ads'
 /
 &outflow
    num_outlet = 2
