@@ -574,7 +574,7 @@ plot_forecast <- function(pdf_file_name,
     nlayers <- length(depths)
     
     focal_depths <- focal_depths_manager
-    png( paste0(save_location,'/',pdf_file_name, "_management.png"),width = 12, height = 6,units = 'in',res=300)
+    png( paste0(save_location,'/',pdf_file_name, "_management.png"),width = 6, height = 3,units = 'in',res=300)
     par(mfrow=c(1,2))
     
     #PLOT OF TURNOVER PROBABILITY
