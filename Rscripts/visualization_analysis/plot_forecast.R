@@ -852,7 +852,9 @@ plot_forecast <- function(pdf_file_name,
       }else{
         file.copy(from = paste0(save_location,'/',pdf_file_name, "_management.png"), to = paste0(save_location,'/','Current_forecast.png'),overwrite=TRUE)
         system(paste0('git add Current_forecast.png'))
+        system(paste0('git add ', paste0(pdf_file_name, "_management.png")))
       }
+      system(paste0('git add ', pdf_file_name, ".pdf"))
       system(paste0('git add ', pdf_file_name, ".pdf"))
       system('git commit -m "forecast and plots"')
       system('git push')
