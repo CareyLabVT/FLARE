@@ -5,6 +5,7 @@ if (!"RCurl" %in% installed.packages()) install.packages("RCurl")
 if (!"testit" %in% installed.packages()) install.packages("testit")
 if (!"imputeTS" %in% installed.packages()) install.packages("imputeTS")
 if (!"tidyverse" %in% installed.packages()) install.packages("tidyverse")
+if (!"rMR" %in% installed.packages()) install.packages("rMR")
 
 library(mvtnorm)
 library(ncdf4)
@@ -14,6 +15,7 @@ library(testit)
 library(imputeTS)
 library(tidyverse)
 library(tools)
+library(rMR)
 
 data_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
 code_folder <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
