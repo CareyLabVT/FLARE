@@ -17,23 +17,27 @@ library(tidyverse)
 library(tools)
 library(rMR)
 
-data_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
-code_folder <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
-forecast_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/test_forecast_launch_aed/"
-execute_location <<- "/Volumes/ramdisk2/"
+#data_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
+#code_folder <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
+#forecast_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/test_forecast_launch/"
+#execute_location <<- "/Volumes/ramdisk1/"
+
+data_location <<- "/data/SCCData"
+code_folder <<- "~/applications/forecast/FLARE"
+forecast_location <<- "~/applications/forecast/FCR_forecasts/v2.glm"
+execute_location <<- "/data/forecast_exec"
 
 source(paste0(forecast_location,"/","configure_FLARE.R"))
 source(paste0(code_folder, "/", "Rscripts/run_flare.R"))
 source(paste0(code_folder, "/", "Rscripts/visualization_analysis/plot_forecast.R"))
 source(paste0(code_folder, "/", "Rscripts/visualization_analysis/combined_oxygen_plot.R"))
 
-start_day_local <- "2020-03-09" #"2019-09-20" 
+start_day_local <- "2019-09-20" 
 restart_file <- NA
-restart_file <- "/Users/quinn/Dropbox (VTFRS)/Research/SSC_forecasting/test_forecast_launch_aed/testing_sim_H_2019_09_20_2020_03_09_F_0_3122020_8_29.nc"
 
-sim_name <- "testing_sim"
+sim_name <- "v2.glm"
 start_time_local <- "07:00:00"
-forecast_start_day_local <- "2020-03-10" 
+forecast_start_day_local <- "2020-03-09"
 spin_up_days <- 0
 days_between_forecasts <- 1
 forecast_days <- 16
@@ -43,7 +47,7 @@ wait_time <- 60*60
 start_day_local <- as_date(start_day_local)
 forecast_start_day_local <- as_date(forecast_start_day_local)
 
-if(is.na(restart_file)){
+if(!file.exists(paste0(forecast_location,"/last_success.Rdata"))){
   
   hist_days <- as.numeric(difftime(as_date(forecast_start_day_local),as_date(start_day_local)))
   
@@ -93,12 +97,16 @@ if(is.na(restart_file)){
   #ADVANCE TO NEXT DAY
   start_day_local <- as_date(start_day_local) + days(hist_days)
   restart_file <- unlist(out)[1]
+  save(restart_file,start_day_local,file = paste0(forecast_location,"/last_success.Rdata"))
 }
 
 forecast_day_count <- 1
 #ALL SUBSEQUENT DAYS
 if(num_forecast_periods > 0){
   repeat{
+    
+    load(paste0(forecast_location,"/last_success.Rdata"))
+    
     
     startTime <- Sys.time()
     if(forecast_day_count == 1){
@@ -164,6 +172,7 @@ if(num_forecast_periods > 0){
     
     spin_up_days <- 0
     
+    
     if(forecast_no_SSS){
       
       
@@ -171,7 +180,7 @@ if(num_forecast_periods > 0){
       out1 <- run_flare(start_day_local,
                         start_time_local,
                         forecast_start_day_local,
-                        sim_name = paste0(sim_name, "_NOSSS"),
+                        sim_name = sim_name,
                         hist_days = hist_days,
                         forecast_days = forecast_days,
                         spin_up_days = spin_up_days,
@@ -212,19 +221,14 @@ if(num_forecast_periods > 0){
     }
     
     if(forecast_SSS){
-      
-      sss_start_day_local <- start_day_local + days(hist_days)
-      sss_forecast_start_day_local <- sss_start_day_local
-      restart_file_sss <- unlist(out1)[1]
-      
-      out2 <- run_flare(start_day_local = sss_start_day_local,
+      out2 <- run_flare(start_day_local,
                         start_time_local,
-                        forecast_start_day_local = sss_forecast_start_day_local,
+                        forecast_start_day_local,
                         sim_name = paste0(sim_name, "_SSS"),
-                        hist_days = 0,
+                        hist_days = hist_days,
                         forecast_days = forecast_days,
                         spin_up_days = spin_up_days,
-                        restart_file = restart_file_sss,
+                        restart_file = restart_file,
                         code_folder = code_folder,
                         forecast_location = forecast_location,
                         execute_location = execute_location,
@@ -259,18 +263,26 @@ if(num_forecast_periods > 0){
                     use_ctd = use_ctd,
                     modeled_depths = modeled_depths)
       
-      
       combined_oxygen_plot(with_oxy = unlist(out2[[1]]), 
                            without_oxy = unlist(out1[[1]]), 
-                           forecast_location)
+                           forecast_location,
+                           push_to_git)
     }
     
     
     restart_file <- unlist(out1)[1]
     
+    
+    
     #ADVANCE TO NEXT DAY
     start_day_local <- start_day_local + days(hist_days)
     forecast_day_count <- forecast_day_count + 1
+    
+    save(restart_file, 
+         start_day_local, 
+         forecast_day_count, 
+         file = paste0(forecast_location,"/last_success.Rdata"))
+    
     if(!is.na(num_forecast_periods)){
       if(forecast_day_count > num_forecast_periods){
         break
