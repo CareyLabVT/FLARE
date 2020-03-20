@@ -20,7 +20,7 @@ extract_observations <- function(fname,
                  abs(depth-modeled_depths[j]) < distance_threshold_meter &
                variable == target_variable,
                method %in% methods) %>% 
-        summarize(value = mean(value)) %>% 
+        summarize(value = mean(value, na.rm = TRUE)) %>% 
         mutate(value = ifelse(is.na(value),NA, value),
                value = ifelse(is.nan(value),NA, value))
       obs[i,j] <- d1$value
