@@ -18,9 +18,9 @@ combined_oxygen_plot <- function(with_oxy, without_oxy, forecast_location, push_
   oxy_sss_9m_low95 <- rep(NA, dim(oxy)[1])
   oxy_sss_9m_up95 <- rep(NA, dim(oxy)[1])
   for(i in 1:dim(oxy)[1]){
-    oxy_sss_9m_mean[i] <- mean(oxy[i, , 17])
-    oxy_sss_9m_low95[i] <- quantile(oxy[i, , 17], 0.025)
-    oxy_sss_9m_up95[i] <- quantile(oxy[i, , 17], 0.975)
+    oxy_sss_9m_mean[i] <- mean(oxy[i, , 19])
+    oxy_sss_9m_low95[i] <- quantile(oxy[i, , 19], 0.025)
+    oxy_sss_9m_up95[i] <- quantile(oxy[i, , 19], 0.975)
   }
   
   nc <- nc_open(without_oxy) 
@@ -34,9 +34,9 @@ combined_oxygen_plot <- function(with_oxy, without_oxy, forecast_location, push_
   oxy_9m_low95 <- rep(NA, dim(oxy)[1])
   oxy_9m_up95 <- rep(NA, dim(oxy)[1])
   for(i in 1:dim(oxy)[1]){
-    oxy_9m_mean[i] <- mean(oxy[i, , 17])
-    oxy_9m_low95[i] <- quantile(oxy[i, , 17], 0.025)
-    oxy_9m_up95[i] <- quantile(oxy[i, , 17], 0.975)
+    oxy_9m_mean[i] <- mean(oxy[i, , 19])
+    oxy_9m_low95[i] <- quantile(oxy[i, , 19], 0.025)
+    oxy_9m_up95[i] <- quantile(oxy[i, , 19], 0.975)
   }
   
   nc_close(nc)
