@@ -10,3 +10,12 @@
 .masthead {
     border-bottom: 5px solid #0092ca;
 }
+
+.greedy-nav a.site-title {
+    font-size: 1.5em;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+    background: #fff url(../images/logo.jpg) no-repeat left top;
+    width: 305px;
+    height: 150px;
+    margin-right: 0;
+}
