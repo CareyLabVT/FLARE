@@ -19,7 +19,7 @@ if("fday.group" %in% colnames(daily.forecast)){
     return(modeled)
   }
 
-  debiased <- daily.forecast %>% select(grouping)
+  debiased <- daily.forecast %>% select(all_of(grouping))
   for(Var in 1:length(VarInfo$VarNames)){
     VarName <- VarInfo$VarNames[Var]
     assign(VarName, value = as_tibble(lin_mod(daily.forecast[,VarName],

@@ -38,7 +38,7 @@ spline_to_hourly <- function(df,VarNamesStates){
 
   # converting from time difference back to timestamp
   interp.df  = interp.df %>%
-    unnest %>%
+    unnest(c("days", all_of(VarNamesStates))) %>%
     dplyr::mutate(timestamp = as_datetime(t0 + days, tz = attributes(t0)$tzone))
   return(interp.df)
 }

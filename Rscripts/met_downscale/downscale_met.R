@@ -70,7 +70,7 @@ downscale_met <- function(forecasts,
     
   }else{
     print("without downscaling noise")
-    debiased <- debiased %>% mutate(dscale.member = 0) %>%
+    debiased <- debiased %>% mutate(dscale.member = 1) %>%
       mutate(ShortWave = ifelse(ShortWave <0, 0, ShortWave),
              RelHum = ifelse(RelHum <0, 0, RelHum),
              RelHum = ifelse(RelHum > 100, 100, RelHum),
@@ -101,7 +101,7 @@ downscale_met <- function(forecasts,
   
   ## convert longwave to hourly (just copy 6 hourly values over past 6-hour time period)
   nonSW.flux.hrly <- redistributed %>%
-    select(timestamp, NOAA.member, VarNames_6hr, dscale.member) %>%
+    select(timestamp, NOAA.member, all_of(VarNames_6hr), dscale.member) %>%
     repeat_6hr_to_hrly()
   
   ## downscale shortwave to hourly

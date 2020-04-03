@@ -83,7 +83,7 @@ fit_downscaling_parameters <- function(observations,
   
   ## convert longwave to hourly (just copy 6 hourly values over past 6-hour time period)
   nonSW.flux.hrly <- redistributed %>%
-    select(timestamp, NOAA.member, VarNames_6hr) %>%
+    select(timestamp, NOAA.member, all_of(VarNames_6hr)) %>%
     repeat_6hr_to_hrly()
   
   

@@ -25,7 +25,8 @@ process_downscale_GEFS <- function(folder,
                                    first_obs_date,
                                    last_obs_date,
                                    input_met_file_tz,
-                                   weather_uncertainty){
+                                   weather_uncertainty,
+                                   obs_met_outfile){
   # -----------------------------------
   # 0. Source necessary files
   # -----------------------------------
@@ -46,6 +47,9 @@ process_downscale_GEFS <- function(folder,
   for.file.path = noaa_location
   
   obs.data <- read_csv(obs.file.path)
+  
+  obs_met_glm <- read_csv(paste0(working_directory,"/",obs_met_outfile))
+  obs_met_glm$time <- force_tz(obs_met_glm$time, tz = local_tzone)
   
   obs.data$timestamp <- force_tz(obs.data$timestamp, tz = local_tzone)
   
@@ -100,13 +104,16 @@ process_downscale_GEFS <- function(folder,
                        WRITE_FILES = TRUE,
                        downscaling_coeff,
                        full_time_local,
-                       weather_uncertainty)
-  files = met_forecast_output[[1]]
-  output = met_forecast_output[[2]]
-  if(compare_output_to_obs == TRUE){
-    "comparing forecast output to obs"
-    compare_output_to_obs(output, hrly.obs)
-  }
+                       weather_uncertainty,
+                       obs_met_glm)
+  files <- met_forecast_output[[1]]
+  output <- met_forecast_output[[2]]
+  
+  
+  #if(compare_output_to_obs == TRUE){
+  #  "comparing forecast output to obs"
+  #  compare_output_to_obs(output, hrly.obs)
+  #}
   return(files)
 }
 

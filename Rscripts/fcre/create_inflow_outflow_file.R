@@ -8,250 +8,105 @@ create_inflow_outflow_file <- function(full_time_local,
                                        chemistry_file,
                                        local_tzone,
                                        met_file_names,
-                                       forecast_days){
-  
-  min_baseflow <- 0.0
+                                       forecast_days,
+                                       inflow_process_uncertainty){
   
   full_time_day_local <- as_date(full_time_local)
   
-  inflow <- read.csv(inflow_file1)
+  inflow <- read_csv(inflow_file1)
   inflow_names <- names(inflow)
-  spillway <- read.csv(outflow_file1)
-  wetland <- read.csv(inflow_file2)
-  inflow_chemistry <- read.csv(chemistry_file)
+  wetland <- read_csv(inflow_file2)
+  #inflow_chemistry <- read_csv(chemistry_file)
   
-  inflow_time <- inflow$time 
-  spillway_time <- spillway$time
-  wetland_time <- wetland$time
-  chemistry_time <- inflow_chemistry$time
+  curr_all_days <- NULL
   
-  inflow_new <- as.data.frame(array(NA, dim = c(length(full_time_day_local), 15)))
-  wetland_new <- as.data.frame(array(NA, dim = c(length(full_time_day_local), 15)))
-  spillway_new <- as.data.frame(array(NA, dim = c(length(full_time_day_local), 2)))
+  for(m in 1:length(met_file_names)){
+    curr_met_daily <- read_csv(paste0(working_directory,"/",met_file_names[m])) %>% 
+      mutate(time = as_date(time)) %>% 
+      group_by(time) %>% 
+      summarize(Rain = mean(Rain),
+                AirTemp = mean(AirTemp)) %>% 
+      mutate(ensemble = m) %>% 
+      mutate(AirTempMean = roll_mean(AirTemp, n = 5, align = "right",fill=NA),
+             RainMean = roll_mean(Rain, n = 5, align = "right",fill=NA),
+             AirTemp_lag1 = lag(AirTemp, 1),
+             Rain_lag1 = lag(Rain, 1))
+    
+    curr_all_days <- rbind(curr_all_days,curr_met_daily)
+  }
   
-  inflow_file_names <- rep(NA, n_inflow_outflow_members)
-  spillway_file_names <- rep(NA, n_inflow_outflow_members)
-  wetland_file_names <- rep(NA, n_inflow_outflow_members)
   
-  forecast_start_day <- day(full_time_day_local[start_forecast_step])
-  forecast_start_month <- month(full_time_day_local[start_forecast_step])
+  tmp <- left_join(curr_all_days, inflow, by = "time")
   
-  first_forecast_day <-  read_csv(paste0(working_directory,"/",met_file_names[1])) %>%
-    mutate(day = as_date(time), hour = hour(time)) %>%
-    filter(day == full_time_day_local[start_forecast_step] & hour < hour[1])
+  forecasts_days <- full_time_day_local[start_forecast_step:length(full_time_day_local)]
+  if(use_future_inflow == FALSE || start_forecast_step == length(full_time_day_local)){
+    forecasts_days <- NULL 
+  }
   
-  if(forecast_days > 0 & use_future_inflow){
-    curr_all_days <- NULL
-    for(m in 2:length(met_file_names)){
-      curr_met_daily <- read_csv(paste0(working_directory,"/",met_file_names[m])) %>% 
-        #full_join(first_forecast_day) %>% 
-        mutate(day = as_date(time)) %>% 
-        group_by(day) %>% 
-        summarize(Precip = mean(Rain),
-                  AirTemp = mean(AirTemp)) %>% 
-        mutate(AirTemp_lag = lag(AirTemp, n = 1),
-                AirTemp_change = AirTemp - AirTemp_lag,
-               ensemble = m)
-      
-      curr_all_days <- rbind(curr_all_days,curr_met_daily)
+  tmp <- tmp %>%
+    mutate(forecast = ifelse(time %in% forecasts_days, 1, 0),
+           TEMP = ifelse(forecast == 1, NA, TEMP),
+           FLOW = ifelse(forecast == 1, NA, FLOW))
+  
+  if(inflow_process_uncertainty == TRUE){
+    inflow_error <- rnorm(nrow(tmp), 0, 0.00965)
+    temp_error <- rnorm(nrow(tmp), 0, 0.943)
+  }else{
+    inflow_error <- rep(0.0, nrow(tmp))
+    temp_error <- rep(0.0, nrow(tmp))
+  }
+  
+  for(i in 1:nrow(tmp)){
+    if(tmp$forecast[i] == 0 & is.na(tmp$FLOW[i]) & include_wq == FALSE){
+      tmp[i, c("FLOW", "TEMP")]  <- inflow %>% 
+        filter(time < full_time_day_local[start_forecast_step]) %>% 
+        mutate(doy = yday(time)) %>% 
+        filter(doy == yday(tmp$time[i])) %>% 
+        summarize_at(.vars = c("FLOW", "TEMP"), mean, na.rm = TRUE) %>% 
+        unlist()
+    }
+    if(tmp$forecast[i] == 0 & is.na(tmp$FLOW[i]) & include_wq == TRUE){
+      tmp[i, c("FLOW", "TEMP", wq_names)] <- inflow %>% 
+        filter(time < full_time_day_local[start_forecast_step]) %>% 
+        mutate(doy = yday(time)) %>% 
+        filter(doy == yday(tmp$time[i])) %>% 
+        summarize_at(FLOW = mean(c("FLOW", "TEMP", wq_names), na.rm = TRUE)) %>% 
+        unlist()
+    }     
+    if(tmp$forecast[i] == 1){
+      tmp$FLOW[i] = 0.0010803 + 0.9478724 * tmp$FLOW[i - 1] +  0.3478991 * tmp$Rain_lag1[i] + inflow_error[i]
+      tmp$TEMP[i] = 0.20291 +  0.94214 * tmp$TEMP[i-1] +  0.04278 * tmp$AirTemp_lag1[i] + inflow_error[i]
     }
   }
   
-  met_ensemble_index <- 1
+  tmp <- tmp %>% 
+    mutate(ifelse(FLOW < 0.0, 0.0, FLOW))
   
-  for(m in 1:n_inflow_outflow_members){
+  file_name_base <- met_file_names %>% 
+    str_sub(4) 
+  inflow1_file_names <- paste0("inflow", file_name_base)
+  outflow_file_names <- paste0("outflow", file_name_base)
+  
+  for(i in 1:n_distinct(tmp$ensemble)){
+    tmp2 <- tmp %>% 
+      filter(ensemble == i) %>% 
+      select(time, FLOW, TEMP) %>% 
+      mutate_at(vars(c("FLOW", "TEMP")), funs(round(., 4))) %>% 
+      mutate(SALT = 0.0)
     
-    met_ensemble_index <- met_ensemble_index + 1
-    if(met_ensemble_index > length(met_file_names)){
-      met_ensemble_index <- 2
-    }
+    write_csv(x = tmp2,
+              path = paste0(working_directory,"/",inflow1_file_names[i]),
+              quote_escape = "none")
     
-    for(i in 1:length(full_time_day_local)){
-      
-      curr_day <- day(full_time_day_local[i])
-      curr_month <- month(full_time_day_local[i])
-      
-      #if a historical period OR don't use future inflow (i.e., use the observed because you are hindcasting)
-      if(i <= (start_forecast_step) || use_future_inflow == FALSE){
-        
-        for(j in 2:3){
-          
-          if(!(full_time_day_local[i] %in% inflow_time)){
-            
-            #NEED TO MAKE THIS A FUNCTION OF PREVIOUS FLOW
-            index1 <- which(day(inflow_time) == curr_day & month(inflow_time) == curr_month)
-            if(n_inflow_outflow_members == 1){
-              inflow_new[i,j] <- mean(inflow[index1,j], na.rm = TRUE)
-            }else{
-              inflow_new[i,j] <- rnorm(1, mean(inflow[index1,j], na.rm = TRUE), sd(inflow[index1,j], na.rm = TRUE))
-              inflow_new[i,j] <- max(inflow_new[i,j], min_baseflow)
-            }
-          }else{
-            index1 <- which(inflow_time == full_time_day_local[i])
-            inflow_new[i,j] <- inflow[index1,j]
-          }
-          
-          
-          if(!(full_time_day_local[i] %in% wetland_time)){
-            
-            #NEED TO MAKE THIS A FUNCTION OF PREVIOUS FLOW
-            index1 <- which(day(wetland_time) == curr_day & month(wetland_time) == curr_month)
-            if(n_inflow_outflow_members == 1){
-              wetland_new[i,j] <- mean(wetland[index1,j], na.rm = TRUE)
-            }else{
-              wetland_new[i,j] <- rnorm(1, mean(wetland[index1,j], na.rm = TRUE), sd(wetland[index1,j], na.rm = TRUE))
-              wetland_new[i,j] <- max(wetland_new[i,j], min_baseflow)
-            }
-          }else{
-            index1 <- which(wetland_time == full_time_day_local[i])
-            wetland_new[i,j] <- wetland[index1,j]
-          }
-        }
-        
-        for(j in 4:ncol(inflow_new)){
-          
-          if(!(full_time_day_local[i] %in% chemistry_time)){
-            
-            #NEED TO MAKE THIS A FUNCTION OF PREVIOUS FLOW
-            index1 <- which(day(chemistry_time) == curr_day & month(chemistry_time) == curr_month)
-            if(n_inflow_outflow_members == 1){
-              inflow_new[i,j] <- mean(inflow_chemistry[index1,j], na.rm = TRUE)
-            }else{
-              inflow_new[i,j] <- rnorm(1, mean(inflow_chemistry[index1,j], na.rm = TRUE), sd(inflow_chemistry[index1,j], na.rm = TRUE))
-              inflow_new[i,j] <- max(inflow_new[i,j], 0.0)
-            }
-          }else{
-            index1 <- which(chemistry_time == full_time_day_local[i])
-            inflow_new[i,j] <- inflow_chemistry[index1,j]
-          }
-          
-          
-          if(!(full_time_day_local[i] %in% wetland_time)){
-            
-            #NEED TO MAKE THIS A FUNCTION OF PREVIOUS FLOW
-            index1 <- which(day(wetland_time) == curr_day & month(wetland_time) == curr_month)
-            if(n_inflow_outflow_members == 1){
-              wetland_new[i,j] <- mean(wetland[index1,j], na.rm = TRUE)
-            }else{
-              wetland_new[i,j] <- rnorm(1, mean(wetland[index1,j], na.rm = TRUE), sd(wetland[index1,j], na.rm = TRUE))
-              wetland_new[i,j] <- max(wetland_new[i,j], 0.0)
-            }
-          }else{
-            index1 <- which(wetland_time == full_time_day_local[i])
-            wetland_new[i,j] <- wetland[index1,j]
-          }
-        }
-        
-      }else{ #FORECAST IN THE FUTURE
-        
-        curr_met_daily <- curr_all_days %>% 
-          filter(ensemble == met_ensemble_index & day == full_time_day_local[i])
-        
-        if(n_inflow_outflow_members == 1){
-          curr_met_daily <- curr_all_days %>%
-            group_by(day) %>% 
-            summarize(Precip = mean(Precip),
-                      AirTemp = mean(AirTemp)) %>% 
-            mutate(AirTemp_lag = lag(AirTemp, n = 1),
-                   AirTemp_change = AirTemp - AirTemp_lag) %>% 
-            filter(day == full_time_day_local[i])
-        }
-        
-        #flow and temperature
-        if(n_inflow_outflow_members == 1){
-          inflow_error <- 0.0
-          temp_error  <- 0.0
-        }else{
-          inflow_error <- rnorm(1, 0, 0.009416283)
-          temp_error <- rnorm(1, 0, 0.6294369)
-        }
-        
-        inflow_new[i,2] <- 0.9483  * inflow_new[i - 1,2] + 0.7093 * curr_met_daily$Precip + inflow_error
-        inflow_new[i,2] <- max(c(inflow_new[i,2], min_baseflow))
-        #inflow_new[i,3] <- 0.797373    * inflow_new[i - 1,3] +  0.188219 * curr_met_daily$AirTemp + temp_error
-        
-        
-        inflow_new[i,3] <- 0.999160 * inflow_new[i - 1,3] +  0.227172 * curr_met_daily$AirTemp_change + temp_error
-        
-        #inflow_new[i,3] <- 0.995261 * inflow_new[i - 1,3] +  
-        #                   0.102463 * (curr_met_daily$AirTemp_lag - inflow_new[i - 1,3]) +
-        #                   0.255484 * curr_met_daily$AirTemp_change +
-        #                   temp_error
-        
-        
-        #OVERWRITE FOR NOW UNTIL WE GET AN EQUATION
-        #index1 <- which(day(inflow_time) == curr_day & month(inflow_time) == curr_month)
-        #inflow_new[i,2] <- rnorm(1, mean(inflow[index1,2], na.rm = TRUE), sd(inflow[index1,2], na.rm = TRUE))
-        #inflow_new[i,3]  <- rnorm(1, mean(inflow[index1,3], na.rm = TRUE), sd(inflow[index1,3], na.rm = TRUE))
-        #inflow_new[i,2] <- max(inflow_new[i,2], 0.0)
-        #inflow_new[i,3] <- max(inflow_new[i,3], 0.0)
-        
-        index2 <- which(day(wetland_time) == curr_day & month(wetland_time) == curr_month)
-        wetland_new[i,2] <- rnorm(1, mean(wetland[index2,2], na.rm = TRUE), sd(wetland[index2,2], na.rm = TRUE))
-        wetland_new[i,3]  <- rnorm(1, mean(wetland[index2,3], na.rm = TRUE), sd(wetland[index2,3], na.rm = TRUE))  
-        wetland_new[i,2] <- max(wetland_new[i,2], 0.0)
-        wetland_new[i,3] <- max(wetland_new[i,3], 0.0)
-        
-        for(j in 4:ncol(inflow_new)){
-          
-          index1 <- which(day(chemistry_time) == curr_day & month(chemistry_time) == curr_month)
-          index2 <- which(day(wetland_time) == curr_day & month(wetland_time) == curr_month)
-          
-          if(n_inflow_outflow_members == 1){
-            
-            inflow_new[i,j] <- mean(inflow_chemistry[index1,j], na.rm = TRUE)
-            wetland_new[i,j] <- mean(wetland[index2,j], na.rm = TRUE)
-            
-          }else{
-            
-            inflow_new[i,j] <- rnorm(1, mean(inflow_chemistry[index1,j], na.rm = TRUE), sd(inflow_chemistry[index1,j], na.rm = TRUE))
-            wetland_new[i,j] <- rnorm(1, mean(wetland[index2,j], na.rm = TRUE), sd(wetland[index2,j], na.rm = TRUE))  
-            inflow_new[i,j] <- max(inflow_new[i,j], 0.0)
-            wetland_new[i,j] <- max(wetland_new[i,j], 0.0)
-            
-          }
-        }
-      }
-      
-      if(include_wetland_inflow){
-        spillway_new[i,2] <- inflow_new[i,2] +  wetland_new[i,2] 
-      }else{
-        spillway_new[i,2] <- inflow_new[i,2]
-      }
-    }
-    if(n_inflow_outflow_members == 1){
-      inflow_file_names[m] <- paste0(working_directory,'/','inflow_file1_mean.csv')
-      spillway_file_names[m] <- paste0(working_directory,'/','outflow_file1_mean.csv')
-      wetland_file_names[m] <- paste0(working_directory,'/','inflow_file2_mean.csv')
-    }else{
-      inflow_file_names[m] <- paste0(working_directory,'/','inflow_file1_ens',m,'.csv')
-      spillway_file_names[m] <- paste0(working_directory,'/','outflow_file1_ens',m,'.csv')
-      wetland_file_names[m] <- paste0(working_directory,'/','inflow_file2_ens',m,'.csv')
-    }
+    tmp2 <- tmp2 %>% 
+      select(time, FLOW)
     
-    inflow_new[,1] <- full_time_day_local
-    spillway_new[,1] <- full_time_day_local
-    wetland_new[,1] <- full_time_day_local
-    
-    names(inflow_new) <- inflow_names    
-    names(wetland_new) <- c("time","FLOW","TEMP","SALT","OXY_oxy","NIT_amm","NIT_nit", "PHS_frp", "OGM_doc", "OGM_poc",
-                            "OGM_don","OGM_dop","OGM_pop","OGM_pon","PHS_frp_ads")   
-    names(spillway_new) <- c("time","FLOW")   
-    
-    write.csv(inflow_new,
-              file = inflow_file_names[m],
-              row.names = FALSE,
-              quote = FALSE)
-    write.csv(spillway_new,
-              file = spillway_file_names[m],
-              row.names = FALSE,
-              quote = FALSE)
-    write.csv(wetland_new,
-              file = wetland_file_names[m],
-              row.names = FALSE,
-              quote = FALSE)
+    write_csv(x = tmp2,
+              path = paste0(working_directory,"/",outflow_file_names[i]),
+              quote_escape = "none")
   }
-  return(list(inflow_file_names = as.character(inflow_file_names),
-              spillway_file_names = as.character(spillway_file_names),
-              wetland_file_names = as.character(wetland_file_names)))
+  
+  return(list(inflow_file_names = as.character(inflow1_file_names),
+              spillway_file_names = as.character(outflow_file_names),
+              wetland_file_names = as.character(inflow1_file_names)))
 }

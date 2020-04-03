@@ -181,6 +181,10 @@ inflow_qaqc <- function(realtime_file,
   #   facet_wrap(~Nutrient, scales = "free")
   
   
+  #inflow_clean <- inflow_clean %>% 
+  #  filter(time < as_datetime("2018-01-01 00:00:00"))
+  
+  
   write_csv(inflow_clean, cleaned_inflow_file)  
   
 }

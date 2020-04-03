@@ -110,14 +110,13 @@ run_EnKF <- function(x,
     
     # Start loop through ensemble members
     for(m in 1:nmembers){
+  
+        curr_met_file <- met_file_names[met_index]
+
       
-      if(i > (hist_days + 1) & use_future_met == TRUE){
-        curr_met_file <- met_file_names[1 + met_index]
+      if(npars > 0 & i > (hist_days + 1)){
+        curr_pars <- x[i - 1, m , (nstates+1):(nstates+npars)] 
       }else{
-        curr_met_file <- met_file_names[1]
-      }
-      
-      if(npars > 0){
         curr_pars <- x[i - 1, m , (nstates+1):(nstates+npars)]
       }
       
@@ -205,27 +204,20 @@ run_EnKF <- function(x,
             for(wq in 1:16){
               wq_enkf_tmp <- x[i - 1, m, wq_start[i]:wq_end[i]]
               wq_init_vals <- c(wq_init_vals, 
-                                spline(modeled_depths,  
-                                       wq_enkf_tmp,
-                                       xout = glm_depths_tmp, 
-                                       method = "fmm")$y)
+                                approx(modeled_depths,wq_enkf_tmp, glm_depths_mid, rule = 2)$y)
             }
             for(wq in 1:num_phytos){
               wq_enkf_tmp <- x_phyto_groups[i-1,m ,wq]
-              wq_init_vals <- c(wq_init_vals, spline(modeled_depths,
-                                                     wq_enkf_tmp,
-                                                     xout = glm_depths_tmp, 
-                                                     method = "fmm")$y)
+              wq_init_vals <- c(wq_init_vals, 
+                                approx(modeled_depths,wq_enkf_tmp, glm_depths_mid, rule = 2)$y)
             }
           }else{
             wq_init_vals <- c()
             
             for(wq in 1:num_wq_vars){
               wq_enkf_tmp <- x[i - 1, m, wq_start[wq]:wq_end[wq]]
-              wq_init_vals <- c(wq_init_vals, spline(modeled_depths,
-                                                     wq_enkf_tmp,
-                                                     xout = glm_depths_tmp, 
-                                                     method = "fmm")$y)
+              wq_init_vals <- c(wq_init_vals, 
+                                approx(modeled_depths,wq_enkf_tmp, glm_depths_mid, rule = 2)$y)
             }
           }
           update_glm_nml_list[[list_index]] <- wq_init_vals
@@ -242,10 +234,17 @@ run_EnKF <- function(x,
 
         
         the_temps_enkf_tmp <- x[i - 1, m, 1:ndepths_modeled]
-        the_temps_glm <- spline(modeled_depths,
-                                the_temps_enkf_tmp,
-                                xout = glm_depths_tmp, 
-                                method = "fmm")$y
+        
+        glm_depths_tmp_tmp <- c(glm_depths_tmp, surface_height[i - 1, m])
+        glm_depths_mid <- glm_depths_tmp_tmp[1:(length(glm_depths_tmp_tmp)-1)] + diff(glm_depths_tmp_tmp)/2
+        
+        
+        the_temps_glm <- approx(modeled_depths,the_temps_enkf_tmp, glm_depths_mid, rule = 2)$y
+        
+        #the_temps_glm <- spline(modeled_depths,
+        #                        the_temps_enkf_tmp,
+        #                        xout = glm_depths_tmp, 
+        #                        method = "fmm")$y
         
         update_glm_nml_list[[list_index]] <- the_temps_glm
         update_glm_nml_names[list_index] <- "the_temps"
@@ -290,21 +289,12 @@ run_EnKF <- function(x,
         update_glm_nml_names[list_index] <- "meteo_fl"
         list_index <- list_index + 1
         
-        if(n_inflow_outflow_members == 1){
-          tmp <- file.copy(from = inflow_file_names[1], 
-                           to = "inflow_file1.csv", overwrite = TRUE)
-          tmp <- file.copy(from = inflow_file_names[2], 
-                           to = "inflow_file2.csv", overwrite = TRUE)
-          tmp <- file.copy(from = outflow_file_names, 
-                           to = "outflow_file1.csv", overwrite = TRUE)
-        }else{
           tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 1], 
                            to = "inflow_file1.csv", overwrite = TRUE)
           tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 2], 
                            to = "inflow_file2.csv", overwrite = TRUE)
           tmp <- file.copy(from = outflow_file_names[inflow_outflow_index], 
                            to = "outflow_file1.csv", overwrite = TRUE)      
-        }
         
         
         update_nml(update_glm_nml_list, 
@@ -360,18 +350,22 @@ run_EnKF <- function(x,
               glm_temps <- rev(GLM_temp_wq_out$output[ ,1])
               glm_depths[i,m,1:num_glm_depths] <- GLM_temp_wq_out$depths_enkf
               
+              glm_depths_tmp <- c(GLM_temp_wq_out$depths_enkf,GLM_temp_wq_out$surface_height)
               
-              x_star[m, 1:ndepths_modeled] <- spline(x = c(glm_depths[i,m,1:num_glm_depths],GLM_temp_wq_out$surface_height), 
-                                                     y = c(glm_temps,glm_temps[num_glm_depths]), 
-                                                     xout = modeled_depths, 
-                                                     method = "fmm")$y
+              glm_depths_mid <- glm_depths_tmp[1:(length(glm_depths_tmp)-1)] + diff(glm_depths_tmp)/2
+              
+              x_star[m, 1:ndepths_modeled] <- approx(glm_depths_mid,glm_temps, modeled_depths, rule = 2)$y
+              
+              #x_star[m, 1:ndepths_modeled] <- spline(x = c(glm_depths[i,m,1:num_glm_depths],GLM_temp_wq_out$surface_height), 
+              #                                       y = c(glm_temps,glm_temps[num_glm_depths]), 
+              #                                       xout = modeled_depths, 
+              #                                       method = "fmm")$y
+              
+              
               if(include_wq){
                 for(wq in 1:num_wq_vars){
                   glm_wq <-  rev(GLM_temp_wq_out$output[ ,1+wq])
-                  x_star[m, wq_start[wq]:wq_end[wq]] <- spline(x = c(glm_depths[i,m,1:num_glm_depths],GLM_temp_wq_out$surface_height),
-                                                               y = c(glm_wq,glm_wq[num_glm_depths]), 
-                                                               xout = modeled_depths, 
-                                                               method = "fmm")$y
+                  x_star[m, wq_start[wq]:wq_end[wq]] <- approx(glm_depths_mid,glm_wq, modeled_depths, rule = 2)$y
                 }
               }
               
@@ -409,12 +403,12 @@ run_EnKF <- function(x,
         
         #INCREMENT ThE MET_INDEX TO MOVE TO ThE NEXT NOAA ENSEMBLE
         met_index <- met_index + 1
-        if(met_index > n_met_members){
+        if(met_index > length(met_file_names)){
           met_index <- 1
         }
         
         inflow_outflow_index <- inflow_outflow_index + 1
-        if(inflow_outflow_index > n_inflow_outflow_members){
+        if(inflow_outflow_index > nrow(inflow_file_names)){
           inflow_outflow_index <- 1
         }
         
@@ -451,18 +445,8 @@ run_EnKF <- function(x,
     #Corruption [nmembers x nstates] 
     x_corr <- x_star + nqt[, 1:nstates]
     
-    #for(m in 1:nmembers){
-    #  orig_temp <- x_corr[m,1:ndepths_modeled]
-    #  dens <- rep(NA, ndepths_modeled)
-    #  for(d in 1:ndepths_modeled){
-    #  dens[d] <- temperature_to_density(orig_temp[d], the_sals_init)
-    #  }
-    #  index <- order(dens, decreasing = TRUE)
-    #  x_corr[m,1:ndepths_modeled] <- orig_temp[index]
-    #}
-    
     if(npars > 0){
-      pars_corr <- x[i - 1, , (nstates+1):(nstates+npars)] + pqt
+      pars_corr <- x[i - 1, , (nstates+1):(nstates+npars)]
       pars_star <- x[i - 1, , (nstates+1):(nstates+npars)]
     }
     
@@ -558,7 +542,16 @@ run_EnKF <- function(x,
       
       #Ensemble mean
       ens_mean <- apply(x_corr[,], 2, mean)
+      if(npars > 0){
+        par_mean <- apply(pars_corr, 2, mean)
+      }
       
+      for(m in 1:nmembers){
+        #x_corr[m, ] <- Inflat * (x_corr[m,] - ens_mean) + ens_mean
+        pars_corr[m, ] <- Inflat_pars * (pars_corr[m,] - par_mean) + par_mean
+      }
+      
+      ens_mean <- apply(x_corr[,], 2, mean)
       if(npars > 0){
         par_mean <- apply(pars_corr, 2, mean)
       }

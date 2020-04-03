@@ -16,14 +16,14 @@ daily_to_6hr <- function(forecasts, daily.forecast, debiased, VarNames){
     devNames = append(devNames, paste0(VarNames[Var],".prop"))
     deviations[which(is.nan(unlist(deviations[,paste0(VarNames[Var],".prop")]))),paste0(VarNames[Var],".prop")] <- 0.0
   }
-  deviations <- deviations %>% select(grouping, timestamp, devNames)
+  deviations <- deviations %>% select(all_of(grouping), timestamp, all_of(devNames))
   
   redistributed <- inner_join(debiased, deviations, by = grouping)
   for(Var in 1:length(VarNames)){
     redistributed[,VarNames[Var]] = redistributed[,VarNames[Var]] * redistributed[,paste0(VarNames[Var], ".prop")]
   }
   
-  redistributed <- redistributed %>% select(NOAA.member, timestamp, VarNames, dscale.member)
+  redistributed <- redistributed %>% select(NOAA.member, timestamp, all_of(VarNames), dscale.member)
   
   return(redistributed)
 }
