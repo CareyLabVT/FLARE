@@ -41,12 +41,8 @@ process_GEFS <- function(file_name,
   
   d <- read_csv(paste0(in_directory,'/',file_name,'.csv')) 
   
-  # adjust for different timezones in saved GEFS forecasts 
-  if(date(full_time_local[1])>as_datetime("2018-12-07 02:00:00", tz = "EST")){ 
-    for.input_tz <- "GMT"
-  }else{
-    for.input_tz <- "US/Eastern"
-  }
+  for.input_tz <- "GMT"
+
   
   #for.input_tz = "GMT"
   

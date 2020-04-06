@@ -53,7 +53,7 @@ run_EnKF <- function(x,
   
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
   
-
+  
   glm_salt <- array(NA, dim = c(nmembers, 500))
   
   ###START EnKF
@@ -110,9 +110,9 @@ run_EnKF <- function(x,
     
     # Start loop through ensemble members
     for(m in 1:nmembers){
-  
-        curr_met_file <- met_file_names[met_index]
-
+      
+      curr_met_file <- met_file_names[met_index]
+      
       
       if(npars > 0 & i > (hist_days + 1)){
         curr_pars <- x[i - 1, m , (nstates+1):(nstates+npars)] 
@@ -121,16 +121,6 @@ run_EnKF <- function(x,
       }
       
       if(!use_null_model){
-        
-        ########################################
-        #BEGIN GLM SPECIFIC PART
-        ########################################
-        # REQUIRES:
-        #curr_met_file, curr_pars, par_names, par_nml, 
-        #x[i - 1, m, ], surface_height[i - 1, m],
-        # curr_start, curr_stop
-        # RETURNS;
-        # x_star[m, ], 
         
         update_glm_nml_list <- list()
         update_aed_nml_list <- list()
@@ -141,7 +131,26 @@ run_EnKF <- function(x,
         if(npars > 0){
           
           sed_temp_mean_index <- which(par_names == "sed_temp_mean")
-          non_sed_temp_mean_index <- which(par_names != "sed_temp_mean")
+          non_sed_temp_mean_index <- which(par_names != "sed_temp_mean" & 
+                                             par_names != "Fsed_oxy")
+          
+          fsed_oxy_index <- which(par_names == "Fsed_oxy")
+          
+          if(length(fsed_oxy_index) == 1){
+            update_var(curr_pars[fsed_oxy_index], 
+                       par_names[fsed_oxy_index], 
+                       working_directory, 
+                       par_nml[fsed_oxy_index])
+          }else if(length(fsed_oxy_index) == 2){
+            update_var(c(curr_pars[fsed_oxy_index[1]],curr_pars[fsed_oxy_index[2]]), 
+                       par_names[fsed_oxy_index[1]], 
+                       working_directory, 
+                       par_nml[fsed_oxy_index[1]])
+            
+          }else if(length(fsed_oxy_index) > 2){
+            stop(paste0("Too many sediment Fsed oxy zones"))
+          }
+          
           if(length(sed_temp_mean_index) == 1){
             update_glm_nml_list[[list_index]] <- c(curr_pars[sed_temp_mean_index],
                                                    zone2_temp_init_mean) 
@@ -196,9 +205,12 @@ run_EnKF <- function(x,
         
         glm_depths_tmp <- glm_depths[i-1, m,!is.na(glm_depths[i-1, m,])]
         
+        glm_depths_tmp_tmp <- c(glm_depths_tmp, surface_height[i - 1, m])
+        glm_depths_mid <- glm_depths_tmp_tmp[1:(length(glm_depths_tmp_tmp)-1)] + diff(glm_depths_tmp_tmp)/2
+        
         if(include_wq){
           if("PHY_TCHLA" %in% wq_names){
- 
+            
             wq_init_vals <- c()
             
             for(wq in 1:16){
@@ -231,20 +243,9 @@ run_EnKF <- function(x,
           }
         }
         
-
-        
         the_temps_enkf_tmp <- x[i - 1, m, 1:ndepths_modeled]
         
-        glm_depths_tmp_tmp <- c(glm_depths_tmp, surface_height[i - 1, m])
-        glm_depths_mid <- glm_depths_tmp_tmp[1:(length(glm_depths_tmp_tmp)-1)] + diff(glm_depths_tmp_tmp)/2
-        
-        
         the_temps_glm <- approx(modeled_depths,the_temps_enkf_tmp, glm_depths_mid, rule = 2)$y
-        
-        #the_temps_glm <- spline(modeled_depths,
-        #                        the_temps_enkf_tmp,
-        #                        xout = glm_depths_tmp, 
-        #                        method = "fmm")$y
         
         update_glm_nml_list[[list_index]] <- the_temps_glm
         update_glm_nml_names[list_index] <- "the_temps"
@@ -282,19 +283,18 @@ run_EnKF <- function(x,
         update_glm_nml_names[list_index] <- "avg_surf_temp"
         list_index <- list_index + 1
         
-        
         #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
         
         update_glm_nml_list[[list_index]] <- curr_met_file
         update_glm_nml_names[list_index] <- "meteo_fl"
         list_index <- list_index + 1
         
-          tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 1], 
-                           to = "inflow_file1.csv", overwrite = TRUE)
-          tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 2], 
-                           to = "inflow_file2.csv", overwrite = TRUE)
-          tmp <- file.copy(from = outflow_file_names[inflow_outflow_index], 
-                           to = "outflow_file1.csv", overwrite = TRUE)      
+        tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 1], 
+                         to = "inflow_file1.csv", overwrite = TRUE)
+        tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 2], 
+                         to = "inflow_file2.csv", overwrite = TRUE)
+        tmp <- file.copy(from = outflow_file_names[inflow_outflow_index], 
+                         to = "outflow_file1.csv", overwrite = TRUE)      
         
         
         update_nml(update_glm_nml_list, 
@@ -356,12 +356,6 @@ run_EnKF <- function(x,
               
               x_star[m, 1:ndepths_modeled] <- approx(glm_depths_mid,glm_temps, modeled_depths, rule = 2)$y
               
-              #x_star[m, 1:ndepths_modeled] <- spline(x = c(glm_depths[i,m,1:num_glm_depths],GLM_temp_wq_out$surface_height), 
-              #                                       y = c(glm_temps,glm_temps[num_glm_depths]), 
-              #                                       xout = modeled_depths, 
-              #                                       method = "fmm")$y
-              
-              
               if(include_wq){
                 for(wq in 1:num_wq_vars){
                   glm_wq <-  rev(GLM_temp_wq_out$output[ ,1+wq])
@@ -419,28 +413,28 @@ run_EnKF <- function(x,
     } # END ENSEMBLE LOOP
     
     
-    # DEAL WITh ENSEMBLE MEMBERS ThAT ARE "BAD" AND 
-    # PRODUCE NA VALUES OR hAVE NEGATIVE TEMPERATURES
-    # ThIS RANDOMLY REPLACES IT WITh A GOOD ENSEMBLE MEMBER
-    if(length(which(is.na(c(x_star)))) > 0){
-      good_index <- NULL
-      for(m in 1:nmembers){
-        if(length(which(is.na(c(x_star[m, ])))) == 0 &
-           length(which(c(x_star[m, ]) <= 0)) == 0){
-          good_index <- c(good_index, m)
-        }
-      }
-      for(m in 1:nmembers){
-        if(length(which(is.na(c(x_star[m, ])))) > 0 |
-           length(which(c(x_star[m, ]) <= 0) > 0)){
-          replace_index <- sample(good_index, 1)
-          x_star[m, ] <- x_star[replace_index, ]
-          surface_height[i, m] <- surface_height[i, replace_index]
-          snow_ice_thickness[i, m, ] <- snow_ice_thickness[i, replace_index, ]
-          mixing_vars[m, ] <- mixing_vars[replace_index, ]
-        }
-      }
-    }
+    #    # DEAL WITh ENSEMBLE MEMBERS ThAT ARE "BAD" AND 
+    #    # PRODUCE NA VALUES OR hAVE NEGATIVE TEMPERATURES
+    #    # ThIS RANDOMLY REPLACES IT WITh A GOOD ENSEMBLE MEMBER
+    #    if(length(which(is.na(c(x_star)))) > 0){
+    #      good_index <- NULL
+    #      for(m in 1:nmembers){
+    #        if(length(which(is.na(c(x_star[m, ])))) == 0 &
+    #           length(which(c(x_star[m, ]) <= 0)) == 0){
+    #          good_index <- c(good_index, m)
+    #        }
+    #      }
+    #      for(m in 1:nmembers){
+    #        if(length(which(is.na(c(x_star[m, ])))) > 0 |
+    #           length(which(c(x_star[m, ]) <= 0) > 0)){
+    #          replace_index <- sample(good_index, 1)
+    #          x_star[m, ] <- x_star[replace_index, ]
+    #          surface_height[i, m] <- surface_height[i, replace_index]
+    #          snow_ice_thickness[i, m, ] <- snow_ice_thickness[i, replace_index, ]
+    #          mixing_vars[m, ] <- mixing_vars[replace_index, ]
+    #        }
+    #      }
+    #    }
     
     #Corruption [nmembers x nstates] 
     x_corr <- x_star + nqt[, 1:nstates]
@@ -625,7 +619,6 @@ run_EnKF <- function(x,
           running_residuals[1:(num_adapt_days - 1), ] <- running_residuals[2:num_adapt_days, ]
           running_residuals[num_adapt_days, ] <- NA
           running_residuals[num_adapt_days, z_index] <- zt - ens_mean[z_index]
-          #running_residuals[num_adapt_days, z_index] <- rowMeans(update_increment[z_index,])
           if(!is.na(running_residuals[1, z_index[1]])){
             qt <- update_qt(running_residuals, 
                             modeled_depths, 
@@ -698,8 +691,6 @@ run_EnKF <- function(x,
         }
       } 
     }
-    
-    
     
     ###################
     ## Quality Control Step 

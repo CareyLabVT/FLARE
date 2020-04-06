@@ -57,7 +57,7 @@ create_inflow_outflow_file <- function(full_time_local,
   }
   
   for(i in 1:nrow(tmp)){
-    if(tmp$forecast[i] == 0 & is.na(tmp$FLOW[i]) & include_wq == FALSE){
+    if(tmp$forecast[i] == 0 & is.na(tmp$FLOW[i]) & !include_wq){
       tmp[i, c("FLOW", "TEMP")]  <- inflow %>% 
         filter(time < full_time_day_local[start_forecast_step]) %>% 
         mutate(doy = yday(time)) %>% 
@@ -65,22 +65,30 @@ create_inflow_outflow_file <- function(full_time_local,
         summarize_at(.vars = c("FLOW", "TEMP"), mean, na.rm = TRUE) %>% 
         unlist()
     }
-    if(tmp$forecast[i] == 0 & is.na(tmp$FLOW[i]) & include_wq == TRUE){
+    if(tmp$forecast[i] == 0 & is.na(tmp$FLOW[i]) & include_wq){
       tmp[i, c("FLOW", "TEMP", wq_names)] <- inflow %>% 
         filter(time < full_time_day_local[start_forecast_step]) %>% 
         mutate(doy = yday(time)) %>% 
         filter(doy == yday(tmp$time[i])) %>% 
-        summarize_at(FLOW = mean(c("FLOW", "TEMP", wq_names), na.rm = TRUE)) %>% 
+        summarize_at(.vars = c("FLOW", "TEMP", wq_names), mean, na.rm = TRUE) %>% 
         unlist()
     }     
     if(tmp$forecast[i] == 1){
       tmp$FLOW[i] = 0.0010803 + 0.9478724 * tmp$FLOW[i - 1] +  0.3478991 * tmp$Rain_lag1[i] + inflow_error[i]
-      tmp$TEMP[i] = 0.20291 +  0.94214 * tmp$TEMP[i-1] +  0.04278 * tmp$AirTemp_lag1[i] + inflow_error[i]
+      tmp$TEMP[i] = 0.20291 +  0.94214 * tmp$TEMP[i-1] +  0.04278 * tmp$AirTemp_lag1[i] + temp_error[i]
+      if(include_wq){
+        tmp[i, c(wq_names)] <- inflow %>% 
+          filter(time < full_time_day_local[start_forecast_step]) %>% 
+          mutate(doy = yday(time)) %>% 
+          filter(doy == yday(tmp$time[i])) %>% 
+          summarize_at(.vars = c(wq_names), mean, na.rm = TRUE) %>% 
+          unlist()
+      }
     }
   }
   
   tmp <- tmp %>% 
-    mutate(ifelse(FLOW < 0.0, 0.0, FLOW))
+    mutate(FLOW = ifelse(FLOW < 0.0, 0.0, FLOW))
   
   file_name_base <- met_file_names %>% 
     str_sub(4) 
