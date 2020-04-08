@@ -153,13 +153,13 @@ run_EnKF <- function(x,
           
           if(length(sed_temp_mean_index) == 1){
             update_glm_nml_list[[list_index]] <- round(c(curr_pars[sed_temp_mean_index],
-                                                   zone2_temp_init_mean),4) 
+                                                         zone2_temp_init_mean),4) 
             update_glm_nml_names[list_index] <- "sed_temp_mean"
             list_index <- list_index + 1
             
           }else if(length(sed_temp_mean_index) == 2){
             update_glm_nml_list[[list_index]] <-  round(c(curr_pars[sed_temp_mean_index[1]],
-                                                    curr_pars[sed_temp_mean_index[2]]), 4)
+                                                          curr_pars[sed_temp_mean_index[2]]), 4)
             update_glm_nml_names[list_index] <- "sed_temp_mean"
             list_index <- list_index + 1
             
@@ -172,11 +172,19 @@ run_EnKF <- function(x,
               if(par_nml[par] == "glm3.nml"){
                 if(par_names[par] == "inflow_factor"){
                   if(include_wq){
-                    update_glm_nml_list[[list_index]] <- c( round(curr_pars[par],4), 
-                                                            round(curr_pars[par],4), 1.0)
+                    if(include_wetland_inflow){
+                      update_glm_nml_list[[list_index]] <- c( round(curr_pars[par],4), 
+                                                              round(curr_pars[par],4), 
+                                                              sss_inflow_factor)
+                    }else{
+                      update_glm_nml_list[[list_index]] <- c( round(curr_pars[par],4),
+                                                              sss_inflow_factor)
+                    }
                     update_glm_nml_names[list_index] <- par_names[par]
                     list_index <- list_index + 1
-                    update_glm_nml_list[[list_index]] <- c( round(curr_pars[par],4), 1.0)
+                    
+                    update_glm_nml_list[[list_index]] <- c( round(curr_pars[par],4), 
+                                                            sss_inflow_factor)
                     update_glm_nml_names[list_index] <- "outflow_factor"
                     list_index <- list_index + 1
                   }else{
@@ -373,8 +381,8 @@ run_EnKF <- function(x,
               
               if(include_wq & "PHY_TCHLA" %in% wq_names){
                 for(wq in 1:num_phytos){
-                glm_wq <-rev(GLM_temp_wq_out$output[ , length(glm_output_vars) + wq])
-                phyto_groups_star[m, , wq] <- approx(glm_depths_mid, glm_wq, modeled_depths, rule = 2)$y
+                  glm_wq <-rev(GLM_temp_wq_out$output[ , length(glm_output_vars) + wq])
+                  phyto_groups_star[m, , wq] <- approx(glm_depths_mid, glm_wq, modeled_depths, rule = 2)$y
                 }
               }
               
