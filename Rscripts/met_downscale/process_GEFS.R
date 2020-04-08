@@ -14,7 +14,6 @@
 process_GEFS <- function(file_name,
                          n_ds_members,
                          n_met_members,
-                         sim_files_folder,
                          in_directory,
                          out_directory,
                          local_tzone,

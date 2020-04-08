@@ -74,6 +74,8 @@ FLAREversion <<- "v1.0_beta.1"
 base_GLM_nml <- paste0(forecast_location,"/glm3_woAED.nml" )
 if(include_wq){
   base_AED_nml <<- paste0(forecast_location,"/aed2_only_Oxy.nml")
+  base_AED_phyto_pars_nml  <<- paste0(forecast_location,"/aed2_phyto_pars.nml")
+  base_AED_zoop_pars_nml  <<- paste0(forecast_location,"/aed2_zoop_pars.nml")
 }
 #################################
 ### Uncertainty simulated

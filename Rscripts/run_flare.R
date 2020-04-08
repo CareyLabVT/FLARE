@@ -307,10 +307,6 @@ run_flare<-function(start_day_local,
                        day(full_time_local[1]))
   }
   
-  sim_files_folder <- paste0(code_folder, "/", "sim_files")
-  fl <- c(list.files(sim_files_folder, full.names = TRUE))
-  tmp <- file.copy(from = fl, to = working_directory, overwrite = TRUE)
-  
   if(!is.na(restart_file)){
     tmp <- file.copy(from = restart_file, to = working_directory, overwrite = TRUE)
   }
@@ -563,7 +559,6 @@ run_flare<-function(start_day_local,
                                            noaa_location,
                                            input_met_file = cleaned_met_file,
                                            working_directory,
-                                           sim_files_folder = paste0(code_folder, "/", "sim_files"),
                                            n_ds_members,
                                            n_met_members,
                                            file_name,
@@ -634,7 +629,6 @@ run_flare<-function(start_day_local,
                                                       noaa_location,
                                                       input_met_file = cleaned_met_file,
                                                       working_directory,
-                                                      sim_files_folder = paste0(code_folder, "/", "sim_files"),
                                                       n_ds_members,
                                                       n_met_members,
                                                       file_name,
@@ -1030,6 +1024,10 @@ run_flare<-function(start_day_local,
     }
     file.copy(from = paste0(base_AED_nml), 
               to = paste0(working_directory, "/", "aed2.nml"), overwrite = TRUE)
+    file.copy(from = paste0(base_AED_phyto_pars_nml), 
+              to = paste0(working_directory, "/", "aed2_phyto_pars.nml"), overwrite = TRUE)
+    file.copy(from = paste0(base_AED_zoop_pars_nml), 
+              to = paste0(working_directory, "/", "aed2_zoop_pars.nml"), overwrite = TRUE)
   }else{
     update_var(0, "num_wq_vars", working_directory, "glm3.nml") #GLM SPECIFIC
   }
