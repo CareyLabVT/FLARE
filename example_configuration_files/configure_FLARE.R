@@ -37,6 +37,8 @@ forecast_SSS_Oxy <<- 500
 #umol/m3  of oxygen if SSS turned on in forecast
 sss_fname <<- paste0(data_location,"/manual-data/FCR_SSS_inflow_2013_2020.csv")
 
+sss_inflow_factor <<- 1.0
+
 #####################
 # Weather forcing options
 ######################
