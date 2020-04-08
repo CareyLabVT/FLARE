@@ -676,13 +676,7 @@ run_flare<-function(start_day_local,
                              inflow2 = inflow_outflow_files$wetland_file_names)
   outflow_file_names <- cbind(inflow_outflow_files$spillway_file_names)
   
-  management_input <- read_sss_files(full_time_local,
-                                     working_directory,
-                                     input_file_tz = 'EST5EDT', 
-                                     sss_file = sss_fname,
-                                     local_tzone)
-  
-  
+
   #### END DRIVER CONTAINER ####
   
   
@@ -1444,6 +1438,12 @@ run_flare<-function(start_day_local,
       }
     }
   }
+  
+  management_input <- read_sss_files(full_time_local,
+                                     working_directory,
+                                     input_file_tz = 'EST', 
+                                     sss_file = sss_fname,
+                                     local_tzone)
   
   ####################################################
   #### STEP 12: Run Ensemble Kalman Filter

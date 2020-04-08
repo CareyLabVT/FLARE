@@ -85,11 +85,11 @@ create_inflow_outflow_file <- function(full_time_local,
       tmp$FLOW[i] = 0.0010803 + 0.9478724 * tmp$FLOW[i - 1] +  0.3478991 * tmp$Rain_lag1[i] + inflow_error[i]
       tmp$TEMP[i] = 0.20291 +  0.94214 * tmp$TEMP[i-1] +  0.04278 * tmp$AirTemp_lag1[i] + temp_error[i]
       if(include_wq){
-        tmp[i, c(all_of(wq_names_tmp))] <- inflow %>% 
+        tmp[i, c(wq_names_tmp)] <- inflow %>% 
           filter(time < full_time_day_local[start_forecast_step]) %>% 
           mutate(doy = yday(time)) %>% 
           filter(doy == yday(tmp$time[i])) %>% 
-          summarize_at(.vars = c(all_of(wq_names_tmp)), mean, na.rm = TRUE) %>% 
+          summarize_at(.vars = c(wq_names_tmp), mean, na.rm = TRUE) %>% 
           unlist()
       }
     }
@@ -108,7 +108,7 @@ create_inflow_outflow_file <- function(full_time_local,
       filter(ensemble == i) %>% 
       mutate(SALT = 0.0) %>% 
       select(time, FLOW, TEMP, SALT, all_of(wq_names_tmp)) %>% 
-      mutate_at(vars(c("FLOW", "TEMP", "SALT", all_of(wq_names_tmp))), funs(round(., 4)))
+      mutate_at(vars(c("FLOW", "TEMP", "SALT", wq_names_tmp)), funs(round(., 4)))
       
     
     write_csv(x = tmp2,

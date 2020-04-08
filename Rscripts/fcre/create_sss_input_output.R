@@ -5,49 +5,62 @@ create_sss_input_output <- function(x, i, m, full_time_local,
   
   full_time_day_local <- as_date(full_time_local)
   
+  sss_oxy_factor <- 1.0
+  
   sss_depth <- 8
   depth_index <- which.min(abs(modeled_depths - sss_depth))
   
   time_sss <- c(full_time_day_local[i - 1],full_time_day_local[i])
   if(i > (hist_days + 1)){
     if(forecast_sss_on){
+      if(management_input[i-1, 2] == 0){
       FLOW1 <- forecast_SSS_flow * (1/(60*60*24))
-      OXY1 <- x[i-1, m, wq_start[1] + depth_index - 1] + forecast_SSS_Oxy
-      OXY1 <- forecast_SSS_Oxy
+      OXY1 <- forecast_SSS_Oxy * sss_oxy_factor
+      }else{
+        FLOW1 <- management_input[i-1, 1]
+        OXY1 <- management_input[i-1, 2]  * sss_oxy_factor
+      }
     }else{
       FLOW1 <- 0.0
-      OXY1 <- x[i-1, m, wq_start[1] + depth_index - 1] + 0.0
+      OXY1 <-  0.0
     }
   }else{
     FLOW1 <- management_input[i-1, 1]
-    #Add input oxygen to the existing concentration
-    OXY1 <- x[i-1, m, wq_start[1] + depth_index - 1] + management_input[i-1, 2]
-    #Add use the input oxygen as the concentration
-    OXY1 <- management_input[i-1, 2]  
+    OXY1 <-  management_input[i-1, 2]  * sss_oxy_factor
   }
   
   if(i > (hist_days + 1)){
     if(forecast_sss_on){
+      if(management_input[i, 2] == 0){
       FLOW2 <- forecast_SSS_flow * (1/(60*60*24))
-      OXY2 <- x[i-1, m, wq_start[1] + depth_index - 1] + forecast_SSS_Oxy
-      OXY2 <- forecast_SSS_Oxy
+      OXY2 <- forecast_SSS_Oxy * sss_oxy_factor
+      }else{
+        FLOW2 <- management_input[i, 1]
+        OXY2 <- management_input[i, 2]  * sss_oxy_factor
+      }
     }else{
       FLOW2 <- 0.0
-      OXY2 <- x[i-1, m, wq_start[1] + depth_index - 1]
+      OXY2 <- 0.0
     }
   }else{
     FLOW2 <- management_input[i, 1]
-    #Add input oxygen to the existing concentration
-    #OXY2 <- x[i-1, m, wq_start[1] + depth_index - 1] + management_input[i, 2]
-    #Add use the input oxygen as the concentration
-    OXY2 <- management_input[i, 2]       
+    OXY2 <- management_input[i, 2]  * sss_oxy_factor    
   }
   
   FLOW <- round(c(FLOW1, FLOW2), 5)
   TEMP <- round(rep(x[i-1, m, depth_index],2), 3)
   SALT <- rep(0,2)
   
+  #OXY_EQ <- Eq.Ox.conc(TEMP[1], elevation.m = 506,
+  #           bar.press = NULL, bar.units = NULL,
+  #           out.DO.meas = "mg/L",
+  #           salinity = 0, salinity.units = "pp.thou")*1000*(1/32)
+  
+  #if(OXY1 > OXY_EQ){OXY1 = OXY_EQ}
+  #if(OXY2 > OXY_EQ){OXY2 = OXY_EQ}
+  
   OXY_oxy <- round(c(OXY1, OXY2), 3)
+  
   if(length(which(wq_names != "OXY_oxy")) == 0){
   sss_inflow <- data.frame(time = time_sss, FLOW = FLOW, TEMP = TEMP, SALT = SALT, OXY_oxy = OXY_oxy)
   }else{

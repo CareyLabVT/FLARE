@@ -132,10 +132,10 @@ inflow_qaqc <- function(realtime_file,
       select(time, NIT_amm, NIT_nit, PHS_frp, OGM_doc, OGM_poc, OGM_don, OGM_dop, OGM_pop, OGM_pon, PHS_frp_ads)
     
     inflow_combined_with_na <- left_join(inflow_combined, nutrients, by = "time") %>% 
-      mutate(OXY_oxy = (temp.C = Eq.Ox.conc(TEMP, elevation.m = 506,
+      mutate(OXY_oxy = Eq.Ox.conc(TEMP, elevation.m = 506,
                                             bar.press = NULL, bar.units = NULL,
                                             out.DO.meas = "mg/L",
-                                            salinity = 0, salinity.units = "pp.thou"))*1000*(1/32)) %>% 
+                                            salinity = 0, salinity.units = "pp.thou")*1000*(1/32)) %>% 
       mutate(NIT_amm = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(NIT_amm), NA),
              NIT_nit = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(NIT_nit), NA),
              PHS_frp = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(PHS_frp), NA),
