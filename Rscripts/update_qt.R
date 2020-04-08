@@ -87,7 +87,12 @@ update_qt <- function(resid30day, modeled_depths, qt, include_wq, npars, nstates
   
   if(use_cov){
     tmp_resid <- resid30day[, 1:ndepths_modeled]
-    index <- which(!is.na(tmp_resid[1, ]))
+    index <- NULL
+    for(i in 1:ndepths_modeled){
+      if(length(which(!is.na(tmp_resid[, i]))) > 3){
+      index <- c(index, i)
+      }
+    }
     resid <- tmp_resid[, index]
     Qt <- cov(resid, use = "pairwise.complete.obs")
     full_Qt <- array(NA,dim=c(ndepths_modeled,ndepths_modeled))

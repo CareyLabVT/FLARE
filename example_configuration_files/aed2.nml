@@ -11,7 +11,7 @@
 !
 !-------------------------------------------------------------------------------
 &aed2_models
-   models = 'aed2_tracer',
+   models = 'aed2_sedflux',
             'aed2_noncohesive',
             'aed2_oxygen',
             'aed2_carbon',
@@ -37,10 +37,13 @@
 !                                different benthic cells at different times
 !                                        - computed by model
 !-------------------------------------------------------------------------------
-!&aed2_sedflux
-!   sedflux_model = 'Constant'
-!/
-!
+&aed2_sedflux
+   sedflux_model = 'Constant2D'  ! Refer to ../Geo/Zones.PNG
+/
+&aed2_sed_const2d
+   n_zones  = 2
+   Fsed_oxy = -60.0, 30
+/
 !###############################################################################
 ! aed2_sed_constant
 !  Fsed_oxy  = Sedimentation flux for oxygen
@@ -579,7 +582,7 @@
   !I_Kmpb       = 100.00
   !mpb_max      =1000.00
   !resuspension =   0.0, 0.0, 0.0
-  !resus_link   =  ''
+  resus_link   =  ''
   !n_zones      =   1
   !active_zones =   1
   !-- Set link variables to other modules

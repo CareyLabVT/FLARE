@@ -14,14 +14,29 @@ create_inflow_outflow_file <- function(full_time_local,
   full_time_day_local <- as_date(full_time_local)
   
   inflow <- read_csv(inflow_file1)
-  inflow_names <- names(inflow)
   wetland <- read_csv(inflow_file2)
-  #inflow_chemistry <- read_csv(chemistry_file)
+
+  if(include_wq){
+    wq_names_tmp <- wq_names[which(wq_names %in% names(inflow))]
+  }else{
+    wq_names_tmp <- NULL
+  }
   
   curr_all_days <- NULL
   
+  col_types <- cols(
+    time = col_datetime(format = ""),
+    ShortWave = col_double(),
+    LongWave = col_double(),
+    AirTemp = col_double(),
+    RelHum = col_double(),
+    WindSpeed = col_double(),
+    Rain = col_double(),
+    Snow = col_double())
+  
   for(m in 1:length(met_file_names)){
-    curr_met_daily <- read_csv(paste0(working_directory,"/",met_file_names[m])) %>% 
+    curr_met_daily <- read_csv(paste0(working_directory,"/",met_file_names[m]),
+                               col_types = col_types) %>% 
       mutate(time = as_date(time)) %>% 
       group_by(time) %>% 
       summarize(Rain = mean(Rain),
@@ -58,30 +73,23 @@ create_inflow_outflow_file <- function(full_time_local,
   
   for(i in 1:nrow(tmp)){
     if(tmp$forecast[i] == 0 & is.na(tmp$FLOW[i]) & !include_wq){
-      tmp[i, c("FLOW", "TEMP")]  <- inflow %>% 
+      tmp[i, c("FLOW", "TEMP",wq_names_tmp)]  <- inflow %>% 
         filter(time < full_time_day_local[start_forecast_step]) %>% 
         mutate(doy = yday(time)) %>% 
         filter(doy == yday(tmp$time[i])) %>% 
-        summarize_at(.vars = c("FLOW", "TEMP"), mean, na.rm = TRUE) %>% 
+        summarize_at(.vars = c("FLOW", "TEMP", wq_names_tmp), mean, na.rm = TRUE) %>% 
         unlist()
     }
-    if(tmp$forecast[i] == 0 & is.na(tmp$FLOW[i]) & include_wq){
-      tmp[i, c("FLOW", "TEMP", wq_names)] <- inflow %>% 
-        filter(time < full_time_day_local[start_forecast_step]) %>% 
-        mutate(doy = yday(time)) %>% 
-        filter(doy == yday(tmp$time[i])) %>% 
-        summarize_at(.vars = c("FLOW", "TEMP", wq_names), mean, na.rm = TRUE) %>% 
-        unlist()
-    }     
+    
     if(tmp$forecast[i] == 1){
       tmp$FLOW[i] = 0.0010803 + 0.9478724 * tmp$FLOW[i - 1] +  0.3478991 * tmp$Rain_lag1[i] + inflow_error[i]
       tmp$TEMP[i] = 0.20291 +  0.94214 * tmp$TEMP[i-1] +  0.04278 * tmp$AirTemp_lag1[i] + temp_error[i]
       if(include_wq){
-        tmp[i, c(wq_names)] <- inflow %>% 
+        tmp[i, c(all_of(wq_names_tmp))] <- inflow %>% 
           filter(time < full_time_day_local[start_forecast_step]) %>% 
           mutate(doy = yday(time)) %>% 
           filter(doy == yday(tmp$time[i])) %>% 
-          summarize_at(.vars = c(wq_names), mean, na.rm = TRUE) %>% 
+          summarize_at(.vars = c(all_of(wq_names_tmp)), mean, na.rm = TRUE) %>% 
           unlist()
       }
     }
@@ -98,14 +106,15 @@ create_inflow_outflow_file <- function(full_time_local,
   for(i in 1:n_distinct(tmp$ensemble)){
     tmp2 <- tmp %>% 
       filter(ensemble == i) %>% 
-      select(time, FLOW, TEMP) %>% 
-      mutate_at(vars(c("FLOW", "TEMP")), funs(round(., 4))) %>% 
-      mutate(SALT = 0.0)
+      mutate(SALT = 0.0) %>% 
+      select(time, FLOW, TEMP, SALT, all_of(wq_names_tmp)) %>% 
+      mutate_at(vars(c("FLOW", "TEMP", "SALT", all_of(wq_names_tmp))), funs(round(., 4)))
+      
     
     write_csv(x = tmp2,
               path = paste0(working_directory,"/",inflow1_file_names[i]),
               quote_escape = "none")
-    
+
     tmp2 <- tmp2 %>% 
       select(time, FLOW)
     

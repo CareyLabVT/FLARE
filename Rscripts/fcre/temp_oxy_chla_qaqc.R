@@ -1,13 +1,13 @@
-temp_oxy_chla_qaqc <- function(data_file, maintenance_file, input_file_tz)
-{
-  CATDATA_COL_NAMES = c("DateTime", "RECORD", "CR6_Batt_V", "CR6Panel_Temp_C", "ThermistorTemp_C_surface",
-                        "ThermistorTemp_C_1", "ThermistorTemp_C_2", "ThermistorTemp_C_3", "ThermistorTemp_C_4",
-                        "ThermistorTemp_C_5", "ThermistorTemp_C_6", "ThermistorTemp_C_7", "ThermistorTemp_C_8",
-                        "ThermistorTemp_C_9", "RDO_mgL_5", "RDOsat_percent_5", "RDOTemp_C_5", "RDO_mgL_9",
-                        "RDOsat_percent_9", "RDOTemp_C_9", "EXO_Date", "EXO_Time", "EXOTemp_C_1", "EXOCond_uScm_1",
-                        "EXOSpCond_uScm_1", "EXOTDS_mgL_1", "EXODOsat_percent_1", "EXODO_mgL_1", "EXOChla_RFU_1",
-                        "EXOChla_ugL_1", "EXOBGAPC_RFU_1", "EXOBGAPC_ugL_1", "EXOfDOM_RFU_1", "EXOfDOM_QSU_1",
-                        "EXO_pressure", "EXO_depth", "EXO_battery", "EXO_cablepower", "EXO_wiper")
+temp_oxy_chla_qaqc <- function(data_file, maintenance_file, input_file_tz){
+  
+  CATDATA_COL_NAMES <- c("DateTime", "RECORD", "CR6_Batt_V", "CR6Panel_Temp_C", "ThermistorTemp_C_surface",
+                         "ThermistorTemp_C_1", "ThermistorTemp_C_2", "ThermistorTemp_C_3", "ThermistorTemp_C_4",
+                         "ThermistorTemp_C_5", "ThermistorTemp_C_6", "ThermistorTemp_C_7", "ThermistorTemp_C_8",
+                         "ThermistorTemp_C_9", "RDO_mgL_5", "RDOsat_percent_5", "RDOTemp_C_5", "RDO_mgL_9",
+                         "RDOsat_percent_9", "RDOTemp_C_9", "EXO_Date", "EXO_Time", "EXOTemp_C_1", "EXOCond_uScm_1",
+                         "EXOSpCond_uScm_1", "EXOTDS_mgL_1", "EXODOsat_percent_1", "EXODO_mgL_1", "EXOChla_RFU_1",
+                         "EXOChla_ugL_1", "EXOBGAPC_RFU_1", "EXOBGAPC_ugL_1", "EXOfDOM_RFU_1", "EXOfDOM_QSU_1",
+                         "EXO_pressure", "EXO_depth", "EXO_battery", "EXO_cablepower", "EXO_wiper")
   
   # after maintenance, DO values will continue to be replaced by NA until DO_mgL returns within this threshold (in mg/L)
   # of the pre-maintenance value
@@ -247,7 +247,8 @@ temp_oxy_chla_qaqc <- function(data_file, maintenance_file, input_file_tz)
                       wtr_5_do = d1$RDOTemp_C_5, wtr_9_do = d1$RDOTemp_C_9,
                       Chla_1 = d1$EXOChla_ugL_1, doobs_1 = d1$EXODO_mgL_1, 
                       doobs_5 = d1$RDO_mgL_5, doobs_9 = d1$RDO_mgL_9,
-                      fDOM_1 = d1$EXOfDOM_QSU_1, bgapc_1 = d1$EXOBGAPC_ugL_1)
+                      fDOM_1 = d1$EXOfDOM_QSU_1, bgapc_1 = d1$EXOBGAPC_ugL_1,
+                      depth_1.6 = d1$EXO_depth)
     
     d4 <- data.frame(TIMESTAMP = d2$TIMESTAMP, wtr_surface = d2$ThermistorTemp_C_surface, 
                      wtr_1 = d2$ThermistorTemp_C_1, wtr_2 = d2$ThermistorTemp_C_2, 
@@ -258,7 +259,8 @@ temp_oxy_chla_qaqc <- function(data_file, maintenance_file, input_file_tz)
                      wtr_5_do = d2$RDOTemp_C_5, wtr_9_do = d2$RDOTemp_C_9,
                      Chla_1 = d2$EXOChla_ugL_1, doobs_1 = d2$EXODO_mgL_1, 
                      doobs_5 = d2$RDO_mgL_5, doobs_9 = d2$RDO_mgL_9,
-                     fDOM_1 = d2$EXOfDOM_QSU_1, bgapc_1 = d2$EXOBGAPC_ugL_1)
+                     fDOM_1 = d2$EXOfDOM_QSU_1, bgapc_1 = d2$EXOBGAPC_ugL_1,
+                     depth_1.6 = d2$EXO_depth)
     
     d <- rbind(d3,d4)
     
@@ -278,7 +280,8 @@ temp_oxy_chla_qaqc <- function(data_file, maintenance_file, input_file_tz)
                      wtr_5_do = d1$RDOTemp_C_5, wtr_9_do = d1$RDOTemp_C_9,
                      Chla_1 = d1$EXOChla_ugL_1, doobs_1 = d1$EXODO_mgL_1, 
                      doobs_5 = d1$RDO_mgL_5, doobs_9 = d1$RDO_mgL_9,
-                     fDOM_1 = d1$EXOfDOM_QSU_1, bgapc_1 = d1$EXOBGAPC_ugL_1)
+                     fDOM_1 = d1$EXOfDOM_QSU_1, bgapc_1 = d1$EXOBGAPC_ugL_1,
+                     depth_1.6 = d1$EXO_depth)
   }
   
   #DIRRRRTY qsu -> mg/L ->  mmol/m3
@@ -291,10 +294,10 @@ temp_oxy_chla_qaqc <- function(data_file, maintenance_file, input_file_tz)
   d$doobs_9 <- d$doobs_9*1000/32  #mg/L (obs units) -> mmol/m3 (glm units)
   
   d <- d %>% 
-  mutate(day = day(TIMESTAMP),
-         year = year(TIMESTAMP),
-         hour = hour(TIMESTAMP),
-         month = month(TIMESTAMP)) %>%
+    mutate(day = day(TIMESTAMP),
+           year = year(TIMESTAMP),
+           hour = hour(TIMESTAMP),
+           month = month(TIMESTAMP)) %>%
     group_by(day, year, hour, month) %>% 
     select(-TIMESTAMP) %>% 
     summarise_all(mean, na.rm = TRUE) %>% 
@@ -305,7 +308,6 @@ temp_oxy_chla_qaqc <- function(data_file, maintenance_file, input_file_tz)
            hour = ifelse(as.numeric(hour) < 10, paste0("0",hour),hour)) %>% 
     mutate(timestamp = as_datetime(paste0(year,"-",month,"-",day," ",hour,":00:00"),tz = local_tzone)) %>% 
     arrange(timestamp) 
-  
   
   
   d_therm <- d %>% 
@@ -323,7 +325,8 @@ temp_oxy_chla_qaqc <- function(data_file, maintenance_file, input_file_tz)
            "9.0" = wtr_9) %>% 
     pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
     mutate(variable = "temperature",
-           method = "thermistor")
+           method = "thermistor",
+           value = ifelse(is.nan(value), NA, value))
   
   
   d_do_temp <- d %>% 
@@ -332,15 +335,16 @@ temp_oxy_chla_qaqc <- function(data_file, maintenance_file, input_file_tz)
            "9.0" = wtr_9_do) %>% 
     pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
     mutate(variable = "temperature",
-           method = "do_sensor")
+           method = "do_sensor",
+           value = ifelse(is.nan(value), NA, value))
   
   d_exo_temp <- d %>% 
     select(timestamp, wtr_1_exo) %>% 
-    rename("1.0" = wtr_1_exo) %>% 
+    rename("1.6" = wtr_1_exo) %>% 
     pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
     mutate(variable = "temperature",
-           method = "exo_sensor")
-  
+           method = "exo_sensor",
+           value = ifelse(is.nan(value), NA, value))
   
   d_do_do <- d %>% 
     select(timestamp, doobs_5, doobs_9) %>% 
@@ -348,39 +352,205 @@ temp_oxy_chla_qaqc <- function(data_file, maintenance_file, input_file_tz)
            "9.0" = doobs_9) %>% 
     pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
     mutate(variable = "oxygen",
-           method = "do_sensor")
+           method = "do_sensor",
+           value = ifelse(is.nan(value), NA, value))
   
   d_exo_do <- d %>% 
     select(timestamp, doobs_1) %>% 
-    rename("1.0" = doobs_1) %>% 
+    rename("1.6" = doobs_1) %>% 
     pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
     mutate(variable = "oxygen",
-           method = "exo_sensor")
+           method = "exo_sensor",
+           value = ifelse(is.nan(value), NA, value))
   
   d_exo_fdom <- d %>% 
     select(timestamp, fDOM_1) %>% 
-    rename("1.0" = fDOM_1) %>% 
+    rename("1.6" = fDOM_1) %>% 
     pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
     mutate(variable = "fdom",
-           method = "exo_sensor")
+           method = "exo_sensor",
+           value = ifelse(is.nan(value), NA, value))
   
   d_exo_chla <- d %>% 
     select(timestamp, Chla_1) %>% 
-    rename("1.0" = Chla_1) %>% 
+    rename("1.6" = Chla_1) %>% 
     pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
     mutate(variable = "chla",
-           method = "exo_sensor")
+           method = "exo_sensor",
+           value = ifelse(is.nan(value), NA, value))
   
   d_exo_bgapc <- d %>% 
     select(timestamp, bgapc_1) %>% 
-    rename("1.0" = bgapc_1) %>% 
+    rename("1.6" = bgapc_1) %>% 
     pivot_longer(cols = -timestamp, names_to = "depth", values_to = "value") %>% 
     mutate(variable = "bgapc",
-           method = "exo_sensor")
+           method = "exo_sensor",
+           value = ifelse(is.nan(value), NA, value))
+  
+  if(variable_obsevation_depths == TRUE){
+    
+    d_depth <- d %>% mutate(wtr_surface = depth_1.6 - 0.6 - 0.9,
+                            wtr_1 = depth_1.6 - 0.6,
+                            wtr_2 = depth_1.6 + 0.4,
+                            wtr_3 = depth_1.6 + 1.4,
+                            wtr_4 = depth_1.6 + 2.4,
+                            wtr_5 = depth_1.6 + 3.4,
+                            wtr_6 = depth_1.6 + 4.4,
+                            wtr_7 = depth_1.6 + 5.4,
+                            wtr_8 = depth_1.6 + 6.4,
+                            wtr_9 = depth_1.6 + 7.4,
+                            wtr_1_exo = depth_1.6,
+                            wtr_5_do = depth_1.6 + 3.4,
+                            wtr_9_do = depth_1.6 + 7.4,
+                            Chla_1 = depth_1.6,
+                            doobs_1 = depth_1.6 - 0.6,
+                            doobs_5 = depth_1.6 + 3.4,
+                            doobs_9 = depth_1.6 + 7.4,
+                            fDOM_1 = depth_1.6,
+                            bgapc_1 = depth_1.6) %>% 
+      select(-c(depth_1.6, day,year, hour, month))
+    
+    
+    d_therm_depth <- d_depth %>% 
+      select(timestamp, wtr_surface, wtr_1, wtr_2, wtr_3, wtr_4, wtr_5, wtr_6, 
+             wtr_7,wtr_8, wtr_9) %>% 
+      rename("0.0" = wtr_surface,
+             "1.0" = wtr_1,
+             "2.0" = wtr_2,
+             "3.0" = wtr_3,
+             "4.0" = wtr_4,
+             "5.0" = wtr_5,
+             "6.0" = wtr_6,
+             "7.0" = wtr_7,
+             "8.0" = wtr_8,
+             "9.0" = wtr_9) %>% 
+      pivot_longer(cols = -timestamp, names_to = "depth", values_to = "depth_exo") %>% 
+      mutate(variable = "temperature",
+             method = "thermistor",
+             depth_exo = ifelse(is.nan(depth_exo), NA, depth_exo))
+    
+    d_therm <- d_therm %>% 
+      left_join(d_therm_depth, by = c("timestamp", "depth","variable", "method")) %>% 
+      mutate(depth = ifelse(!is.na(depth_exo),depth_exo,depth),
+             depth = as.numeric(depth),
+             depth = round(depth, 2)) %>% 
+      select(-depth_exo) %>% 
+      filter(depth > 0.0)
+    
+    d_do_temp_depth <- d_depth %>% 
+      select(timestamp, wtr_5_do, wtr_9_do) %>% 
+      rename("5.0" = wtr_5_do,
+             "9.0" = wtr_9_do) %>% 
+      pivot_longer(cols = -timestamp, names_to = "depth", values_to = "depth_exo") %>% 
+      mutate(variable = "temperature",
+             method = "do_sensor")
+    
+    d_do_temp <- d_do_temp %>% 
+      left_join(d_do_temp_depth, by = c("timestamp", "depth","variable", "method")) %>% 
+      mutate(depth = ifelse(!is.na(depth_exo),depth_exo,depth),
+             depth = as.numeric(depth),
+             depth = round(depth, 2)) %>% 
+      select(-depth_exo) %>% 
+      filter(depth > 0.0)
+    
+    d_exo_temp_depth <- d_depth %>% 
+      select(timestamp, wtr_1_exo) %>% 
+      rename("1.6" = wtr_1_exo) %>% 
+      pivot_longer(cols = -timestamp, names_to = "depth", values_to = "depth_exo") %>% 
+      mutate(variable = "temperature",
+             method = "exo_sensor")
+    
+    d_exo_temp <- d_exo_temp %>% 
+      left_join(d_do_temp_depth, by = c("timestamp", "depth","variable", "method")) %>% 
+      mutate(depth = ifelse(!is.na(depth_exo),depth_exo,depth),
+             depth = as.numeric(depth),
+             depth = round(depth, 2)) %>% 
+      select(-depth_exo) %>% 
+      filter(depth > 0.0)
+    
+    d_do_do_depth <- d_depth %>% 
+      select(timestamp, doobs_5, doobs_9) %>% 
+      rename("5.0" = doobs_5,
+             "9.0" = doobs_9) %>% 
+      pivot_longer(cols = -timestamp, names_to = "depth", values_to = "depth_exo") %>% 
+      mutate(variable = "oxygen",
+             method = "do_sensor")
+    
+    d_do_do <- d_do_do %>% 
+      left_join(d_do_do_depth, by = c("timestamp", "depth","variable", "method")) %>% 
+      mutate(depth = ifelse(!is.na(depth_exo),depth_exo,depth),
+             depth = as.numeric(depth),
+             depth = round(depth, 2)) %>% 
+      select(-depth_exo) %>% 
+      filter(depth > 0.0)
+    
+    d_exo_do_depth <- d_depth %>% 
+      select(timestamp, doobs_1) %>% 
+      rename("1.6" = doobs_1) %>% 
+      pivot_longer(cols = -timestamp, names_to = "depth", values_to = "depth_exo") %>% 
+      mutate(variable = "oxygen",
+             method = "exo_sensor")
+    
+    d_exo_do <- d_exo_do %>% 
+      left_join(d_exo_do_depth, by = c("timestamp", "depth","variable", "method")) %>% 
+      mutate(depth = ifelse(!is.na(depth_exo),depth_exo,depth),
+             depth = as.numeric(depth),
+             depth = round(depth, 2)) %>% 
+      select(-depth_exo) %>% 
+      filter(depth > 0.0)
+    
+    d_exo_fdom_depth <- d_depth %>% 
+      select(timestamp, fDOM_1) %>% 
+      rename("1.6" = fDOM_1) %>% 
+      pivot_longer(cols = -timestamp, names_to = "depth", values_to = "depth_exo") %>% 
+      mutate(variable = "oxygen",
+             method = "exo_sensor")
+    
+    d_exo_fdom <- d_exo_fdom %>% 
+      left_join(d_exo_fdom_depth, by = c("timestamp", "depth","variable", "method")) %>% 
+      mutate(depth = ifelse(!is.na(depth_exo),depth_exo,depth),
+             depth = as.numeric(depth),
+             depth = round(depth, 2)) %>% 
+      select(-depth_exo) %>% 
+      filter(depth > 0.0)
+    
+    d_exo_chla_depth <- d_depth %>% 
+      select(timestamp, Chla_1) %>% 
+      rename("1.6" = Chla_1) %>% 
+      pivot_longer(cols = -timestamp, names_to = "depth", values_to = "depth_exo") %>% 
+      mutate(variable = "chla",
+             method = "exo_sensor")
+    
+    d_exo_chla <- d_exo_chla %>% 
+      left_join(d_exo_chla_depth, by = c("timestamp", "depth","variable", "method")) %>% 
+      mutate(depth = ifelse(!is.na(depth_exo),depth_exo,depth),
+             depth = as.numeric(depth),
+             depth = round(depth, 2)) %>% 
+      select(-depth_exo) %>% 
+      filter(depth > 0.0)
+    
+    d_exo_bgapc_depth <- d_depth %>% 
+      select(timestamp, bgapc_1) %>% 
+      rename("1.6" = bgapc_1) %>% 
+      pivot_longer(cols = -timestamp, names_to = "depth", values_to = "depth_exo") %>% 
+      mutate(variable = "bgapc",
+             method = "exo_sensor")
+    
+    d_exo_bgapc <- d_exo_bgapc %>% 
+      left_join(d_exo_chla_depth, by = c("timestamp", "depth","variable", "method")) %>% 
+      mutate(depth = ifelse(!is.na(depth_exo),depth_exo,depth),
+             depth = as.numeric(depth),
+             depth = round(depth, 2)) %>% 
+      select(-depth_exo) %>% 
+      filter(depth > 0.0)
+  }
+  
   
   d <- rbind(d_therm,d_do_temp,d_exo_temp,d_do_do,d_exo_do,d_exo_fdom,
              d_exo_chla,d_exo_bgapc)
-
+  
+  d <- d %>% mutate(depth = as.numeric(depth))
+  
   # write to output file
   return(d)
 }

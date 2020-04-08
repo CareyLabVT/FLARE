@@ -37,8 +37,6 @@ forecast_SSS_Oxy <<- 500
 #umol/m3  of oxygen if SSS turned on in forecast
 sss_fname <<- paste0(data_location,"/manual-data/FCR_SSS_inflow_2013_2020.csv")
 
-
-
 #####################
 # Weather forcing options
 ######################
@@ -104,7 +102,7 @@ single_run <<- FALSE
 #Init depth of lake
 lake_depth_init <<- 9.4  #not a modeled state
 
-modeled_depths <<- c(0.1, seq(0.5, 9, 0.5))
+modeled_depths <<- round(c(0.1, seq(0.33334, 9.33, 0.333334)), 2)
 
 default_temp_init <<- c(6.2, 5.7, 5.5, 5.5, 5.4, 5.3, 5.3, 5.3, 5.2, 5.0)
 default_temp_init_depths <<-  c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9)
@@ -117,9 +115,9 @@ default_blue_ice_thickness_init <<- 0.0
 ##############################
 ##  Ensemble members used
 ##############################
-n_enkf_members <<- 1
-n_ds_members <<- 21
-n_inflow_outflow_members <<- 21
+n_enkf_members <<- 5 #1
+n_ds_members <<- 1 #21
+n_inflow_outflow_members <<- 1 #21*21
 #Note: this number is multiplied by
 # 1) the number of NOAA ensembles (21)
 # 2) the number of downscaling essembles (50 is current)
@@ -128,18 +126,19 @@ n_inflow_outflow_members <<- 21
 ################################
 ### Process uncertainty adaption
 ##################################
-qt_alpha <<- 0.8  #0 - all weight on the new Qt, 1 - all weight on the current Qt
-qt_beta <<- 0.7 #
-localization_distance <<- 1 #distance in meters were covariances in the process error are used
+#qt_alpha <<- 0.8  #0 - all weight on the new Qt, 1 - all weight on the current Qt
+#qt_beta <<- 0.7 #
+#localization_distance <<- 1 #distance in meters were covariances in the process error are used
 use_cov <<- TRUE
 adapt_qt_method <<- 1  #0 = no adapt, 1 = variance in residuals, 2 = Rastetter et al 2011
-num_adapt_days <<- 15
+num_adapt_days <<- 30
+Inflat_pars <<- 1.02
 
 #################################
 # Parameter calibration information
 #################################
 
-include_pars_in_qt_update <<- TRUE
+#include_pars_in_qt_update <<- TRUE
 #Adapt the parameter noise
 
 #Initial zone temperatures and the upper and lower bounds
@@ -151,14 +150,14 @@ zone1_temp_init_upperbound <<- 20
 zone1_temp_lowerbound <<- -100
 zone1_temp_upperbound <<- 100
 #daily perturbance of parameter value
-zone1temp_init_qt <<- 0.01^2  #THIS IS THE VARIANCE, NOT THE SD
+zone1temp_init_qt <<- 1^2  #THIS IS THE VARIANCE, NOT THE SD
 
 zone2_temp_init_mean <<- 15
 zone2_temp_init_lowerbound <<-  10
 zone2_temp_init_upperbound <<-  20
 zone2_temp_lowerbound <<-  -100
 zone2_temp_upperbound <<-  100
-zone2temp_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
+zone2temp_init_qt <<- 1^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Shortwave factor
 swf_init_mean <<- 1.0
@@ -167,7 +166,7 @@ swf_init_upperbound <<- 1.5
 swf_lowerbound <<- -10
 swf_upperbound <<- 10
 #daily perturbance of parameter value
-swf_init_qt <<- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
+swf_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Longwave factor
 lwf_init_mean <<- 1.0
@@ -176,7 +175,7 @@ lwf_init_upperbound <<- 1.5
 lwf_lowerbound <<- -10
 lwf_upperbound <<- 10
 #daily perturbance of parameter value
-lwf_init_qt <<- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
+lwf_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Inflow factor
 inflow_factor_init_mean <<- 0.5
@@ -187,307 +186,79 @@ inflow_factor_upperbound <<- 1.0
 #daily perturbance of parameter value
 inflow_factor_init_qt <<- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
 
-#Fsed_oxy
-Fsed_oxy_init_mean <<- -20
-Fsed_oxy_init_lowerbound <<-  -100 #-30 #-24.220
-Fsed_oxy_init_upperbound <<-  -5 #10 #-24.218
-Fsed_oxy_lowerbound <<-  -1000 #-30 #-24.220
-Fsed_oxy_upperbound <<-  1000 #10 #-24.218
-#daily perturbance of parameter value
-Fsed_oxy_init_qt <<- 1^2 #THIS IS THE VARIANCE, NOT THE SD
-
-#Rdom_minerl
-Rdom_minerl_init_mean <<- 0.001
-Rdom_minerl_init_lowerbound <<-  0.0005 #0.00049
-Rdom_minerl_init_upperbound <<-  0.005 #0.00051
-Rdom_minerl_lowerbound <<-  -1 #0.0000 #0.00049
-Rdom_minerl_upperbound <<-  1 #0.00051
-#daily perturbance of parameter value
-Rdom_minerl_init_qt <<- 0.0001^2 #THIS IS THE VARIANCE, NOT THE SD
-
-#R_growth
-R_growth_init_mean <<-  1.0
-R_growth_init_lowerbound <<-  0.5 #0.99
-R_growth_init_upperbound <<-  1.5 #1.01
-R_growth_lowerbound <<-  -10.00 #0.99
-R_growth_upperbound <<-  10.00 #1.01
-#daily perturbance of parameter value
-R_growth_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
-
-#Rnitrif
-Rnitrif_init_mean <<- 0.02
-Rnitrif_init_lowerbound <<-  0.001 #0.99
-Rnitrif_init_upperbound <<-  0.1 #1.01
-Rnitrif_lowerbound <<-  -1 #0.99
-Rnitrif_upperbound <<-  1 #1.01
-#daily perturbance of parameter value
-Rnitrif_init_qt <<- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
-
-#w_p
-w_p_init_mean <<- 0.0
-w_p_init_lowerbound <<-  -0.1 #0.99
-w_p_init_upperbound <<-  0.1 #1.01
-w_p_lowerbound <<-  -0.1 #0.99
-w_p_upperbound <<-  0.1 #1.01
-#daily perturbance of parameter value
-w_p_init_qt <<- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
-
-#Fsed_frp
-Fsed_frp_init_mean <<- 0.11
-Fsed_frp_init_lowerbound <<-  0.01 #0.99
-Fsed_frp_init_upperbound <<-  0.2 #1.01
-Fsed_frp_lowerbound <<-  -1000 #0.99
-Fsed_frp_upperbound <<-  1000 #1.01
-#daily perturbance of parameter value
-Fsed_frp_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
-
-#Fsed_amm
-Fsed_amm_init_mean <<- 5
-Fsed_amm_init_lowerbound <<-  2 #0.99
-Fsed_amm_init_upperbound <<-  8 #1.01
-Fsed_amm_lowerbound <<-  -1000 #0.99
-Fsed_amm_upperbound <<-  1000 #1.01
-#daily perturbance of parameter value
-Fsed_amm_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
-
-#Fsed_nit
-Fsed_nit_init_mean <<- -10
-Fsed_nit_init_lowerbound <<-  -10 #0.99
-Fsed_nit_init_upperbound <<-  0.0 #1.01
-Fsed_nit_lowerbound <<-  -100 #0.99
-Fsed_nit_upperbound <<-  100 #1.01
-#daily perturbance of parameter value
-Fsed_nit_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
-
-#Fsed_doc
-Fsed_doc_init_mean <<- 50
-Fsed_doc_init_lowerbound <<-  10 #0.99
-Fsed_doc_init_upperbound <<-  60 #1.01
-Fsed_doc_lowerbound <<-  -1000 #0.99
-Fsed_doc_upperbound <<-  1000 #1.01
-#daily perturbance of parameter value
-Fsed_doc_init_qt <<- 0.1^2 #THIS IS THE VARIANCE, NOT THE SD
-
-#Create parameter vectors
-if(include_wq){
-  par_names <<- c(
-    "sed_temp_mean"
-    ,"sed_temp_mean"
-    ,"sw_factor"
-    ,"lw_factor"
-    #,"Fsed_oxy"
-    #,"pd%R_growth"
-    #,"Rnitrif"
-    #,"Fsed_frp"
-    #,"Rdom_minerl"
-    #,"Fsed_nit"
-    #,"Fsed_amm"
-    #, "Fsed_doc"
-  )
-  par_names_save <<- c(
-    "zone1temp"
-    ,"zone2temp"
-    ,"sw_factor"
-    ,"lw_factor"
-    #,"Fsed_oxy"
-    #,"R_growth"
-    #,"Rnitrif"
-    #,"Fsed_frp"
-    #,"Rdom_minerl"
-    #,"Fsed_nit"
-    #,"Fsed_amm"
-    #,"Fsed_doc"
-  )
-  par_nml <<- c(
-    "glm3.nml"
-    ,"glm3.nml"
-    ,"glm3.nml"
-    ,"glm3.nml"
-    #,"aed2.nml"
-    #,"aed2_phyto_pars.nml"
-    #,"aed2.nml"
-    #,"aed2.nml"
-    #, "aed2.nml"
-    #, "aed2.nml"
-    #, "aed2.nml"
-    #, "aed2.nml"
-  )
-  par_init_mean <<- c(
-    zone1_temp_init_mean
-    ,zone2_temp_init_mean
-    ,swf_init_mean
-    ,lwf_init_mean
-    #,Fsed_oxy_init_mean
-    #,R_growth_init_mean
-    #,Rnitrif_init_mean
-    #,Fsed_frp_init_mean
-    #,Rdom_minerl_init_mean
-    #,Fsed_nit_init_mean
-    #,Fsed_amm_init_mean
-    #,Fsed_doc_init_mean
-  )
-  par_init_lowerbound <<- c(
-    zone1_temp_init_lowerbound
-    ,zone2_temp_init_lowerbound
-    ,swf_init_lowerbound
-    ,lwf_init_lowerbound
-    #,Fsed_oxy_init_lowerbound
-    #,R_growth_init_lowerbound
-    #,Rnitrif_init_lowerbound
-    #,Fsed_frp_init_lowerbound
-    #,Rdom_minerl_init_lowerbound
-    #,Fsed_nit_init_lowerbound
-    #,Fsed_amm_init_lowerbound
-    #,Fsed_doc_init_lowerbound
-  )
-  par_init_upperbound <<- c(
-    zone1_temp_init_upperbound
-    ,zone2_temp_init_upperbound
-    ,swf_init_upperbound
-    ,lwf_init_upperbound
-    #,Fsed_oxy_init_upperbound
-    #,R_growth_init_upperbound
-    #,Rnitrif_init_upperbound
-    #,Fsed_frp_init_upperbound
-    #,Rdom_minerl_init_upperbound
-    #,Fsed_nit_init_upperbound
-    #,Fsed_amm_init_upperbound
-    #,Fsed_doc_init_upperbound
-  )
-  par_lowerbound <<- c(
-    zone1_temp_lowerbound
-    ,zone2_temp_lowerbound
-    ,swf_lowerbound
-    ,lwf_lowerbound
-    #,Fsed_oxy_lowerbound
-    #,R_growth_lowerbound
-    #,Rnitrif_lowerbound
-    #,Fsed_frp_lowerbound
-    #,Rdom_minerl_lowerbound
-    #,Fsed_nit_lowerbound
-    #,Fsed_amm_lowerbound
-    #,Fsed_doc_lowerbound
-  )
-  par_upperbound <<- c(
-    zone1_temp_upperbound
-    ,zone2_temp_upperbound
-    ,swf_upperbound
-    ,lwf_upperbound
-    #,Fsed_oxy_upperbound
-    #,R_growth_upperbound
-    #,Rnitrif_upperbound
-    #,Fsed_frp_upperbound
-    #,Rdom_minerl_upperbound
-    #,Fsed_nit_upperbound
-    #,Fsed_amm_upperbound
-    #,Fsed_doc_upperbound
-  )
-  par_init_qt <<- c(
-    zone1temp_init_qt
-    ,zone2temp_init_qt
-    ,swf_init_qt
-    ,lwf_init_qt
-    #,Fsed_oxy_init_qt
-    #,R_growth_init_qt
-    #,Rnitrif_init_qt
-    #,Fsed_frp_init_qt
-    #,Rdom_minerl_init_qt
-    #,Fsed_nit_init_qt
-    #,Fsed_amm_init_qt
-    #,Fsed_doc_init_qt
-  )
-  par_units <<- c(
-    "deg_C"
-    ,"deg_C"
-    ,"-"
-    ,"-"
-    #,"-"
-    #,"-"
-    #,"-"
-    #,"-"
-    #,"-"
-    #,"-"
-    #,"-"
-    #,"-"
-  )
-  
-  
-}else{
-  par_names <<- c("sed_temp_mean"
-                  ,"sed_temp_mean"
-                  ,"sw_factor"
-                  ,"lw_factor"
-                  #,"inflow_factor"
-  )
-  par_names_save <<- c("zone1temp"
-                       ,"zone2temp"
-                       ,"sw_factor"
-                       ,"lw_factor"
-                       #,"inflow_factor"
-  )
-  par_nml <<- c("glm3.nml"
-                ,"glm3.nml"
-                ,"glm3.nml"
-                ,"glm3.nml"
-                #,"glm3.nml"
-  )
-  par_init_mean <<- c(zone1_temp_init_mean
-                      ,zone2_temp_init_mean
-                      ,swf_init_mean
-                      ,lwf_init_mean
-                      #,inflow_factor_init_mean
-  )
-  par_init_lowerbound <<- c(zone1_temp_init_lowerbound
-                            ,zone2_temp_init_lowerbound
-                            ,swf_init_lowerbound
-                            ,lwf_init_lowerbound
-                            #,inflow_factor_init_lowerbound
-  )
-  par_init_upperbound <<- c(zone1_temp_init_upperbound
-                            ,zone2_temp_init_upperbound
-                            ,swf_init_upperbound
-                            , lwf_init_upperbound
-                            #,inflow_factor_init_upperbound
-  )
-  par_lowerbound <<- c(zone1_temp_lowerbound
-                       ,zone2_temp_lowerbound
-                       ,swf_lowerbound
-                       , lwf_lowerbound
-                       #,inflow_factor_lowerbound
-  )
-  par_upperbound <<- c(zone1_temp_upperbound
-                       ,zone2_temp_upperbound
-                       ,swf_upperbound
-                       , lwf_upperbound
-                       #,inflow_factor_upperbound
-  )
-  par_init_qt <<- c(zone1temp_init_qt
-                    ,zone2temp_init_qt
-                    ,swf_init_qt
-                    , lwf_init_qt
-                    #,inflow_factor_init_qt
-  )
-  par_units <<- c("deg_C"
-                  ,"deg_C"
-                  ,"-"
-                  ,"-"
-                  #,"-"
-  ) #
-}
-
+par_names <<- c("sed_temp_mean"
+                ,"sed_temp_mean"
+                ,"sw_factor"
+                #,"lw_factor"
+                ,"inflow_factor"
+)
+par_names_save <<- c("zone1temp"
+                     ,"zone2temp"
+                     ,"sw_factor"
+                     #,"lw_factor"
+                     ,"inflow_factor"
+)
+par_nml <<- c("glm3.nml"
+              ,"glm3.nml"
+              ,"glm3.nml"
+              #,"glm3.nml"
+              ,"glm3.nml"
+)
+par_init_mean <<- c(zone1_temp_init_mean
+                    ,zone2_temp_init_mean
+                    ,swf_init_mean
+                    #,lwf_init_mean
+                    ,inflow_factor_init_mean
+)
+par_init_lowerbound <<- c(zone1_temp_init_lowerbound
+                          ,zone2_temp_init_lowerbound
+                          ,swf_init_lowerbound
+                          #,lwf_init_lowerbound
+                          ,inflow_factor_init_lowerbound
+)
+par_init_upperbound <<- c(zone1_temp_init_upperbound
+                          ,zone2_temp_init_upperbound
+                          ,swf_init_upperbound
+                          #, lwf_init_upperbound
+                          ,inflow_factor_init_upperbound
+)
+par_lowerbound <<- c(zone1_temp_lowerbound
+                     ,zone2_temp_lowerbound
+                     ,swf_lowerbound
+                     #, lwf_lowerbound
+                     ,inflow_factor_lowerbound
+)
+par_upperbound <<- c(zone1_temp_upperbound
+                     ,zone2_temp_upperbound
+                     ,swf_upperbound
+                     #, lwf_upperbound
+                     ,inflow_factor_upperbound
+)
+par_init_qt <<- c(zone1temp_init_qt
+                  ,zone2temp_init_qt
+                  ,swf_init_qt
+                  #, lwf_init_qt
+                  ,inflow_factor_init_qt
+)
+par_units <<- c("deg_C"
+                ,"deg_C"
+                ,"-"
+                #,"-"
+                ,"-"
+) 
 
 #####################################
 ###  Observation information
 ######################################
 
-use_ctd <<- FALSE
-ctd_fname <<- paste0(data_location,"/manual-data/CTD_Meta_13_18_final.csv")
-#Use CTD data in place of the sensor string
-use_nutrient_data <<- FALSE
+ctd_fname <<- NA #paste0(data_location,"/manual-data/CTD_final_2013_2019.csv")
+
 nutrients_fname <<- paste0(data_location,"/manual-data/chemistry.csv")
 
 temp_obs_fname <<- c(paste0(data_location,"/mia-data/Catwalk.csv"),
                      paste0(data_location, "/manual-data/Catwalk_cleanedEDI.csv"))
+variable_obsevation_depths <<- FALSE
+ctd_2_exo_chla <<- c(-0.35, 1.9)
 
 met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"),
                     paste0(data_location, "/manual-data/Met_final_2015_2019.csv"))
@@ -499,6 +270,23 @@ outflow_file1 <<- paste0(data_location,"/manual-data/FCR_spillway_outflow_newEDI
 
 include_wetland_inflow <<- FALSE
 inflow_file2 <<- paste0(data_location,"/manual-data/FCR_wetland_inflow_newEDI_2013_2018_20190912_oneDOC.csv")
+
+do_methods <<- c("do_sensor", "exo_sensor")
+chla_methods <<- c("exo_sensor", "ctd")
+temp_methods <<- c("thermistor", "do_sensor", "exo_sensor")
+fdom_methods <<- c("exo_sensor","grab_sample")
+nh4_methods <<- c("grab_sample")
+no3_methods <<- c("grab_sample")
+srp_methods <<- c("grab_sample")
+
+time_threshold_seconds_temp <<- 60*30
+time_threshold_seconds_oxygen <<- 60*60*12
+time_threshold_seconds_chla <<- 60*60*12
+time_threshold_seconds_fdom <<- 60*60*12
+time_threshold_seconds_nh4 <<- 60*60*12
+time_threshold_seconds_no3 <<- 60*60*12
+time_threshold_seconds_srp <<- 60*60*12
+distance_threshold_meter <<- 0.15
 
 #########################################
 ###  Water quality state information
@@ -528,15 +316,17 @@ wq_names <<- c("OXY_oxy",
                "PHY_TCHLA")
 
 #Default initial states if lacking observations
-init_donc <<- 0.1/47.4
-init_dopc <<- 0.1/47.4
-init_ponc <<- (0.1/78.5)
-init_popc <<-(0.1/78.5)
 
 #carbon to chlorophyll ratio (mg C/mg chla)
 #12 g/ mole of C vs. X g/ mole of chla
 #Initial concentration of phytoplankton (mmol C/m3)
 biomass_to_chla <<- c((50/12),(50/12), (50/12))
+
+
+init_donc <<- 0.1/47.4
+init_dopc <<- 0.1/47.4
+init_ponc <<- (0.1/78.5)
+init_popc <<-(0.1/78.5)
 
 OXY_oxy_init <<- 300.62
 CAR_pH_init <<- 6.2
@@ -556,12 +346,10 @@ PHY_TCHLA_init <<- 10.0
 
 init_phyto_proportion <<- c(0.3, 0.3, 0.4)
 
-proportional_obs_error <<- TRUE
-
 #uncertainy in temperature measurement
-obs_error_temperature_intercept <<- 0.0001 #NEED TO DOUBLE CHECK
+obs_error_temperature_intercept <<- 0.1^2
 
-obs_error_temperature_slope <<- 0.0 #NEED TO DOUBLE CHECK
+obs_error_temperature_slope <<- 0.0
 
 #Observational uncertainty for each variable
 
@@ -606,10 +394,6 @@ obs_error_wq_slope <<- c(0, #OXY_oxy #0.25
                          NA, #PHS_frp_ads
                          0) #PHY_TCHLA
 
-
-
-ctd_2_exo_chla <- c(-0.35, 1.9)
-
 temp_process_error <<- 0.5
 OXY_oxy_process_error <<- 1000
 CAR_pH_process_error <<- 0.001
@@ -649,7 +433,6 @@ NCS_ss1_init_error <<- 0.5
 PHS_frp_ads_init_error <<- 0.1
 PHY_TCHLA_init_error <<- 3
 PHY_init_error <<- c(3, 3, 3)
-
 
 #########################################
 # Archiving options

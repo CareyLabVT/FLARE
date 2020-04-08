@@ -584,7 +584,7 @@
   !I_Kmpb       = 100.00
   !mpb_max      =1000.00
   !resuspension =   0.0, 0.0, 0.0
-  !resus_link   =  ''
+  resus_link   =  ''
   !n_zones      =   1
   !active_zones =   1
   !-- Set link variables to other modules

@@ -47,9 +47,8 @@ create_sss_input_output <- function(x, i, m, full_time_local,
   TEMP <- round(rep(x[i-1, m, depth_index],2), 3)
   SALT <- rep(0,2)
   
-  
-  if(length(which(wq_names != "OXY_oxy")) == 0){
   OXY_oxy <- round(c(OXY1, OXY2), 3)
+  if(length(which(wq_names != "OXY_oxy")) == 0){
   sss_inflow <- data.frame(time = time_sss, FLOW = FLOW, TEMP = TEMP, SALT = SALT, OXY_oxy = OXY_oxy)
   }else{
     NIT_amm <-  round(rep(x[i-1, m, wq_start[6] + depth_index - 1],2), 3)

@@ -137,12 +137,12 @@ run_EnKF <- function(x,
           fsed_oxy_index <- which(par_names == "Fsed_oxy")
           
           if(length(fsed_oxy_index) == 1){
-            update_var(curr_pars[fsed_oxy_index], 
+            update_var(round(curr_pars[fsed_oxy_index], 4), 
                        par_names[fsed_oxy_index], 
                        working_directory, 
                        par_nml[fsed_oxy_index])
           }else if(length(fsed_oxy_index) == 2){
-            update_var(c(curr_pars[fsed_oxy_index[1]],curr_pars[fsed_oxy_index[2]]), 
+            update_var(round(c(curr_pars[fsed_oxy_index[1]],curr_pars[fsed_oxy_index[2]]), 4), 
                        par_names[fsed_oxy_index[1]], 
                        working_directory, 
                        par_nml[fsed_oxy_index[1]])
@@ -152,14 +152,14 @@ run_EnKF <- function(x,
           }
           
           if(length(sed_temp_mean_index) == 1){
-            update_glm_nml_list[[list_index]] <- c(curr_pars[sed_temp_mean_index],
-                                                   zone2_temp_init_mean) 
+            update_glm_nml_list[[list_index]] <- round(c(curr_pars[sed_temp_mean_index],
+                                                   zone2_temp_init_mean),4) 
             update_glm_nml_names[list_index] <- "sed_temp_mean"
             list_index <- list_index + 1
             
           }else if(length(sed_temp_mean_index) == 2){
-            update_glm_nml_list[[list_index]] <-  c(curr_pars[sed_temp_mean_index[1]],
-                                                    curr_pars[sed_temp_mean_index[2]])
+            update_glm_nml_list[[list_index]] <-  round(c(curr_pars[sed_temp_mean_index[1]],
+                                                    curr_pars[sed_temp_mean_index[2]]), 4)
             update_glm_nml_names[list_index] <- "sed_temp_mean"
             list_index <- list_index + 1
             
@@ -172,23 +172,23 @@ run_EnKF <- function(x,
               if(par_nml[par] == "glm3.nml"){
                 if(par_names[par] == "inflow_factor"){
                   if(include_wq){
-                    update_glm_nml_list[[list_index]] <- c(curr_pars[par], 
-                                                           curr_pars[par], 1.0)
+                    update_glm_nml_list[[list_index]] <- c( round(curr_pars[par],4), 
+                                                            round(curr_pars[par],4), 1.0)
                     update_glm_nml_names[list_index] <- par_names[par]
                     list_index <- list_index + 1
-                    update_glm_nml_list[[list_index]] <- c(curr_pars[par], 1.0)
+                    update_glm_nml_list[[list_index]] <- c( round(curr_pars[par],4), 1.0)
                     update_glm_nml_names[list_index] <- "outflow_factor"
                     list_index <- list_index + 1
                   }else{
-                    update_glm_nml_list[[list_index]] <- (curr_pars[par])
+                    update_glm_nml_list[[list_index]] <-  round(curr_pars[par],4)
                     update_glm_nml_names[list_index] <- par_names[par]
                     list_index <- list_index + 1
-                    update_glm_nml_list[[list_index]] <- (curr_pars[par])
+                    update_glm_nml_list[[list_index]] <-  round(curr_pars[par],4)
                     update_glm_nml_names[list_index] <- "outflow_factor"
                     list_index <- list_index + 1
                   }
                 }else{
-                  update_glm_nml_list[[list_index]] <- (curr_pars[par])
+                  update_glm_nml_list[[list_index]] <- round(curr_pars[par],4)
                   update_glm_nml_names[list_index] <- par_names[par]
                   list_index <- list_index + 1
                 }
@@ -213,13 +213,13 @@ run_EnKF <- function(x,
             
             wq_init_vals <- c()
             
-            for(wq in 1:16){
-              wq_enkf_tmp <- x[i - 1, m, wq_start[i]:wq_end[i]]
+            for(wq in 1:length(which(wq_names!= "PHY_TCHLA"))){
+              wq_enkf_tmp <- x[i - 1, m, wq_start[wq]:wq_end[wq]]
               wq_init_vals <- c(wq_init_vals, 
                                 approx(modeled_depths,wq_enkf_tmp, glm_depths_mid, rule = 2)$y)
             }
             for(wq in 1:num_phytos){
-              wq_enkf_tmp <- x_phyto_groups[i-1,m ,wq]
+              wq_enkf_tmp <- x_phyto_groups[i-1,m, (1 + (ndepths_modeled*(wq-1))):(wq*ndepths_modeled)] 
               wq_init_vals <- c(wq_init_vals, 
                                 approx(modeled_depths,wq_enkf_tmp, glm_depths_mid, rule = 2)$y)
             }
@@ -232,7 +232,7 @@ run_EnKF <- function(x,
                                 approx(modeled_depths,wq_enkf_tmp, glm_depths_mid, rule = 2)$y)
             }
           }
-          update_glm_nml_list[[list_index]] <- wq_init_vals
+          update_glm_nml_list[[list_index]] <- round(wq_init_vals, 4)
           update_glm_nml_names[list_index] <- "wq_init_vals"
           list_index <- list_index + 1
           
@@ -247,7 +247,7 @@ run_EnKF <- function(x,
         
         the_temps_glm <- approx(modeled_depths,the_temps_enkf_tmp, glm_depths_mid, rule = 2)$y
         
-        update_glm_nml_list[[list_index]] <- the_temps_glm
+        update_glm_nml_list[[list_index]] <- round(the_temps_glm, 4)
         update_glm_nml_names[list_index] <- "the_temps"
         list_index <- list_index + 1
         
@@ -255,7 +255,7 @@ run_EnKF <- function(x,
         update_glm_nml_names[list_index] <- "the_sals"
         list_index <- list_index + 1
         
-        update_glm_nml_list[[list_index]] <- glm_depths_tmp
+        update_glm_nml_list[[list_index]] <- round(glm_depths_tmp, 4)
         update_glm_nml_names[list_index] <- "the_depths"
         list_index <- list_index + 1
         
@@ -263,7 +263,7 @@ run_EnKF <- function(x,
         update_glm_nml_names[list_index] <- "num_depths"
         list_index <- list_index + 1
         
-        update_glm_nml_list[[list_index]] <- surface_height[i - 1, m]
+        update_glm_nml_list[[list_index]] <- round(surface_height[i - 1, m], 4)
         update_glm_nml_names[list_index] <- "lake_depth"
         list_index <- list_index + 1
         
@@ -271,15 +271,15 @@ run_EnKF <- function(x,
         update_glm_nml_names[list_index] <- "snow_thickness"
         list_index <- list_index + 1
         
-        update_glm_nml_list[[list_index]] <- snow_ice_thickness[i - 1, m, 2]
+        update_glm_nml_list[[list_index]] <- round(snow_ice_thickness[i - 1, m, 2], 4)
         update_glm_nml_names[list_index] <- "white_ice_thickness"
         list_index <- list_index + 1
         
-        update_glm_nml_list[[list_index]] <- snow_ice_thickness[i - 1, m, 3]
+        update_glm_nml_list[[list_index]] <- round(snow_ice_thickness[i - 1, m, 3], 4)
         update_glm_nml_names[list_index] <- "blue_ice_thickness"
         list_index <- list_index + 1
         
-        update_glm_nml_list[[list_index]] <- avg_surf_temp[i - 1, m]
+        update_glm_nml_list[[list_index]] <- round(avg_surf_temp[i - 1, m], 4)
         update_glm_nml_names[list_index] <- "avg_surf_temp"
         list_index <- list_index + 1
         
@@ -372,7 +372,10 @@ run_EnKF <- function(x,
               mixing_vars[m, ] <- GLM_temp_wq_out$mixing_vars
               
               if(include_wq & "PHY_TCHLA" %in% wq_names){
-                phyto_groups_star[m, , ] <- GLM_temp_wq_out$output[ , (length(glm_output_vars) + 1): (length(glm_output_vars)+ num_phytos)]
+                for(wq in 1:num_phytos){
+                glm_wq <-rev(GLM_temp_wq_out$output[ , length(glm_output_vars) + wq])
+                phyto_groups_star[m, , wq] <- approx(glm_depths_mid, glm_wq, modeled_depths, rule = 2)$y
+                }
               }
               
               if(length(which(is.na(x_star[m, ]))) == 0){
@@ -590,11 +593,11 @@ run_EnKF <- function(x,
         p_t_combined <- p_it_combined/ (nmembers - 1)
       }
       #Kalman gain
-      k_t <- p_t %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t)
+      k_t <- p_t %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t, tol = 1e-17)
       if(npars > 0){
-        k_t_pars <- p_t_pars %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t)
+        k_t_pars <- p_t_pars %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t, tol = 1e-17)
         k_t_combined <- p_t_combined %*% t(h_combined) %*% 
-          solve(h_combined %*% p_t_combined %*% t(h_combined) + psi_t)
+          solve(h_combined %*% p_t_combined %*% t(h_combined) + psi_t, tol = 1e-17)
       }
       
       #Update states array (transposes are necessary to convert 

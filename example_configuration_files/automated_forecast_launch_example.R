@@ -68,7 +68,6 @@ if(!file.exists(paste0(forecast_location,"/last_success.Rdata"))){
                    n_enkf_members = n_enkf_members,
                    n_ds_members = n_ds_members,
                    include_wq = include_wq,
-                   use_ctd = use_ctd,
                    uncert_mode = uncert_mode,
                    cov_matrix = cov_matrix,
                    downscaling_coeff = downscaling_coeff,
@@ -194,7 +193,6 @@ if(num_forecast_periods > 0){
                         n_enkf_members = n_enkf_members,
                         n_ds_members = n_ds_members,
                         include_wq = include_wq,
-                        use_ctd = use_ctd,
                         uncert_mode = uncert_mode,
                         cov_matrix = cov_matrix,
                         downscaling_coeff = downscaling_coeff,
@@ -238,7 +236,6 @@ if(num_forecast_periods > 0){
                         n_enkf_members = n_enkf_members,
                         n_ds_members = n_ds_members,
                         include_wq = include_wq,
-                        use_ctd = use_ctd,
                         uncert_mode = uncert_mode,
                         cov_matrix = cov_matrix,
                         downscaling_coeff = downscaling_coeff,
@@ -260,7 +257,6 @@ if(num_forecast_periods > 0){
                     plot_summaries = TRUE,
                     push_to_git = push_to_git,
                     pull_from_git = pull_from_git,
-                    use_ctd = use_ctd,
                     modeled_depths = modeled_depths)
       
       combined_oxygen_plot(with_oxy = unlist(out2[[1]]), 
