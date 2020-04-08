@@ -6,12 +6,6 @@ note: that FLARE has not been fully generalized and only works at Falling Creek 
 
 Users guide is pending
 
-`initiate_forecast_example.R` provides an example for running FLARE once. Move this file to your `forecast_location`
-
-`automated_forecast_launch_example.R` provides an example for automated running of forecasts.  Move this file to your `forecast_location` (see below) so that you can edit it separate of the FLARE repository.  
-
-`configure_FLARE.R` are the variables that you need to set to run FLARE that are not in `initiate_forecast_example.R` or `automated_forecast_launch_example.R`
-
 # Setting up data repositories for FCR
 
 In your `data_location` directory run the following five commands at the command line:
@@ -26,4 +20,22 @@ In your `data_location` directory run the following five commands at the command
 
 `git clone -b manual-data --single-branch https://github.com/CareyLabVT/SCCData.git manual-data`
 
+You will also need to download the meterology file (`Met_final_2015_2019.csv`)from the Environmental Data Initiative and place it in the `manual-data` directory:  https://portal.edirepository.org/nis/mapbrowse?packageid=edi.389.4
 
+# Initiating a simulation
+
+1) Create a directory (`forecast_location`) where you will move simulation configuration files and where you want FLARE to save the forecast output.
+
+2) Copy the `configure_FLARE.R` from `FLARE/example_configuration_files/` to your `forecast_location`. 
+
+3) Copy the relevant General Lake Model nml files `FLARE/example_configuration_files/` to your `forecast_location`
+
+4) Copy either of the two files below to from the `FLARE/example_configuration_files/` to `forecast_location`
+
+ * `initiate_forecast_example.R` provides an example for running FLARE once. 
+
+ * `automated_forecast_launch_example.R` provides an example for automated running of forecasts.  
+
+5) Modify your `initiate_forecast_example.R` or `automated_forecast_launch_example.R` and `configure_FLARE.R` scripts to customize your simulation.
+
+6) Run `initiate_forecast_example.R` or `automated_forecast_launch_example.R`
