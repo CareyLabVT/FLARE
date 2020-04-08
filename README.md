@@ -14,13 +14,15 @@ Users guide is pending
 
 # Setting up data repositories for FCR
 
-In your `data_location` directory run the following three commands at the command line:
+In your `data_location` directory run the following five commands at the command line:
 
 `git clone -b carina-data --single-branch https://github.com/CareyLabVT/SCCData.git carina-data`
 
 `git clone -b mia-data --single-branch https://github.com/CareyLabVT/SCCData.git mia-data`
 
-`git clone -b noaa-data --single-branch https://github.com/CareyLabVT/SCCData.git noaa-data`
+`git clone -b diana-data --single-branch https://github.com/CareyLabVT/SCCData.git diana-data`
+
+`git clone -b fcre --single-branch https://github.com/CareyLabVT/noaa_gefs_forecasts.git fcre`
 
 `git clone -b manual-data --single-branch https://github.com/CareyLabVT/SCCData.git manual-data`
 
