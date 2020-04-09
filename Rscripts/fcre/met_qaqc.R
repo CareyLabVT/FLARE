@@ -5,7 +5,7 @@ met_qaqc <- function(fname, cleaned_met_file,input_file_tz,local_tzone,full_time
     d_names <- read_csv(fname[1], skip = 1, n_max = 3)
     names(d1) <- names(d_names)
     
-    d1 <- d1[-85572, ]
+    #d1 <- d1[-85572, ]
     
     TIMESTAMP_in <- force_tz(d1$TIMESTAMP, tzone = input_file_tz)
     
@@ -40,7 +40,7 @@ met_qaqc <- function(fname, cleaned_met_file,input_file_tz,local_tzone,full_time
     d_names <- read.csv(fname, skip = 1)
     names(d1) <- names(d_names)
     
-    d1 <- d1[-85572, ]
+    #d1 <- d1[-85572, ]
     
     TIMESTAMP_in <- as.POSIXct(d1$TIMESTAMP, 
                                format= "%Y-%m-%d %H:%M",
