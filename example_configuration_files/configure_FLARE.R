@@ -130,9 +130,6 @@ n_inflow_outflow_members <<- 1 #21*21
 ################################
 ### Process uncertainty adaption
 ##################################
-#qt_alpha <<- 0.8  #0 - all weight on the new Qt, 1 - all weight on the current Qt
-#qt_beta <<- 0.7 #
-#localization_distance <<- 1 #distance in meters were covariances in the process error are used
 use_cov <<- TRUE
 adapt_qt_method <<- 1  #0 = no adapt, 1 = variance in residuals, 2 = Rastetter et al 2011
 num_adapt_days <<- 30

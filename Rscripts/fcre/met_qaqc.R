@@ -90,7 +90,7 @@ met_qaqc <- function(fname, cleaned_met_file,input_file_tz,local_tzone,full_time
     mutate(day = ifelse(as.numeric(day) < 10, paste0("0",day),day),
            hour = ifelse(as.numeric(hour) < 10, paste0("0",hour),hour)) %>% 
     mutate(timestamp = as_datetime(paste0(year,"-",month,"-",day," ",hour,":00:00"),tz = local_tzone)) %>% 
-    select(timestamp,ShortWave,LongWave,AirTemp,RelHum,WindSpeed,Rain) %>% 
+    dplyr::select(timestamp,ShortWave,LongWave,AirTemp,RelHum,WindSpeed,Rain) %>% 
     arrange(timestamp)
   
   write.csv(d, cleaned_met_file, row.names = FALSE)

@@ -114,10 +114,8 @@ run_EnKF <- function(x,
       curr_met_file <- met_file_names[met_index]
       
       
-      if(npars > 0 & i > (hist_days + 1)){
+      if(npars > 0){
         curr_pars <- x[i - 1, m , (nstates+1):(nstates+npars)] 
-      }else{
-        curr_pars <- x[i - 1, m , (nstates+1):(nstates+npars)]
       }
       
       if(!use_null_model){
@@ -297,6 +295,11 @@ run_EnKF <- function(x,
         update_glm_nml_names[list_index] <- "meteo_fl"
         list_index <- list_index + 1
         
+        update_nml(update_glm_nml_list, 
+                   update_glm_nml_names, 
+                   working_directory, 
+                   "glm3.nml")
+        
         tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 1], 
                          to = "inflow_file1.csv", overwrite = TRUE)
         tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 2], 
@@ -305,10 +308,7 @@ run_EnKF <- function(x,
                          to = "outflow_file1.csv", overwrite = TRUE)      
         
         
-        update_nml(update_glm_nml_list, 
-                   update_glm_nml_names, 
-                   working_directory, 
-                   "glm3.nml")
+
         
         #Use GLM NML files to run GLM for a day
         # Only allow simulations without NaN values in the output to proceed. 
@@ -422,37 +422,13 @@ run_EnKF <- function(x,
       }
       
     } # END ENSEMBLE LOOP
-    
-    
-    #    # DEAL WITh ENSEMBLE MEMBERS ThAT ARE "BAD" AND 
-    #    # PRODUCE NA VALUES OR hAVE NEGATIVE TEMPERATURES
-    #    # ThIS RANDOMLY REPLACES IT WITh A GOOD ENSEMBLE MEMBER
-    #    if(length(which(is.na(c(x_star)))) > 0){
-    #      good_index <- NULL
-    #      for(m in 1:nmembers){
-    #        if(length(which(is.na(c(x_star[m, ])))) == 0 &
-    #           length(which(c(x_star[m, ]) <= 0)) == 0){
-    #          good_index <- c(good_index, m)
-    #        }
-    #      }
-    #      for(m in 1:nmembers){
-    #        if(length(which(is.na(c(x_star[m, ])))) > 0 |
-    #           length(which(c(x_star[m, ]) <= 0) > 0)){
-    #          replace_index <- sample(good_index, 1)
-    #          x_star[m, ] <- x_star[replace_index, ]
-    #          surface_height[i, m] <- surface_height[i, replace_index]
-    #          snow_ice_thickness[i, m, ] <- snow_ice_thickness[i, replace_index, ]
-    #          mixing_vars[m, ] <- mixing_vars[replace_index, ]
-    #        }
-    #      }
-    #    }
-    
+
     #Corruption [nmembers x nstates] 
     x_corr <- x_star + nqt[, 1:nstates]
     
     if(npars > 0){
       pars_corr <- x[i - 1, , (nstates+1):(nstates+npars)]
-      pars_star <- x[i - 1, , (nstates+1):(nstates+npars)]
+      pars_star <- pars_corr
     }
     
     if(include_wq){
@@ -553,7 +529,9 @@ run_EnKF <- function(x,
       
       for(m in 1:nmembers){
         #x_corr[m, ] <- Inflat * (x_corr[m,] - ens_mean) + ens_mean
-        pars_corr[m, ] <- Inflat_pars * (pars_corr[m,] - par_mean) + par_mean
+        if(npars > 0){
+          pars_corr[m, ] <- Inflat_pars * (pars_corr[m,] - par_mean) + par_mean
+        }
       }
       
       ens_mean <- apply(x_corr[,], 2, mean)
@@ -641,45 +619,6 @@ run_EnKF <- function(x,
                             num_wq_vars)
           }
         }
-      }else if(adapt_qt_method == 2){
-        
-        if(npars > 0){
-          qt <- update_sigma(qt,
-                             p_t = p_t_combined,
-                             h = h_combined,
-                             x_star,
-                             pars_star,
-                             x_corr,
-                             pars_corr,
-                             psi_t,
-                             zt,
-                             npars,
-                             qt_pars,
-                             include_pars_in_qt_update,
-                             nstates,
-                             qt_alpha)
-        }else{
-          qt <- update_sigma(qt, 
-                             p_t, 
-                             h, 
-                             x_star, 
-                             pars_star = NA, 
-                             x_corr, 
-                             pars_corr = NA, 
-                             psi_t, zt, 
-                             npars, 
-                             qt_pars, 
-                             include_pars_in_qt_update, 
-                             nstates, 
-                             qt_alpha)
-        }
-        
-        qt <- localization(mat= qt,
-                           nstates,
-                           modeled_depths,
-                           num_wq_vars,
-                           wq_start,
-                           wq_end)
       }
     }
     

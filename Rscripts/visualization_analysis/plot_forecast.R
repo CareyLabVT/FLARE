@@ -573,7 +573,7 @@ plot_forecast <- function(pdf_file_name,
     
     print("Extracting temperature observations")
     obs_temp <- extract_observations(fname = cleaned_observations_file_long,
-                                     full_time_local,
+                                     full_time_local_past,
                                      modeled_depths = modeled_depths,
                                      local_tzone,
                                      target_variable = "temperature",
