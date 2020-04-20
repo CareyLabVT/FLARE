@@ -16,17 +16,17 @@ archive_forecast <- function(working_directory,
     forecast_archive_dir <- paste0(forecast_location, "/", forecast_archive_dir_name)
   }
   
-  file.rename(from = paste0(working_directory, "/", save_file_name, ".nc"), 
-              to = paste0(working_directory, "/", forecast_archive_dir_name, ".nc"))
+  file.rename(from = paste0(forecast_location, "/", save_file_name, ".nc"), 
+              to = paste0(forecast_location, "/", forecast_archive_dir_name, ".nc"))
 
   files <- list.files(paste0(working_directory), full.names = TRUE)
   files_pdf <- list.files(paste0(working_directory), pattern = ".pdf", full.names = TRUE)
-  files_nc <- list.files(paste0(working_directory),
-                         pattern = paste0(forecast_archive_dir_name, ".nc"), 
-                         full.names = TRUE)
+  #files_nc <- list.files(paste0(working_directory),
+  #                       pattern = paste0(forecast_archive_dir_name, ".nc"), 
+  #                       full.names = TRUE)
 
   tmp <- file.copy(from = files_pdf, to = forecast_location)
-  tmp <- file.copy(from = files_nc, to = forecast_location)
+  #tmp <- file.copy(from = files_nc, to = forecast_location)
 
   netcdf_name <- paste0(forecast_archive_dir_name, ".nc")
 

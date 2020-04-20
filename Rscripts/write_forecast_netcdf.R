@@ -26,13 +26,14 @@ write_forecast_netcdf <- function(x,
                                   x_phyto_groups,
                                   running_residuals,
                                   mixing_restart,
-                                  glm_depths_restart){
+                                  glm_depths_restart,
+                                  forecast_location){
   
   obs <- z
   
   num_wq_vars <- length(wq_end)
   
-  ncfname <- paste0(save_file_name,'.nc')
+  ncfname <- paste0(forecast_location,"/",save_file_name,'.nc')
   #Set dimensions
   ens <- seq(1,dim(x)[2],1)
   depths <- modeled_depths

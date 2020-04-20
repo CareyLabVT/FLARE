@@ -307,9 +307,9 @@ run_flare<-function(start_day_local,
                        day(full_time_local[1]))
   }
   
-  if(!is.na(restart_file)){
-    tmp <- file.copy(from = restart_file, to = working_directory, overwrite = TRUE)
-  }
+  #if(!is.na(restart_file)){
+  #  tmp <- file.copy(from = restart_file, to = working_directory, overwrite = TRUE)
+  #}
   
   ####################################################
   #### STEP 4: PROCESS RAW INPUT AND OBSERVATION DATA
@@ -1576,7 +1576,8 @@ run_flare<-function(start_day_local,
                         x_phyto_groups,
                         running_residuals,
                         mixing_restart,
-                        glm_depths_restart)
+                        glm_depths_restart,
+                        forecast_location)
   
   #### END GLM ENKF CONTAINER ####
   
