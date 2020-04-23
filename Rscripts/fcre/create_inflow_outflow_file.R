@@ -14,7 +14,9 @@ create_inflow_outflow_file <- function(full_time_local,
   full_time_day_local <- as_date(full_time_local)
   
   inflow <- read_csv(inflow_file1)
+  if(!is.na(inflow_file2)){
   wetland <- read_csv(inflow_file2)
+  }
 
   if(include_wq){
     wq_names_tmp <- wq_names[which(wq_names %in% names(inflow))]
