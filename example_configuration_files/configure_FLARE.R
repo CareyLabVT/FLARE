@@ -119,13 +119,9 @@ default_blue_ice_thickness_init <<- 0.0
 ##############################
 ##  Ensemble members used
 ##############################
-n_enkf_members <<- 5 #1
-n_ds_members <<- 1 #21
-n_inflow_outflow_members <<- 1 #21*21
-#Note: this number is multiplied by
-# 1) the number of NOAA ensembles (21)
-# 2) the number of downscaling essembles (50 is current)
-# get to the total number of essembles
+ensemble_size <<- 441
+n_ds_members <<- 21
+n_inflow_outflow_members <<- 21*21
 
 ################################
 ### Process uncertainty adaption

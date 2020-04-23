@@ -24,24 +24,7 @@ run_flare<-function(start_day_local,
                     forecast_days = 16,  
                     spin_up_days = 0,
                     restart_file = NA,
-                    code_folder, 
-                    forecast_location = NA,
-                    execute_location = NA,
-                    push_to_git = FALSE,
-                    pull_from_git = TRUE, 
-                    data_location = NA, 
-                    n_enkf_members = NA,
-                    n_ds_members = 50,
-                    include_wq = FALSE,
                     uncert_mode = 1,
-                    cov_matrix = NA,
-                    downscaling_coeff = NA,
-                    GLMversion,
-                    DOWNSCALE_MET = TRUE,
-                    FLAREversion,
-                    met_ds_obs_start,
-                    met_ds_obs_end,
-                    modeled_depths,
                     forecast_sss_on){
   
   #################################################
@@ -273,8 +256,14 @@ run_flare<-function(start_day_local,
   }
   npars <- length(par_names)
   
-  # SET UP NUMBER OF ENSEMBLE MEMBERS
   n_met_members <- 21
+  # SET UP NUMBER OF ENSEMBLE MEMBERS
+  if(forecast_days > 0 & (ensemble_size %% (n_met_members * n_ds_members)) != 0){
+    stop(paste0("ensemble_size (",ensemble_size,") is not a multiple of the number of
+                n_met_members (",n_met_members,
+                ") * n_ds_members (",n_ds_members,")"))
+  }
+
   if(single_run){
     n_met_members <- 3
     n_ds_members <- 1
@@ -1159,7 +1148,7 @@ run_flare<-function(start_day_local,
   ################################################################
   #### STEP 11: CREATE THE X ARRAY (STATES X TIME);INCLUDES INITIALATION
   ################################################################
-  nmembers <- n_enkf_members*n_met_members*n_ds_members
+  nmembers <- ensemble_size
   
   x <- array(NA, dim=c(nsteps, nmembers, nstates + npars))
   

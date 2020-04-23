@@ -51,33 +51,18 @@ if(!file.exists(paste0(forecast_location,"/last_success.Rdata"))){
   
   hist_days <- as.numeric(difftime(as_date(forecast_start_day_local),as_date(start_day_local)))
   
+  forecast_days <- 0
+  
   out <- run_flare(start_day_local,
                    start_time_local,
                    forecast_start_day_local,
-                   sim_name = sim_name,
+                   sim_name = sim_name, 
                    hist_days = hist_days,
-                   forecast_days = 0,
+                   forecast_days = forecast_days,  
                    spin_up_days = spin_up_days,
                    restart_file = restart_file,
-                   code_folder = code_folder,
-                   forecast_location = forecast_location,
-                   execute_location = execute_location,
-                   push_to_git = push_to_git,
-                   pull_from_git = pull_from_git,
-                   data_location = data_location,
-                   n_enkf_members = n_enkf_members,
-                   n_ds_members = n_ds_members,
-                   include_wq = include_wq,
                    uncert_mode = uncert_mode,
-                   cov_matrix = cov_matrix,
-                   downscaling_coeff = downscaling_coeff,
-                   GLMversion = GLMversion,
-                   DOWNSCALE_MET = DOWNSCALE_MET,
-                   FLAREversion = FLAREversion,
-                   met_ds_obs_start = met_ds_obs_start,
-                   met_ds_obs_end = met_ds_obs_end,
-                   modeled_depths = modeled_depths,
-                   forecast_sss_on = FALSE)
+                   forecast_sss_on = forecast_sss_on)
   
   
   plot_forecast(pdf_file_name = unlist(out)[2],
@@ -171,100 +156,28 @@ if(num_forecast_periods > 0){
     
     spin_up_days <- 0
     
+    out1 <- run_flare(start_day_local,
+                      start_time_local,
+                      forecast_start_day_local,
+                      sim_name = sim_name, 
+                      hist_days = hist_days,
+                      forecast_days = forecast_days,  
+                      spin_up_days = spin_up_days,
+                      restart_file = restart_file,
+                      uncert_mode = uncert_mode,
+                      forecast_sss_on = forecast_sss_on)
     
-    if(forecast_no_SSS){
-      
-      
-      
-      out1 <- run_flare(start_day_local,
-                        start_time_local,
-                        forecast_start_day_local,
-                        sim_name = sim_name,
-                        hist_days = hist_days,
-                        forecast_days = forecast_days,
-                        spin_up_days = spin_up_days,
-                        restart_file = restart_file,
-                        code_folder = code_folder,
-                        forecast_location = forecast_location,
-                        execute_location = execute_location,
-                        push_to_git = push_to_git,
-                        pull_from_git = pull_from_git,
-                        data_location = data_location,
-                        n_enkf_members = n_enkf_members,
-                        n_ds_members = n_ds_members,
-                        include_wq = include_wq,
-                        uncert_mode = uncert_mode,
-                        cov_matrix = cov_matrix,
-                        downscaling_coeff = downscaling_coeff,
-                        GLMversion = GLMversion,
-                        DOWNSCALE_MET = DOWNSCALE_MET,
-                        FLAREversion = FLAREversion,
-                        met_ds_obs_start = met_ds_obs_start,
-                        met_ds_obs_end = met_ds_obs_end,
-                        modeled_depths = modeled_depths,
-                        forecast_sss_on = FALSE)
-      
-      plot_forecast(pdf_file_name = unlist(out1)[2],
-                    output_file = unlist(out1)[1],
-                    include_wq = include_wq,
-                    forecast_days = forecast_days,
-                    code_folder = code_folder,
-                    save_location = forecast_location,
-                    data_location = data_location,
-                    plot_summaries = TRUE,
-                    push_to_git = push_to_git,
-                    pull_from_git = pull_from_git,
-                    use_ctd = use_ctd,
-                    modeled_depths = modeled_depths)
-    }
-    
-    if(forecast_SSS){
-      out2 <- run_flare(start_day_local,
-                        start_time_local,
-                        forecast_start_day_local,
-                        sim_name = paste0(sim_name, "_SSS"),
-                        hist_days = hist_days,
-                        forecast_days = forecast_days,
-                        spin_up_days = spin_up_days,
-                        restart_file = restart_file,
-                        code_folder = code_folder,
-                        forecast_location = forecast_location,
-                        execute_location = execute_location,
-                        push_to_git = push_to_git,
-                        pull_from_git = pull_from_git,
-                        data_location = data_location,
-                        n_enkf_members = n_enkf_members,
-                        n_ds_members = n_ds_members,
-                        include_wq = include_wq,
-                        uncert_mode = uncert_mode,
-                        cov_matrix = cov_matrix,
-                        downscaling_coeff = downscaling_coeff,
-                        GLMversion = GLMversion,
-                        DOWNSCALE_MET = DOWNSCALE_MET,
-                        FLAREversion = FLAREversion,
-                        met_ds_obs_start = met_ds_obs_start,
-                        met_ds_obs_end = met_ds_obs_end,
-                        modeled_depths = modeled_depths,
-                        forecast_sss_on = TRUE)
-      
-      plot_forecast(pdf_file_name = unlist(out2)[2],
-                    output_file = unlist(out2)[1],
-                    include_wq = include_wq,
-                    forecast_days = forecast_days,
-                    code_folder = code_folder,
-                    save_location = forecast_location,
-                    data_location = data_location,
-                    plot_summaries = TRUE,
-                    push_to_git = push_to_git,
-                    pull_from_git = pull_from_git,
-                    modeled_depths = modeled_depths)
-      
-      combined_oxygen_plot(with_oxy = unlist(out2[[1]]), 
-                           without_oxy = unlist(out1[[1]]), 
-                           forecast_location,
-                           push_to_git)
-    }
-    
+    plot_forecast(pdf_file_name = unlist(out1)[2],
+                  output_file = unlist(out1)[1],
+                  include_wq = include_wq,
+                  forecast_days = forecast_days,
+                  code_folder = code_folder,
+                  save_location = forecast_location,
+                  data_location = data_location,
+                  plot_summaries = TRUE,
+                  push_to_git = push_to_git,
+                  pull_from_git = pull_from_git,
+                  modeled_depths = modeled_depths)
     
     restart_file <- unlist(out1)[1]
     
