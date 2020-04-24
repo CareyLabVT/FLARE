@@ -21,7 +21,6 @@ run_EnKF <- function(x,
                      parameter_uncertainty,
                      machine,
                      hist_days,
-                     print_glm2screen,
                      x_phyto_groups,
                      inflow_file_names,
                      outflow_file_names,
@@ -327,12 +326,12 @@ run_EnKF <- function(x,
           
           if(machine == "unix" | machine == "mac"){
             system2(paste0(working_directory, "/", "glm"), 
-                    stdout = print_glm2screen, 
-                    stderr = print_glm2screen,
+                    stdout = FALSE, 
+                    stderr = FALSE,
                     env = paste0("DYLD_LIBRARY_PATH=",working_directory))
           }else if(machine == "windows"){
             system2(paste0(working_directory, "/", "glm.exe"), 
-                    invisible = print_glm2screen)
+                    invisible = FALSE)
           }else{
             print("Machine not identified")
             stop()

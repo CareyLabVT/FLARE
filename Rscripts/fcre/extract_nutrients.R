@@ -1,5 +1,4 @@
 extract_nutrients <- function(fname,
-                        modeled_depths,
                         input_file_tz,
                         local_tzone){
 

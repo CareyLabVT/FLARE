@@ -9,15 +9,20 @@ create_inflow_outflow_file <- function(full_time_local,
                                        local_tzone,
                                        met_file_names,
                                        forecast_days,
-                                       inflow_process_uncertainty){
+                                       inflow_process_uncertainty,
+                                       future_inflow_flow_coeff,
+                                       future_inflow_flow_error,
+                                       future_inflow_temp_coeff,
+                                       future_inflow_temp_error)
+{
   
   full_time_day_local <- as_date(full_time_local)
   
   inflow <- read_csv(inflow_file1)
   if(!is.na(inflow_file2)){
-  wetland <- read_csv(inflow_file2)
+    wetland <- read_csv(inflow_file2)
   }
-
+  
   if(include_wq){
     wq_names_tmp <- wq_names[which(wq_names %in% names(inflow))]
   }else{
@@ -66,8 +71,8 @@ create_inflow_outflow_file <- function(full_time_local,
            FLOW = ifelse(forecast == 1, NA, FLOW))
   
   if(inflow_process_uncertainty == TRUE){
-    inflow_error <- rnorm(nrow(tmp), 0, 0.00965)
-    temp_error <- rnorm(nrow(tmp), 0, 0.943)
+    inflow_error <- rnorm(nrow(tmp), 0, future_inflow_flow_error)
+    temp_error <- rnorm(nrow(tmp), 0, future_inflow_temp_error)
   }else{
     inflow_error <- rep(0.0, nrow(tmp))
     temp_error <- rep(0.0, nrow(tmp))
@@ -84,8 +89,12 @@ create_inflow_outflow_file <- function(full_time_local,
     }
     
     if(tmp$forecast[i] == 1){
-      tmp$FLOW[i] = 0.0010803 + 0.9478724 * tmp$FLOW[i - 1] +  0.3478991 * tmp$Rain_lag1[i] + inflow_error[i]
-      tmp$TEMP[i] = 0.20291 +  0.94214 * tmp$TEMP[i-1] +  0.04278 * tmp$AirTemp_lag1[i] + temp_error[i]
+      tmp$FLOW[i] = future_inflow_flow_coeff[1] + 
+        future_inflow_flow_coeff[2] * tmp$FLOW[i - 1] +  
+        future_inflow_flow_coeff[3] * tmp$Rain_lag1[i] + inflow_error[i]
+      tmp$TEMP[i] = future_inflow_temp_coeff[1] +  
+        future_inflow_temp_coeff[2] * tmp$TEMP[i-1] +  
+        future_inflow_temp_coeff[3] * tmp$AirTemp_lag1[i] + temp_error[i]
       if(include_wq){
         tmp[i, c(wq_names_tmp)] <- inflow %>% 
           filter(time < full_time_day_local[start_forecast_step]) %>% 
@@ -111,12 +120,12 @@ create_inflow_outflow_file <- function(full_time_local,
       mutate(SALT = 0.0) %>% 
       select(time, FLOW, TEMP, SALT, all_of(wq_names_tmp)) %>% 
       mutate_at(vars(c("FLOW", "TEMP", "SALT", wq_names_tmp)), funs(round(., 4)))
-      
+    
     
     write_csv(x = tmp2,
               path = paste0(working_directory,"/",inflow1_file_names[i]),
               quote_escape = "none")
-
+    
     tmp2 <- tmp2 %>% 
       select(time, FLOW)
     

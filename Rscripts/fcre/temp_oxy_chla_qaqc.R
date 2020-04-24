@@ -1,4 +1,7 @@
-temp_oxy_chla_qaqc <- function(data_file, maintenance_file, input_file_tz){
+temp_oxy_chla_qaqc <- function(realtime_file,
+                               qaqc_file, 
+                               maintenance_file, 
+                               input_file_tz){
   
   CATDATA_COL_NAMES <- c("DateTime", "RECORD", "CR6_Batt_V", "CR6Panel_Temp_C", "ThermistorTemp_C_surface",
                          "ThermistorTemp_C_1", "ThermistorTemp_C_2", "ThermistorTemp_C_3", "ThermistorTemp_C_4",
@@ -29,7 +32,7 @@ temp_oxy_chla_qaqc <- function(data_file, maintenance_file, input_file_tz){
   
   # read catwalk data and maintenance log
   # NOTE: date-times throughout this script are processed as UTC
-  catdata <- read_csv(data_file[1], skip = 4, col_names = CATDATA_COL_NAMES,
+  catdata <- read_csv(realtime_file, skip = 4, col_names = CATDATA_COL_NAMES,
                       col_types = cols(.default = col_double(), DateTime = col_datetime()))
   
   log <- read_csv(maintenance_file, col_types = cols(
@@ -220,12 +223,12 @@ temp_oxy_chla_qaqc <- function(data_file, maintenance_file, input_file_tz){
   catdata$DateTime <- as.character(catdata$DateTime)
   
   
-  if(length(data_file) > 1){
+  if(!is.na(qaqc_file)){
     #Different lakes are going to have to modify this for their temperature data format
     
     d1 <- catdata
     
-    d2 <- read.csv(data_file[2], na.strings = 'NA', stringsAsFactors = FALSE)
+    d2 <- read.csv(qaqc_file, na.strings = 'NA', stringsAsFactors = FALSE)
     
     TIMESTAMP_in <- as_datetime(d1$DateTime,tz = input_file_tz)
     d1$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = local_tzone)

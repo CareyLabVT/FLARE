@@ -41,18 +41,16 @@ run_flare<-function(start_day_local,
   source(paste0(code_folder,"/","Rscripts/localization.R")) 
   source(paste0(code_folder,"/","Rscripts/temperature_to_density.R"))
   source(paste0(code_folder,"/","Rscripts/extract_observations.R"))
+  source(paste0(code_folder,"/","Rscripts/create_obs_met_input.R"))
+  source(paste0(code_folder,"/","Rscripts/create_sss_input_output.R"))
+  source(paste0(code_folder,"/","Rscripts/create_inflow_outflow_file.R"))
+  source(paste0(code_folder,"/","Rscripts/read_sss_files.R"))
   
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/create_inflow_outflow_file.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/create_obs_met_input.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/create_sss_input_output.R"))
-  
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_CTD.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/read_sss_files.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_nutrients.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/temp_oxy_chla_qaqc.R")) 
+  source(paste0(code_folder,"/","Rscripts/",lake_name,"/in_situ_qaqc.R"))  
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/met_qaqc.R")) 
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/inflow_qaqc.R"))   
+  source(paste0(code_folder,"/","Rscripts/",lake_name,"/inflow_qaqc.R"))  
   
+
   ### METEROLOGY DOWNSCALING OPTIONS
   if(is.na(downscaling_coeff)){
     FIT_PARAMETERS <- TRUE
@@ -369,7 +367,8 @@ run_flare<-function(start_day_local,
   }
   
   cleaned_met_file <- paste0(working_directory, "/met_full_postQAQC.csv")
-  met_qaqc(fname = met_obs_fname,
+  met_qaqc(realtime_file = met_obs_fname[1],
+           qaqc_file = met_obs_fname[2],
            cleaned_met_file,
            input_file_tz = "EST",
            local_tzone,
@@ -384,29 +383,17 @@ run_flare<-function(start_day_local,
               local_tzone, 
               input_file_tz = 'EST')
   
-  cleaned_observations_file_long <- paste0(working_directory, "/observations_postQAQC_long.csv")
+  cleaned_observations_file_long <- paste0(working_directory, 
+                                           "/observations_postQAQC_long.csv")
   
-  d <- temp_oxy_chla_qaqc(data_file = temp_obs_fname, 
-                          maintenance_file = paste0(data_location, '/mia-data/CAT_MaintenanceLog.txt'), 
-                          input_file_tz = "EST")
-  
-  
-  if(!is.na(ctd_fname)){
-    d_ctd <- extract_CTD(fname = ctd_fname,
-                         input_file_tz = "EST",
-                         local_tzone)
-    d <- rbind(d,d_ctd)
-  }
-  
-  if(!is.na(nutrients_fname)){
-    d_nutrients <- extract_nutrients(fname = nutrients_fname,
-                                     modeled_depths = modeled_depths,
-                                     input_file_tz = "EST", 
-                                     local_tzone)
-    d <- rbind(d,d_nutrients)
-  }
-  
-  write_csv(d, cleaned_observations_file_long)
+  in_situ_qaqc(temp_obs_fname = temp_obs_fname, 
+               data_location = data_location, 
+               maintenance_file = maintenance_file,
+               ctd_fname = ctd_fname, 
+               nutrients_fname = nutrients_fname,
+               cleaned_observations_file_long = cleaned_observations_file_long,
+               lake_name,
+               code_folder)
   
   #### END QAQC CONTAINER ####
   
@@ -659,7 +646,11 @@ run_flare<-function(start_day_local,
                                                      local_tzone,
                                                      met_file_names,
                                                      forecast_days,
-                                                     inflow_process_uncertainty)
+                                                     inflow_process_uncertainty,
+                                                     future_inflow_flow_coeff,
+                                                     future_inflow_flow_error,
+                                                     future_inflow_temp_coeff,
+                                                     future_inflow_temp_error)
   
   inflow_file_names <- cbind(inflow1 = inflow_outflow_files$inflow_file_names,
                              inflow2 = inflow_outflow_files$wetland_file_names)
@@ -1428,11 +1419,8 @@ run_flare<-function(start_day_local,
     }
   }
   
-  management_input <- read_sss_files(full_time_local,
-                                     working_directory,
-                                     input_file_tz = 'EST', 
-                                     sss_file = sss_fname,
-                                     local_tzone)
+  management_input <- read_sss_files(full_time_local, 
+                                     sss_file = sss_fname)
   
   ####################################################
   #### STEP 12: Run Ensemble Kalman Filter
@@ -1461,7 +1449,6 @@ run_flare<-function(start_day_local,
                           parameter_uncertainty,
                           machine,
                           hist_days,
-                          print_glm2screen,
                           x_phyto_groups,
                           inflow_file_names,
                           outflow_file_names,
