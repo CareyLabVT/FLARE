@@ -38,6 +38,7 @@ forecast_SSS_Oxy <<- 500
 sss_fname <<- paste0(data_location,"/manual-data/FCR_SSS_inflow_2013_2020.csv")
 
 sss_inflow_factor <<- 1.0
+sss_depth <- 8
 
 #####################
 # Weather forcing options
@@ -64,7 +65,10 @@ met_ds_obs_end <<- as.Date("2019-07-11")
 missing_met_data_threshold <<- 100
 
 use_future_inflow <<- TRUE
-
+future_inflow_flow_coeff <<- c(0.0010803, 0.9478724, 0.3478991)
+future_inflow_flow_error <<- 0.00965
+future_inflow_temp_coeff <<- c(0.20291, 0.94214, 0.04278)
+future_inflow_temp_error <<- 0.943
 ############################
 # Run information
 #############################
@@ -119,9 +123,9 @@ default_blue_ice_thickness_init <<- 0.0
 ##############################
 ##  Ensemble members used
 ##############################
-ensemble_size <<- 441
-n_ds_members <<- 21
-n_inflow_outflow_members <<- 21*21
+ensemble_size <<- 21*10
+n_ds_members <<- 10
+n_inflow_outflow_members <<- 21*10
 
 ################################
 ### Process uncertainty adaption
@@ -265,8 +269,7 @@ inflow_file1 <<- c(paste0(data_location,"/diana-data/FCRweir.csv"),
 
 outflow_file1 <<- paste0(data_location,"/manual-data/FCR_spillway_outflow_newEDI_SUMMED_WeirWetland_2013_2018_20190912.csv")
 
-include_wetland_inflow <<- FALSE
-inflow_file2 <<- paste0(data_location,"/manual-data/FCR_wetland_inflow_newEDI_2013_2018_20190912_oneDOC.csv")
+inflow_file2 <<- NA
 
 do_methods <<- c("do_sensor", "exo_sensor")
 chla_methods <<- c("exo_sensor", "ctd")
@@ -437,7 +440,7 @@ PHY_init_error <<- c(3, 3, 3)
 
 #Pull data from github?
 #Push results to github?
-pull_from_git <<- TRUE
+pull_from_git <<- FALSE
 push_to_git <<- FALSE
 
 #########################################
@@ -452,9 +455,3 @@ focal_depths_manager <<- c(1,5,8) #c(2, 4, 9) #c(4,16,25) #c(4,16,25)
 #Indexes for the depths that are compared to calculate turnover
 turnover_index_1 <<- 1 #1 #4
 turnover_index_2 <<- 8 #8 #25
-
-####################################
-# Extra options that you will not adjust
-####################################
-hold_inflow_outflow_constant <<- FALSE
-print_glm2screen <<- FALSE
