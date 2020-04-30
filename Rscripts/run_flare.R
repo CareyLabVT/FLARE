@@ -304,17 +304,12 @@ run_flare<-function(start_day_local,
   
   #### START QAQC CONTAINER ####
   
-  temperature_location <- paste0(data_location, "/", "mia-data") #FCR SPECIFIC
-  met_station_location <- paste0(data_location, "/", "carina-data") #FCR SPECIFIC
-  #noaa_location <- paste0(data_location, "/", "noaa-data") #FCR SPECIFIC
-  manual_data_location <- paste0(data_location, "/", "manual-data") #FCR SPECIFIC
-  diana_data_location <- paste0(data_location, "/", "diana-data") #FCR SPECIFIC
   if(pull_from_git){
     
-    if(!file.exists(temperature_location)){
+    if(!file.exists(realtime_insitu_location)){
       stop("Missing temperature data GitHub repo")
     }
-    if(!file.exists(met_station_location)){
+    if(!file.exists(realtime_met_station_location)){
       stop("Missing met station data GitHub repo")
     }
     if(!file.exists(noaa_location)){
@@ -324,14 +319,14 @@ run_flare<-function(start_day_local,
       stop("Missing Manual data GitHub repo")
     }
     
-    if(!file.exists(diana_data_location)){
+    if(!file.exists(realtime_inflow_data_location)){
       stop("Missing Inflow data GitHub repo")
     }
     
-    setwd(temperature_location)
+    setwd(realtime_insitu_location)
     system(paste0("git pull"))
     
-    setwd(met_station_location)
+    setwd(realtime_met_station_location)
     system(paste0("git pull"))
     
     setwd(noaa_location)
@@ -340,30 +335,9 @@ run_flare<-function(start_day_local,
     setwd(manual_data_location)
     system(paste0("git pull"))
     
-    setwd(diana_data_location)
+    setwd(realtime_inflow_data_location)
     system(paste0("git pull"))
-    
-    #if(length(met_obs_fname) > 1 & !file.exists(met_obs_fname[2])){
-    #  inUrl1  <- "https://pasta.lternet.edu/package/eml/edi/389/ea47ae493c7025d61245287649895e6" 
-    #  download.file(inUrl1,met_obs_fname[2],method="curl")
-    #}
-    
-    #if(length(temp_obs_fname) > 1 & !file.exists(temp_obs_fname[2])){
-    #  inUrl1  <- "https://pasta.lternet.edu/package/eml/edi/271/4/b888ac006ef4ca601f63e2703d7476b9" 
-    #  download.file(inUrl1,temp_obs_fname[2],method="curl")
-    #  
-    #}
-    
-    #if(!is.na(ctd_fname) & !file.exists(ctd_fname)){
-    #  inUrl1  <- "https://pasta.lternet.edu/package/eml/edi/200/10/1fc7d2a5c69c6a651793dba06d375ae2" 
-    #  download.file(inUrl1,ctd_fname,method="curl")
-    #}
-    
-    #if(!is.na(nutrients_fname) & !file.exists(nutrients_fname)){
-    #  inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/199/5/2b3dc84ae6b12d10bd5485f1c300af13" 
-    #  download.file(inUrl1,nutrients_fname,method="curl")
-    #}
-    
+  
   }
   
   cleaned_met_file <- paste0(working_directory, "/met_full_postQAQC.csv")
@@ -386,7 +360,7 @@ run_flare<-function(start_day_local,
   cleaned_observations_file_long <- paste0(working_directory, 
                                            "/observations_postQAQC_long.csv")
   
-  in_situ_qaqc(temp_obs_fname = temp_obs_fname, 
+  in_situ_qaqc(insitu_obs_fname = insitu_obs_fname, 
                data_location = data_location, 
                maintenance_file = maintenance_file,
                ctd_fname = ctd_fname, 

@@ -92,7 +92,7 @@ plot_forecast <- function(pdf_file_name,
   cleaned_observations_file_long <- paste0(save_location, 
                                            "/observations_postQAQC_long.csv")
   
-  in_situ_qaqc(temp_obs_fname = temp_obs_fname, 
+  in_situ_qaqc(insitu_obs_fname = insitu_obs_fname, 
                data_location = data_location, 
                maintenance_file = maintenance_file,
                ctd_fname = ctd_fname, 

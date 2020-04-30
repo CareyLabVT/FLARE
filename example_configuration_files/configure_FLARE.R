@@ -251,23 +251,28 @@ par_units <<- c("deg_C"
 #####################################
 ###  Observation information
 ######################################
+realtime_insitu_location <- paste0(data_location,"/mia-data")
+realtime_met_station_location <- paste0(data_location,"/carina-data") 
+manual_data_location <- paste0(data_location, "/manual-data") 
+realtime_inflow_data_location <- paste0(data_location, "/diana-data")
 
-ctd_fname <<- NA #paste0(data_location,"/manual-data/CTD_final_2013_2019.csv")
 
-nutrients_fname <<- paste0(data_location,"/manual-data/chemistry.csv")
+ctd_fname <<- NA #paste0(manual_data_location,"/CTD_final_2013_2019.csv")
 
-temp_obs_fname <<- c(paste0(data_location,"/mia-data/Catwalk.csv"),
-                     paste0(data_location, "/manual-data/Catwalk_cleanedEDI.csv"))
+nutrients_fname <<- paste0(manual_data_location,"/chemistry.csv")
+
+insitu_obs_fname <<- c(paste0(realtime_insitu_location,"/Catwalk.csv"),
+                     paste0(manual_data_location,"/Catwalk_cleanedEDI.csv"))
 variable_obsevation_depths <<- FALSE
 ctd_2_exo_chla <<- c(-0.35, 1.9)
 
-met_obs_fname <<- c(paste0(data_location,"/carina-data/FCRmet.csv"),
-                    paste0(data_location, "/manual-data/Met_final_2015_2019.csv"))
+met_obs_fname <<- c(paste0(realtime_met_station_location,"/FCRmet.csv"),
+                    paste0(manual_data_location,"/Met_final_2015_2019.csv"))
 
-inflow_file1 <<- c(paste0(data_location,"/diana-data/FCRweir.csv"),
-                   paste0(data_location,"/manual-data/inflow_for_EDI_2013_06Mar2020.csv"))
+inflow_file1 <<- c(paste0(realtime_inflow_data_location,"/FCRweir.csv"),
+                   paste0(manual_data_location,"/inflow_for_EDI_2013_06Mar2020.csv"))
 
-outflow_file1 <<- paste0(data_location,"/manual-data/FCR_spillway_outflow_newEDI_SUMMED_WeirWetland_2013_2018_20190912.csv")
+outflow_file1 <<- paste0(manual_data_location,"/FCR_spillway_outflow_newEDI_SUMMED_WeirWetland_2013_2018_20190912.csv")
 
 inflow_file2 <<- NA
 

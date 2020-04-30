@@ -2,23 +2,19 @@
 if (!"mvtnorm" %in% installed.packages()) install.packages("mvtnorm")
 if (!"ncdf4" %in% installed.packages()) install.packages("ncdf4")
 if (!"lubridate" %in% installed.packages()) install.packages("lubridate")
-if (!"RCurl" %in% installed.packages()) install.packages("RCurl")
 if (!"testit" %in% installed.packages()) install.packages("testit")
 if (!"imputeTS" %in% installed.packages()) install.packages("imputeTS")
 if (!"tidyverse" %in% installed.packages()) install.packages("tidyverse")
 if (!"rMR" %in% installed.packages()) install.packages("rMR")
-if (!"RcppRoll" %in% installed.packages()) install.packages("RcppRoll")
 
 library(mvtnorm)
 library(ncdf4)
 library(lubridate)
-library(RCurl)
 library(testit)
 library(imputeTS)
 library(tidyverse)
 library(tools)
 library(rMR)
-library(RcppRoll)
 
 data_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/flare_training/flare_testing_files/SCC_data/"
 code_folder <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/flare_training/flare_testing_files/FLARE/"

@@ -49,9 +49,7 @@ create_inflow_outflow_file <- function(full_time_local,
       summarize(Rain = mean(Rain),
                 AirTemp = mean(AirTemp)) %>% 
       mutate(ensemble = m) %>% 
-      mutate(AirTempMean = roll_mean(AirTemp, n = 5, align = "right",fill=NA),
-             RainMean = roll_mean(Rain, n = 5, align = "right",fill=NA),
-             AirTemp_lag1 = lag(AirTemp, 1),
+      mutate(AirTemp_lag1 = lag(AirTemp, 1),
              Rain_lag1 = lag(Rain, 1))
     
     curr_all_days <- rbind(curr_all_days,curr_met_daily)
@@ -119,7 +117,7 @@ create_inflow_outflow_file <- function(full_time_local,
       filter(ensemble == i) %>% 
       mutate(SALT = 0.0) %>% 
       select(time, FLOW, TEMP, SALT, all_of(wq_names_tmp)) %>% 
-      mutate_at(vars(c("FLOW", "TEMP", "SALT", wq_names_tmp)), funs(round(., 4)))
+      mutate_at(vars(c("FLOW", "TEMP", "SALT", all_of(wq_names_tmp))), funs(round(., 4)))
     
     
     write_csv(x = tmp2,
