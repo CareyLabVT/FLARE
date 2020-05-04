@@ -29,8 +29,8 @@ simulate_SSS <<- TRUE
 forecast_no_SSS <<- TRUE
 #Run forecasts without SSS turned off
 
-forecast_SSS <<- FALSE
-#Run forecasts without SSS turned on
+use_specified_sss <<- TRUE
+
 forecast_SSS_flow <<- 1000
 #m3/day rate of flow if SSS turned on in forecast
 forecast_SSS_Oxy <<- 500

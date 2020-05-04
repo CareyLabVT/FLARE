@@ -2,7 +2,8 @@ create_sss_input_output <- function(x, i, m, full_time_local,
                                     working_directory, wq_start, 
                                     management_input, hist_days, 
                                     forecast_sss_on,
-                                    sss_depth){
+                                    sss_depth,
+                                    use_specified_sss){
   
   full_time_day_local <- as_date(full_time_local)
   
@@ -13,12 +14,12 @@ create_sss_input_output <- function(x, i, m, full_time_local,
   time_sss <- c(full_time_day_local[i - 1],full_time_day_local[i])
   if(i > (hist_days + 1)){
     if(forecast_sss_on){
-      if(management_input[i-1, 2] == 0){
-      FLOW1 <- forecast_SSS_flow * (1/(60*60*24))
-      OXY1 <- forecast_SSS_Oxy * sss_oxy_factor
-      }else{
+      if(use_specified_sss){
         FLOW1 <- management_input[i-1, 1]
         OXY1 <- management_input[i-1, 2]  * sss_oxy_factor
+      }else{
+      FLOW1 <- forecast_SSS_flow * (1/(60*60*24))
+      OXY1 <- forecast_SSS_Oxy * sss_oxy_factor
       }
     }else{
       FLOW1 <- 0.0
@@ -31,12 +32,12 @@ create_sss_input_output <- function(x, i, m, full_time_local,
   
   if(i > (hist_days + 1)){
     if(forecast_sss_on){
-      if(management_input[i, 2] == 0){
-      FLOW2 <- forecast_SSS_flow * (1/(60*60*24))
-      OXY2 <- forecast_SSS_Oxy * sss_oxy_factor
+      if(use_specified_sss){
+        FLOW1 <- management_input[i, 1]
+        OXY1 <- management_input[i, 2]  * sss_oxy_factor
       }else{
-        FLOW2 <- management_input[i, 1]
-        OXY2 <- management_input[i, 2]  * sss_oxy_factor
+        FLOW1 <- forecast_SSS_flow * (1/(60*60*24))
+        OXY1 <- forecast_SSS_Oxy * sss_oxy_factor
       }
     }else{
       FLOW2 <- 0.0

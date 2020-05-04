@@ -244,7 +244,7 @@ run_EnKF <- function(x,
           if(simulate_SSS){
             create_sss_input_output(x, i, m, full_time_local, working_directory, 
                                     wq_start, management_input, hist_days, 
-                                    forecast_sss_on)
+                                    forecast_sss_on, sss_depth,use_specified_sss)
           }
         }
         
