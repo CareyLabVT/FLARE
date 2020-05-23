@@ -10,15 +10,15 @@ Users guide is pending
 
 In your `data_location` directory run the following five commands at the command line:
 
-`git clone -b carina-data --single-branch --depth 1 https://github.com/CareyLabVT/SCCData.git carina-data`
+`git clone -b carina-data --depth 1 https://github.com/CareyLabVT/SCCData.git carina-data`
 
-`git clone -b mia-data --single-branch --depth 1 https://github.com/CareyLabVT/SCCData.git mia-data`
+`git clone -b mia-data --depth 1 https://github.com/CareyLabVT/SCCData.git mia-data`
 
-`git clone -b diana-data --single-branch --depth 1 https://github.com/CareyLabVT/SCCData.git diana-data`
+`git clone -b diana-data --depth 1 https://github.com/CareyLabVT/SCCData.git diana-data`
 
-`git clone -b fcre --single-branch --depth 1 https://github.com/CareyLabVT/noaa_gefs_forecasts.git fcre`
+`git clone -b fcre --depth 1 https://github.com/CareyLabVT/noaa_gefs_forecasts.git fcre`
 
-`git clone -b manual-data --single-branch --depth 1 https://github.com/CareyLabVT/SCCData.git manual-data`
+`git clone -b manual-data --depth 1 https://github.com/CareyLabVT/SCCData.git manual-data`
 
 You will also need to download the meterology file (`Met_final_2015_2019.csv`)from the Environmental Data Initiative and place it in the `manual-data` directory:  https://portal.edirepository.org/nis/mapbrowse?packageid=edi.389.4
 
