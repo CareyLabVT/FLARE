@@ -25,12 +25,10 @@ use_null_model <<- FALSE
 ###########################
 simulate_SSS <<- TRUE
 #Include SSS in data assimilation
-
-forecast_no_SSS <<- TRUE
-#Run forecasts without SSS turned off
-
+forecast_SSS <<- FALSE
+#Run forecasts without SSS turned on
 use_specified_sss <<- TRUE
-
+# Use SSS from file in forecast
 forecast_SSS_flow <<- 1000
 #m3/day rate of flow if SSS turned on in forecast
 forecast_SSS_Oxy <<- 500
@@ -38,7 +36,8 @@ forecast_SSS_Oxy <<- 500
 sss_fname <<- paste0(data_location,"/manual-data/FCR_SSS_inflow_2013_2020.csv")
 
 sss_inflow_factor <<- 1.0
-sss_depth <- 8
+sss_depth <<- 8.5
+
 
 #####################
 # Weather forcing options
@@ -69,15 +68,19 @@ future_inflow_flow_coeff <<- c(0.0010803, 0.9478724, 0.3478991)
 future_inflow_flow_error <<- 0.00965
 future_inflow_temp_coeff <<- c(0.20291, 0.94214, 0.04278)
 future_inflow_temp_error <<- 0.943
+
+doc_scalar <<- 2.0
+
 ############################
 # Run information
 #############################
 
-GLMversion <<- "GLM 3.0.0beta10"
-FLAREversion <<- "v1.0_beta.1"
+GLMversion <<- "GLM 3.1.0a"
+FLAREversion <<- "v1.1"
 #GLM and FLARE version; the code adds these to the output files
 
 base_GLM_nml <- paste0(forecast_location,"/glm3_woAED.nml" )
+base_GLM_nml <- paste0(forecast_location,"/glm3_woAED_CCC_inflows.nml" )
 if(include_wq){
   base_AED_nml <<- paste0(forecast_location,"/aed2_only_Oxy.nml")
   base_AED_phyto_pars_nml  <<- paste0(forecast_location,"/aed2_phyto_pars.nml")
@@ -112,8 +115,11 @@ lake_depth_init <<- 9.4  #not a modeled state
 
 modeled_depths <<- round(c(0.1, seq(0.33334, 9.33, 0.333334)), 2)
 
-default_temp_init <<- c(6.2, 5.7, 5.5, 5.5, 5.4, 5.3, 5.3, 5.3, 5.2, 5.0)
-default_temp_init_depths <<-  c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+#default_temp_init <<- c(6.2, 5.7, 5.5, 5.5, 5.4, 5.3, 5.3, 5.3, 5.2, 5.0)
+#default_temp_init_depths <<-  c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+
+default_temp_init <<- c(25.667, 24.9101, 23.067, 21.8815, 19.6658, 16.5739, 12.9292, 12.8456, 12.8127, 12.8079, 12.778)
+default_temp_init_depths <<-  c(0.127, 1.004, 2.005, 3.021, 4.002, 5.004, 6.004, 7.01, 8.001, 9.015, 9.518)
 the_sals_init <<- 0.0
 
 default_snow_thickness_init <<- 0.0
@@ -123,17 +129,22 @@ default_blue_ice_thickness_init <<- 0.0
 ##############################
 ##  Ensemble members used
 ##############################
-ensemble_size <<- 21*10
-n_ds_members <<- 10
-n_inflow_outflow_members <<- 21*10
+ensemble_size <<- 21*5
+n_ds_members <<- 5
+n_inflow_outflow_members <<- 21*5
 
 ################################
 ### Process uncertainty adaption
 ##################################
-use_cov <<- TRUE
-adapt_qt_method <<- 1  #0 = no adapt, 1 = variance in residuals, 2 = Rastetter et al 2011
+#qt_alpha <<- 0.8  #0 - all weight on the new Qt, 1 - all weight on the current Qt
+#qt_beta <<- 0.7 #
+#localization_distance <<- 1 #distance in meters were covariances in the process error are used
+use_cov <<- FALSE
+use_state_inflation <<- FALSE
+adapt_qt_method <<- 0  #0 = no adapt, 1 = variance in residuals, 2 = Rastetter et al 2011
 num_adapt_days <<- 30
-Inflat_pars <<- 1.02
+Inflat_pars <<- 1.04
+Inflat <<- 1.1
 
 #################################
 # Parameter calibration information
@@ -150,15 +161,12 @@ zone1_temp_init_lowerbound <<- 10
 zone1_temp_init_upperbound <<- 20
 zone1_temp_lowerbound <<- -100
 zone1_temp_upperbound <<- 100
-#daily perturbance of parameter value
-zone1temp_init_qt <<- 1^2  #THIS IS THE VARIANCE, NOT THE SD
 
 zone2_temp_init_mean <<- 15
 zone2_temp_init_lowerbound <<-  10
 zone2_temp_init_upperbound <<-  20
 zone2_temp_lowerbound <<-  -100
 zone2_temp_upperbound <<-  100
-zone2temp_init_qt <<- 1^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Shortwave factor
 swf_init_mean <<- 1.0
@@ -166,8 +174,7 @@ swf_init_lowerbound <<- 0.5
 swf_init_upperbound <<- 1.5
 swf_lowerbound <<- -10
 swf_upperbound <<- 10
-#daily perturbance of parameter value
-swf_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
+
 
 #Longwave factor
 lwf_init_mean <<- 1.0
@@ -175,8 +182,6 @@ lwf_init_lowerbound <<- 0.5
 lwf_init_upperbound <<- 1.5
 lwf_lowerbound <<- -10
 lwf_upperbound <<- 10
-#daily perturbance of parameter value
-lwf_init_qt <<- 0.01^2 #THIS IS THE VARIANCE, NOT THE SD
 
 #Inflow factor
 inflow_factor_init_mean <<- 0.5
@@ -184,87 +189,252 @@ inflow_factor_init_lowerbound <<- 0.0
 inflow_factor_init_upperbound <<- 1.0
 inflow_factor_lowerbound <<- 0.0
 inflow_factor_upperbound <<- 1.0
-#daily perturbance of parameter value
-inflow_factor_init_qt <<- 0.001^2 #THIS IS THE VARIANCE, NOT THE SD
+
+#Fsed_oxy
+Fsed_oxy_init_mean <<- -20
+Fsed_oxy_init_lowerbound <<-  -50 #-30 #-24.220
+Fsed_oxy_init_upperbound <<-  -5 #10 #-24.218
+Fsed_oxy_lowerbound <<-  -1000 #-30 #-24.220
+Fsed_oxy_upperbound <<-  1000 #10 #-24.218
+
+#Rdom_minerl
+Rdom_minerl_init_mean <<- 0.001
+Rdom_minerl_init_lowerbound <<-  0.0005 #0.00049
+Rdom_minerl_init_upperbound <<-  0.005 #0.00051
+Rdom_minerl_lowerbound <<-  0 #0.0000 #0.00049
+Rdom_minerl_upperbound <<-  1 #0.00051
+
+#R_growth
+R_growth_init_mean <<-  1.0
+R_growth_init_lowerbound <<-  0.5 #0.99
+R_growth_init_upperbound <<-  1.5 #1.01
+R_growth_lowerbound <<-  -10.00 #0.99
+R_growth_upperbound <<-  10.00 #1.01
+
+#Rnitrif
+Rnitrif_init_mean <<- 0.02
+Rnitrif_init_lowerbound <<-  0.005 #0.99
+Rnitrif_init_upperbound <<-  0.05 #1.01
+Rnitrif_lowerbound <<-  0 #0.99
+Rnitrif_upperbound <<-  1 #1.01
+
+#w_p
+w_p_init_mean <<- 0.0
+w_p_init_lowerbound <<-  -0.1 #0.99
+w_p_init_upperbound <<-  0.1 #1.01
+w_p_lowerbound <<-  -0.1 #0.99
+w_p_upperbound <<-  0.1 #1.01
+
+#Fsed_frp
+Fsed_frp_init_mean <<- 0.5
+Fsed_frp_init_lowerbound <<-  0.001 #0.99
+Fsed_frp_init_upperbound <<-  0.05 #1.01
+Fsed_frp_lowerbound <<-  0#0.99
+Fsed_frp_upperbound <<-  10 #1.01
+
+#Fsed_amm
+Fsed_amm_init_mean <<- 5
+Fsed_amm_init_lowerbound <<-  1 #0.99
+Fsed_amm_init_upperbound <<-  2 #1.01
+Fsed_amm_lowerbound <<-  -1000 #0.99
+Fsed_amm_upperbound <<-  1000 #1.01
+
+#Fsed_nit
+Fsed_nit_init_mean <<- -0.1
+Fsed_nit_init_lowerbound <<-  -1 #0.99
+Fsed_nit_init_upperbound <<-  -0.5 #1.01
+Fsed_nit_lowerbound <<-  -100 #0.99
+Fsed_nit_upperbound <<-  0 #1.01
+
+#Fsed_doc
+Fsed_doc_init_mean <<- 50
+Fsed_doc_init_lowerbound <<-  10 #0.99
+Fsed_doc_init_upperbound <<-  60 #1.01
+Fsed_doc_lowerbound <<-  -1000 #0.99
+Fsed_doc_upperbound <<-  1000 #1.01
 
 par_names <<- c("sed_temp_mean"
                 ,"sed_temp_mean"
                 ,"sw_factor"
-                #,"lw_factor"
-                ,"inflow_factor"
+                #,"Fsed_oxy"
+                #,"Fsed_oxy"
+                #,"Rdomr_minerl"
+                #,"Fsed_frp"
+                #,"Fsed_amm"
+                #,"Fsed_nit"
+                #,"pd%R_resp"
+                #,"Rnitrif"
+                #,"pd%X_ncon"
+                #,"pd%X_pcon"
+                #,"pd%K_N"
+                #,"pd%K_P"
+                #,"pd%I_K"
 )
+
+#par_names <<- c()
+
 par_names_save <<- c("zone1temp"
                      ,"zone2temp"
                      ,"sw_factor"
-                     #,"lw_factor"
-                     ,"inflow_factor"
+                     ,"Fsed_oxy_zone1"
+                     ,"Fsed_oxy_zone2"
+                     ,"Rdomr_minerl"
+                     ,"Fsed_frp"
+                     ,"Fsed_amm"
+                     ,"Fsed_nit"
+                     ,"R_resp"
+                     ,"Rnitrif"
+                     #,"X_ncon"
+                     #,"X_pcon"
+                     ,"K_N"
+                     ,"K_P"
+                     #,"I_K" 
 )
 par_nml <<- c("glm3.nml"
               ,"glm3.nml"
               ,"glm3.nml"
-              #,"glm3.nml"
-              ,"glm3.nml"
+              ,"aed2.nml"
+              ,"aed2.nml"
+              ,"aed2.nml"
+              ,"aed2.nml"
+              ,"aed2.nml"
+              ,"aed2.nml"
+              ,"aed2_phyto_pars.nml"
+              ,"aed2.nml"
+              #,"aed2_phyto_pars.nml"
+              #,"aed2_phyto_pars.nml"
+              ,"aed2_phyto_pars.nml"
+              ,"aed2_phyto_pars.nml"
+              #,"aed2_phyto_pars.nml"
 )
+
 par_init_mean <<- c(zone1_temp_init_mean
                     ,zone2_temp_init_mean
                     ,swf_init_mean
-                    #,lwf_init_mean
-                    ,inflow_factor_init_mean
+                    ,Fsed_oxy_init_mean
+                    ,Fsed_oxy_init_mean
+                    ,Rdom_minerl_init_mean
+                    ,Fsed_frp_init_mean
+                    ,Fsed_amm_init_mean
+                    ,Fsed_nit_init_mean
+                    ,0.12
+                    ,Rnitrif_init_mean
+                    # ,0.035
+                    #,0.0015
+                    ,3.21
+                    ,0.16
+                    #,15
 )
 par_init_lowerbound <<- c(zone1_temp_init_lowerbound
                           ,zone2_temp_init_lowerbound
                           ,swf_init_lowerbound
-                          #,lwf_init_lowerbound
-                          ,inflow_factor_init_lowerbound
+                          ,-40
+                          ,-10
+                          ,Rdom_minerl_init_lowerbound
+                          ,Fsed_frp_init_lowerbound
+                          ,Fsed_amm_init_lowerbound
+                          ,Fsed_nit_init_lowerbound
+                          ,0.05
+                          ,Rnitrif_init_lowerbound
+                          #,0.02
+                          #,0.0005
+                          ,2
+                          ,0.1
+                          #,10
 )
 par_init_upperbound <<- c(zone1_temp_init_upperbound
                           ,zone2_temp_init_upperbound
                           ,swf_init_upperbound
-                          #, lwf_init_upperbound
-                          ,inflow_factor_init_upperbound
+                          ,-10
+                          ,20
+                          ,Rdom_minerl_init_upperbound
+                          ,Fsed_frp_init_upperbound
+                          ,Fsed_amm_init_upperbound
+                          ,Fsed_nit_init_upperbound
+                          ,0.15
+                          ,Rnitrif_init_upperbound
+                          #,0.070
+                          #,0.005
+                          ,4
+                          ,0.2
+                          #,25
 )
 par_lowerbound <<- c(zone1_temp_lowerbound
                      ,zone2_temp_lowerbound
                      ,swf_lowerbound
-                     #, lwf_lowerbound
-                     ,inflow_factor_lowerbound
+                     ,Fsed_oxy_lowerbound
+                     ,Fsed_oxy_lowerbound
+                     ,Rdom_minerl_lowerbound
+                     ,Fsed_frp_lowerbound
+                     ,Fsed_amm_lowerbound
+                     ,Fsed_nit_lowerbound
+                     ,0.001
+                     ,Rnitrif_lowerbound
+                     #,0.02
+                     #,0.0005
+                     ,0.26
+                     ,0.04
+                     #,5
 )
 par_upperbound <<- c(zone1_temp_upperbound
                      ,zone2_temp_upperbound
                      ,swf_upperbound
-                     #, lwf_upperbound
-                     ,inflow_factor_upperbound
+                     ,Fsed_oxy_upperbound
+                     ,Fsed_oxy_upperbound
+                     ,Rdom_minerl_upperbound
+                     ,Fsed_frp_upperbound
+                     ,Fsed_amm_upperbound
+                     ,Fsed_nit_upperbound
+                     ,1
+                     ,Rnitrif_upperbound
+                     #,0.070
+                     #,0.005
+                     ,10
+                     ,1
+                     #,30
 )
-par_init_qt <<- c(zone1temp_init_qt
-                  ,zone2temp_init_qt
-                  ,swf_init_qt
-                  #, lwf_init_qt
-                  ,inflow_factor_init_qt
-)
+
 par_units <<- c("deg_C"
                 ,"deg_C"
                 ,"-"
-                #,"-"
+                ,"-"
+                ,"-"
+                ,"-"
+                ,"-"
+                ,"-"
+                ,"-"
+                ,"-"
+                ,"-"
+                ,"-"
+                ,"-"
+                ,"-"
+                ,"-"
+                ,"-"
+                ,"-"
+                ,"-"
                 ,"-"
 ) 
+
+
 
 #####################################
 ###  Observation information
 ######################################
+
 realtime_insitu_location <- paste0(data_location,"/mia-data")
 realtime_met_station_location <- paste0(data_location,"/carina-data") 
 manual_data_location <- paste0(data_location, "/manual-data") 
 realtime_inflow_data_location <- paste0(data_location, "/diana-data")
 
 
-ctd_fname <<- NA #paste0(manual_data_location,"/CTD_final_2013_2019.csv")
+ctd_fname <<- paste0(manual_data_location,"/CTD_final_2013_2019.csv")
 
 nutrients_fname <<- paste0(manual_data_location,"/chemistry.csv")
 
 insitu_obs_fname <<- c(paste0(realtime_insitu_location,"/Catwalk.csv"),
-                     paste0(manual_data_location,"/Catwalk_cleanedEDI.csv"))
+                       paste0(manual_data_location,"/Catwalk_cleanedEDI.csv"))
 variable_obsevation_depths <<- FALSE
-ctd_2_exo_chla <<- c(-0.35, 1.9)
+
 
 met_obs_fname <<- c(paste0(realtime_met_station_location,"/FCRmet.csv"),
                     paste0(manual_data_location,"/Met_final_2015_2019.csv"))
@@ -276,15 +446,18 @@ outflow_file1 <<- paste0(manual_data_location,"/FCR_spillway_outflow_newEDI_SUMM
 
 inflow_file2 <<- NA
 
-do_methods <<- c("do_sensor", "exo_sensor")
-chla_methods <<- c("exo_sensor", "ctd")
-temp_methods <<- c("thermistor", "do_sensor", "exo_sensor")
-fdom_methods <<- c("exo_sensor","grab_sample")
+focal_depths <<- 1.6
+
+do_methods <<- c("do_sensor", "exo_sensor") #,"ctd")
+chla_methods <<- c("exo_sensor") # "ctd")
+temp_methods <<- c("thermistor", "do_sensor", "exo_sensor") # "ctd")
+fdom_methods <<- c("exo_sensor") #"grab_sample")
 nh4_methods <<- c("grab_sample")
 no3_methods <<- c("grab_sample")
 srp_methods <<- c("grab_sample")
+dic_methods <<- c("grab_sample")
 
-time_threshold_seconds_temp <<- 60*30
+time_threshold_seconds_temp <<- 60*60*12
 time_threshold_seconds_oxygen <<- 60*60*12
 time_threshold_seconds_chla <<- 60*60*12
 time_threshold_seconds_fdom <<- 60*60*12
@@ -297,129 +470,238 @@ distance_threshold_meter <<- 0.15
 ###  Water quality state information
 #########################################
 
-#The names of the phytoplankton groups that contribute to
-#total chl-a in GLM
-tchla_components_vars <<- c("PHY_cyano","PHY_green","PHY_diatom")
+#carbon to chlorophyll ratio (mg C/mg chla)
+#12 g/ mole of C vs. X g/ mole of chla
+#Initial concentration of phytoplankton (mmol C/m3)
+biomass_to_chla <<- c((40/12),(40/12), (40/12))
 
 #define water quality variables modeled.  Not used if include_wq == FALSE
-wq_names <<- c("OXY_oxy",
-               "CAR_pH",
-               "CAR_dic",
-               "CAR_ch4",
+wq_names <<- c("temp",
+               "OXY_oxy",
+               #"CAR_dic",
+               #"CAR_ch4",
                "SIL_rsi",
                "NIT_amm",
                "NIT_nit",
                "PHS_frp",
                "OGM_doc",
+               "OGM_docr",
                "OGM_poc",
                "OGM_don",
+               #"OGM_donr",
                "OGM_pon",
                "OGM_dop",
+               #"OGM_dopr",
                "OGM_pop",
-               "NCS_ss1",
-               "PHS_frp_ads",
-               "PHY_TCHLA")
+               #"NCS_ss1",
+               #"PHS_frp_ads",
+               "PHY_cyano",
+               #"PHY_cyano_IN",
+               #"PHY_cyano_IP",
+               "PHY_green",
+               #"PHY_green_IN",
+               #"PHY_green_IP",
+               "PHY_diatom"
+               #"PHY_diatom_IN",
+               #"PHY_diatom_IP"
+)
+
+wq_states_to_obs <<- list(temp = 1, 
+                          OXY_oxy = 2, 
+                          #CAR_dic = NA, 
+                          #CAR_ch4 = NA, 
+                          SIL_rsi = NA, 
+                          NIT_amm = c(3,5), 
+                          NIT_nit = c(4,5),  
+                          PHS_frp = c(6,7), 
+                          OGM_doc = 8, 
+                          OGM_docr = 8, 
+                          OGM_poc = NA, 
+                          OGM_don = 5, 
+                          #OGM_donr = 5, 
+                          OGM_pon = 5, 
+                          OGM_dop = 7, 
+                          #OGM_dopr = 7, 
+                          OGM_pop = 7, 
+                          #NCS_ss1 = NA, 
+                          #PHS_frp_ads = 7,
+                          PHY_cyano = 9, #20
+                          #PHY_cyano_IN = NA, 
+                          #PHY_cyano_IP = NA, 
+                          PHY_green = 9, #23
+                          #PHY_green_IN = NA, 
+                          #PHY_green_IP = NA, 
+                          PHY_diatom = 9 #26
+                          #PHY_diatom_IN = NA, 
+                          #PHY_diatom_IP = NA 
+)
+
+wq_states_to_obs_mapping <<- list(temp = 1, 
+                                  OXY_oxy= 1, 
+                                  #CAR_dic = NA, 
+                                  #CAR_ch4 = NA, 
+                                  SIL_rsi=  NA, 
+                                  NIT_amm = 1, 
+                                  NIT_nit = 1, 
+                                  PHS_frp = 1, 
+                                  OGM_doc = 1, 
+                                  OGM_docr = 1, 
+                                  OGM_poc = NA, 
+                                  OGM_don = 1, 
+                                  #OGM_donr = 1, 
+                                  OGM_pon = 1, 
+                                  OGM_dop = 1, 
+                                  #OGM_dopr = 1, 
+                                  OGM_pop = 1, 
+                                  #NCS_ss1 = NA, 
+                                  #PHS_frp_ads = 1, 
+                                  PHY_cyano = 1/(biomass_to_chla[1]), 
+                                  #PHY_cyano_IN = NA, 
+                                  #PHY_cyano_IP = NA,
+                                  PHY_green = 1/(biomass_to_chla[2]), 
+                                  #PHY_green_IN = NA,
+                                  #PHY_green_IP = NA, 
+                                  PHY_diatom = 1/(biomass_to_chla[3])
+                                  #PHY_diatom_IN = NA, 
+                                  #PHY_diatom_IP = NA
+)
+
+wq_names_obs <<- c(
+  "temp",
+  "OXY_oxy",
+  #"CAR_dic",
+  "NIT_amm",
+  "NIT_nit",
+  "NIT_total",
+  "PHS_frp",
+  "PHS_total",
+  "OGM_doc_total",
+  "PHY_TCHLA")
 
 #Default initial states if lacking observations
-
-#carbon to chlorophyll ratio (mg C/mg chla)
-#12 g/ mole of C vs. X g/ mole of chla
-#Initial concentration of phytoplankton (mmol C/m3)
-biomass_to_chla <<- c((50/12),(50/12), (50/12))
-
-
 init_donc <<- 0.1/47.4
-init_dopc <<- 0.1/47.4
-init_ponc <<- (0.1/78.5)
-init_popc <<-(0.1/78.5)
+init_dopc <<- 0.0 #0.1/47.4
+init_ponc <<-  (0.1/78.5)
+init_popc <<- 0.0 #(0.1/78.5)
+
+don_doc_init_ratio <<- 0.4
+donr_docr_init_ratio <<- 0
+dop_doc_init_ratio <<- 0.005
+dopr_docr_init_ratio <<- 0
+
+docr_to_total_doc <<- 0.80
+
+phyto_n_biomass_ratio <<- 0.035
+phyto_p_biomass_ratio <<- 0.0016
 
 OXY_oxy_init <<- 300.62
 CAR_pH_init <<- 6.2
-CAR_dic_init <<- 2000
-CAR_ch4_init <<- 5
+CAR_dic_init <<- 100
+CAR_ch4_init <<- 0 #5
 SIL_rsi_init <<- 100
 NIT_amm_init <<- 0.69
 NIT_nit_init <<- 0.05
 PHS_frp_init <<- 0.07
-OGM_doc_init <<- 200
-OGM_poc_init <<- 20 #78.5
-OGM_pon_init <<- OGM_poc_init * init_ponc
-OGM_pop_init <<- OGM_poc_init * init_popc
-NCS_ss1_init <<- 1.0
-PHS_frp_ads_init <<- 0.0
-PHY_TCHLA_init <<- 10.0
+OGM_doc_init <<- 50
+OGM_docr_init <<- 250
+OGM_don_init <<- 15
+OGM_dop_init <<- 0.5
+OGM_poc_init <<- 2
+OGM_pon_init <<- 0.1
+OGM_pop_init <<- 0.05
+NCS_ss1_init <<- 0.0
+PHS_frp_ads_init <<- 0.05
+
+PHY_cyano_init <<- 10.0
+PHY_green_init <<- 10.0
+PHY_diatom_init <<- 10.0
+PHY_cyano_IN_init <<- PHY_cyano_init * phyto_n_biomass_ratio
+PHY_green_IN_init <<- PHY_green_init * phyto_n_biomass_ratio
+PHY_diatom_IN_init <<- PHY_diatom_init * phyto_n_biomass_ratio
+PHY_cyano_IP_init <<- PHY_cyano_init * phyto_p_biomass_ratio
+PHY_green_IP_init <<- PHY_green_init * phyto_p_biomass_ratio
+PHY_diatom_IP_init <<- PHY_diatom_init * phyto_p_biomass_ratio
 
 init_phyto_proportion <<- c(0.3, 0.3, 0.4)
 
-#uncertainy in temperature measurement
-obs_error_temperature_intercept <<- 0.1^2
-
-obs_error_temperature_slope <<- 0.0
-
 #Observational uncertainty for each variable
 
-obs_error_wq_intercept_phyto = c(NA, NA, NA)
 
-obs_error_wq_intercept <<- c(5, #OXY_oxy #0.25
-                             NA, #CAR_pH
-                             NA, #CAR_dic
-                             NA, #CAR_ch4
-                             NA, #SIL_rsi
-                             0.01, #NIT_amm
-                             0.001, #NIT_nit
-                             0.001, #PHS_frp
-                             500, #OGM_doc
-                             NA, #OGM_poc
-                             NA, #OGM_don
-                             NA, #OGM_pon
-                             NA, #OGM_dop
-                             NA, #OGM_pop
-                             NA, #NCS_ss1
-                             NA, #PHS_frp_ads
-                             0.25) #PHY_TCHLA
+obs_error_wq_intercept <<- list(temp = 0.00514729, # Temp
+                                OXY_oxy = 0.25, #OXY_oxy 0.25 1958.838
+                                #CAR_dic = 1,
+                                NIT_amm = 0.028, #NIT_amm
+                                NIT_nit = 0.008, #NIT_nit #0.08
+                                NIT_total = 0.028, #TN
+                                PHS_frp = 0.005, #PHS_frp #0.05
+                                PHS_total = 0.005, #PHS_total
+                                OGM_doc_total = 0.25, #6996, #6996, #OGM_doc
+                                PHY_TCHLA = 0.25 #PHY_TCHLA 3.338957
+) 
 
+obs_error_wq_intercept <<- list(temp = 0.00514729, # Temp
+                                OXY_oxy = 0.25, #OXY_oxy 0.25 1958.838
+                                #CAR_dic = 0.001,
+                                NIT_amm = 0.028, #NIT_amm
+                                NIT_nit = 0.0025, #NIT_nit #0.08
+                                NIT_total = 0.1, #TN
+                                PHS_frp = 0.005, #PHS_frp #0.05
+                                PHS_total = 0.05, #PHS_total
+                                OGM_doc_total = 1, #6996, #OGM_doc
+                                PHY_TCHLA = 0.5^2 #PHY_TCHLA 3.338957
+) 
 
-obs_error_wq_slope_phyto = c(NA, NA, NA)
+obs_error_wq_slope <<- c(temp = 0, #temp
+                         OXY_oxy = 0, #OXY_oxy #0.25
+                         #CAR_dic = 0,
+                         NIT_amm = 0, #NIT_amm
+                         NIT_nit = 0, #NIT_nit
+                         NIT_total = 0, #NIT_total
+                         PHS_frp = 0, #PHS_frp
+                         PHS_total = 0, #PHS_total
+                         OGM_doc = 0, #OGM_doc
+                         PHY_TCHLA = 0) #PHY_TCHLA
 
-obs_error_wq_slope <<- c(0, #OXY_oxy #0.25
-                         NA, #CAR_pH
-                         NA, #CAR_dic
-                         NA, #CAR_ch4
-                         NA, #SIL_rsi
-                         0, #NIT_amm
-                         0, #NIT_nit
-                         0, #PHS_frp
-                         0, #OGM_doc
-                         NA, #OGM_poc
-                         NA, #OGM_don
-                         NA, #OGM_pon
-                         NA, #OGM_dop
-                         NA, #OGM_pop
-                         NA, #NCS_ss1
-                         NA, #PHS_frp_ads
-                         0) #PHY_TCHLA
+exo_2_ctd_chla <- c(0, 1)  #c(-2.0430, 2.5314) #c(1.8795, 0.6662)
+exo_2_ctd_do <- c(0, 1) #c(8.3670, 0.7152)
+do_2_ctd_do_5 <- c(0, 1) #c(19.6254, 0.8636)
+do_2_ctd_do_9 <- c(0, 1) #c(11.0971, 0.9156)
+ctd_2_exo_chla <<- c(0, 1)  #c(-2.0430, 2.5314) #c(-1.582, 1.335)
+ctd_2_do_do <<- c(0, 1) #c(-10.770, 1.061)
+exo_fdom_2_doc <<- c(-38.95, 22.47)
 
-temp_process_error <<- 0.5
-OXY_oxy_process_error <<- 1000
-CAR_pH_process_error <<- 0.001
-CAR_dic_process_error <<- 1
-CAR_ch4_process_error <<- 1
-SIL_rsi_process_error <<- 1
-NIT_amm_process_error <<- 1
-NIT_nit_process_error <<- 0.1
-PHS_frp_process_error <<- 0.1
-OGM_doc_process_error <<- 1000
-OGM_poc_process_error <<- 0.1
-OGM_don_process_error <<- 0.1
-OGM_pon_process_error <<- 0.1
-OGM_dop_process_error <<- 0.1
-OGM_pop_process_error <<- 0.1
-NCS_ss1_process_error <<- 0.01
-PHS_frp_ads_process_error <<- 0.0001
-PHY_TCHLA_process_error <<- 5
-PHY_process_error <<- c(0.001, 0.001, 0.001)
+temp_process_error <<- 1.5^2
+OXY_oxy_process_error <<- 90^2
+CAR_pH_process_error <<- 0
+CAR_dic_process_error <<- 179.86^2
+CAR_ch4_process_error <<- 8.47^2
+SIL_rsi_process_error <<- 75.02^2
+NIT_amm_process_error <<- 1 ^ 2 #4.94^2
+NIT_nit_process_error <<- 0.5 ^ 2 #1.06^2
+PHS_frp_process_error <<- 0.05^2
+OGM_doc_process_error <<- 10^2
+OGM_docr_process_error <<- 70^2
+OGM_poc_process_error <<- 10^2
+OGM_don_process_error <<- 4.94^2
+OGM_donr_process_error <<- 4.94^2
+OGM_pon_process_error <<- 4.94^2
+OGM_dop_process_error <<- 0.1^2
+OGM_dopr_process_error <<- 0.1^2
+OGM_pop_process_error <<- 0.1^2
+NCS_ss1_process_error <<- 0.01^2
+PHS_frp_ads_process_error <<- 0.05^2
 
-temp_init_error <<- 0.5
+PHY_cyano_process_error <<- 5^2
+PHY_green_process_error <<- 5^2
+PHY_diatom_process_error <<- 5^2
+PHY_cyano_IN_process_error <<- (1 * phyto_n_biomass_ratio)^2
+PHY_green_IN_process_error <<- (1 * phyto_n_biomass_ratio)^2
+PHY_diatom_IN_process_error <<- (1 * phyto_n_biomass_ratio)^2
+PHY_cyano_IP_process_error <<- (1 * phyto_p_biomass_ratio)^2
+PHY_green_IP_process_error <<- (1 * phyto_p_biomass_ratio)^2
+PHY_diatom_IP_process_error <<- (1 * phyto_p_biomass_ratio)^2
+
+temp_init_error <<- 1.5^2
 OXY_oxy_init_error <<- 1000
 CAR_pH_init_error <<- 0.001
 CAR_dic_init_error <<- 0.001
@@ -429,15 +711,46 @@ NIT_amm_init_error <<- 2
 NIT_nit_init_error <<- 0.01
 PHS_frp_init_error <<- 0.01
 OGM_doc_init_error <<- 1000
+OGM_docr_init_error <<- 1000
 OGM_poc_init_error <<- 2
 OGM_don_init_error <<- 4
+OGM_donr_init_error <<- 4
 OGM_pon_init_error <<- 2
 OGM_dop_init_error <<- 3
+OGM_dopr_init_error <<- 3
 OGM_pop_init_error <<- 4
 NCS_ss1_init_error <<- 0.5
 PHS_frp_ads_init_error <<- 0.1
-PHY_TCHLA_init_error <<- 3
-PHY_init_error <<- c(3, 3, 3)
+PHY_cyano_init_error <<- 10.0
+PHY_green_init_error <<- 10.0
+PHY_diatom_init_error <<- 10.0
+PHY_cyano_IN_init_error <<- 10
+PHY_green_IN_init_error <<- 10 * phyto_n_biomass_ratio
+PHY_diatom_IN_init_error <<- 10 * phyto_n_biomass_ratio
+PHY_cyano_IP_init_error <<- 10 * phyto_p_biomass_ratio
+PHY_green_IP_init_error <<- 10 * phyto_p_biomass_ratio
+PHY_diatom_IP_init_error <<- 10 * phyto_p_biomass_ratio
+
+####
+# Dignostics
+###
+
+diagnostics_names <- c("extc_coef",
+                       "PHY_cyano_fI",
+                       "PHY_cyano_fNit",
+                       "PHY_cyano_fPho",
+                       "PHY_cyano_fT",
+                       "PHY_green_fI",
+                       "PHY_green_fNit",
+                       "PHY_green_fPho",
+                       "PHY_green_fT",
+                       "PHY_diatom_fI",
+                       "PHY_diatom_fNit",
+                       "PHY_diatom_fPho",
+                       "PHY_diatom_fT",
+                       "rad")
+
+secchi_file <- "/Users/quinn/Dropbox (VTFRS)/Research/SSC_forecasting/SCC_data/manual-data/Secchi_depth_2013-2019.csv"
 
 #########################################
 # Archiving options
