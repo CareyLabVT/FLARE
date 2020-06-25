@@ -168,13 +168,13 @@ update_qt <- function(resid30day, modeled_depths, qt, include_wq, npars, nstates
     }
   }
   
-  if(npars > 0){
-    for(p in 1:npars){
-      qt <- rbind(qt, rep(0.0, ncol(qt)))
-      qt <- cbind(qt, rep(0.0, nrow(qt)))
-      qt[ncol(qt),nrow(qt)] <- old_qt[nstates + p,nstates + p]
-    }
-  }
+  #if(npars > 0){
+  #  for(p in 1:npars){
+  #    qt <- rbind(qt, rep(0.0, ncol(qt)))
+  #    qt <- cbind(qt, rep(0.0, nrow(qt)))
+  #    qt[ncol(qt),nrow(qt)] <- old_qt[nstates + p,nstates + p]
+  #  }
+  #}
   
   return(qt)
 }

@@ -1,6 +1,7 @@
 extract_CTD <- function(fname,
                         input_file_tz,
-                        local_tzone){
+                        local_tzone,
+                        focal_depths){
   
   d <- read_csv(fname, guess_max = 1000000) %>% 
     mutate(Date = force_tz(Date, tzone = input_file_tz),
@@ -13,10 +14,16 @@ extract_CTD <- function(fname,
            "oxygen" = DO_mgL,
            "chla" = Chla_ugL) %>% 
     mutate(oxygen = oxygen*1000/32,
-           chla = ctd_2_exo_chla[1] + ctd_2_exo_chla[2] * chla) %>% 
+           chla = ctd_2_exo_chla[1] + ctd_2_exo_chla[2] * chla,
+           oxygen = ctd_2_do_do[1] + ctd_2_do_do[2] * oxygen) %>% 
     pivot_longer(cols = c("temperature","oxygen","chla"), names_to = "variable", values_to = "value") %>% 
     mutate(method = "ctd") %>% 
     select(timestamp , depth, value, variable, method) %>% 
     mutate(timestamp = as_datetime(timestamp, tz = local_tzone))
+  
+  if(!is.na(focal_depths)){
+    d <- d %>% filter(depth %in% focal_depths)
+  }
+  
   return(d)
 }

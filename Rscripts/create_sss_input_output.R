@@ -33,11 +33,11 @@ create_sss_input_output <- function(x, i, m, full_time_local,
   if(i > (hist_days + 1)){
     if(forecast_sss_on){
       if(use_specified_sss){
-        FLOW1 <- management_input[i, 1]
-        OXY1 <- management_input[i, 2]  * sss_oxy_factor
+        FLOW2 <- management_input[i, 1]
+        OXY2 <- management_input[i, 2]  * sss_oxy_factor
       }else{
-        FLOW1 <- forecast_SSS_flow * (1/(60*60*24))
-        OXY1 <- forecast_SSS_Oxy * sss_oxy_factor
+        FLOW2 <- forecast_SSS_flow * (1/(60*60*24))
+        OXY2 <- forecast_SSS_Oxy * sss_oxy_factor
       }
     }else{
       FLOW2 <- 0.0
@@ -65,21 +65,41 @@ create_sss_input_output <- function(x, i, m, full_time_local,
   if(length(which(wq_names != "OXY_oxy")) == 0){
   sss_inflow <- data.frame(time = time_sss, FLOW = FLOW, TEMP = TEMP, SALT = SALT, OXY_oxy = OXY_oxy)
   }else{
-    NIT_amm <-  round(rep(x[i-1, m, wq_start[6] + depth_index - 1],2), 3)
-    NIT_nit <-  round(rep(x[i-1, m, wq_start[7] + depth_index - 1],2), 3)
-    PHS_frp <-  round(rep(x[i-1, m, wq_start[8] + depth_index - 1],2), 3)
-    OGM_doc <-  round(rep(x[i-1, m, wq_start[9] + depth_index - 1],2), 3)
-    OGM_poc <-  round(rep(x[i-1, m, wq_start[10] + depth_index - 1],2), 3)
-    OGM_don <-  round(rep(x[i-1, m, wq_start[11] + depth_index - 1],2), 3)
-    OGM_dop <-  round(rep(x[i-1, m, wq_start[13] + depth_index - 1],2), 3)
-    OGM_pop <-  round(rep(x[i-1, m, wq_start[14] + depth_index - 1],2), 3)
-    OGM_pon <-  round(rep(x[i-1, m, wq_start[12] + depth_index - 1],2), 3)
-    PHS_frp_ads <-  round(rep(x[i-1, m, wq_start[16] + depth_index - 1],2), 3)
-    sss_inflow <- data.frame(time = time_sss, FLOW = FLOW, TEMP = TEMP, SALT = SALT, OXY_oxy,
-                             NIT_amm = NIT_amm, NIT_nit = NIT_nit, PHS_frp = PHS_frp,
-                             OGM_doc = OGM_doc, OGM_poc = OGM_poc, OGM_don = OGM_don,
-                             OGM_dop = OGM_dop, OGM_pop = OGM_pop, OGM_pon = OGM_pon,
-                             PHS_frp_ads = PHS_frp_ads)
+    
+    NIT_amm <- round(rep(x[i-1, m, wq_start[which(wq_names == "NIT_amm")-1] + depth_index - 1],2), 3)
+    NIT_nit <- round(rep(x[i-1, m, wq_start[which(wq_names == "NIT_nit")-1] + depth_index - 1],2), 3)
+    PHS_frp <- round(rep(x[i-1, m, wq_start[which(wq_names == "PHS_frp")-1] + depth_index - 1],2), 3)
+    OGM_doc <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_doc")-1] + depth_index - 1],2), 3)
+    OGM_docr <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_docr")-1] + depth_index - 1],2), 3)
+    OGM_poc <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_poc")-1] + depth_index - 1],2), 3)
+    OGM_don <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_don")-1] + depth_index - 1],2), 3)
+    OGM_dop <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_dop")-1] + depth_index - 1],2), 3)
+    OGM_pop <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_pop")-1] + depth_index - 1],2), 3)
+    OGM_pon <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_pon")-1] + depth_index - 1],2), 3)
+    #PHS_frp_ads <- round(rep(x[i-1, m, wq_start[which(wq_names == "PHS_frp_ads")-1] + depth_index - 1],2), 3)
+    #CAR_dic <- round(rep(x[i-1, m, wq_start[which(wq_names == "CAR_dic")-1] + depth_index - 1],2), 3)
+    #CAR_ch4 <- round(rep(x[i-1, m, wq_start[which(wq_names == "CAR_ch4")-1] + depth_index - 1],2), 3)
+    SIL_rsi <- round(rep(x[i-1, m, wq_start[which(wq_names == "SIL_rsi")-1] + depth_index - 1],2), 3)
+
+    sss_inflow <- data.frame(time = time_sss, 
+                             FLOW = FLOW, 
+                             TEMP = TEMP, 
+                             SALT = SALT, 
+                             OXY_oxy = OXY_oxy,
+                             NIT_amm = NIT_amm,
+                             NIT_nit = NIT_nit,
+                             PHS_frp = PHS_frp,
+                             OGM_doc = OGM_doc,
+                             OGM_docr = OGM_docr,
+                             OGM_poc = OGM_poc, 
+                             OGM_don = OGM_don,
+                             OGM_pon = OGM_pon,
+                             OGM_dop = OGM_dop,
+                             OGM_pop = OGM_pop,
+                             #PHS_frp_ads = PHS_frp_ads,
+                             #CAR_dic = CAR_dic,
+                             #CAR_ch4 = CAR_ch4,
+                             SIL_rsi = SIL_rsi)
   }
   
 

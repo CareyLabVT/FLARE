@@ -119,6 +119,10 @@ create_inflow_outflow_file <- function(full_time_local,
       select(time, FLOW, TEMP, SALT, all_of(wq_names_tmp)) %>% 
       mutate_at(vars(c("FLOW", "TEMP", "SALT", all_of(wq_names_tmp))), funs(round(., 4)))
     
+    if("OGM_doc" %in% wq_names_tmp){
+    tmp2 <- tmp2 %>% 
+      mutate(OGM_docr = OGM_docr * doc_scalar)
+    }
     
     write_csv(x = tmp2,
               path = paste0(working_directory,"/",inflow1_file_names[i]),

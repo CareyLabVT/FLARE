@@ -72,18 +72,18 @@ update_nml <- function(var_list,var_name_list,working_directory, nml){
   orig_nml = read_nml(paste0(working_directory,'/',nml))
   
   for(k in 1:length(var_list)){
-  index1 = NA; index2 = NA
-  for (g in 1:length(orig_nml)) {
-    for (q in 1:length(orig_nml[[g]])) {
-      if (names(orig_nml[[g]][q]) == var_name_list[k]) {
-        index1 = g; index2 = q; 
+    index1 = NA; index2 = NA
+    for (g in 1:length(orig_nml)) {
+      for (q in 1:length(orig_nml[[g]])) {
+        if (names(orig_nml[[g]][q]) == var_name_list[k]) {
+          index1 = g; index2 = q; 
+        }
       }
     }
-  }
-  holder2 = unlist(orig_nml[[index1]][index2])
-  holder2[1:length(var_list[[k]])] = var_list[[k]]
-  holder2 = list(holder2[1:length(var_list[[k]])])
-  orig_nml[[index1]][index2] = holder2
+    holder2 = unlist(orig_nml[[index1]][index2])
+    holder2[1:length(var_list[[k]])] = var_list[[k]]
+    holder2 = list(holder2[1:length(var_list[[k]])])
+    orig_nml[[index1]][index2] = holder2
   }
   
   write_nml(orig_nml, paste0(working_directory,'/',nml))
@@ -208,7 +208,7 @@ update_phyto <- function(p_initial,nml_name = 'aed2_phyto_pars.nml'){
 #' @examples
 #' add(1, 1)
 #' add(10, 1)
-get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars){
+get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars,diagnostic_vars){
   glm_nc <- nc_open(paste0(working_dir,ncFile))
   tallest_layer <- ncvar_get(glm_nc, "NS")
   final_time_step <- length(tallest_layer)
@@ -218,10 +218,10 @@ get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars){
   heights <- heights[1:tallest_layer,final_time_step]
   heights_out <- heights_surf - z_out
   
-  snow <- ncvar_get(glm_nc, "hsnow")[2]
-  ice_white <- ncvar_get(glm_nc, "hwice")[2] 
-  ice_blue <- ncvar_get(glm_nc, "hice")[2] 
-  avg_surf_temp <- ncvar_get(glm_nc, "avg_surf_temp")[2] 
+  snow <- ncvar_get(glm_nc, "hsnow")[final_time_step]
+  ice_white <- ncvar_get(glm_nc, "hwice")[final_time_step] 
+  ice_blue <- ncvar_get(glm_nc, "hice")[final_time_step] 
+  avg_surf_temp <- ncvar_get(glm_nc, "avg_surf_temp")[final_time_step] 
   
   
   glm_temps <- ncvar_get(glm_nc, "temp")[1:tallest_layer, final_time_step]
@@ -232,6 +232,16 @@ get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars){
     output[,v] <- var_modeled[1:tallest_layer, final_time_step]
   }
   
+  if(length(diagnostic_vars) > 0){
+    diagnostics_output <- array(NA,dim=c(tallest_layer,length(diagnostic_vars)))
+    for(v in 1:length(diagnostic_vars)){
+      var_modeled <- ncvar_get(glm_nc, diagnostic_vars[v])
+      diagnostics_output[,v] <- var_modeled[1:tallest_layer, final_time_step]
+    }
+  }else{
+    diagnostics_output <- NA
+  }
+  
   mixing_vars <- ncvar_get(glm_nc, "restart_variables")
   
   nc_close(glm_nc)
@@ -240,5 +250,6 @@ get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars){
               depths_enkf = rev(heights_surf - heights),
               snow_wice_bice = c(snow, ice_white, ice_blue),
               avg_surf_temp = avg_surf_temp,
-              mixing_vars = mixing_vars))
+              mixing_vars = mixing_vars,
+              diagnostics_output = diagnostics_output))
 }

@@ -1,7 +1,8 @@
 temp_oxy_chla_qaqc <- function(realtime_file,
                                qaqc_file, 
                                maintenance_file, 
-                               input_file_tz){
+                               input_file_tz,
+                               focal_depths){
   
   CATDATA_COL_NAMES <- c("DateTime", "RECORD", "CR6_Batt_V", "CR6Panel_Temp_C", "ThermistorTemp_C_surface",
                          "ThermistorTemp_C_1", "ThermistorTemp_C_2", "ThermistorTemp_C_3", "ThermistorTemp_C_4",
@@ -287,14 +288,18 @@ temp_oxy_chla_qaqc <- function(realtime_file,
                      depth_1.6 = d1$EXO_depth)
   }
   
-  #DIRRRRTY qsu -> mg/L ->  mmol/m3
-  #From Mary Lofton Sept 8, Model_w/o_Oct_2018 (R2 = 0.593)
-  d$fDOM_1 <- -98.147 + 26.101* d$fDOM_1
+
+  d$fDOM_1 <- exo_fdom_2_doc[1] + exo_fdom_2_doc[2] * d$fDOM_1
   
   #oxygen unit conversion
   d$doobs_1 <- d$doobs_1*1000/32  #mg/L (obs units) -> mmol/m3 (glm units)
   d$doobs_5 <- d$doobs_5*1000/32  #mg/L (obs units) -> mmol/m3 (glm units)
   d$doobs_9 <- d$doobs_9*1000/32  #mg/L (obs units) -> mmol/m3 (glm units)
+  
+  d$Chla_1 <-  exo_2_ctd_chla[1] +  d$Chla_1 *  exo_2_ctd_chla[2]
+  d$doobs_1 <- exo_2_ctd_do[1]  +   d$doobs_1 * exo_2_ctd_do[2]
+  d$doobs_5 <- do_2_ctd_do_5[1] +   d$doobs_5 * do_2_ctd_do_5[2]
+  d$doobs_9 <- do_2_ctd_do_9[1] +   d$doobs_9 * do_2_ctd_do_9[2]
   
   d <- d %>% 
     mutate(day = day(TIMESTAMP),

@@ -288,7 +288,7 @@ plot_forecast <- function(pdf_file_name,
         lower95_oxy <- array(NA,dim=c(length(t),length(depths)))
         for(ii in 1:length(depths)){
           for(j in 1:length(t)){
-            mean_oxy[j,ii] <- mean(OXY_oxy[j,,ii])
+            mean_oxy[j,ii] <- median(OXY_oxy[j,,ii])
             lower95_oxy[j,ii] <- quantile(OXY_oxy[j,,ii],0.025)
             upper95_oxy[j,ii] <- quantile(OXY_oxy[j,,ii],0.975)
           }
@@ -322,14 +322,14 @@ plot_forecast <- function(pdf_file_name,
         model = i
         obs <- obs_chla[,i]
         
-        ylim = range(c(PHY_TCHLA[,,]),na.rm = TRUE) 
+        ylim = range(c(PHY_TCHLA[,,],obs),na.rm = TRUE) 
         if(plot_summaries){
           mean_TCHLA <- array(NA,dim=c(length(t),length(depths)))
           upper95_TCHLA <- array(NA,dim=c(length(t),length(depths)))
           lower95_TCHLA <- array(NA,dim=c(length(t),length(depths)))
           for(ii in 1:length(depths)){
             for(j in 1:length(t)){
-              mean_TCHLA[j,ii] <- mean(PHY_TCHLA[j,,ii])
+              mean_TCHLA[j,ii] <- median(PHY_TCHLA[j,,ii])
               lower95_TCHLA[j,ii] <- quantile(PHY_TCHLA[j,,ii],0.025)
               upper95_TCHLA[j,ii] <- quantile(PHY_TCHLA[j,,ii],0.975)
             }
@@ -359,7 +359,7 @@ plot_forecast <- function(pdf_file_name,
       for(i in 1:nlayers){
         model = i
         obs <- obs_fdom[,i]
-        ylim = range(c(OGM_doc[,,]),na.rm = TRUE) 
+        ylim = range(c(OGM_doc[,,], obs),na.rm = TRUE) 
         
         if(plot_summaries){
           mean_doc <- array(NA,dim=c(length(t),length(depths)))
@@ -367,7 +367,7 @@ plot_forecast <- function(pdf_file_name,
           lower95_doc <- array(NA,dim=c(length(t),length(depths)))
           for(ii in 1:length(depths)){
             for(j in 1:length(t)){
-              mean_doc[j,ii] <- mean(OGM_doc[j,,ii])
+              mean_doc[j,ii] <- median(OGM_doc[j,,ii])
               lower95_doc[j,ii] <- quantile(OGM_doc[j,,ii],0.025)
               upper95_doc[j,ii] <- quantile(OGM_doc[j,,ii],0.975)
             }
@@ -397,7 +397,7 @@ plot_forecast <- function(pdf_file_name,
       for(i in 1:nlayers){
         model = i
         obs <- obs_NO3[,i]
-        ylim = range(c(NIT_nit[,,]),na.rm = TRUE) 
+        ylim = range(c(NIT_nit[,,],obs),na.rm = TRUE) 
         
         if(plot_summaries){
           mean_doc <- array(NA,dim=c(length(t),length(depths)))
@@ -405,7 +405,7 @@ plot_forecast <- function(pdf_file_name,
           lower95_doc <- array(NA,dim=c(length(t),length(depths)))
           for(ii in 1:length(depths)){
             for(j in 1:length(t)){
-              mean_doc[j,ii] <- mean(NIT_nit[j,,ii])
+              mean_doc[j,ii] <- median(NIT_nit[j,,ii])
               lower95_doc[j,ii] <- quantile(NIT_nit[j,,ii],0.025)
               upper95_doc[j,ii] <- quantile(NIT_nit[j,,ii],0.975)
             }
@@ -437,7 +437,7 @@ plot_forecast <- function(pdf_file_name,
       for(i in 1:nlayers){
         model = i
         obs <- obs_NH4[,i]
-        ylim = range(c(NIT_amm[,,]),na.rm = TRUE) 
+        ylim = range(c(NIT_amm[,,],obs),na.rm = TRUE) 
         
         if(plot_summaries){
           mean_doc <- array(NA,dim=c(length(t),length(depths)))
@@ -445,7 +445,7 @@ plot_forecast <- function(pdf_file_name,
           lower95_doc <- array(NA,dim=c(length(t),length(depths)))
           for(ii in 1:length(depths)){
             for(j in 1:length(t)){
-              mean_doc[j,ii] <- mean(NIT_amm[j,,ii])
+              mean_doc[j,ii] <- median(NIT_amm[j,,ii])
               lower95_doc[j,ii] <- quantile(NIT_amm[j,,ii],0.025)
               upper95_doc[j,ii] <- quantile(NIT_amm[j,,ii],0.975)
             }
@@ -475,7 +475,7 @@ plot_forecast <- function(pdf_file_name,
       for(i in 1:nlayers){
         model = i
         obs <- obs_SRP[,i]
-        ylim = range(c(PHS_frp[,,]),na.rm = TRUE) 
+        ylim = range(c(PHS_frp[,,],obs),na.rm = TRUE) 
         
         if(plot_summaries){
           mean_doc <- array(NA,dim=c(length(t),length(depths)))
@@ -483,7 +483,7 @@ plot_forecast <- function(pdf_file_name,
           lower95_doc <- array(NA,dim=c(length(t),length(depths)))
           for(ii in 1:length(depths)){
             for(j in 1:length(t)){
-              mean_doc[j,ii] <- mean(PHS_frp[j,,ii])
+              mean_doc[j,ii] <- median(PHS_frp[j,,ii])
               lower95_doc[j,ii] <- quantile(PHS_frp[j,,ii],0.025)
               upper95_doc[j,ii] <- quantile(PHS_frp[j,,ii],0.975)
             }
@@ -524,9 +524,9 @@ plot_forecast <- function(pdf_file_name,
               lower95_wq <- array(NA,dim=c(length(t),length(depths)))
               for(ii in 1:length(depths)){
                 for(j in 1:length(t)){
-                  mean_wq[j,ii] <- mean(wq_output[wq,j,,ii])
-                  lower95_wq[j,ii] <- quantile(wq_output[wq,j,,ii],0.025)
-                  upper95_wq[j,ii] <- quantile(wq_output[wq,j,,ii],0.975)
+                  mean_wq[j,ii] <- median(wq_output[wq,j,,ii], na.rm = TRUE)
+                  lower95_wq[j,ii] <- quantile(wq_output[wq,j,,ii],0.025, na.rm = TRUE)
+                  upper95_wq[j,ii] <- quantile(wq_output[wq,j,,ii],0.975, na.rm = TRUE)
                 }
               }
               plot(full_time_local,mean_wq[,model],type='l',ylab=wq_names_w_phytos[wq],xlab='time step (day)',main = paste('depth: ',depths[i],' m',sep=''),ylim=ylim)
@@ -727,7 +727,7 @@ plot_forecast <- function(pdf_file_name,
             lower95_oxy <- array(NA,dim=c(length(t),length(depths)))
             for(ii in 1:length(depths)){
               for(j in 1:length(t)){
-                mean_oxy[j,ii] <- mean(OXY_oxy[j,,ii])
+                mean_oxy[j,ii] <- median(OXY_oxy[j,,ii])
                 lower95_oxy[j,ii] <- quantile(OXY_oxy[j,,ii],0.025)
                 upper95_oxy[j,ii] <- quantile(OXY_oxy[j,,ii],0.975)
               }
@@ -770,7 +770,7 @@ plot_forecast <- function(pdf_file_name,
               lower95_TCHLA <- array(NA,dim=c(length(t),length(depths)))
               for(ii in 1:length(depths)){
                 for(j in 1:length(t)){
-                  mean_TCHLA[j,ii] <- mean(PHY_TCHLA[j,,ii])
+                  mean_TCHLA[j,ii] <- median(PHY_TCHLA[j,,ii])
                   lower95_TCHLA[j,ii] <- quantile(PHY_TCHLA[j,,ii],0.025)
                   upper95_TCHLA[j,ii] <- quantile(PHY_TCHLA[j,,ii],0.975)
                 }
@@ -809,7 +809,7 @@ plot_forecast <- function(pdf_file_name,
               lower95_doc <- array(NA,dim=c(length(t),length(depths)))
               for(ii in 1:length(depths)){
                 for(j in 1:length(t)){
-                  mean_doc[j,ii] <- mean(OGM_doc[j,,ii])
+                  mean_doc[j,ii] <- median(OGM_doc[j,,ii])
                   lower95_doc[j,ii] <- quantile(OGM_doc[j,,ii],0.025)
                   upper95_doc[j,ii] <- quantile(OGM_doc[j,,ii],0.975)
                 }
