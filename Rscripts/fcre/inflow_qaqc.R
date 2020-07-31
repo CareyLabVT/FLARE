@@ -120,26 +120,28 @@ inflow_qaqc <- function(realtime_file,
       mutate(NIT_amm = NH4_ugL*1000*0.001*(1/18.04),
              NIT_nit =  NO3NO2_ugL*1000*0.001*(1/62.00),
              PHS_frp = SRP_ugL*1000*0.001*(1/94.9714),
-             PHS_frp_ads = PHS_frp,
+             #PHS_frp_ads = PHS_frp,
              OGM_doc = DOC_mgL*1000*(1/12.01)* 0.10,
              OGM_docr = DOC_mgL*1000*(1/12.01)* 0.90, 
              OGM_poc = 0.1*(OGM_doc+OGM_docr),
              TN = TN_ugL*1000*0.001*(1/14),
              TP = TP_ugL*1000*0.001*(1/30.97),
-             OGM_don = (5/6)*(TN-(NIT_amm+NIT_nit)),
-             OGM_dop = 0.3*(TP - PHS_frp),
+             OGM_don = (5/6)*(TN-(NIT_amm+NIT_nit)) * 0.1,
+             OGM_donr = (5/6)*(TN-(NIT_amm+NIT_nit)) * 0.9,
+             OGM_dop = 0.3*(TP - PHS_frp) *0.1,
+             OGM_dopr = 0.3*(TP - PHS_frp) * 0.9,
              OGM_pon = (1/6)*(TN -(NIT_amm+NIT_nit)),
              OGM_pop = 0.7*(TP - PHS_frp),
-             CAR_dic = DIC_mgL*1000*(1/52.515),
-             CAR_ch4 = 0.0,
-             SIL_rsi = 0.0) %>% 
-      select(time, NIT_amm, NIT_nit, PHS_frp, OGM_doc, OGM_docr, OGM_poc, OGM_don, OGM_dop, OGM_pop, OGM_pon, PHS_frp_ads, CAR_dic, CAR_ch4, SIL_rsi)
+             #CAR_dic = DIC_mgL*1000*(1/52.515),
+             #CAR_ch4 = 0.0,
+             SIL_rsi = 126.3866) %>% 
+      select(time, NIT_amm, NIT_nit, PHS_frp, OGM_doc, OGM_docr, OGM_poc, OGM_don,OGM_donr, OGM_dop, OGM_dopr, OGM_pop, OGM_pon,SIL_rsi)
     
     inflow_combined_with_na <- left_join(inflow_combined, nutrients, by = "time") %>% 
       mutate(OXY_oxy = Eq.Ox.conc(TEMP, elevation.m = 506,
-                                            bar.press = NULL, bar.units = NULL,
-                                            out.DO.meas = "mg/L",
-                                            salinity = 0, salinity.units = "pp.thou")*1000*(1/32)) %>% 
+                                  bar.press = NULL, bar.units = NULL,
+                                  out.DO.meas = "mg/L",
+                                  salinity = 0, salinity.units = "pp.thou")*1000*(1/32)) %>% 
       mutate(NIT_amm = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(NIT_amm), NA),
              NIT_nit = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(NIT_nit), NA),
              PHS_frp = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(PHS_frp), NA),
@@ -147,21 +149,24 @@ inflow_qaqc <- function(realtime_file,
              OGM_docr = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(OGM_docr), NA),
              OGM_poc = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(OGM_poc), NA),
              OGM_don = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(OGM_don), NA),
+             OGM_donr = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(OGM_donr), NA),
              OGM_dop = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(OGM_dop), NA),
+             OGM_dopr = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(OGM_dopr), NA),
              OGM_pop = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(OGM_pop), NA),
              OGM_pon = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(OGM_pon), NA),
-             PHS_frp_ads = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(PHS_frp_ads), NA),
-             CAR_dic = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(CAR_dic), NA),
-             CAR_ch4 = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(CAR_ch4), NA),
-             SIL_rsi = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(SIL_rsi), NA),
-             ) %>% 
+             #PHS_frp_ads = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(PHS_frp_ads), NA),
+             #CAR_dic = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(CAR_dic), NA),
+             #CAR_ch4 = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(CAR_ch4), NA),
+             SIL_rsi = ifelse(time <= last(nutrients$time) & time >= first(nutrients$time), na_interpolation(SIL_rsi), NA)
+      ) %>% 
       mutate(OGM_dop = ifelse(time > as_date("2013-09-01") & time < as_date("2015-01-01"), NA, OGM_dop), 
+             OGM_dopr = ifelse(time > as_date("2013-09-01") & time < as_date("2015-01-01"), NA, OGM_dopr),
              OGM_pop = ifelse(time > as_date("2013-09-01") & time < as_date("2015-01-01"), NA, OGM_pop))
     
     nutrients_monthly <- nutrients %>% 
       mutate(month = month(time)) %>% 
       group_by(month) %>% 
-      summarise_at(vars(NIT_amm:CAR_dic), mean, na.rm = TRUE)
+      summarise_at(vars(NIT_amm:SIL_rsi), mean, na.rm = TRUE)
     
     inflow_clean <- inflow_combined_with_na %>% 
       mutate(month = month(time)) %>% 
@@ -173,14 +178,16 @@ inflow_qaqc <- function(realtime_file,
              OGM_docr = ifelse(is.na(OGM_docr.x), OGM_docr.y,OGM_docr.x),
              OGM_poc = ifelse(is.na(OGM_poc.x), OGM_poc.y,OGM_poc.x),
              OGM_don = ifelse(is.na(OGM_don.x), OGM_don.y,OGM_don.x),
+             OGM_donr = ifelse(is.na(OGM_don.x), OGM_don.y,OGM_don.x),
              OGM_dop = ifelse(is.na(OGM_dop.x), OGM_dop.y,OGM_dop.x),
+             OGM_dopr = ifelse(is.na(OGM_dop.x), OGM_dop.y,OGM_dop.x),
              OGM_pop = ifelse(is.na(OGM_pop.x), OGM_pop.y,OGM_pop.x),
              OGM_pon = ifelse(is.na(OGM_pon.x), OGM_pon.y,OGM_pon.x),
-             PHS_frp_ads = ifelse(is.na(PHS_frp_ads.x), PHS_frp_ads.y,PHS_frp_ads.x),
-             CAR_dic = ifelse(is.na(CAR_dic.x), CAR_dic.y,CAR_dic.x)) %>% 
-             #CAR_ch4 = ifelse(is.na(CAR_ch4.x), CAR_ch4.y,CAR_ch4.x),
-             #SIL_rsi = ifelse(is.na(SIL_rsi.x), SIL_rsi.y,SIL_rsi.x))  %>% 
-      select(time, FLOW,TEMP,SALT,OXY_oxy,NIT_amm,NIT_nit,PHS_frp,OGM_doc,OGM_docr,OGM_poc,OGM_don,OGM_pon,OGM_dop,OGM_pop,PHS_frp_ads,CAR_dic,CAR_ch4,SIL_rsi)
+             #PHS_frp_ads = ifelse(is.na(PHS_frp_ads.x), PHS_frp_ads.y,PHS_frp_ads.x),
+             #CAR_dic = ifelse(is.na(CAR_dic.x), CAR_dic.y,CAR_dic.x)) %>% 
+      #CAR_ch4 = ifelse(is.na(CAR_ch4.x), CAR_ch4.y,CAR_ch4.x),
+             SIL_rsi = ifelse(is.na(SIL_rsi.x), SIL_rsi.y,SIL_rsi.x))  %>% 
+      select(time, FLOW,TEMP,SALT,OXY_oxy, SIL_rsi, NIT_amm,NIT_nit,PHS_frp,OGM_doc,OGM_docr,OGM_poc,OGM_don,OGM_donr,OGM_pon,OGM_dop,OGM_dopr,OGM_pop)
     
   }else{
     inflow_clean <- inflow_combined

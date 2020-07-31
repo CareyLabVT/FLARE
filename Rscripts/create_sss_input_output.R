@@ -7,9 +7,31 @@ create_sss_input_output <- function(x, i, m, full_time_local,
   
   full_time_day_local <- as_date(full_time_local)
   
+  potential_names <- c("OXY_oxy",
+                       "SIL_rsi",
+                       "NIT_amm",
+                       "NIT_nit",
+                       "PHS_frp",
+                       "OGM_doc",
+                       "OGM_docr",
+                       "OGM_poc",
+                       "OGM_don",
+                       "OGM_donr",
+                       "OGM_pon",
+                       "OGM_dop",
+                       "OGM_dopr",
+                       "OGM_pop")
+
+  
   sss_oxy_factor <- 1.0
   
   depth_index <- which.min(abs(modeled_depths - sss_depth))
+  
+  if(include_wq){
+    wq_names_tmp <- wq_names[which(wq_names %in% potential_names)]
+  }else{
+    wq_names_tmp <- NULL
+  }
   
   time_sss <- c(full_time_day_local[i - 1],full_time_day_local[i])
   if(i > (hist_days + 1)){
@@ -62,7 +84,7 @@ create_sss_input_output <- function(x, i, m, full_time_local,
   
   OXY_oxy <- round(c(OXY1, OXY2), 3)
   
-  if(length(which(wq_names != "OXY_oxy")) == 0){
+  if(length(which(wq_names != "OXY_oxy")) == 1){
   sss_inflow <- data.frame(time = time_sss, FLOW = FLOW, TEMP = TEMP, SALT = SALT, OXY_oxy = OXY_oxy)
   }else{
     
@@ -73,7 +95,9 @@ create_sss_input_output <- function(x, i, m, full_time_local,
     OGM_docr <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_docr")-1] + depth_index - 1],2), 3)
     OGM_poc <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_poc")-1] + depth_index - 1],2), 3)
     OGM_don <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_don")-1] + depth_index - 1],2), 3)
+    OGM_donr <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_donr")-1] + depth_index - 1],2), 3)
     OGM_dop <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_dop")-1] + depth_index - 1],2), 3)
+    OGM_dopr <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_dop")-1] + depth_index - 1],2), 3)
     OGM_pop <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_pop")-1] + depth_index - 1],2), 3)
     OGM_pon <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_pon")-1] + depth_index - 1],2), 3)
     #PHS_frp_ads <- round(rep(x[i-1, m, wq_start[which(wq_names == "PHS_frp_ads")-1] + depth_index - 1],2), 3)
@@ -86,6 +110,7 @@ create_sss_input_output <- function(x, i, m, full_time_local,
                              TEMP = TEMP, 
                              SALT = SALT, 
                              OXY_oxy = OXY_oxy,
+                             SIL_rsi = SIL_rsi,
                              NIT_amm = NIT_amm,
                              NIT_nit = NIT_nit,
                              PHS_frp = PHS_frp,
@@ -93,13 +118,18 @@ create_sss_input_output <- function(x, i, m, full_time_local,
                              OGM_docr = OGM_docr,
                              OGM_poc = OGM_poc, 
                              OGM_don = OGM_don,
+                             OGM_donr = OGM_donr,
                              OGM_pon = OGM_pon,
                              OGM_dop = OGM_dop,
-                             OGM_pop = OGM_pop,
+                             OGM_dopr = OGM_dopr,
+                             OGM_pop = OGM_pop
                              #PHS_frp_ads = PHS_frp_ads,
                              #CAR_dic = CAR_dic,
                              #CAR_ch4 = CAR_ch4,
-                             SIL_rsi = SIL_rsi)
+                             )
+    
+    #sss_inflow <- sss_inflow %>% 
+    #  select(vars(c("FLOW", "TEMP", "SALT", all_of(wq_names_tmp))))
   }
   
 

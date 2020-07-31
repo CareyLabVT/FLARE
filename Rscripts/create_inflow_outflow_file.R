@@ -98,8 +98,7 @@ create_inflow_outflow_file <- function(full_time_local,
           filter(time < full_time_day_local[start_forecast_step]) %>% 
           mutate(doy = yday(time)) %>% 
           filter(doy == yday(tmp$time[i])) %>% 
-          summarize_at(.vars = c(wq_names_tmp), mean, na.rm = TRUE) %>% 
-          unlist()
+          summarize_at(.vars = c(wq_names_tmp), mean, na.rm = TRUE) 
       }
     }
   }
@@ -119,9 +118,17 @@ create_inflow_outflow_file <- function(full_time_local,
       select(time, FLOW, TEMP, SALT, all_of(wq_names_tmp)) %>% 
       mutate_at(vars(c("FLOW", "TEMP", "SALT", all_of(wq_names_tmp))), funs(round(., 4)))
     
-    if("OGM_doc" %in% wq_names_tmp){
+    if("OGM_docr" %in% wq_names_tmp){
     tmp2 <- tmp2 %>% 
       mutate(OGM_docr = OGM_docr * doc_scalar)
+    }
+    if("OGM_donr" %in% wq_names_tmp){
+      tmp2 <- tmp2 %>% 
+        mutate(OGM_donr = OGM_donr * doc_scalar)
+    }
+    if("OGM_dopr" %in% wq_names_tmp){
+      tmp2 <- tmp2 %>% 
+        mutate(OGM_dopr = OGM_dopr * doc_scalar)
     }
     
     write_csv(x = tmp2,

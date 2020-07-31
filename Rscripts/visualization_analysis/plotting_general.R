@@ -49,6 +49,7 @@ plotting_general <- function(pdf_file_name,
                            ,"Fsed_oxy_zone1"
                            ,"Fsed_oxy_zone2"
                            ,"Rdom_minerl"
+                           ,"Rdomr_minerl"
                            ,"Fsed_frp"
                            ,"Fsed_amm"
                            ,"Fsed_nit"
@@ -90,7 +91,7 @@ plotting_general <- function(pdf_file_name,
                           "PHY_diatom_IN",
                           "PHY_diatom_IP")
   
-  combined_states <- list(NIT_total = c("NIT_amm","NIT_nit","OGM_don","OGM_pon"),
+  combined_states_potential <- list(NIT_total = c("NIT_amm","NIT_nit","OGM_don","OGM_pon"),
                           #PHS_total = c("PHS_frp","OGM_dop","OGM_dopr","OGM_pop","PHS_frp_ads"),
                           PHS_total = c("PHS_frp","OGM_dop","OGM_pop"),
                           OGM_doc_total = c("OGM_doc","OGM_docr"),
@@ -111,11 +112,11 @@ plotting_general <- function(pdf_file_name,
                              "PHY_diatom_fT",
                              "rad")
   
-  biomass_to_chla <- c((50/12),(50/12), (50/12))
-  combined_states_conversion <- list(NIT_total = c(1,1,1,1,1),
+  #biomass_to_chla <- c((80/12),(30/12), (30/12))
+  combined_states_conversion_potential <- list(NIT_total = c(1,1,1,1,1),
                                      PHS_total = c(1,1,1,1,1),
                                      OGM_doc_total = c(1,1),
-                                     PHY_TCHLA = 1/biomass_to_chla)
+                                     PHY_TCHLA = c(1/biomass_to_chla[1], 1/biomass_to_chla[2], 1/biomass_to_chla[3]))
   
   
   nc <- nc_open(output_file)
@@ -127,10 +128,11 @@ plotting_general <- function(pdf_file_name,
   full_time_day_local <- as_date(full_time_local)
   nsteps <- length(full_time_day_local)
   forecasted <- ncvar_get(nc, 'forecasted')
-  depths <- ncvar_get(nc, 'z')
+  depths <- round(ncvar_get(nc, 'z'),2)
   
   wq_names <- wq_names_potential[wq_names_potential %in% names(nc$var)]
-  
+  combined_states_conversion <- combined_states_conversion_potential[names(combined_states_conversion_potential) %in% wq_names_obs]
+  combined_states <- combined_states_potential[names(combined_states_potential) %in% wq_names_obs]
   
   state_names <- c(wq_names, names(combined_states))
   par_names <- par_names_potential[par_names_potential %in% names(nc$var)]
@@ -157,6 +159,7 @@ plotting_general <- function(pdf_file_name,
     state_list[[s]] <- ncvar_get(nc, wq_names[s])
   }
   
+  if(length(combined_states) > 0){
   for(i in 1:length(combined_states)){
     for(s in 1:length(combined_states[[i]])){
       if(s > 1){
@@ -166,6 +169,7 @@ plotting_general <- function(pdf_file_name,
       }
     }
     state_list[[length(wq_names)+i]] <- tmp_list
+  }
   }
   
   names(state_list) <- state_names
@@ -337,6 +341,7 @@ plotting_general <- function(pdf_file_name,
     PHY_TCHLA_obs <- array(NA, dim = obs_dims)
     NIT_total_obs <- array(NA, dim = obs_dims)
     PHS_total_obs <- array(NA, dim = obs_dims)
+    OGM_doc_obs_total <- array(NA, dim = obs_dims)
   }
   
   z_potential <- list(temp = obs_temp,
@@ -365,7 +370,12 @@ plotting_general <- function(pdf_file_name,
   
   z <- array(unlist(z_potential[names(z_potential) %in% wq_names_obs]), dim = c(nsteps, length(depths), length(wq_names_obs)))
   
-  pdf(paste0(save_location,'/',pdf_file_name, ".pdf"),width = 11, height = 8)
+  if(length(focal_depths_plotting) < 4){
+    plot_height <- 3
+  }else{
+    plot_height <- 8
+  }
+  pdf(paste0(save_location,'/',pdf_file_name, ".pdf"),width = 11, height = plot_height)
   
   for(i in 1:length(state_names)){
     
@@ -377,7 +387,7 @@ plotting_general <- function(pdf_file_name,
     lower_var <- array(NA,dim = c(length(depths), length(full_time_local)))
     for(j in 1:length(full_time_local)){
       for(ii in 1:length(depths)){
-        mean_var[ii, j] <- median(curr_var[j, , ii], na.rm = TRUE)
+        mean_var[ii, j] <- mean(curr_var[j, , ii], na.rm = TRUE)
         upper_var[ii, j] <- quantile(curr_var[j, , ii], 0.1, na.rm = TRUE)
         lower_var[ii, j] <- quantile(curr_var[j, , ii], 0.9, na.rm = TRUE)
       }
@@ -400,7 +410,8 @@ plotting_general <- function(pdf_file_name,
                           upper_var = c(upper_var),
                           lower_var = c(lower_var),
                           observed = obs,
-                          depth = rep(depths, length(full_time_local)))
+                          depth = rep(depths, length(full_time_local))) %>% 
+      filter(depth %in% focal_depths_plotting)
     
     if(forecast_index > 0){
       forecast_start_day <- full_time_local[forecast_index-1]
@@ -411,7 +422,7 @@ plotting_general <- function(pdf_file_name,
     }
     
     p <- ggplot(curr_tibble, aes(x = date)) + 
-      facet_wrap(~depth) +
+      facet_wrap(~depth, scales = "free") +
       geom_ribbon(aes(ymin = lower_var, ymax = upper_var), 
                   alpha = 0.70, 
                   fill = "gray") +
@@ -435,7 +446,7 @@ plotting_general <- function(pdf_file_name,
       upper_var <- array(NA, dim = c(length(full_time_local)))
       lower_var <- array(NA, dim = c(length(full_time_local)))
       for(j in 1:length(full_time_local)){
-        mean_var[j] <- median(curr_var[j, ])
+        mean_var[j] <- mean(curr_var[j, ])
         upper_var[j] <- quantile(curr_var[j, ], 0.1, na.rm = TRUE)
         lower_var[j] <- quantile(curr_var[j, ], 0.9, na.rm = TRUE)
       }
@@ -481,7 +492,7 @@ plotting_general <- function(pdf_file_name,
       lower_var <- array(NA,dim = c(length(depths), length(full_time_local)))
       for(j in 1:length(full_time_local)){
         for(ii in 1:length(depths)){
-          mean_var[ii, j] <- median(curr_var[j, , ii], na.rm = TRUE)
+          mean_var[ii, j] <- mean(curr_var[j, , ii], na.rm = TRUE)
           upper_var[ii, j] <- quantile(curr_var[j, , ii], 0.1, na.rm = TRUE)
           lower_var[ii, j] <- quantile(curr_var[j, , ii], 0.9, na.rm = TRUE)
         }
@@ -496,7 +507,8 @@ plotting_general <- function(pdf_file_name,
                             curr_var = c(mean_var),
                             upper_var = c(upper_var),
                             lower_var = c(lower_var),
-                            depth = rep(depths, length(full_time_local)))
+                            depth = rep(depths, length(full_time_local))) %>% 
+      filter(depth %in% focal_depths_plotting)
       
       if(forecast_index > 0){
         forecast_start_day <- full_time_local[forecast_index-1]
@@ -535,7 +547,6 @@ plotting_general <- function(pdf_file_name,
       full_time_local_obs <- tibble(date = as_date(full_time_local))
       obs <- obs %>% 
         right_join(full_time_local_obs, by = "date") %>% 
-        mutate(DateTime = full_time_local) %>% 
         select(Secchi_m) 
     }
     
@@ -551,7 +562,7 @@ plotting_general <- function(pdf_file_name,
     lower_var <- array(NA,dim = c(length(full_time_local)))
     for(j in 1:length(full_time_local)){
       sechi <- 1.7 / curr_var[j, , ii]
-      mean_var[j] <- median(sechi, na.rm = TRUE)
+      mean_var[j] <- mean(sechi, na.rm = TRUE)
       upper_var[j] <- quantile(sechi, 0.1, na.rm = TRUE)
       lower_var[j] <- quantile(sechi, 0.9, na.rm = TRUE)
     }

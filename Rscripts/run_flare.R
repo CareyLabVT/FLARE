@@ -45,10 +45,12 @@ run_flare<-function(start_day_local,
   source(paste0(code_folder,"/","Rscripts/create_sss_input_output.R"))
   source(paste0(code_folder,"/","Rscripts/create_inflow_outflow_file.R"))
   source(paste0(code_folder,"/","Rscripts/read_sss_files.R"))
-  
+
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/in_situ_qaqc.R"))  
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/met_qaqc.R")) 
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/inflow_qaqc.R"))  
+  source(paste0(code_folder,"/","Rscripts/",lake_name,"/inflow_qaqc.R")) 
+  
+  source(paste0(code_folder,"/","Rscripts/define_model_",model_name,".R")) 
   
   
   ### METEROLOGY DOWNSCALING OPTIONS
@@ -784,6 +786,7 @@ run_flare<-function(start_day_local,
       PHY_TCHLA_obs <- array(NA, dim = obs_dims)
       NIT_total_obs <- array(NA, dim = obs_dims)
       PHS_total_obs <- array(NA, dim = obs_dims)
+      OGM_doc_obs_total  <- array(NA, dim = obs_dims)
     }
     
     z_potential <- list(temp = obs_temp,
@@ -1007,11 +1010,11 @@ run_flare<-function(start_day_local,
     CAR_ch4_init_depth <- rep(CAR_ch4_init, ndepths_modeled)
     SIL_rsi_init_depth <- rep(SIL_rsi_init, ndepths_modeled)
     OGM_poc_init_depth <- rep(OGM_poc_init, ndepths_modeled)
-    OGM_don_init_depth <- OGM_doc_init_depth * don_doc_init_ratio
-    OGM_donr_init_depth <- OGM_docr_init_depth * donr_docr_init_ratio
+    OGM_don_init_depth <- rep(OGM_don_init, ndepths_modeled)
+    OGM_donr_init_depth <- rep(OGM_donr_init, ndepths_modeled)
     OGM_pon_init_depth <- rep(OGM_pon_init, ndepths_modeled)
-    OGM_dop_init_depth <- OGM_doc_init_depth * dop_doc_init_ratio
-    OGM_dopr_init_depth <- OGM_doc_init_depth * dopr_docr_init_ratio
+    OGM_dop_init_depth <- rep(OGM_dop_init, ndepths_modeled)
+    OGM_dopr_init_depth <- rep(OGM_dopr_init, ndepths_modeled)
     OGM_pop_init_depth <- rep(OGM_pop_init, ndepths_modeled)
     NCS_ss1_init_depth <- rep(NCS_ss1_init, ndepths_modeled)
     PHS_frp_ads_init_depth <- rep(PHS_frp_ads_init, ndepths_modeled)
@@ -1052,41 +1055,6 @@ run_flare<-function(start_day_local,
     wq_init_vals <- c(" ")
   }
   
-  ########################################
-  #BEGIN GLM SPECIFIC PART
-  ########################################
-  
-  GLM_folder <- paste0(code_folder, "/", "glm", "/", machine) 
-  fl <- c(list.files(GLM_folder, full.names = TRUE))
-  tmp <- file.copy(from = fl, to = working_directory, overwrite = TRUE)
-  
-  file.copy(from = paste0(base_GLM_nml), 
-            to = paste0(working_directory, "/", "glm3.nml"), overwrite = TRUE)
-  
-  update_var(num_wq_vars, "num_wq_vars", working_directory, "glm3.nml") #GLM SPECIFIC
-
-  if(include_wq){
-
-    file.copy(from = paste0(base_AED_nml), 
-              to = paste0(working_directory, "/", "aed2.nml"), overwrite = TRUE)
-    file.copy(from = paste0(base_AED_phyto_pars_nml), 
-              to = paste0(working_directory, "/", "aed2_phyto_pars.nml"), overwrite = TRUE)
-    file.copy(from = paste0(base_AED_zoop_pars_nml), 
-              to = paste0(working_directory, "/", "aed2_zoop_pars.nml"), overwrite = TRUE)
-  }
-  
-  update_var(ndepths_modeled, "num_depths", working_directory, "glm3.nml") #GLM SPECIFIC
-  update_var(modeled_depths, "the_depths", working_directory, "glm3.nml") #GLM SPECIFIC
-  update_var(rep(the_sals_init, ndepths_modeled), "the_sals", working_directory, "glm3.nml") #GLM SPECIFIC
-  
-  #Create a copy of the NML to record starting initial conditions
-  file.copy(from = paste0(working_directory, "/", "glm3.nml"), #GLM SPECIFIC
-            to = paste0(working_directory, "/", "glm3_initial.nml"), overwrite = TRUE) #GLM SPECIFIC
-  
-  ########################################
-  #END GLM SPECIFIC PART
-  ########################################
-  
   #######################################################
   #### STEP 9: CREATE THE PSI VECTOR (DATA uncertainty)  
   #######################################################
@@ -1114,20 +1082,25 @@ run_flare<-function(start_day_local,
     }
   }
   
-  if(restart_present){
-    nc <- nc_open(restart_file)
-    qt <- ncvar_get(nc, "qt_restart")
-    running_residuals <- ncvar_get(nc, "running_residuals")
+  #if(restart_present){
+  #  nc <- nc_open(restart_file)
+  #  qt <- ncvar_get(nc, "qt_restart")
+  #  running_residuals <- ncvar_get(nc, "running_residuals")
     #qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
     #diag(qt_pars) <- par_init_qt
-    nc_close(nc)
-    qt_init <- qt
-  }else{
+  #  nc_close(nc)
+  #  qt_init <- qt
+  #}else{
     qt <- matrix(data = 0, nrow = ndepths_modeled, ncol = ndepths_modeled)
     
     diag(qt) <- rep(temp_process_error,ndepths_modeled )
     qt_init <- matrix(data = 0, nrow = ndepths_modeled, ncol = ndepths_modeled)
     diag(qt_init) <- rep(temp_init_error,ndepths_modeled)
+    
+
+    #combined_error <- c(sqrt(temp_process_error))
+    combined_error <- c(temp_process_error)
+
     
     if(include_wq){
 
@@ -1189,6 +1162,12 @@ run_flare<-function(start_day_local,
         
         
         wq_var_error <- as.numeric(bind_cols(wq_var_error_potential[names(wq_var_error_potential) %in% c("temp",wq_names)])) 
+        
+        #combined_error <- c(combined_error, sqrt(wq_var_error))
+        
+        combined_error <- c(combined_error, wq_var_error)
+        
+        combined_error <- sqrt(combined_error)
 
         wq_var_init_error <- as.numeric(bind_cols(wq_var_init_error_potential[names(wq_var_init_error_potential) %in% c("temp",wq_names)])) 
 
@@ -1203,28 +1182,13 @@ run_flare<-function(start_day_local,
           qt_init[ncol(qt_init),nrow(qt_init)] <- wq_var_init_error[i]
         }
       }
-    }
     
     running_residuals <- array(NA, dim =c(num_adapt_days, nrow(qt)))
-    
-    #Covariance matrix for parameters
-    #if(npars > 0){
-    #  for(pars in 1:npars){
-    #    qt <- rbind(qt, rep(0.0, ncol(qt)))
-    #    qt <- cbind(qt, rep(0.0, nrow(qt)))
-    #    qt[ncol(qt),nrow(qt)] <- par_init_qt[pars]
-    #    
-    #    qt_init <- rbind(qt_init, rep(0.0, ncol(qt_init)))
-    #    qt_init <- cbind(qt_init, rep(0.0, nrow(qt)))
-    #    qt_init[ncol(qt_init),nrow(qt_init)] <- par_init_qt[pars]
-    #  }
-    #  qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
-    #  diag(qt_pars) <- par_init_qt
-    #}else{
+
     qt_pars <- NA
-    #}
+
   }
-  
+
   ################################################################
   #### STEP 11: CREATE THE X ARRAY (STATES X TIME);INCLUDES INITIALATION
   ################################################################
@@ -1508,7 +1472,13 @@ run_flare<-function(start_day_local,
                           mixing_vars,
                           glm_depths,
                           diagnostics_names,
-                          diagnostics
+                          diagnostics,
+                          combined_error,
+                          code_folder, 
+                          base_GLM_nml, 
+                          base_AED_nml,
+                          base_AED_phyto_pars_nml,
+                          base_AED_zoop_pars_nml
   )
   
   x <- enkf_output$x
@@ -1603,7 +1573,8 @@ run_flare<-function(start_day_local,
                         forecast_location,
                         wq_names,
                         diagnostics_names,
-                        diagnostics)
+                        diagnostics,
+                        )
   
   #### END GLM ENKF CONTAINER ####
   

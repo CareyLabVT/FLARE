@@ -253,3 +253,5 @@ get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars,diagnostic_vars
               mixing_vars = mixing_vars,
               diagnostics_output = diagnostics_output))
 }
+
+

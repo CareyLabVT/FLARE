@@ -32,7 +32,13 @@ run_EnKF <- function(x,
                      mixing_vars,
                      glm_depths,
                      diagnostics_names,
-                     diagnostics
+                     diagnostics,
+                     combined_error,
+                     code_folder, 
+                     base_GLM_nml, 
+                     base_AED_nml,
+                     base_AED_phyto_pars_nml,
+                     base_AED_zoop_pars_nml
 ){
   
   nsteps <- length(full_time_local)
@@ -40,6 +46,12 @@ run_EnKF <- function(x,
   n_met_members <- length(met_file_names) - 1
   nstates <- dim(x)[3] - npars
   ndepths_modeled <- length(modeled_depths)
+  
+  q_v <- rep(NA,ndepths_modeled)
+  w <- rep(NA,ndepths_modeled)
+  
+  alpha_v <- 1 - exp(-vert_decorr_length)
+  
   
   if(include_wq){
     num_wq_vars <- length(wq_start)
@@ -53,8 +65,19 @@ run_EnKF <- function(x,
   
   x_prior <- array(NA, dim = c(nsteps, nmembers, nstates + npars))
   
-  
   glm_salt <- array(NA, dim = c(nmembers, 500))
+  
+  set_up_model(code_folder, 
+               working_directory, 
+               base_GLM_nml, 
+               num_wq_vars, 
+               base_AED_nml,
+               base_AED_phyto_pars_nml,
+               base_AED_zoop_pars_nml,
+               ndepths_modeled,
+               modeled_depths,
+               the_sals_init,
+               machine)
   
   ###START EnKF
   for(i in 2:nsteps){
@@ -84,16 +107,6 @@ run_EnKF <- function(x,
       dit_pars<- array(NA, dim = c(nmembers, npars))
     }
     
-    nqt <- rmvnorm(n = nmembers, sigma = as.matrix(qt)) 
-    
-    update_var(colMeans(mixing_vars), 
-               "restart_variables", 
-               working_directory, 
-               "glm3.nml") 
-    
-    update_var(curr_start, "start", working_directory, "glm3.nml")
-    update_var(curr_stop, "stop", working_directory, "glm3.nml")
-    
     # Start loop through ensemble members
     for(m in 1:nmembers){
       
@@ -104,312 +117,81 @@ run_EnKF <- function(x,
         curr_pars <- x[i - 1, m , (nstates+1):(nstates+npars)] 
       }
       
-      if(!use_null_model){
-        
-        update_glm_nml_list <- list()
-        update_aed_nml_list <- list()
-        update_glm_nml_names <- c()
-        update_aed_nml_names <- c()
-        list_index <- 1
-        
-        if(npars > 0){
-          
-          sed_temp_mean_index <- which(par_names == "sed_temp_mean")
-          non_sed_temp_mean_index <- which(par_names != "sed_temp_mean" & 
-                                             par_names != "Fsed_oxy" &
-                                             par_names != "Fsed_frp")
-          
-          fsed_oxy_index <- which(par_names == "Fsed_oxy")
-          
-          if(length(fsed_oxy_index) == 1){
-            update_var(round(curr_pars[fsed_oxy_index], 4), 
-                       par_names[fsed_oxy_index], 
-                       working_directory, 
-                       par_nml[fsed_oxy_index])
-          }else if(length(fsed_oxy_index) == 2){
-            update_var(round(c(curr_pars[fsed_oxy_index[1]],curr_pars[fsed_oxy_index[2]]), 4), 
-                       par_names[fsed_oxy_index[1]], 
-                       working_directory, 
-                       par_nml[fsed_oxy_index[1]])
-            
-          }else if(length(fsed_oxy_index) > 2){
-            stop(paste0("Too many sediment Fsed oxy zones"))
-          }
-          
-          fsed_frp_index <- which(par_names == "Fsed_frp")
-          
-          if(length(fsed_frp_index) == 1){
-            update_var(round(curr_pars[fsed_frp_index], 4), 
-                       par_names[fsed_frp_index], 
-                       working_directory, 
-                       par_nml[fsed_frp_index])
-          }else if(length(fsed_frp_index) == 2){
-            update_var(round(c(curr_pars[fsed_frp_index[1]],curr_pars[fsed_frp_index[2]]), 4), 
-                       par_names[fsed_frp_index[1]], 
-                       working_directory, 
-                       par_nml[fsed_frp_index[1]])
-            
-          }else if(length(fsed_frp_index) > 2){
-            stop(paste0("Too many sediment Fsed frp zones"))
-          }
-          
-          if(length(sed_temp_mean_index) == 1){
-            update_glm_nml_list[[list_index]] <- round(c(curr_pars[sed_temp_mean_index],
-                                                         zone2_temp_init_mean),4) 
-            update_glm_nml_names[list_index] <- "sed_temp_mean"
-            list_index <- list_index + 1
-            
-          }else if(length(sed_temp_mean_index) == 2){
-            update_glm_nml_list[[list_index]] <-  round(c(curr_pars[sed_temp_mean_index[1]],
-                                                          curr_pars[sed_temp_mean_index[2]]), 4)
-            update_glm_nml_names[list_index] <- "sed_temp_mean"
-            list_index <- list_index + 1
-            
-          }else if(length(sed_temp_mean_index) > 2){
-            stop(paste0("Too many sediment temperature zones"))
-          }
-          
-          if(length(non_sed_temp_mean_index) > 0){
-            for(par in non_sed_temp_mean_index){
-              if(par_nml[par] == "glm3.nml"){
-                if(par_names[par] == "inflow_factor"){
-                  if(include_wq){
-                    if(include_wetland_inflow){
-                      update_glm_nml_list[[list_index]] <- c( round(curr_pars[par],4), 
-                                                              round(curr_pars[par],4), 
-                                                              sss_inflow_factor)
-                    }else{
-                      update_glm_nml_list[[list_index]] <- c( round(curr_pars[par],4),
-                                                              sss_inflow_factor)
-                    }
-                    update_glm_nml_names[list_index] <- par_names[par]
-                    list_index <- list_index + 1
-                    
-                    update_glm_nml_list[[list_index]] <- c( round(curr_pars[par],4), 
-                                                            sss_inflow_factor)
-                    update_glm_nml_names[list_index] <- "outflow_factor"
-                    list_index <- list_index + 1
-                  }else{
-                    update_glm_nml_list[[list_index]] <-  round(curr_pars[par],4)
-                    update_glm_nml_names[list_index] <- par_names[par]
-                    list_index <- list_index + 1
-                    update_glm_nml_list[[list_index]] <-  round(curr_pars[par],4)
-                    update_glm_nml_names[list_index] <- "outflow_factor"
-                    list_index <- list_index + 1
-                  }
-                }else{
-                  update_glm_nml_list[[list_index]] <- round(curr_pars[par],4)
-                  update_glm_nml_names[list_index] <- par_names[par]
-                  list_index <- list_index + 1
-                }
-              }else{
-                if(par_nml[par] == "aed2_phyto_pars.nml"){
-                  update_var(rep(round(curr_pars[par],4), num_phytos), 
-                             par_names[par], 
-                             working_directory, 
-                             par_nml[par])
-                }else{
-                  update_var(curr_pars[par], 
-                             par_names[par], 
-                             working_directory, 
-                             par_nml[par])
-                }
-              }
-            }
-          }
+      out <- run_model(i,
+                       m,
+                       mixing_vars,
+                       curr_start,
+                       curr_stop,
+                       par_names,
+                       curr_pars,
+                       working_directory,
+                       par_nml,
+                       num_phytos,
+                       glm_depths,
+                       surface_height,
+                       simulate_SSS,
+                       x,
+                       full_time_local, 
+                       wq_start, 
+                       wq_end,
+                       management_input, 
+                       hist_days, 
+                       forecast_sss_on,
+                       sss_depth,
+                       use_specified_sss,
+                       modeled_depths,
+                       ndepths_modeled,
+                       curr_met_file,
+                       inflow_file_names,
+                       inflow_outflow_index,
+                       outflow_file_names,
+                       glm_output_vars,
+                       diagnostics_names,
+                       machine,
+                       npars,
+                       num_wq_vars,
+                       snow_ice_thickness,
+                       avg_surf_temp,
+                       x_star,
+                       diagnostics)
+      
+      x_star[, ] <- out$x_star
+      surface_height[,] <- out$surface_height
+      snow_ice_thickness[, ,] <- out$snow_ice_thickness
+      avg_surf_temp[,] <- out$avg_surf_temp
+      mixing_vars[,] <- out$mixing_vars
+      diagnostics[, , , ] <- out$diagnostics
+      glm_depths[,,] <- out$glm_depths
+      
+      ########################################
+      #END GLM SPECIFIC PART
+      ########################################
+      
+      #INCREMENT ThE MET_INDEX TO MOVE TO ThE NEXT NOAA ENSEMBLE
+      met_index <- met_index + 1
+      if(met_index > length(met_file_names)){
+        met_index <- 1
+      }
+      
+      inflow_outflow_index <- inflow_outflow_index + 1
+      if(inflow_outflow_index > nrow(inflow_file_names)){
+        inflow_outflow_index <- 1
+      }
+      
+      
+      #Add process noise
+      
+      q_v[] <- NA
+      w[] <- NA
+      for(jj in 1:length(combined_error)){
+        w[] <- rnorm(ndepths_modeled, 0, 1)
+        q_v[1] <- combined_error[jj] * w[1]
+        for(kk in 2:ndepths_modeled){
+          q_v[kk] <- alpha_v * q_v[kk-1] + sqrt(1 - alpha_v^2) * combined_error[jj] * w[kk]
         }
         
-        
-        glm_depths_tmp <- glm_depths[i-1, m,!is.na(glm_depths[i-1, m,])]
-        
-        glm_depths_tmp_tmp <- c(glm_depths_tmp, surface_height[i - 1, m])
-        glm_depths_mid <- glm_depths_tmp_tmp[1:(length(glm_depths_tmp_tmp)-1)] + diff(glm_depths_tmp_tmp)/2
-        
-        if(include_wq){
-          
-          wq_init_vals <- c()
-          
-          for(wq in 1:num_wq_vars){
-            wq_enkf_tmp <- x[i - 1, m, wq_start[wq]:wq_end[wq]]
-            wq_init_vals <- c(wq_init_vals, 
-                              approx(modeled_depths,wq_enkf_tmp, glm_depths_mid, rule = 2)$y)
-          }
-          update_glm_nml_list[[list_index]] <- round(wq_init_vals, 4)
-          update_glm_nml_names[list_index] <- "wq_init_vals"
-          list_index <- list_index + 1
-          
-          if(simulate_SSS){
-            create_sss_input_output(x, i, m, full_time_local, working_directory, 
-                                    wq_start, management_input, hist_days, 
-                                    forecast_sss_on, sss_depth,use_specified_sss)
-          }
-        }
-        
-        the_temps_enkf_tmp <- x[i - 1, m, 1:ndepths_modeled]
-        
-        the_temps_glm <- approx(modeled_depths,the_temps_enkf_tmp, glm_depths_mid, rule = 2)$y
-        
-        update_glm_nml_list[[list_index]] <- round(the_temps_glm, 4)
-        update_glm_nml_names[list_index] <- "the_temps"
-        list_index <- list_index + 1
-        
-        update_glm_nml_list[[list_index]] <- rep(0.0,length(the_temps_glm))
-        update_glm_nml_names[list_index] <- "the_sals"
-        list_index <- list_index + 1
-        
-        update_glm_nml_list[[list_index]] <- round(glm_depths_tmp, 4)
-        update_glm_nml_names[list_index] <- "the_depths"
-        list_index <- list_index + 1
-        
-        update_glm_nml_list[[list_index]] <- length(glm_depths_tmp)
-        update_glm_nml_names[list_index] <- "num_depths"
-        list_index <- list_index + 1
-        
-        update_glm_nml_list[[list_index]] <- round(surface_height[i - 1, m], 4)
-        update_glm_nml_names[list_index] <- "lake_depth"
-        list_index <- list_index + 1
-        
-        update_glm_nml_list[[list_index]] <- 0.0
-        update_glm_nml_names[list_index] <- "snow_thickness"
-        list_index <- list_index + 1
-        
-        update_glm_nml_list[[list_index]] <- round(snow_ice_thickness[i - 1, m, 2], 4)
-        update_glm_nml_names[list_index] <- "white_ice_thickness"
-        list_index <- list_index + 1
-        
-        update_glm_nml_list[[list_index]] <- round(snow_ice_thickness[i - 1, m, 3], 4)
-        update_glm_nml_names[list_index] <- "blue_ice_thickness"
-        list_index <- list_index + 1
-        
-        update_glm_nml_list[[list_index]] <- round(avg_surf_temp[i - 1, m], 4)
-        update_glm_nml_names[list_index] <- "avg_surf_temp"
-        list_index <- list_index + 1
-        
-        #ALLOWS THE LOOPING THROUGH NOAA ENSEMBLES
-        
-        update_glm_nml_list[[list_index]] <- curr_met_file
-        update_glm_nml_names[list_index] <- "meteo_fl"
-        list_index <- list_index + 1
-        
-        update_nml(update_glm_nml_list, 
-                   update_glm_nml_names, 
-                   working_directory, 
-                   "glm3.nml")
-        
-        tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 1], 
-                         to = "inflow_file1.csv", overwrite = TRUE)
-        tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 2], 
-                         to = "inflow_file2.csv", overwrite = TRUE)
-        tmp <- file.copy(from = outflow_file_names[inflow_outflow_index], 
-                         to = "outflow_file1.csv", overwrite = TRUE)      
-        
-        #Use GLM NML files to run GLM for a day
-        # Only allow simulations without NaN values in the output to proceed. 
-        #Necessary due to random Nan in AED output
-        pass <- FALSE
-        num_reruns <- 0
-        
-        if(i == 2 & m == 1){
-          file.copy(from = paste0(working_directory, "/", "glm3.nml"), #GLM SPECIFIC
-                    to = paste0(working_directory, "/", "glm3_initial.nml"), 
-                    overwrite = TRUE) #GLM SPECIFIC
-        }
-        
-        while(!pass){
-          unlink(paste0(working_directory, "/output.nc")) 
-          
-          if(machine == "unix" | machine == "mac"){
-            system2(paste0(working_directory, "/", "glm"), 
-                    stdout = FALSE, 
-                    stderr = FALSE,
-                    env = paste0("DYLD_LIBRARY_PATH=",working_directory))
-          }else if(machine == "windows"){
-            system2(paste0(working_directory, "/", "glm.exe"), 
-                    invisible = FALSE)
-          }else{
-            print("Machine not identified")
-            stop()
-          }
-          
-          if(file.exists(paste0(working_directory, "/output.nc")) & 
-             !has_error(nc <- nc_open(paste0(working_directory, "/output.nc")))){
-            
-            if(length(ncvar_get(nc, "time")) > 1){
-              nc_close(nc)
-              
-              output_vars <- c(glm_output_vars)
-              
-              GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "/output.nc",
-                                                       working_dir = working_directory,
-                                                       z_out = modeled_depths,
-                                                       vars = output_vars,
-                                                       diagnostic_vars = diagnostics_names)
-              
-              num_glm_depths <- length(GLM_temp_wq_out$depths_enkf)
-              glm_temps <- rev(GLM_temp_wq_out$output[ ,1])
-              glm_depths[i,m,1:num_glm_depths] <- GLM_temp_wq_out$depths_enkf
-              
-              glm_depths_tmp <- c(GLM_temp_wq_out$depths_enkf,GLM_temp_wq_out$surface_height)
-              
-              glm_depths_mid <- glm_depths_tmp[1:(length(glm_depths_tmp)-1)] + diff(glm_depths_tmp)/2
-              
-              x_star[m, 1:ndepths_modeled] <- approx(glm_depths_mid,glm_temps, modeled_depths, rule = 2)$y
-              
-              if(include_wq){
-                for(wq in 1:num_wq_vars){
-                  glm_wq <-  rev(GLM_temp_wq_out$output[ ,1+wq])
-                  x_star[m, wq_start[wq]:wq_end[wq]] <- approx(glm_depths_mid,glm_wq, modeled_depths, rule = 2)$y
-                }
-              }
-              
-              surface_height[i, m] <- GLM_temp_wq_out$surface_height
-              
-              snow_ice_thickness[i, m, ] <- GLM_temp_wq_out$snow_wice_bice
-              
-              avg_surf_temp[i, m] <- GLM_temp_wq_out$avg_surf_temp
-              
-              mixing_vars[m, ] <- GLM_temp_wq_out$mixing_vars
-              
-              if(length(diagnostics_names) > 0){
-                for(wq in 1:length(diagnostics_names)){
-                  glm_wq <-  rev(GLM_temp_wq_out$diagnostics_output[ , wq])
-                  diagnostics[i, m , , wq] <- approx(glm_depths_mid,glm_wq, modeled_depths, rule = 2)$y
-                }
-              }
-              
-              if(length(which(is.na(x_star[m, ]))) == 0){
-                pass = TRUE
-              }else{
-                num_reruns <- num_reruns + 1
-              }
-            }else{
-              num_reruns <- num_reruns + 1
-            }
-          }else{
-            num_reruns <- num_reruns + 1
-          }
-          if(num_reruns > 1000){
-            stop(paste0("Too many re-runs (> 1000) due to NaN values in output"))
-          }
-        }
-        
-        ########################################
-        #END GLM SPECIFIC PART
-        ########################################
-        
-        #INCREMENT ThE MET_INDEX TO MOVE TO ThE NEXT NOAA ENSEMBLE
-        met_index <- met_index + 1
-        if(met_index > length(met_file_names)){
-          met_index <- 1
-        }
-        
-        inflow_outflow_index <- inflow_outflow_index + 1
-        if(inflow_outflow_index > nrow(inflow_file_names)){
-          inflow_outflow_index <- 1
-        }
-        
-      }else{
-        x_star[m, 1:nstates] <- x[i - 1, m ,1:nstates]
+        x_corr[m, (((jj-1)*ndepths_modeled)+1):(jj*ndepths_modeled)] <- 
+          x_star[m, (((jj-1)*ndepths_modeled)+1):(jj*ndepths_modeled)] + q_v
       }
       
     } # END ENSEMBLE LOOP
@@ -417,14 +199,26 @@ run_EnKF <- function(x,
     #Corruption [nmembers x nstates]
     if(use_state_inflation){
       x_corr <- x_star    
-    }else{
-      x_corr <- x_star + nqt[, 1:nstates]   
+    }
+    
+    
+    #Correct any negative water quality states
+    if(include_wq & no_negative_states){
+      for(m in 1:nmembers){
+        index <- which(x_corr[m,] < 0.0)
+        x_corr[m, index[which(index <= wq_end[num_wq_vars] & index >= wq_start[1])]] <- 0.0
+      }
     }
     
     if(npars > 0){
       pars_corr <- x[i - 1, , (nstates+1):(nstates+npars)]
+      if(npars == 1){
+        pars_corr <- matrix(pars_corr,nrow = length(pars_corr),ncol = 1)
+      }
       pars_star <- pars_corr
     }
+    
+    
     
     if(npars > 0){
       x_prior[i, , ] <- cbind(x_corr, pars_corr)
@@ -533,6 +327,7 @@ run_EnKF <- function(x,
         par_mean <- apply(pars_corr, 2, mean)
       }
       
+      
       for(m in 1:nmembers){
         if(use_state_inflation){
           x_corr[m, ] <- Inflat * (x_corr[m,] - ens_mean) + ens_mean
@@ -550,7 +345,7 @@ run_EnKF <- function(x,
       n_psi = t(rmvnorm(n = 1, mean = zt, sigma=as.matrix(psi_t)))
       
       #Set any negative observations of water quality variables to zero
-      #n_psi[which(z_index > length(modeled_depths) & n_psi < 0.0)] <- 0.0 
+      n_psi[which(z_index > length(modeled_depths) & n_psi < 0.0)] <- 0.0 
       
       d_mat <- t(matrix(rep(n_psi, each = nmembers), 
                         nrow = nmembers, 
@@ -585,6 +380,10 @@ run_EnKF <- function(x,
       if(npars > 0){
         p_t_pars <- p_it_pars / (nmembers - 1)
         #p_t_combined <- p_it_combined/ (nmembers - 1)
+      }
+      
+      if(!is.na(localization_distance)){
+        p_t <- localization(p_t,nstates,modeled_depths,num_wq_vars,wq_start,wq_end)
       }
       #Kalman gain
       k_t <- p_t %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t, tol = 1e-17)
@@ -655,10 +454,10 @@ run_EnKF <- function(x,
     ##################
     
     #Correct any negative water quality states
-    if(include_wq){
+    if(include_wq & no_negative_states){
       for(m in 1:nmembers){
         index <- which(x[i,m,] < 0.0)
-        x[i, m, index[which(index <= wq_end[num_wq_vars])]] <- 0.0
+        x[i, m, index[which(index <= wq_end[num_wq_vars] & index >= wq_start[1])]] <- 0.0
       }
     }
     
