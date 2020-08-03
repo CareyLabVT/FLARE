@@ -762,7 +762,7 @@ diagnostics_names <- c("extc_coef",
                        "PHY_diatom_fT",
                        "rad")
 
-secchi_file <- "/Users/quinn/Dropbox (VTFRS)/Research/SSC_forecasting/SCC_data/manual-data/Secchi_depth_2013-2019.csv"
+secchi_file <- paste0(manual_data_location,"Secchi_depth_2013-2019.csv")
 
 #########################################
 # Archiving options
