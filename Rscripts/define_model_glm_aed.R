@@ -1,6 +1,6 @@
 run_model <- function(i,
                     m,
-                    mixing_vars,
+                    mixing_vars_start,
                     curr_start,
                     curr_stop,
                     par_names,
@@ -8,10 +8,10 @@ run_model <- function(i,
                     working_directory,
                     par_nml,
                     num_phytos,
-                    glm_depths,
-                    surface_height,
+                    glm_depths_start,
+                    surface_height_start,
                     simulate_SSS,
-                    x,
+                    x_start,
                     full_time_local, 
                     wq_start, 
                     wq_end,
@@ -31,10 +31,9 @@ run_model <- function(i,
                     machine,
                     npars,
                     num_wq_vars,
-                    snow_ice_thickness,
-                    avg_surf_temp,
-                    x_star,
-                    diagnostics){
+                    snow_ice_thickness_start,
+                    avg_surf_temp_start,
+                    nstates){
   
   
   update_glm_nml_list <- list()
@@ -43,7 +42,7 @@ run_model <- function(i,
   update_aed_nml_names <- c()
   list_index <- 1
   
-  update_glm_nml_list[[list_index]] <- colMeans(mixing_vars)
+  update_glm_nml_list[[list_index]] <- mixing_vars_start
   update_glm_nml_names[list_index] <- "restart_variables"
   list_index <- list_index + 1
   
@@ -54,7 +53,13 @@ run_model <- function(i,
   update_glm_nml_list[[list_index]] <- curr_stop
   update_glm_nml_names[list_index] <- "stop"
   list_index <- list_index + 1
-
+  
+  glm_depths_end <- rep(NA,length(glm_depths_start))
+  
+  diagnostics <- array(NA, dim = c(ndepths_modeled, length(diagnostics_names)))
+  
+  x_star_end <- rep(NA, nstates)
+  
   if(npars > 0){
     
     sed_temp_mean_index <- which(par_names == "sed_temp_mean")
@@ -163,9 +168,9 @@ run_model <- function(i,
   }
   
   
-  glm_depths_tmp <- glm_depths[i-1, m,!is.na(glm_depths[i-1, m,])]
+  glm_depths_tmp <- glm_depths_start[!is.na(glm_depths_start)]
   
-  glm_depths_tmp_tmp <- c(glm_depths_tmp, surface_height[i - 1, m])
+  glm_depths_tmp_tmp <- c(glm_depths_tmp, surface_height_start)
   glm_depths_mid <- glm_depths_tmp_tmp[1:(length(glm_depths_tmp_tmp)-1)] + diff(glm_depths_tmp_tmp)/2
   
   if(include_wq){
@@ -173,7 +178,7 @@ run_model <- function(i,
     wq_init_vals <- c()
     
     for(wq in 1:num_wq_vars){
-      wq_enkf_tmp <- x[i - 1, m, wq_start[wq]:wq_end[wq]]
+      wq_enkf_tmp <- x_start[wq_start[wq]:wq_end[wq]]
       wq_enkf_tmp[wq_enkf_tmp < 0] <- 0
       wq_init_vals <- c(wq_init_vals, 
                         approx(modeled_depths,wq_enkf_tmp, glm_depths_mid, rule = 2)$y)
@@ -183,13 +188,13 @@ run_model <- function(i,
     list_index <- list_index + 1
     
     if(simulate_SSS){
-      create_sss_input_output(x, i, m, full_time_local, working_directory, 
+      create_sss_input_output(x_start, i, m, full_time_local, working_directory, 
                               wq_start, management_input, hist_days, 
                               forecast_sss_on, sss_depth,use_specified_sss)
     }
   }
   
-  the_temps_enkf_tmp <- x[i - 1, m, 1:ndepths_modeled]
+  the_temps_enkf_tmp <- x_start[1:ndepths_modeled]
   
   the_temps_glm <- approx(modeled_depths,the_temps_enkf_tmp, glm_depths_mid, rule = 2)$y
   
@@ -209,7 +214,7 @@ run_model <- function(i,
   update_glm_nml_names[list_index] <- "num_depths"
   list_index <- list_index + 1
   
-  update_glm_nml_list[[list_index]] <- round(surface_height[i - 1, m], 4)
+  update_glm_nml_list[[list_index]] <- round(surface_height_start, 4)
   update_glm_nml_names[list_index] <- "lake_depth"
   list_index <- list_index + 1
   
@@ -217,15 +222,15 @@ run_model <- function(i,
   update_glm_nml_names[list_index] <- "snow_thickness"
   list_index <- list_index + 1
   
-  update_glm_nml_list[[list_index]] <- round(snow_ice_thickness[i - 1, m, 2], 4)
+  update_glm_nml_list[[list_index]] <- round(snow_ice_thickness_start[2], 4)
   update_glm_nml_names[list_index] <- "white_ice_thickness"
   list_index <- list_index + 1
   
-  update_glm_nml_list[[list_index]] <- round(snow_ice_thickness[i - 1, m, 3], 4)
+  update_glm_nml_list[[list_index]] <- round(snow_ice_thickness_start[3], 4)
   update_glm_nml_names[list_index] <- "blue_ice_thickness"
   list_index <- list_index + 1
   
-  update_glm_nml_list[[list_index]] <- round(avg_surf_temp[i - 1, m], 4)
+  update_glm_nml_list[[list_index]] <- round(avg_surf_temp_start, 4)
   update_glm_nml_names[list_index] <- "avg_surf_temp"
   list_index <- list_index + 1
   
@@ -291,37 +296,29 @@ run_model <- function(i,
         
         num_glm_depths <- length(GLM_temp_wq_out$depths_enkf)
         glm_temps <- rev(GLM_temp_wq_out$output[ ,1])
-        glm_depths[i,m,1:num_glm_depths] <- GLM_temp_wq_out$depths_enkf
+        glm_depths_end[1:num_glm_depths] <- GLM_temp_wq_out$depths_enkf
         
         glm_depths_tmp <- c(GLM_temp_wq_out$depths_enkf,GLM_temp_wq_out$surface_height)
         
         glm_depths_mid <- glm_depths_tmp[1:(length(glm_depths_tmp)-1)] + diff(glm_depths_tmp)/2
         
-        x_star[m, 1:ndepths_modeled] <- approx(glm_depths_mid,glm_temps, modeled_depths, rule = 2)$y
+        x_star_end[1:ndepths_modeled] <- approx(glm_depths_mid,glm_temps, modeled_depths, rule = 2)$y
         
         if(include_wq){
           for(wq in 1:num_wq_vars){
             glm_wq <-  rev(GLM_temp_wq_out$output[ ,1+wq])
-            x_star[m, wq_start[wq]:wq_end[wq]] <- approx(glm_depths_mid,glm_wq, modeled_depths, rule = 2)$y
+            x_star_end[wq_start[wq]:wq_end[wq]] <- approx(glm_depths_mid,glm_wq, modeled_depths, rule = 2)$y
           }
         }
-        
-        surface_height[i, m] <- GLM_temp_wq_out$surface_height
-        
-        snow_ice_thickness[i, m, ] <- GLM_temp_wq_out$snow_wice_bice
-        
-        avg_surf_temp[i, m] <- GLM_temp_wq_out$avg_surf_temp
-        
-        mixing_vars[m, ] <- GLM_temp_wq_out$mixing_vars
         
         if(length(diagnostics_names) > 0){
           for(wq in 1:length(diagnostics_names)){
             glm_wq <-  rev(GLM_temp_wq_out$diagnostics_output[ , wq])
-            diagnostics[i, m , , wq] <- approx(glm_depths_mid,glm_wq, modeled_depths, rule = 2)$y
+            diagnostics[ , wq] <- approx(glm_depths_mid,glm_wq, modeled_depths, rule = 2)$y
           }
         }
         
-        if(length(which(is.na(x_star[m, ]))) == 0){
+        if(length(which(is.na(x_star_end))) == 0){
           pass = TRUE
         }else{
           num_reruns <- num_reruns + 1
@@ -336,13 +333,13 @@ run_model <- function(i,
       stop(paste0("Too many re-runs (> 1000) due to NaN values in output"))
     }
     
-    return(list(x_star = x_star,
-                surface_height = surface_height, 
-                snow_ice_thickness = snow_ice_thickness,
-                avg_surf_temp = avg_surf_temp,
-                mixing_vars = mixing_vars,
-                diagnostics = diagnostics,
-                glm_depths = glm_depths))
+    return(list(x_star_end  = x_star_end,
+                surface_height_end  = GLM_temp_wq_out$surface_height, 
+                snow_ice_thickness_end  = GLM_temp_wq_out$snow_wice_bice,
+                avg_surf_temp_end  = GLM_temp_wq_out$avg_surf_temp,
+                mixing_vars_end = GLM_temp_wq_out$mixing_vars,
+                diagnostics_end  = diagnostics,
+                glm_depths_end  = glm_depths_end))
   }
 }
 

@@ -14,7 +14,6 @@ run_EnKF <- function(x,
                      met_file_names,
                      include_wq,
                      spin_up_days,
-                     z_states,
                      glm_output_vars,
                      process_uncertainty,
                      initial_condition_uncertainty,
@@ -119,7 +118,7 @@ run_EnKF <- function(x,
       
       out <- run_model(i,
                        m,
-                       mixing_vars,
+                       mixing_vars_start = mixing_vars[m, ],
                        curr_start,
                        curr_stop,
                        par_names,
@@ -127,10 +126,10 @@ run_EnKF <- function(x,
                        working_directory,
                        par_nml,
                        num_phytos,
-                       glm_depths,
-                       surface_height,
+                       glm_depths_start = glm_depths[i-1, m, ],
+                       surface_height_start = surface_height[i-1, m],
                        simulate_SSS,
-                       x,
+                       x_start = x[i-1, m, ],
                        full_time_local, 
                        wq_start, 
                        wq_end,
@@ -150,34 +149,33 @@ run_EnKF <- function(x,
                        machine,
                        npars,
                        num_wq_vars,
-                       snow_ice_thickness,
-                       avg_surf_temp,
-                       x_star,
-                       diagnostics)
-      
-      x_star[, ] <- out$x_star
-      surface_height[,] <- out$surface_height
-      snow_ice_thickness[, ,] <- out$snow_ice_thickness
-      avg_surf_temp[,] <- out$avg_surf_temp
-      mixing_vars[,] <- out$mixing_vars
-      diagnostics[, , , ] <- out$diagnostics
-      glm_depths[,,] <- out$glm_depths
-      
-      ########################################
-      #END GLM SPECIFIC PART
-      ########################################
-      
-      #INCREMENT ThE MET_INDEX TO MOVE TO ThE NEXT NOAA ENSEMBLE
-      met_index <- met_index + 1
-      if(met_index > length(met_file_names)){
-        met_index <- 1
-      }
-      
-      inflow_outflow_index <- inflow_outflow_index + 1
-      if(inflow_outflow_index > nrow(inflow_file_names)){
-        inflow_outflow_index <- 1
-      }
-      
+                       snow_ice_thickness_start = snow_ice_thickness[i-1, m, ],
+                       avg_surf_temp_start = avg_surf_temp[i-1, m],
+                       nstates)
+        
+        x_star[m, ] <- out$x_star_end
+        surface_height[i ,m ] <- out$surface_height_end
+        snow_ice_thickness[i,m ,] <- out$snow_ice_thickness_end
+        avg_surf_temp[i , m] <- out$avg_surf_temp_end
+        mixing_vars[m, ] <- out$mixing_vars_end
+        diagnostics[i, m, , ] <- out$diagnostics_end
+        glm_depths[i, m,] <- out$glm_depths_end
+        
+        ########################################
+        #END GLM SPECIFIC PART
+        ########################################
+        
+        #INCREMENT ThE MET_INDEX TO MOVE TO ThE NEXT NOAA ENSEMBLE
+        met_index <- met_index + 1
+        if(met_index > length(met_file_names)){
+          met_index <- 1
+        }
+        
+        inflow_outflow_index <- inflow_outflow_index + 1
+        if(inflow_outflow_index > nrow(inflow_file_names)){
+          inflow_outflow_index <- 1
+        }
+        
       
       #Add process noise
       
@@ -312,6 +310,8 @@ run_EnKF <- function(x,
       #types present during the time-step 
       
       curr_psi <- psi_intercept[z_index] + psi_slope[z_index] * zt
+      
+      curr_psi <- curr_psi ^ 2
       
       if(length(z_index) > 1){
         psi_t <- diag(curr_psi)

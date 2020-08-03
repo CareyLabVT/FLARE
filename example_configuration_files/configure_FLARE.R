@@ -468,7 +468,7 @@ outflow_file1 <<- paste0(manual_data_location,"/FCR_spillway_outflow_newEDI_SUMM
 
 inflow_file2 <<- NA
 
-focal_depths <<- 1.6
+focal_depths <<- NA
 
 do_methods <<- c("do_sensor", "exo_sensor") #,"ctd")
 chla_methods <<- c("exo_sensor") # "ctd")
@@ -650,16 +650,16 @@ init_phyto_proportion <<- c(0.3, 0.3, 0.4)
 
 #Observational uncertainty for each variable
 
-obs_error_wq_intercept <<- list(temp = 0.005066476, # Temp
-                                OXY_oxy = 721.4975, #OXY_oxy 0.25 1958.838
+obs_error_wq_intercept <<- list(temp = 0.07117918, # Temp
+                                OXY_oxy = 26.86071, #OXY_oxy 0.25 1958.838
                                 #CAR_dic = 0.001,
-                                NIT_amm = (1.5 *1000*0.001*(1/18.04))^2, #NIT_amm
-                                NIT_nit = (1.4*1000*0.001*(1/62.00))^2, #NIT_nit #0.08
-                                NIT_total = (26.0*1000*0.001*(1/14))^2, #TN
-                                PHS_frp = (1.2*1000*0.001*(1/94.9714))^2, #PHS_frp #0.05
-                                PHS_total = (4.4*1000*0.001*(1/30.97))^2, #PHS_total
-                                OGM_doc_total = 5709.614, #OGM_doc
-                                PHY_TCHLA = 0.961727^2 #PHY_TCHLA 3.338957
+                                NIT_amm = (1.5 *1000*0.001*(1/18.04)), #NIT_amm
+                                NIT_nit = (1.4*1000*0.001*(1/62.00)), #NIT_nit #0.08
+                                NIT_total = (26.0*1000*0.001*(1/14)), #TN
+                                PHS_frp = (1.2*1000*0.001*(1/94.9714)), #PHS_frp #0.05
+                                PHS_total = (4.4*1000*0.001*(1/30.97)), #PHS_total
+                                OGM_doc_total = 75.56199, #OGM_doc
+                                PHY_TCHLA = 0.961727 #PHY_TCHLA 3.338957
 ) 
 
 obs_error_wq_slope <<- c(temp = 0, #temp
@@ -682,39 +682,39 @@ ctd_2_do_do <<- c(0, 1) #c(-10.770, 1.061)
 exo_fdom_2_doc <<- c(-38.95, 22.47)
 
 error_scaler <- 0.75
-temp_process_error <<- (1.35) ^2
-OXY_oxy_process_error <<- (42 * error_scaler) ^2
+temp_process_error <<- (1.35 * error_scaler)
+OXY_oxy_process_error <<- (42 * error_scaler)
 CAR_pH_process_error <<- 0
-CAR_dic_process_error <<- (179.86 * error_scaler)^2
-CAR_ch4_process_error <<- (8.47 * error_scaler) ^2
-SIL_rsi_process_error <<- (37.9 * error_scaler) ^2
-NIT_amm_process_error <<- (0.72 * error_scaler) ^ 2 #4.94^2
-NIT_nit_process_error <<- (0.12 * error_scaler) ^ 2 #1.06^2
-PHS_frp_process_error <<- (0.04 * error_scaler) ^2
-OGM_doc_process_error <<- (7.80 * error_scaler)^2
-OGM_docr_process_error <<- (65.8 * error_scaler)^2
-OGM_poc_process_error <<- (10 * error_scaler)^2
-OGM_don_process_error <<- (0.72 * error_scaler)^2
-OGM_donr_process_error <<- (0.72 * error_scaler) ^2
-OGM_pon_process_error <<- (0.72 * error_scaler) ^2
-OGM_dop_process_error <<- (0.04 * error_scaler)^2
-OGM_dopr_process_error <<- (0.04 * error_scaler)^2
-OGM_pop_process_error <<- (0.04 * error_scaler)^2
-NCS_ss1_process_error <<- 0.01^2
-PHS_frp_ads_process_error <<- 0.05^2
+CAR_dic_process_error <<- (179.86 * error_scaler)
+CAR_ch4_process_error <<- (8.47 * error_scaler)
+SIL_rsi_process_error <<- (37.9 * error_scaler)
+NIT_amm_process_error <<- (0.72 * error_scaler) #4.94^2
+NIT_nit_process_error <<- (0.12 * error_scaler) #1.06^2
+PHS_frp_process_error <<- (0.04 * error_scaler)
+OGM_doc_process_error <<- (7.80 * error_scaler)
+OGM_docr_process_error <<- (65.8 * error_scaler)
+OGM_poc_process_error <<- (10 * error_scaler)
+OGM_don_process_error <<- (0.72 * 2 * error_scaler)
+OGM_donr_process_error <<- (0.72 * 2 * error_scaler)
+OGM_pon_process_error <<- (0.72 * 2 * error_scaler)
+OGM_dop_process_error <<- (0.04 * 2 * error_scaler)
+OGM_dopr_process_error <<- (0.04 * 2 *  error_scaler)
+OGM_pop_process_error <<- (0.04 * 2 * error_scaler)
+NCS_ss1_process_error <<- 0.01
+PHS_frp_ads_process_error <<- 0.05
 
-PHY_cyano_process_error <<- (2.52/3 * 4.166667 * 0.1) ^2
-PHY_green_process_error <<- (2.52/3 * 4.166667 * 0.1) ^2
-PHY_diatom_process_error <<- (2.52/3 * 4.166667 * 0.1) ^2
-PHY_cyano_IN_process_error <<- (1 * phyto_n_biomass_ratio)^2
-PHY_green_IN_process_error <<- (1 * phyto_n_biomass_ratio)^2
-PHY_diatom_IN_process_error <<- (1 * phyto_n_biomass_ratio)^2
-PHY_cyano_IP_process_error <<- (1 * phyto_p_biomass_ratio)^2
-PHY_green_IP_process_error <<- (1 * phyto_p_biomass_ratio)^2
-PHY_diatom_IP_process_error <<- (1 * phyto_p_biomass_ratio)^2
+PHY_cyano_process_error <<- (2.52/3 * biomass_to_chla[1] * error_scaler)
+PHY_green_process_error <<- (2.52/3 * biomass_to_chla[2] * error_scaler)
+PHY_diatom_process_error <<- (2.52/3 * biomass_to_chla[3] * error_scaler)
+PHY_cyano_IN_process_error <<- (1 * phyto_n_biomass_ratio)
+PHY_green_IN_process_error <<- (1 * phyto_n_biomass_ratio)
+PHY_diatom_IN_process_error <<- (1 * phyto_n_biomass_ratio)
+PHY_cyano_IP_process_error <<- (1 * phyto_p_biomass_ratio)
+PHY_green_IP_process_error <<- (1 * phyto_p_biomass_ratio)
+PHY_diatom_IP_process_error <<- (1 * phyto_p_biomass_ratio)
 
-temp_init_error <<- 1.5^2
-OXY_oxy_init_error <<- 1000
+temp_init_error <<- 1.5
+OXY_oxy_init_error <<- 50
 CAR_pH_init_error <<- 0.001
 CAR_dic_init_error <<- 0.001
 CAR_ch4_init_error <<- 2
@@ -722,8 +722,8 @@ SIL_rsi_init_error <<- 20
 NIT_amm_init_error <<- 2
 NIT_nit_init_error <<- 0.01
 PHS_frp_init_error <<- 0.01
-OGM_doc_init_error <<- 1000
-OGM_docr_init_error <<- 1000
+OGM_doc_init_error <<- 25
+OGM_docr_init_error <<- 50
 OGM_poc_init_error <<- 2
 OGM_don_init_error <<- 4
 OGM_donr_init_error <<- 4

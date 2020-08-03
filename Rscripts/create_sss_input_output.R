@@ -71,7 +71,7 @@ create_sss_input_output <- function(x, i, m, full_time_local,
   }
   
   FLOW <- round(c(FLOW1, FLOW2), 5)
-  TEMP <- round(rep(x[i-1, m, depth_index],2), 3)
+  TEMP <- round(rep(x[depth_index],2), 3)
   SALT <- rep(0,2)
   
   #OXY_EQ <- Eq.Ox.conc(TEMP[1], elevation.m = 506,
@@ -88,22 +88,22 @@ create_sss_input_output <- function(x, i, m, full_time_local,
   sss_inflow <- data.frame(time = time_sss, FLOW = FLOW, TEMP = TEMP, SALT = SALT, OXY_oxy = OXY_oxy)
   }else{
     
-    NIT_amm <- round(rep(x[i-1, m, wq_start[which(wq_names == "NIT_amm")-1] + depth_index - 1],2), 3)
-    NIT_nit <- round(rep(x[i-1, m, wq_start[which(wq_names == "NIT_nit")-1] + depth_index - 1],2), 3)
-    PHS_frp <- round(rep(x[i-1, m, wq_start[which(wq_names == "PHS_frp")-1] + depth_index - 1],2), 3)
-    OGM_doc <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_doc")-1] + depth_index - 1],2), 3)
-    OGM_docr <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_docr")-1] + depth_index - 1],2), 3)
-    OGM_poc <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_poc")-1] + depth_index - 1],2), 3)
-    OGM_don <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_don")-1] + depth_index - 1],2), 3)
-    OGM_donr <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_donr")-1] + depth_index - 1],2), 3)
-    OGM_dop <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_dop")-1] + depth_index - 1],2), 3)
-    OGM_dopr <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_dop")-1] + depth_index - 1],2), 3)
-    OGM_pop <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_pop")-1] + depth_index - 1],2), 3)
-    OGM_pon <- round(rep(x[i-1, m, wq_start[which(wq_names == "OGM_pon")-1] + depth_index - 1],2), 3)
+    NIT_amm <- round(rep(x[wq_start[which(wq_names == "NIT_amm")-1] + depth_index - 1],2), 3)
+    NIT_nit <- round(rep(x[wq_start[which(wq_names == "NIT_nit")-1] + depth_index - 1],2), 3)
+    PHS_frp <- round(rep(x[wq_start[which(wq_names == "PHS_frp")-1] + depth_index - 1],2), 3)
+    OGM_doc <- round(rep(x[wq_start[which(wq_names == "OGM_doc")-1] + depth_index - 1],2), 3)
+    OGM_docr <- round(rep(x[wq_start[which(wq_names == "OGM_docr")-1] + depth_index - 1],2), 3)
+    OGM_poc <- round(rep(x[wq_start[which(wq_names == "OGM_poc")-1] + depth_index - 1],2), 3)
+    OGM_don <- round(rep(x[wq_start[which(wq_names == "OGM_don")-1] + depth_index - 1],2), 3)
+    OGM_donr <- round(rep(x[wq_start[which(wq_names == "OGM_donr")-1] + depth_index - 1],2), 3)
+    OGM_dop <- round(rep(x[wq_start[which(wq_names == "OGM_dop")-1] + depth_index - 1],2), 3)
+    OGM_dopr <- round(rep(x[wq_start[which(wq_names == "OGM_dop")-1] + depth_index - 1],2), 3)
+    OGM_pop <- round(rep(x[wq_start[which(wq_names == "OGM_pop")-1] + depth_index - 1],2), 3)
+    OGM_pon <- round(rep(x[wq_start[which(wq_names == "OGM_pon")-1] + depth_index - 1],2), 3)
     #PHS_frp_ads <- round(rep(x[i-1, m, wq_start[which(wq_names == "PHS_frp_ads")-1] + depth_index - 1],2), 3)
     #CAR_dic <- round(rep(x[i-1, m, wq_start[which(wq_names == "CAR_dic")-1] + depth_index - 1],2), 3)
     #CAR_ch4 <- round(rep(x[i-1, m, wq_start[which(wq_names == "CAR_ch4")-1] + depth_index - 1],2), 3)
-    SIL_rsi <- round(rep(x[i-1, m, wq_start[which(wq_names == "SIL_rsi")-1] + depth_index - 1],2), 3)
+    SIL_rsi <- round(rep(x[wq_start[which(wq_names == "SIL_rsi")-1] + depth_index - 1],2), 3)
 
     sss_inflow <- data.frame(time = time_sss, 
                              FLOW = FLOW, 
