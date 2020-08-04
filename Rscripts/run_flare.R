@@ -851,11 +851,6 @@ run_flare<-function(start_day_local,
     init_dic_obs_depths <- modeled_depths[which(!is.na(obs_DIC[1, ]))]
   }
   
-  
-  #OGM_doc_init_depth <- NA
-  #PHY_TCHLA_init_depth <- NA
-  #OXY_oxy_init_depth <- NA
-  
   #NEED AN ERROR CHECK FOR WHETHER THERE ARE OBSERVED DATA
   if(is.na(restart_file)){
     if((length(which(init_temps_obs != 0.0)) == 0) | length(which(is.na(init_temps_obs))) > 0){
@@ -933,8 +928,6 @@ run_flare<-function(start_day_local,
       CAR_dic_init_depth <- dic_inter(modeled_depths)
     }
     
-    
-    
     #Initialize DOC usind data if avialable
     if(length(!is.na(init_doc_obs)) == 0){
       OGM_doc_init_depth <- rep(OGM_doc_init, ndepths_modeled)
@@ -991,8 +984,6 @@ run_flare<-function(start_day_local,
     OGM_dop_init_depth <- rep(OGM_dop_init, ndepths_modeled)
     OGM_dopr_init_depth <- rep(OGM_dopr_init, ndepths_modeled)
     OGM_pop_init_depth <- rep(OGM_pop_init, ndepths_modeled)
-    #NCS_ss1_init_depth <- rep(NCS_ss1_init, ndepths_modeled)
-    #PHS_frp_ads_init_depth <- rep(PHS_frp_ads_init, ndepths_modeled)
     
     wq_init_vals_potential <- list(OXY_oxy = OXY_oxy_init_depth,
                                    CAR_dic = CAR_dic_init_depth,
@@ -1010,18 +1001,11 @@ run_flare<-function(start_day_local,
                                    OGM_dop = OGM_dop_init_depth,
                                    OGM_dopr = OGM_dopr_init_depth,
                                    OGM_pop = OGM_pop_init_depth,
-                                   #NCS_ss1= NCS_ss1_init_depth,
-                                   #PHS_frp_ads = PHS_frp_ads_init_depth,
                                    PHY_cyano = PHY_cyano_init_depth,
-                                   #PHY_cyano_IN = PHY_cyano_IN_init_depth,
-                                   #PHY_cyano_IP = PHY_cyano_IP_init_depth,
                                    PHY_green = PHY_green_init_depth,
-                                   #PHY_green_IN = PHY_green_IN_init_depth,
-                                   #PHY_green_IP = PHY_green_IP_init_depth,
                                    PHY_diatom = PHY_diatom_init_depth
-                                   #PHY_diatom_IN = PHY_diatom_IN_init_depth,
-                                   #PHY_diatom_IP = PHY_diatom_IP_init_depth
     )
+    
     wq_init_vals <- as.numeric(unlist(bind_cols(wq_init_vals_potential[names(wq_init_vals_potential) %in% c(state_names)]))) 
     
     #UPDATE NML WITH INITIAL CONDITIONS
@@ -1072,7 +1056,6 @@ run_flare<-function(start_day_local,
   diag(qt) <- rep(temp_process_error,ndepths_modeled )
   qt_init <- matrix(data = 0, nrow = ndepths_modeled, ncol = ndepths_modeled)
   
-  #temp_init_error <- temp_init_error ^ 2
   diag(qt_init) <- rep(temp_init_error,ndepths_modeled)
   
   combined_error <- temp_process_error
@@ -1098,17 +1081,9 @@ run_flare<-function(start_day_local,
                                    OGM_dop = OGM_dop_process_error,
                                    OGM_dopr = OGM_dopr_process_error,
                                    OGM_pop = OGM_pop_process_error,
-                                   #NCS_ss1 = NCS_ss1_process_error,
-                                   #PHS_frp_ads = PHS_frp_ads_process_error,
                                    PHY_cyano = PHY_cyano_process_error,
-                                   #PHY_cyano_IN = PHY_cyano_IN_process_error,
-                                   #PHY_cyano_IP = PHY_cyano_IP_process_error,
                                    PHY_green = PHY_green_process_error,
-                                   #PHY_green_IN = PHY_green_IN_process_error,
-                                   #PHY_green_IP = PHY_green_IP_process_error,
                                    PHY_diatom = PHY_diatom_process_error
-                                   #PHY_diatom_IN = PHY_diatom_IN_process_error,
-                                   #PHY_diatom_IP = PHY_diatom_IP_process_error
     )
     
     wq_var_init_error_potential <- list(OXY_oxy = OXY_oxy_init_error,
@@ -1127,23 +1102,13 @@ run_flare<-function(start_day_local,
                                         OGM_dop = OGM_dop_init_error,
                                         OGM_dopr = OGM_dop_init_error,
                                         OGM_pop = OGM_pop_init_error,
-                                        #NCS_ss1 = NCS_ss1_init_error,
-                                        #PHS_frp_ads = PHS_frp_ads_init_error,
                                         PHY_cyano = PHY_cyano_init_error,
-                                        #PHY_cyano_IN = PHY_cyano_IN_init_error,
-                                        #PHY_cyano_IP = PHY_cyano_IP_init_error,
                                         PHY_green = PHY_green_init_error,
-                                        #PHY_green_IN = PHY_green_IN_init_error,
-                                        #PHY_green_IP = PHY_green_IP_init_error,
                                         PHY_diatom = PHY_diatom_init_error
-                                        #PHY_diatom_IN = PHY_diatom_IN_init_error,
-                                        #PHY_diatom_IP = PHY_diatom_IP_init_error
     )
     
     
     wq_var_error <- as.numeric(bind_cols(wq_var_error_potential[names(wq_var_error_potential) %in% c(state_names)])) 
-    
-    #combined_error <- c(combined_error, sqrt(wq_var_error))
     
     combined_error <- c(combined_error, wq_var_error)
     
