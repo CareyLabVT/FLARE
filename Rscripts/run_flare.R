@@ -905,40 +905,22 @@ run_flare<-function(start_day_local,
     #Initialize Chla usind data if avialable
     if(length(!is.na(init_chla_obs)) == 0){
       PHY_cyano_init_depth <- rep(PHY_cyano_init, ndepths_modeled)
-      #PHY_cyano_IN_init_depth <- rep(PHY_cyano_init * phyto_n_biomass_ratio, ndepths_modeled)
-      #PHY_cyano_IP_init_depth <- rep(PHY_cyano_init * phyto_p_biomass_ratio, ndepths_modeled)
       PHY_green_init_depth <- rep(PHY_green_init, ndepths_modeled)
-      #PHY_green_IN_init_depth <- rep(PHY_green_init * phyto_n_biomass_ratio, ndepths_modeled)
-      #PHY_green_IP_init_depth <- rep(PHY_green_init  * phyto_p_biomass_ratio, ndepths_modeled)
       PHY_diatom_init_depth <- rep(PHY_diatom_init, ndepths_modeled)
-      #PHY_diatom_IN_init_depth <- rep(PHY_diatom_init * phyto_n_biomass_ratio, ndepths_modeled)
-      #PHY_diatom_IP_init_depth <- rep(PHY_diatom_init  * phyto_p_biomass_ratio, ndepths_modeled)
       
     }else if(length(!is.na(init_chla_obs)) == 1){
       PHY_TCHLA_init_depth <- rep(init_chla_obs, ndepths_modeled)
       
       PHY_cyano_init_depth <- PHY_TCHLA_init_depth *  init_phyto_proportion[1] * biomass_to_chla[1]
-      #PHY_cyano_IN_init_depth <- PHY_cyano_init_depth * phyto_n_biomass_ratio
-      #PHY_cyano_IP_init_depth <- PHY_cyano_init_depth * phyto_p_biomass_ratio
       PHY_green_init_depth <- PHY_TCHLA_init_depth  * init_phyto_proportion[2] * biomass_to_chla[2]
-      #PHY_green_IN_init_depth <- PHY_green_init_depth * phyto_n_biomass_ratio
-      #PHY_green_IP_init_depth <- PHY_green_init_depth * phyto_p_biomass_ratio
       PHY_diatom_init_depth <- PHY_TCHLA_init_depth *  init_phyto_proportion[3] * biomass_to_chla[3]
-      #PHY_diatom_IN_init_depth <- PHY_diatom_init_depth * phyto_n_biomass_ratio 
-      #PHY_diatom_IP_init_depth <- PHY_diatom_init_depth  * phyto_p_biomass_ratio
       
     }else{
       chla_inter <- approxfun(init_chla_obs_depths, init_chla_obs, rule=2)
       PHY_TCHLA_init_depth <- chla_inter(modeled_depths)
       PHY_cyano_init_depth <- PHY_TCHLA_init_depth *  init_phyto_proportion[1] * biomass_to_chla[1]
-      #PHY_cyano_IN_init_depth <- PHY_cyano_init_depth * phyto_n_biomass_ratio
-      #PHY_cyano_IP_init_depth <- PHY_cyano_init_depth * phyto_p_biomass_ratio
       PHY_green_init_depth <- PHY_TCHLA_init_depth  * init_phyto_proportion[2] * biomass_to_chla[2]
-      #PHY_green_IN_init_depth <- PHY_green_init_depth * phyto_n_biomass_ratio
-      #PHY_green_IP_init_depth <- PHY_green_init_depth * phyto_p_biomass_ratio
       PHY_diatom_init_depth <- PHY_TCHLA_init_depth *  init_phyto_proportion[3] * biomass_to_chla[3]
-      #PHY_diatom_IN_init_depth <- PHY_diatom_init_depth * phyto_n_biomass_ratio 
-      #PHY_diatom_IP_init_depth <- PHY_diatom_init_depth  * phyto_p_biomass_ratio
     }
     
     #Initialize DIC usind data if avialable
@@ -1039,7 +1021,7 @@ run_flare<-function(start_day_local,
                                    PHY_diatom = PHY_diatom_init_depth
                                    #PHY_diatom_IN = PHY_diatom_IN_init_depth,
                                    #PHY_diatom_IP = PHY_diatom_IP_init_depth
-                                   )
+    )
     wq_init_vals <- as.numeric(unlist(bind_cols(wq_init_vals_potential[names(wq_init_vals_potential) %in% c(state_names)]))) 
     
     #UPDATE NML WITH INITIAL CONDITIONS
@@ -1090,10 +1072,12 @@ run_flare<-function(start_day_local,
   diag(qt) <- rep(temp_process_error,ndepths_modeled )
   qt_init <- matrix(data = 0, nrow = ndepths_modeled, ncol = ndepths_modeled)
   
-  temp_init_error <- temp_init_error ^ 2
+  #temp_init_error <- temp_init_error ^ 2
   diag(qt_init) <- rep(temp_init_error,ndepths_modeled)
   
-  combined_error <- c(temp_process_error)
+  combined_error <- temp_process_error
+  
+  combined_init_error <- temp_init_error
   
   
   if(include_wq){
@@ -1125,7 +1109,7 @@ run_flare<-function(start_day_local,
                                    PHY_diatom = PHY_diatom_process_error
                                    #PHY_diatom_IN = PHY_diatom_IN_process_error,
                                    #PHY_diatom_IP = PHY_diatom_IP_process_error
-                                   )
+    )
     
     wq_var_init_error_potential <- list(OXY_oxy = OXY_oxy_init_error,
                                         CAR_dic = CAR_dic_init_error,
@@ -1154,7 +1138,7 @@ run_flare<-function(start_day_local,
                                         PHY_diatom = PHY_diatom_init_error
                                         #PHY_diatom_IN = PHY_diatom_IN_init_error,
                                         #PHY_diatom_IP = PHY_diatom_IP_init_error
-                                        )
+    )
     
     
     wq_var_error <- as.numeric(bind_cols(wq_var_error_potential[names(wq_var_error_potential) %in% c(state_names)])) 
@@ -1164,6 +1148,8 @@ run_flare<-function(start_day_local,
     combined_error <- c(combined_error, wq_var_error)
     
     wq_var_init_error <- as.numeric(bind_cols(wq_var_init_error_potential[names(wq_var_init_error_potential) %in% c(state_names)])) 
+    
+    combined_init_error <- c(combined_init_error, wq_var_init_error)
     
     for(i in 1:num_wq_vars){
       for(j in 1:ndepths_modeled){
@@ -1201,107 +1187,50 @@ run_flare<-function(start_day_local,
   
   #Initial conditions
   if(!restart_present){
-    if(include_wq){
-      if(npars > 0){
-        x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
-                                    mean=c(the_temps_init, 
-                                           wq_init_vals), 
-                                    sigma=as.matrix(qt_init[1:nstates,1:nstates]))
-        
-        if(single_run){
-          for(m in 1:nmembers){
-            x[1,m ,1:nstates] <- rep(c(the_temps_init, 
-                                       wq_init_vals))
-          }
-        }
-        if(include_wq){
-          for(m in 1:nmembers){
-            index <- which(x[1,m,] < 0.0)
-            x[1, m, index[which(index < wq_end[num_wq_vars])]] <- 0.0
-          }
-        }
-        
-        for(par in 1:npars){
-          x[1, ,(nstates+par)] <- runif(n=nmembers,par_init_lowerbound[par], par_init_upperbound[par])
-          if(single_run){
-            x[1, ,(nstates+par)] <-  rep(par_init_mean[par], nmembers)
-          }
+    
+    alpha_v <- 1 - exp(-vert_decorr_length)
+    
+    q_v <- rep(NA,ndepths_modeled)
+    w <- rep(NA,ndepths_modeled)
+    
+    combined_initial_conditions <- c(the_temps_init, 
+                                     wq_init_vals)
+    
+    for(m in 1:nmembers){
+      q_v[] <- NA
+      w[] <- NA
+      for(jj in 1:length(combined_error)){
+        w[] <- rnorm(ndepths_modeled, 0, 1)
+        q_v[1] <- combined_error[jj] * w[1]
+        for(kk in 2:ndepths_modeled){
+          q_v[kk] <- alpha_v * q_v[kk-1] + sqrt(1 - alpha_v^2) * combined_init_error[jj] * w[kk]
         }
         
-        
-        if(initial_condition_uncertainty == FALSE & hist_days == 0){
-          state_means <- colMeans(x[1, , 1:nstates])
-          for(m in 1:nmembers){
-            x[1, m, ] <- state_means
-          }
-        }
-        
-      }else{
-        x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
-                                    mean=c(the_temps_init,wq_init_vals),
-                                    sigma=as.matrix(qt))
-        
-        if(single_run){
-          for(m in 1:nmembers){
-            x[1,m ,1:nstates] <- rep(c(the_temps_init, 
-                                       wq_init_vals))
-          }
-        }
-        
-        if(initial_condition_uncertainty == FALSE & hist_days == 0){
-          state_means <- colMeans(x[1, , 1:nstates])
-          for(m in 1:nmembers){
-            x[1, m, ] <- state_means
-          }
+        if(single_run | (initial_condition_uncertainty == FALSE & hist_days == 0)){
+          x[1,m,(((jj-1)*ndepths_modeled)+1):(jj*ndepths_modeled)] <- 
+            combined_initial_conditions[(((jj-1)*ndepths_modeled)+1):(jj*ndepths_modeled)]
+        }else{
+          x[1,m,(((jj-1)*ndepths_modeled)+1):(jj*ndepths_modeled)] <- 
+            combined_initial_conditions[(((jj-1)*ndepths_modeled)+1):(jj*ndepths_modeled)] + q_v
         }
       }
       
-    }else{
-      if(npars > 0){
-        x[1, ,1:nstates] <- rmvnorm(n=nmembers, 
-                                    mean=c(the_temps_init), 
-                                    sigma=as.matrix(qt_init[1:nstates,1:nstates]))
-        
-        for(par in 1:npars){
-          x[1, ,(nstates+par)] <- runif(n=nmembers,par_init_lowerbound[par], par_init_upperbound[par])
-          if(single_run){
-            x[1, ,(nstates+par)] <- rep(par_init_mean[par], nmembers)
-          }
-        }
-        
-        if(initial_condition_uncertainty == FALSE){
-          state_means <- colMeans(x[1, , 1:nstates])
-          for(m in 1:nmembers){
-            x[1, m,1:nstates] <- state_means
-          }
-        }
-      }else{
-        x[1, , ] <- rmvnorm(n=nmembers, 
-                            mean=the_temps_init,
-                            sigma=as.matrix(qt))
-        
-        if(initial_condition_uncertainty == FALSE & hist_days == 0){
-          state_means <- colMeans(x[1, , 1:nstates])
-          for(m in 1:nmembers){
-            x[1, m, ] <- state_means
-          }
-        }
+    }
+    
+    for(par in 1:npars){
+      x[1, ,(nstates+par)] <- runif(n=nmembers,par_init_lowerbound[par], par_init_upperbound[par])
+      if(single_run){
+        x[1, ,(nstates+par)] <-  rep(par_init_mean[par], nmembers)
       }
     }
+    
     if(include_wq){
       for(m in 1:nmembers){
-        for(wq in 1:num_wq_vars){
-          index <- which(x[1, m, 1:wq_end[num_wq_vars]] < 0.0)
-          index <- index[which(index > wq_start[1])]
-          x[1, m, index] <- 0.0
-        }
+        index <- which(x[1, m, 1:wq_end[num_wq_vars]] < 0.0)
+        index <- index[which(index > wq_start[1])]
+        x[1, m, index] <- 0.0
       }
     }
-    write.csv(x[1, , ],paste0(working_directory, "/", "restart_",
-                              year(full_time_local[1]), "_",
-                              month(full_time_local[1]), "_",
-                              day(full_time_local[1]), "_cold.csv"),
-              row.names = FALSE)
   }
   
   #THIS ALLOWS THE EnKF TO BE RESTARTED FROM YESTERDAY"S RUN
@@ -1372,10 +1301,7 @@ run_flare<-function(start_day_local,
     }
     nc_close(nc)
   }else{
-    x_previous <- read.csv(paste0(working_directory, "/", "restart_",
-                                  year(full_time_local[1]), "_",
-                                  month(full_time_local[1]), "_",
-                                  day(full_time_local[1]), "_cold.csv"))
+    x_previous <- x[1, , ]
     
     
     surface_height[1, ] <- round(lake_depth_init, 3)

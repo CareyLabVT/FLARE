@@ -584,12 +584,6 @@ PHS_frp_ads_init <<- 0.05
 PHY_cyano_init <<- 10.0
 PHY_green_init <<- 10.0
 PHY_diatom_init <<- 10.0
-PHY_cyano_IN_init <<- PHY_cyano_init * phyto_n_biomass_ratio
-PHY_green_IN_init <<- PHY_green_init * phyto_n_biomass_ratio
-PHY_diatom_IN_init <<- PHY_diatom_init * phyto_n_biomass_ratio
-PHY_cyano_IP_init <<- PHY_cyano_init * phyto_p_biomass_ratio
-PHY_green_IP_init <<- PHY_green_init * phyto_p_biomass_ratio
-PHY_diatom_IP_init <<- PHY_diatom_init * phyto_p_biomass_ratio
 
 init_phyto_proportion <<- c(0.3, 0.3, 0.4)
 
