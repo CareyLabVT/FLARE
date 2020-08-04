@@ -75,13 +75,12 @@ doc_scalar <<- 3.0
 # Run information
 #############################
 
-model_name <- "glm_aed"
+model_name <- "glm_aed" #other is "null"
 
 GLMversion <<- "GLM 3.1.0a"
 FLAREversion <<- "v1.1"
 #GLM and FLARE version; the code adds these to the output files
 
-base_GLM_nml <- paste0(forecast_location,"/glm3_woAED.nml" )
 base_GLM_nml <- paste0(forecast_location,"/glm3.nml" )
 if(include_wq){
   base_AED_nml <<- paste0(forecast_location,"/aed2_20200701_2DOCpools.nml")
@@ -117,9 +116,6 @@ lake_depth_init <<- 9.4  #not a modeled state
 
 modeled_depths <<- round(c(0.1, seq(0.33334, 9.33, 0.333334)), 2)
 
-#default_temp_init <<- c(6.2, 5.7, 5.5, 5.5, 5.4, 5.3, 5.3, 5.3, 5.2, 5.0)
-#default_temp_init_depths <<-  c(0.1, 1, 2, 3, 4, 5, 6, 7, 8, 9)
-
 default_temp_init <<- c(25.667, 24.9101, 23.067, 21.8815, 19.6658, 16.5739, 12.9292, 12.8456, 12.8127, 12.8079, 12.778)
 default_temp_init_depths <<-  c(0.127, 1.004, 2.005, 3.021, 4.002, 5.004, 6.004, 7.01, 8.001, 9.015, 9.518)
 the_sals_init <<- 0.0
@@ -138,15 +134,8 @@ n_inflow_outflow_members <<- 21*10
 ################################
 ### Process uncertainty adaption
 ##################################
-#qt_alpha <<- 0.8  #0 - all weight on the new Qt, 1 - all weight on the current Qt
-#qt_beta <<- 0.7 #
-localization_distance <<- NA #distance in meters were covariances in the process error are used
-use_cov <<- FALSE
-use_state_inflation <<- FALSE
-adapt_qt_method <<- 0  #0 = no adapt, 1 = variance in residuals, 2 = Rastetter et al 2011
-num_adapt_days <<- 30
+localization_distance <<- NA #distance in meters were covariances in the model error are used
 Inflat_pars <<- 1.02
-Inflat <<- 1.1
 vert_decorr_length <- 4.0
 no_negative_states <- TRUE
 
@@ -276,8 +265,6 @@ par_names <<- c("sed_temp_mean"
 )
 
 #par_names <<- c()
-
-#par_names <<- c("sw_factor")
 
 par_names_save <<- c("zone1temp"
                      ,"zone2temp"
@@ -421,24 +408,6 @@ par_units <<- c("deg_C"
                 ,"-"
 ) 
 
-#par_names <<- c("sw_factor")
-
-
-#par_names_save <<- c("sw_factor")
-#par_nml <<- c("glm3.nml")
-
-#par_init_mean <<- c(swf_init_mean)
-#par_init_lowerbound <<- c(swf_init_lowerbound)
-#par_init_upperbound <<- c(swf_init_upperbound)
-#par_lowerbound <<- c(swf_lowerbound)
-#par_upperbound <<- c(swf_upperbound)
-
-#par_units <<- c("-") 
-
-
-
-
-
 #####################################
 ###  Observation information
 ######################################
@@ -468,7 +437,7 @@ outflow_file1 <<- paste0(manual_data_location,"/FCR_spillway_outflow_newEDI_SUMM
 
 inflow_file2 <<- NA
 
-focal_depths <<- NA
+focal_depths <<- 1.6
 
 do_methods <<- c("do_sensor", "exo_sensor") #,"ctd")
 chla_methods <<- c("exo_sensor") # "ctd")
@@ -498,100 +467,76 @@ distance_threshold_meter <<- 0.15
 biomass_to_chla <<- c((160/12),(60/12), (60/12))
 
 #define water quality variables modeled.  Not used if include_wq == FALSE
-wq_names <<- c("temp",
-               "OXY_oxy",
-               "CAR_dic",
-               "CAR_ch4",
-               "SIL_rsi",
-               "NIT_amm",
-               "NIT_nit",
-               "PHS_frp",
-               "OGM_doc",
-               "OGM_docr",
-               "OGM_poc",
-               "OGM_don",
-               "OGM_donr",
-               "OGM_pon",
-               "OGM_dop",
-               "OGM_dopr",
-               "OGM_pop",
-               #"NCS_ss1",
-               #"PHS_frp_ads",
-               "PHY_cyano",
-               #"PHY_cyano_IN",
-               #"PHY_cyano_IP",
-               "PHY_green",
-               #"PHY_green_IN",
-               #"PHY_green_IP",
-               "PHY_diatom"
-               #"PHY_diatom_IN",
-               #"PHY_diatom_IP"
+state_names <<- c("temp",
+                  "OXY_oxy",
+                  "CAR_dic",
+                  "CAR_ch4",
+                  "SIL_rsi",
+                  "NIT_amm",
+                  "NIT_nit",
+                  "PHS_frp",
+                  "OGM_doc",
+                  "OGM_docr",
+                  "OGM_poc",
+                  "OGM_don",
+                  "OGM_donr",
+                  "OGM_pon",
+                  "OGM_dop",
+                  "OGM_dopr",
+                  "OGM_pop",
+                  "PHY_cyano",
+                  "PHY_green",
+                  "PHY_diatom"
 )
 
-wq_states_to_obs <<- list(temp = 1, 
-                          OXY_oxy = 2, 
-                          CAR_dic = NA, 
-                          CAR_ch4 = NA, 
-                          SIL_rsi = NA, 
-                          NIT_amm = c(3,5), 
-                          NIT_nit = c(4,5),  
-                          PHS_frp = c(6,7), 
-                          OGM_doc = 8, 
-                          OGM_docr = 8, 
-                          OGM_poc = NA, 
-                          OGM_don = 5, 
-                          OGM_donr = 5, 
-                          OGM_pon = 5, 
-                          OGM_dop = 7, 
-                          OGM_dopr = 7, 
-                          OGM_pop = 7, 
-                          #NCS_ss1 = NA, 
-                          #PHS_frp_ads = 7,
-                          PHY_cyano = 9, #20
-                          #PHY_cyano_IN = NA, 
-                          #PHY_cyano_IP = NA, 
-                          PHY_green = 9, #23
-                          #PHY_green_IN = NA, 
-                          #PHY_green_IP = NA, 
-                          PHY_diatom = 9 #26
-                          #PHY_diatom_IN = NA, 
-                          #PHY_diatom_IP = NA 
+states_to_obs <<- list(temp = 1, 
+                       OXY_oxy = 2, 
+                       CAR_dic = NA, 
+                       CAR_ch4 = NA, 
+                       SIL_rsi = NA, 
+                       NIT_amm = c(3,5), 
+                       NIT_nit = c(4,5),  
+                       PHS_frp = c(6,7), 
+                       OGM_doc = 8, 
+                       OGM_docr = 8, 
+                       OGM_poc = NA, 
+                       OGM_don = 5, 
+                       OGM_donr = 5, 
+                       OGM_pon = 5, 
+                       OGM_dop = 7, 
+                       OGM_dopr = 7, 
+                       OGM_pop = 7, 
+                       PHY_cyano = 9, #20
+                       PHY_green = 9, #23
+                       PHY_diatom = 9 #26
+                       
 )
 
-wq_states_to_obs_mapping <<- list(temp = 1, 
-                                  OXY_oxy= 1, 
-                                  CAR_dic = NA, 
-                                  CAR_ch4 = NA, 
-                                  SIL_rsi=  NA, 
-                                  NIT_amm = 1, 
-                                  NIT_nit = 1, 
-                                  PHS_frp = 1, 
-                                  OGM_doc = 1, 
-                                  OGM_docr = 1, 
-                                  OGM_poc = NA, 
-                                  OGM_don = 1, 
-                                  OGM_donr = 1, 
-                                  OGM_pon = 1, 
-                                  OGM_dop = 1, 
-                                  OGM_dopr = 1, 
-                                  OGM_pop = 1, 
-                                  #NCS_ss1 = NA, 
-                                  #PHS_frp_ads = 1, 
-                                  PHY_cyano = 1/(biomass_to_chla[1]), 
-                                  #PHY_cyano_IN = NA, 
-                                  #PHY_cyano_IP = NA,
-                                  PHY_green = 1/(biomass_to_chla[2]), 
-                                  #PHY_green_IN = NA,
-                                  #PHY_green_IP = NA, 
-                                  PHY_diatom = 1/(biomass_to_chla[3])
-                                  #PHY_diatom_IN = NA, 
-                                  #PHY_diatom_IP = NA
+states_to_obs_mapping <<- list(temp = 1, 
+                               OXY_oxy= 1, 
+                               CAR_dic = NA, 
+                               CAR_ch4 = NA, 
+                               SIL_rsi=  NA, 
+                               NIT_amm = 1, 
+                               NIT_nit = 1, 
+                               PHS_frp = 1, 
+                               OGM_doc = 1, 
+                               OGM_docr = 1, 
+                               OGM_poc = NA, 
+                               OGM_don = 1, 
+                               OGM_donr = 1, 
+                               OGM_pon = 1, 
+                               OGM_dop = 1, 
+                               OGM_dopr = 1, 
+                               OGM_pop = 1, 
+                               PHY_cyano = 1/(biomass_to_chla[1]), 
+                               PHY_green = 1/(biomass_to_chla[2]), 
+                               PHY_diatom = 1/(biomass_to_chla[3])
 )
 
-wq_names_obs <<- c(
+state_names_obs <<- c(
   "temp",
   "OXY_oxy",
-  #"CAR_dic",
   "NIT_amm",
   "NIT_nit",
   "NIT_total",
@@ -650,28 +595,26 @@ init_phyto_proportion <<- c(0.3, 0.3, 0.4)
 
 #Observational uncertainty for each variable
 
-obs_error_wq_intercept <<- list(temp = 0.07117918, # Temp
-                                OXY_oxy = 26.86071, #OXY_oxy 0.25 1958.838
-                                #CAR_dic = 0.001,
-                                NIT_amm = (1.5 *1000*0.001*(1/18.04)), #NIT_amm
-                                NIT_nit = (1.4*1000*0.001*(1/62.00)), #NIT_nit #0.08
-                                NIT_total = (26.0*1000*0.001*(1/14)), #TN
-                                PHS_frp = (1.2*1000*0.001*(1/94.9714)), #PHS_frp #0.05
-                                PHS_total = (4.4*1000*0.001*(1/30.97)), #PHS_total
-                                OGM_doc_total = 75.56199, #OGM_doc
-                                PHY_TCHLA = 0.961727 #PHY_TCHLA 3.338957
+obs_error_intercept <<- list(temp = 0.07117918, # Temp
+                             OXY_oxy = 26.86071, #OXY_oxy 0.25 1958.838
+                             NIT_amm = (1.5 *1000*0.001*(1/18.04)), #NIT_amm
+                             NIT_nit = (1.4*1000*0.001*(1/62.00)), #NIT_nit #0.08
+                             NIT_total = (26.0*1000*0.001*(1/14)), #TN
+                             PHS_frp = (1.2*1000*0.001*(1/94.9714)), #PHS_frp #0.05
+                             PHS_total = (4.4*1000*0.001*(1/30.97)), #PHS_total
+                             OGM_doc_total = 75.56199, #OGM_doc
+                             PHY_TCHLA = 0.961727 #PHY_TCHLA 3.338957
 ) 
 
-obs_error_wq_slope <<- c(temp = 0, #temp
-                         OXY_oxy = 0, #OXY_oxy #0.25
-                         #CAR_dic = 0,
-                         NIT_amm = 0, #NIT_amm
-                         NIT_nit = 0, #NIT_nit
-                         NIT_total = 0, #NIT_total
-                         PHS_frp = 0, #PHS_frp
-                         PHS_total = 0, #PHS_total
-                         OGM_doc = 0, #OGM_doc
-                         PHY_TCHLA = 0) #PHY_TCHLA
+obs_error_slope <<- c(temp = 0, #temp
+                      OXY_oxy = 0, #OXY_oxy #0.25
+                      NIT_amm = 0, #NIT_amm
+                      NIT_nit = 0, #NIT_nit
+                      NIT_total = 0, #NIT_total
+                      PHS_frp = 0, #PHS_frp
+                      PHS_total = 0, #PHS_total
+                      OGM_doc = 0, #OGM_doc
+                      PHY_TCHLA = 0) #PHY_TCHLA
 
 exo_2_ctd_chla <- c(0, 1)  #c(-2.0430, 2.5314) #c(1.8795, 0.6662)
 exo_2_ctd_do <- c(0, 1) #c(8.3670, 0.7152)
@@ -700,18 +643,12 @@ OGM_pon_process_error <<- (0.72 * 2 * error_scaler)
 OGM_dop_process_error <<- (0.04 * 2 * error_scaler)
 OGM_dopr_process_error <<- (0.04 * 2 *  error_scaler)
 OGM_pop_process_error <<- (0.04 * 2 * error_scaler)
-NCS_ss1_process_error <<- 0.01
-PHS_frp_ads_process_error <<- 0.05
+
 
 PHY_cyano_process_error <<- (2.52/3 * biomass_to_chla[1] * error_scaler)
 PHY_green_process_error <<- (2.52/3 * biomass_to_chla[2] * error_scaler)
 PHY_diatom_process_error <<- (2.52/3 * biomass_to_chla[3] * error_scaler)
-PHY_cyano_IN_process_error <<- (1 * phyto_n_biomass_ratio)
-PHY_green_IN_process_error <<- (1 * phyto_n_biomass_ratio)
-PHY_diatom_IN_process_error <<- (1 * phyto_n_biomass_ratio)
-PHY_cyano_IP_process_error <<- (1 * phyto_p_biomass_ratio)
-PHY_green_IP_process_error <<- (1 * phyto_p_biomass_ratio)
-PHY_diatom_IP_process_error <<- (1 * phyto_p_biomass_ratio)
+
 
 temp_init_error <<- 1.5
 OXY_oxy_init_error <<- 50
@@ -731,17 +668,9 @@ OGM_pon_init_error <<- 2
 OGM_dop_init_error <<- 3
 OGM_dopr_init_error <<- 3
 OGM_pop_init_error <<- 4
-NCS_ss1_init_error <<- 0.5
-PHS_frp_ads_init_error <<- 0.1
 PHY_cyano_init_error <<- 10.0
 PHY_green_init_error <<- 10.0
 PHY_diatom_init_error <<- 10.0
-PHY_cyano_IN_init_error <<- 10
-PHY_green_IN_init_error <<- 10 * phyto_n_biomass_ratio
-PHY_diatom_IN_init_error <<- 10 * phyto_n_biomass_ratio
-PHY_cyano_IP_init_error <<- 10 * phyto_p_biomass_ratio
-PHY_green_IP_init_error <<- 10 * phyto_p_biomass_ratio
-PHY_diatom_IP_init_error <<- 10 * phyto_p_biomass_ratio
 
 ####
 # Dignostics
@@ -762,7 +691,7 @@ diagnostics_names <- c("extc_coef",
                        "PHY_diatom_fT",
                        "rad")
 
-secchi_file <- paste0(manual_data_location,"Secchi_depth_2013-2019.csv")
+secchi_file <- paste0(manual_data_location,"/Secchi_depth_2013-2019.csv")
 
 #########################################
 # Archiving options
@@ -770,7 +699,7 @@ secchi_file <- paste0(manual_data_location,"Secchi_depth_2013-2019.csv")
 
 #Pull data from github?
 #Push results to github?
-pull_from_git <<- FALSE
+pull_from_git <<- TRUE
 push_to_git <<- FALSE
 
 #########################################

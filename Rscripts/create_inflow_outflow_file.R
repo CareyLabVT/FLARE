@@ -24,7 +24,7 @@ create_inflow_outflow_file <- function(full_time_local,
   }
   
   if(include_wq){
-    wq_names_tmp <- wq_names[which(wq_names %in% names(inflow))]
+    wq_names_tmp <- state_names[which(state_names %in% names(inflow))]
   }else{
     wq_names_tmp <- NULL
   }

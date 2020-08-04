@@ -56,7 +56,7 @@ run_EnKF <- function(x,
     num_wq_vars <- length(wq_start)
   }
   
-  num_phytos <- length(which(str_detect(wq_names,"PHY_") & !str_detect(wq_names,"_IP") & !str_detect(wq_names,"_IN")))
+  num_phytos <- length(which(str_detect(state_names,"PHY_") & !str_detect(state_names,"_IP") & !str_detect(state_names,"_IN")))
   
   full_time_local_char <- strftime(full_time_local,
                                    format="%Y-%m-%d %H:%M",
@@ -152,30 +152,30 @@ run_EnKF <- function(x,
                        snow_ice_thickness_start = snow_ice_thickness[i-1, m, ],
                        avg_surf_temp_start = avg_surf_temp[i-1, m],
                        nstates)
-        
-        x_star[m, ] <- out$x_star_end
-        surface_height[i ,m ] <- out$surface_height_end
-        snow_ice_thickness[i,m ,] <- out$snow_ice_thickness_end
-        avg_surf_temp[i , m] <- out$avg_surf_temp_end
-        mixing_vars[m, ] <- out$mixing_vars_end
-        diagnostics[i, m, , ] <- out$diagnostics_end
-        glm_depths[i, m,] <- out$glm_depths_end
-        
-        ########################################
-        #END GLM SPECIFIC PART
-        ########################################
-        
-        #INCREMENT ThE MET_INDEX TO MOVE TO ThE NEXT NOAA ENSEMBLE
-        met_index <- met_index + 1
-        if(met_index > length(met_file_names)){
-          met_index <- 1
-        }
-        
-        inflow_outflow_index <- inflow_outflow_index + 1
-        if(inflow_outflow_index > nrow(inflow_file_names)){
-          inflow_outflow_index <- 1
-        }
-        
+      
+      x_star[m, ] <- out$x_star_end
+      surface_height[i ,m ] <- out$surface_height_end
+      snow_ice_thickness[i,m ,] <- out$snow_ice_thickness_end
+      avg_surf_temp[i , m] <- out$avg_surf_temp_end
+      mixing_vars[m, ] <- out$mixing_vars_end
+      diagnostics[i, m, , ] <- out$diagnostics_end
+      glm_depths[i, m,] <- out$glm_depths_end
+      
+      ########################################
+      #END GLM SPECIFIC PART
+      ########################################
+      
+      #INCREMENT ThE MET_INDEX TO MOVE TO ThE NEXT NOAA ENSEMBLE
+      met_index <- met_index + 1
+      if(met_index > length(met_file_names)){
+        met_index <- 1
+      }
+      
+      inflow_outflow_index <- inflow_outflow_index + 1
+      if(inflow_outflow_index > nrow(inflow_file_names)){
+        inflow_outflow_index <- 1
+      }
+      
       
       #Add process noise
       
@@ -193,11 +193,6 @@ run_EnKF <- function(x,
       }
       
     } # END ENSEMBLE LOOP
-    
-    #Corruption [nmembers x nstates]
-    if(use_state_inflation){
-      x_corr <- x_star    
-    }
     
     
     #Correct any negative water quality states
@@ -281,17 +276,17 @@ run_EnKF <- function(x,
       zt <- zt[which(!is.na(zt))]
       
       #Assign which states have obs in the time step
-      h <- matrix(0, nrow = length(wq_names_obs) * ndepths_modeled, ncol = nstates)
+      h <- matrix(0, nrow = length(state_names_obs) * ndepths_modeled, ncol = nstates)
       
       index <- 0
       for(k in 1:(nstates/ndepths_modeled)){
         for(j in 1:ndepths_modeled){
           index <- index + 1
-          if(!is.na(first(wq_states_to_obs[[k]]))){
-            for(jj in 1:length(wq_states_to_obs[[k]])){
-              if(!is.na((z[i, j, wq_states_to_obs[[k]][jj]]))){
-                index2 <- (wq_states_to_obs[[k]][jj] - 1) * ndepths_modeled + j
-                h[index2,index] <- wq_states_to_obs_mapping[[k]]
+          if(!is.na(first(states_to_obs[[k]]))){
+            for(jj in 1:length(states_to_obs[[k]])){
+              if(!is.na((z[i, j, states_to_obs[[k]][jj]]))){
+                index2 <- (states_to_obs[[k]][jj] - 1) * ndepths_modeled + j
+                h[index2,index] <- states_to_obs_mapping[[k]]
               }
             }
           }
@@ -321,31 +316,21 @@ run_EnKF <- function(x,
         psi_t <- curr_psi
       }
       
-      #Ensemble mean
-      ens_mean <- apply(x_corr[,], 2, mean)
-      if(npars > 0){
-        par_mean <- apply(pars_corr, 2, mean)
-      }
-      
-      
-      for(m in 1:nmembers){
-        if(use_state_inflation){
-          x_corr[m, ] <- Inflat * (x_corr[m,] - ens_mean) + ens_mean
-        }
-        if(npars > 0){
-          pars_corr[m, ] <- Inflat_pars * (pars_corr[m,] - par_mean) + par_mean
-        }
-      }
-      
-      ens_mean <- apply(x_corr[,], 2, mean)
-      if(npars > 0){
-        par_mean <- apply(pars_corr, 2, mean)
-      }
-      
-      n_psi = t(rmvnorm(n = 1, mean = zt, sigma=as.matrix(psi_t)))
+      n_psi <- t(rmvnorm(n = 1, mean = zt, sigma=as.matrix(psi_t)))
       
       #Set any negative observations of water quality variables to zero
       n_psi[which(z_index > length(modeled_depths) & n_psi < 0.0)] <- 0.0 
+      
+      #Ensemble mean
+      ens_mean <- apply(x_corr[,], 2, mean)
+      
+      if(npars > 0){
+        par_mean <- apply(pars_corr, 2, mean)
+        for(m in 1:nmembers){
+          pars_corr[m, ] <- Inflat_pars * (pars_corr[m,] - par_mean) + par_mean
+        }
+        par_mean <- apply(pars_corr, 2, mean)
+      }
       
       d_mat <- t(matrix(rep(n_psi, each = nmembers), 
                         nrow = nmembers, 
@@ -357,20 +342,16 @@ run_EnKF <- function(x,
         dit[m, ] <- x_corr[m, ] - ens_mean
         if(npars > 0){
           dit_pars[m, ] <- pars_corr[m, ] - par_mean
-          #dit_combined[m, ] <- c(dit[m, ], dit_pars[m, ])
         }
         if(m == 1){
           p_it <- dit[m, ] %*% t(dit[m, ]) 
           if(npars > 0){
             p_it_pars <- dit_pars[m, ] %*% t(dit[m, ])
-            #p_it_combined <- dit_combined[m, ] %*% t(dit_combined[m, ]) 
           }
         }else{
           p_it <- dit[m, ] %*% t(dit[m, ]) +  p_it 
           if(npars > 0){
             p_it_pars <- dit_pars[m, ] %*% t(dit[m, ]) + p_it_pars
-            #p_it_combined <- dit_combined[m, ] %*% t(dit_combined[m, ]) + 
-            #  p_it_combined
           }
         }
       }
@@ -379,7 +360,6 @@ run_EnKF <- function(x,
       p_t <- p_it / (nmembers - 1)
       if(npars > 0){
         p_t_pars <- p_it_pars / (nmembers - 1)
-        #p_t_combined <- p_it_combined/ (nmembers - 1)
       }
       
       if(!is.na(localization_distance)){
@@ -389,8 +369,6 @@ run_EnKF <- function(x,
       k_t <- p_t %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t, tol = 1e-17)
       if(npars > 0){
         k_t_pars <- p_t_pars %*% t(h) %*% solve(h %*% p_t %*% t(h) + psi_t, tol = 1e-17)
-        #k_t_combined <- p_t_combined %*% t(h_combined) %*% 
-        #  solve(h_combined %*% p_t_combined %*% t(h_combined) + psi_t, tol = 1e-17)
       }
       
       #Update states array (transposes are necessary to convert 
@@ -404,29 +382,29 @@ run_EnKF <- function(x,
       
       
       
-      if(adapt_qt_method == 1){
-        #does previous day have an observation
-        previous_day_obs <- FALSE
-        if(length(which(!is.na(z[i-1, ]))) > 0){
-          previous_day_obs <- TRUE
-        }
-        
-        if(previous_day_obs){
-          running_residuals[1:(num_adapt_days - 1), ] <- running_residuals[2:num_adapt_days, ]
-          running_residuals[num_adapt_days, ] <- NA
-          running_residuals[num_adapt_days, z_index] <- zt - ens_mean[z_index]
-          if(!is.na(running_residuals[1, z_index[1]])){
-            qt <- update_qt(running_residuals, 
-                            modeled_depths, 
-                            qt, 
-                            include_wq, 
-                            npars, nstates, 
-                            wq_start, 
-                            wq_end, 
-                            num_wq_vars)
-          }
-        }
-      }
+      # if(adapt_qt_method == 1){
+      #   #does previous day have an observation
+      #   previous_day_obs <- FALSE
+      #   if(length(which(!is.na(z[i-1, ]))) > 0){
+      #     previous_day_obs <- TRUE
+      #   }
+      #   
+      #   if(previous_day_obs){
+      #     running_residuals[1:(num_adapt_days - 1), ] <- running_residuals[2:num_adapt_days, ]
+      #     running_residuals[num_adapt_days, ] <- NA
+      #     running_residuals[num_adapt_days, z_index] <- zt - ens_mean[z_index]
+      #     if(!is.na(running_residuals[1, z_index[1]])){
+      #       qt <- update_qt(running_residuals, 
+      #                       modeled_depths, 
+      #                       qt, 
+      #                       include_wq, 
+      #                       npars, nstates, 
+      #                       wq_start, 
+      #                       wq_end, 
+      #                       num_wq_vars)
+      #     }
+      #   }
+      # }
     }
     
     #IF NO INITIAL CONDITION UNCERTAINITY THEN SET EACH ENSEMBLE MEMBER TO THE MEAN

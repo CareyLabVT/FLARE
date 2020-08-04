@@ -26,7 +26,7 @@ write_forecast_netcdf <- function(x,
                                   mixing_restart,
                                   glm_depths_restart,
                                   forecast_location,
-                                  wq_names,
+                                  state_names,
                                   diagnostics_names,
                                   diagnostics){
   
@@ -110,14 +110,14 @@ write_forecast_netcdf <- function(x,
   
   
   if(include_wq){
-    for(s in 2:length(wq_names)){
-      def_list[[index+npars+s-1]]<- ncvar_def(wq_names[s],"mmol/m3",list(timedim,ensdim,depthdim),fillvalue,wq_names[s],prec="single")
+    for(s in 2:length(state_names)){
+      def_list[[index+npars+s-1]]<- ncvar_def(state_names[s],"mmol/m3",list(timedim,ensdim,depthdim),fillvalue,state_names[s],prec="single")
     }
   }
   
   if(length(diagnostics_names) > 0){
     for(s in 1:length(diagnostics_names)){
-      def_list[[index+npars+length(wq_names)-1 + s]]<- ncvar_def(diagnostics_names[s],"-",list(timedim,ensdim,depthdim),fillvalue,diagnostics_names[s],prec="single")
+      def_list[[index+npars+length(state_names)-1 + s]]<- ncvar_def(diagnostics_names[s],"-",list(timedim,ensdim,depthdim),fillvalue,diagnostics_names[s],prec="single")
     }
   }
   ncout <- nc_create(ncfname,def_list,force_v4=T)
@@ -151,7 +151,7 @@ write_forecast_netcdf <- function(x,
   }
   
   if(include_wq){
-    for(s in 2:length(wq_names)){
+    for(s in 2:length(state_names)){
       ncvar_put(ncout,def_list[[index+npars+s-1]],x[,,wq_start[s-1]:wq_end[s-1]])
     }
     
@@ -159,7 +159,7 @@ write_forecast_netcdf <- function(x,
   
   if(length(diagnostics_names) > 0){
     for(s in 1:length(diagnostics_names)){
-      ncvar_put(ncout, def_list[[index+npars+length(wq_names) - 1 + s]],diagnostics[, , ,s])
+      ncvar_put(ncout, def_list[[index+npars+length(state_names) - 1 + s]],diagnostics[, , ,s])
     }
   }
   #Global file metadata

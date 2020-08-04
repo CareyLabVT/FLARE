@@ -131,8 +131,8 @@ plotting_general <- function(pdf_file_name,
   depths <- round(ncvar_get(nc, 'z'),2)
   
   wq_names <- wq_names_potential[wq_names_potential %in% names(nc$var)]
-  combined_states_conversion <- combined_states_conversion_potential[names(combined_states_conversion_potential) %in% wq_names_obs]
-  combined_states <- combined_states_potential[names(combined_states_potential) %in% wq_names_obs]
+  combined_states_conversion <- combined_states_conversion_potential[names(combined_states_conversion_potential) %in% state_names_obs]
+  combined_states <- combined_states_potential[names(combined_states_potential) %in% state_names_obs]
   
   state_names <- c(wq_names, names(combined_states))
   par_names <- par_names_potential[par_names_potential %in% names(nc$var)]
@@ -368,7 +368,7 @@ plotting_general <- function(pdf_file_name,
                       PHS_frp_ads = PHS_frp_ads_obs,
                       PHY_TCHLA = PHY_TCHLA_obs)
   
-  z <- array(unlist(z_potential[names(z_potential) %in% wq_names_obs]), dim = c(nsteps, length(depths), length(wq_names_obs)))
+  z <- array(unlist(z_potential[names(z_potential) %in% state_names_obs]), dim = c(nsteps, length(depths), length(state_names_obs)))
   
   if(length(focal_depths_plotting) < 4){
     plot_height <- 3
@@ -398,8 +398,8 @@ plotting_general <- function(pdf_file_name,
       date <- c(date, rep(full_time_local[j], length(depths)))
     }
     
-    if(state_names[i] %in% wq_names_obs){
-      obs_index <- which(wq_names_obs == state_names[i])
+    if(state_names[i] %in% state_names_obs){
+      obs_index <- which(state_names_obs == state_names[i])
       obs <- c(t(z[, ,obs_index]))
     }else{
       obs <- as.numeric(rep(NA, length(date)))

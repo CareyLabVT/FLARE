@@ -248,9 +248,9 @@ run_flare<-function(start_day_local,
   }
   
   ndepths_modeled <- length(modeled_depths)
-  num_wq_vars <- length(wq_names) - 1
+  num_wq_vars <- length(state_names) - 1
   
-  glm_output_vars <- wq_names
+  glm_output_vars <- state_names
   
   npars <- length(par_names)
   
@@ -267,7 +267,7 @@ run_flare<-function(start_day_local,
     n_ds_members <- 1
   }
   
-  nstates <- ndepths_modeled * length(wq_names)
+  nstates <- ndepths_modeled * length(state_names)
   
   ####################################################
   #### STEP 3: ORGANIZE FILES
@@ -809,7 +809,7 @@ run_flare<-function(start_day_local,
                       PHS_frp_ads = PHS_frp_ads_obs,
                       PHY_TCHLA = PHY_TCHLA_obs)
   
-  z <- array(unlist(z_potential[which(names(z_potential) %in% wq_names_obs)]), dim = c(nsteps, ndepths_modeled, length(wq_names_obs)))
+  z <- array(unlist(z_potential[which(names(z_potential) %in% state_names_obs)]), dim = c(nsteps, ndepths_modeled, length(state_names_obs)))
   
   z_obs <- z
   if(!use_obs_constraint){
@@ -905,40 +905,40 @@ run_flare<-function(start_day_local,
     #Initialize Chla usind data if avialable
     if(length(!is.na(init_chla_obs)) == 0){
       PHY_cyano_init_depth <- rep(PHY_cyano_init, ndepths_modeled)
-      PHY_cyano_IN_init_depth <- rep(PHY_cyano_init * phyto_n_biomass_ratio, ndepths_modeled)
-      PHY_cyano_IP_init_depth <- rep(PHY_cyano_init * phyto_p_biomass_ratio, ndepths_modeled)
+      #PHY_cyano_IN_init_depth <- rep(PHY_cyano_init * phyto_n_biomass_ratio, ndepths_modeled)
+      #PHY_cyano_IP_init_depth <- rep(PHY_cyano_init * phyto_p_biomass_ratio, ndepths_modeled)
       PHY_green_init_depth <- rep(PHY_green_init, ndepths_modeled)
-      PHY_green_IN_init_depth <- rep(PHY_green_init * phyto_n_biomass_ratio, ndepths_modeled)
-      PHY_green_IP_init_depth <- rep(PHY_green_init  * phyto_p_biomass_ratio, ndepths_modeled)
+      #PHY_green_IN_init_depth <- rep(PHY_green_init * phyto_n_biomass_ratio, ndepths_modeled)
+      #PHY_green_IP_init_depth <- rep(PHY_green_init  * phyto_p_biomass_ratio, ndepths_modeled)
       PHY_diatom_init_depth <- rep(PHY_diatom_init, ndepths_modeled)
-      PHY_diatom_IN_init_depth <- rep(PHY_diatom_init * phyto_n_biomass_ratio, ndepths_modeled)
-      PHY_diatom_IP_init_depth <- rep(PHY_diatom_init  * phyto_p_biomass_ratio, ndepths_modeled)
+      #PHY_diatom_IN_init_depth <- rep(PHY_diatom_init * phyto_n_biomass_ratio, ndepths_modeled)
+      #PHY_diatom_IP_init_depth <- rep(PHY_diatom_init  * phyto_p_biomass_ratio, ndepths_modeled)
       
     }else if(length(!is.na(init_chla_obs)) == 1){
       PHY_TCHLA_init_depth <- rep(init_chla_obs, ndepths_modeled)
       
       PHY_cyano_init_depth <- PHY_TCHLA_init_depth *  init_phyto_proportion[1] * biomass_to_chla[1]
-      PHY_cyano_IN_init_depth <- PHY_cyano_init_depth * phyto_n_biomass_ratio
-      PHY_cyano_IP_init_depth <- PHY_cyano_init_depth * phyto_p_biomass_ratio
+      #PHY_cyano_IN_init_depth <- PHY_cyano_init_depth * phyto_n_biomass_ratio
+      #PHY_cyano_IP_init_depth <- PHY_cyano_init_depth * phyto_p_biomass_ratio
       PHY_green_init_depth <- PHY_TCHLA_init_depth  * init_phyto_proportion[2] * biomass_to_chla[2]
-      PHY_green_IN_init_depth <- PHY_green_init_depth * phyto_n_biomass_ratio
-      PHY_green_IP_init_depth <- PHY_green_init_depth * phyto_p_biomass_ratio
+      #PHY_green_IN_init_depth <- PHY_green_init_depth * phyto_n_biomass_ratio
+      #PHY_green_IP_init_depth <- PHY_green_init_depth * phyto_p_biomass_ratio
       PHY_diatom_init_depth <- PHY_TCHLA_init_depth *  init_phyto_proportion[3] * biomass_to_chla[3]
-      PHY_diatom_IN_init_depth <- PHY_diatom_init_depth * phyto_n_biomass_ratio 
-      PHY_diatom_IP_init_depth <- PHY_diatom_init_depth  * phyto_p_biomass_ratio
+      #PHY_diatom_IN_init_depth <- PHY_diatom_init_depth * phyto_n_biomass_ratio 
+      #PHY_diatom_IP_init_depth <- PHY_diatom_init_depth  * phyto_p_biomass_ratio
       
     }else{
       chla_inter <- approxfun(init_chla_obs_depths, init_chla_obs, rule=2)
       PHY_TCHLA_init_depth <- chla_inter(modeled_depths)
       PHY_cyano_init_depth <- PHY_TCHLA_init_depth *  init_phyto_proportion[1] * biomass_to_chla[1]
-      PHY_cyano_IN_init_depth <- PHY_cyano_init_depth * phyto_n_biomass_ratio
-      PHY_cyano_IP_init_depth <- PHY_cyano_init_depth * phyto_p_biomass_ratio
+      #PHY_cyano_IN_init_depth <- PHY_cyano_init_depth * phyto_n_biomass_ratio
+      #PHY_cyano_IP_init_depth <- PHY_cyano_init_depth * phyto_p_biomass_ratio
       PHY_green_init_depth <- PHY_TCHLA_init_depth  * init_phyto_proportion[2] * biomass_to_chla[2]
-      PHY_green_IN_init_depth <- PHY_green_init_depth * phyto_n_biomass_ratio
-      PHY_green_IP_init_depth <- PHY_green_init_depth * phyto_p_biomass_ratio
+      #PHY_green_IN_init_depth <- PHY_green_init_depth * phyto_n_biomass_ratio
+      #PHY_green_IP_init_depth <- PHY_green_init_depth * phyto_p_biomass_ratio
       PHY_diatom_init_depth <- PHY_TCHLA_init_depth *  init_phyto_proportion[3] * biomass_to_chla[3]
-      PHY_diatom_IN_init_depth <- PHY_diatom_init_depth * phyto_n_biomass_ratio 
-      PHY_diatom_IP_init_depth <- PHY_diatom_init_depth  * phyto_p_biomass_ratio
+      #PHY_diatom_IN_init_depth <- PHY_diatom_init_depth * phyto_n_biomass_ratio 
+      #PHY_diatom_IP_init_depth <- PHY_diatom_init_depth  * phyto_p_biomass_ratio
     }
     
     #Initialize DIC usind data if avialable
@@ -1009,8 +1009,8 @@ run_flare<-function(start_day_local,
     OGM_dop_init_depth <- rep(OGM_dop_init, ndepths_modeled)
     OGM_dopr_init_depth <- rep(OGM_dopr_init, ndepths_modeled)
     OGM_pop_init_depth <- rep(OGM_pop_init, ndepths_modeled)
-    NCS_ss1_init_depth <- rep(NCS_ss1_init, ndepths_modeled)
-    PHS_frp_ads_init_depth <- rep(PHS_frp_ads_init, ndepths_modeled)
+    #NCS_ss1_init_depth <- rep(NCS_ss1_init, ndepths_modeled)
+    #PHS_frp_ads_init_depth <- rep(PHS_frp_ads_init, ndepths_modeled)
     
     wq_init_vals_potential <- list(OXY_oxy = OXY_oxy_init_depth,
                                    CAR_dic = CAR_dic_init_depth,
@@ -1028,18 +1028,19 @@ run_flare<-function(start_day_local,
                                    OGM_dop = OGM_dop_init_depth,
                                    OGM_dopr = OGM_dopr_init_depth,
                                    OGM_pop = OGM_pop_init_depth,
-                                   NCS_ss1= NCS_ss1_init_depth,
-                                   PHS_frp_ads = PHS_frp_ads_init_depth,
+                                   #NCS_ss1= NCS_ss1_init_depth,
+                                   #PHS_frp_ads = PHS_frp_ads_init_depth,
                                    PHY_cyano = PHY_cyano_init_depth,
-                                   PHY_cyano_IN = PHY_cyano_IN_init_depth,
-                                   PHY_cyano_IP = PHY_cyano_IP_init_depth,
+                                   #PHY_cyano_IN = PHY_cyano_IN_init_depth,
+                                   #PHY_cyano_IP = PHY_cyano_IP_init_depth,
                                    PHY_green = PHY_green_init_depth,
-                                   PHY_green_IN = PHY_green_IN_init_depth,
-                                   PHY_green_IP = PHY_green_IP_init_depth,
-                                   PHY_diatom = PHY_diatom_init_depth,
-                                   PHY_diatom_IN = PHY_diatom_IN_init_depth,
-                                   PHY_diatom_IP = PHY_diatom_IP_init_depth)
-    wq_init_vals <- as.numeric(unlist(bind_cols(wq_init_vals_potential[names(wq_init_vals_potential) %in% c(wq_names)]))) 
+                                   #PHY_green_IN = PHY_green_IN_init_depth,
+                                   #PHY_green_IP = PHY_green_IP_init_depth,
+                                   PHY_diatom = PHY_diatom_init_depth
+                                   #PHY_diatom_IN = PHY_diatom_IN_init_depth,
+                                   #PHY_diatom_IP = PHY_diatom_IP_init_depth
+                                   )
+    wq_init_vals <- as.numeric(unlist(bind_cols(wq_init_vals_potential[names(wq_init_vals_potential) %in% c(state_names)]))) 
     
     #UPDATE NML WITH INITIAL CONDITIONS
     
@@ -1052,15 +1053,15 @@ run_flare<-function(start_day_local,
   #### STEP 9: CREATE THE PSI VECTOR (DATA uncertainty)  
   #######################################################
   
-  psi_slope <- rep(NA, length(wq_names_obs) * ndepths_modeled)
-  psi_intercept <- rep(NA, length(wq_names_obs) * ndepths_modeled)
+  psi_slope <- rep(NA, length(state_names_obs) * ndepths_modeled)
+  psi_intercept <- rep(NA, length(state_names_obs) * ndepths_modeled)
   
   index <- 0
-  for(i in 1:length(wq_names_obs)){
+  for(i in 1:length(state_names_obs)){
     for(j in 1:ndepths_modeled){
       index <- index + 1
-      psi_intercept[index] <- obs_error_wq_intercept[[i]]
-      psi_slope[index] <- obs_error_wq_slope[[i]]
+      psi_intercept[index] <- obs_error_intercept[[i]]
+      psi_slope[index] <- obs_error_slope[[i]]
     }
   }
   
@@ -1092,8 +1093,6 @@ run_flare<-function(start_day_local,
   temp_init_error <- temp_init_error ^ 2
   diag(qt_init) <- rep(temp_init_error,ndepths_modeled)
   
-  
-  #combined_error <- c(sqrt(temp_process_error))
   combined_error <- c(temp_process_error)
   
   
@@ -1115,17 +1114,18 @@ run_flare<-function(start_day_local,
                                    OGM_dop = OGM_dop_process_error,
                                    OGM_dopr = OGM_dopr_process_error,
                                    OGM_pop = OGM_pop_process_error,
-                                   NCS_ss1 = NCS_ss1_process_error,
-                                   PHS_frp_ads = PHS_frp_ads_process_error,
+                                   #NCS_ss1 = NCS_ss1_process_error,
+                                   #PHS_frp_ads = PHS_frp_ads_process_error,
                                    PHY_cyano = PHY_cyano_process_error,
-                                   PHY_cyano_IN = PHY_cyano_IN_process_error,
-                                   PHY_cyano_IP = PHY_cyano_IP_process_error,
+                                   #PHY_cyano_IN = PHY_cyano_IN_process_error,
+                                   #PHY_cyano_IP = PHY_cyano_IP_process_error,
                                    PHY_green = PHY_green_process_error,
-                                   PHY_green_IN = PHY_green_IN_process_error,
-                                   PHY_green_IP = PHY_green_IP_process_error,
-                                   PHY_diatom = PHY_diatom_process_error,
-                                   PHY_diatom_IN = PHY_diatom_IN_process_error,
-                                   PHY_diatom_IP = PHY_diatom_IP_process_error)
+                                   #PHY_green_IN = PHY_green_IN_process_error,
+                                   #PHY_green_IP = PHY_green_IP_process_error,
+                                   PHY_diatom = PHY_diatom_process_error
+                                   #PHY_diatom_IN = PHY_diatom_IN_process_error,
+                                   #PHY_diatom_IP = PHY_diatom_IP_process_error
+                                   )
     
     wq_var_init_error_potential <- list(OXY_oxy = OXY_oxy_init_error,
                                         CAR_dic = CAR_dic_init_error,
@@ -1143,26 +1143,27 @@ run_flare<-function(start_day_local,
                                         OGM_dop = OGM_dop_init_error,
                                         OGM_dopr = OGM_dop_init_error,
                                         OGM_pop = OGM_pop_init_error,
-                                        NCS_ss1 = NCS_ss1_init_error,
-                                        PHS_frp_ads = PHS_frp_ads_init_error,
+                                        #NCS_ss1 = NCS_ss1_init_error,
+                                        #PHS_frp_ads = PHS_frp_ads_init_error,
                                         PHY_cyano = PHY_cyano_init_error,
-                                        PHY_cyano_IN = PHY_cyano_IN_init_error,
-                                        PHY_cyano_IP = PHY_cyano_IP_init_error,
+                                        #PHY_cyano_IN = PHY_cyano_IN_init_error,
+                                        #PHY_cyano_IP = PHY_cyano_IP_init_error,
                                         PHY_green = PHY_green_init_error,
-                                        PHY_green_IN = PHY_green_IN_init_error,
-                                        PHY_green_IP = PHY_green_IP_init_error,
-                                        PHY_diatom = PHY_diatom_init_error,
-                                        PHY_diatom_IN = PHY_diatom_IN_init_error,
-                                        PHY_diatom_IP = PHY_diatom_IP_init_error)
+                                        #PHY_green_IN = PHY_green_IN_init_error,
+                                        #PHY_green_IP = PHY_green_IP_init_error,
+                                        PHY_diatom = PHY_diatom_init_error
+                                        #PHY_diatom_IN = PHY_diatom_IN_init_error,
+                                        #PHY_diatom_IP = PHY_diatom_IP_init_error
+                                        )
     
     
-    wq_var_error <- as.numeric(bind_cols(wq_var_error_potential[names(wq_var_error_potential) %in% c("temp",wq_names)])) 
+    wq_var_error <- as.numeric(bind_cols(wq_var_error_potential[names(wq_var_error_potential) %in% c(state_names)])) 
     
     #combined_error <- c(combined_error, sqrt(wq_var_error))
     
     combined_error <- c(combined_error, wq_var_error)
     
-    wq_var_init_error <- as.numeric(bind_cols(wq_var_init_error_potential[names(wq_var_init_error_potential) %in% c("temp",wq_names)])) 
+    wq_var_init_error <- as.numeric(bind_cols(wq_var_init_error_potential[names(wq_var_init_error_potential) %in% c(state_names)])) 
     
     for(i in 1:num_wq_vars){
       for(j in 1:ndepths_modeled){
@@ -1176,7 +1177,7 @@ run_flare<-function(start_day_local,
       }
     }
     
-    running_residuals <- array(NA, dim =c(num_adapt_days, nrow(qt)))
+    running_residuals <- array(NA, dim =c(30, nrow(qt)))
     
     qt_pars <- NA
     
@@ -1561,7 +1562,7 @@ run_flare<-function(start_day_local,
                         mixing_restart,
                         glm_depths_restart,
                         forecast_location,
-                        wq_names,
+                        state_names,
                         diagnostics_names,
                         diagnostics
   )
