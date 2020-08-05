@@ -33,7 +33,9 @@ run_model <- function(i,
                     num_wq_vars,
                     snow_ice_thickness_start,
                     avg_surf_temp_start,
-                    nstates){
+                    nstates,
+                    states_config,
+                    include_wq){
   
   
   update_glm_nml_list <- list()
@@ -190,7 +192,7 @@ run_model <- function(i,
     if(simulate_SSS){
       create_sss_input_output(x_start, i, m, full_time_local, working_directory, 
                               wq_start, management_input, hist_days, 
-                              forecast_sss_on, sss_depth,use_specified_sss)
+                              forecast_sss_on, sss_depth,use_specified_sss, states_config, include_wq)
     }
   }
   
@@ -354,7 +356,8 @@ set_up_model <- function(code_folder,
                          ndepths_modeled,
                          modeled_depths,
                          the_sals_init,
-                         machine){
+                         machine,
+                         include_wq){
                          
                          
   GLM_folder <- paste0(code_folder, "/", "glm", "/", machine) 

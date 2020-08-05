@@ -13,7 +13,7 @@ write_forecast_netcdf <- function(x,
                                   wq_end,
                                   z,
                                   nstates,
-                                  npars,
+                                  pars_config,
                                   GLMversion,
                                   FLAREversion,
                                   local_tzone,                      
@@ -44,6 +44,8 @@ write_forecast_netcdf <- function(x,
   obs_states <- seq(1,dim(z)[3],1)
   qt_update_days <- seq(1,dim(running_residuals)[1],1)
   mixing_restart_vars <- seq(1, dim(mixing_restart)[2], 1)
+  
+  npars <- nrow(pars_config)
   
   restart_depths <- seq(1, dim(glm_depths_restart)[2])
   
@@ -104,7 +106,7 @@ write_forecast_netcdf <- function(x,
   
   if(npars > 0){
     for(par in 1:npars){
-      def_list[[index+par]] <-ncvar_def(par_names_save[par],par_units[par],list(timedim,ensdim),fillvalue,par_names_save[par],prec="single")
+      def_list[[index+par]] <-ncvar_def(pars_config$par_names_save[par],pars_config$par_units[par],list(timedim,ensdim),fillvalue,pars_config$par_names_save[par],prec="single")
     }
   }
   

@@ -242,17 +242,31 @@ run_flare<-function(start_day_local,
   #### STEP 2: SET ARRAY DIMENSIONS
   ####################################################
   
+  if(!is.na(par_file)){
+    pars_config <- read_csv(par_file)
+    npars <- nrow(pars_config)
+  }else{
+    npars <- 0
+  }
+  
+  obs_config <- read_csv(obs_config_file)
+  
+  states_config <- read_csv(states_config_file)
+  
   nsteps <- length(full_time_local)
   if(spin_up_days > nsteps){
     spin_up_days <- nsteps
   }
   
+  if(nrow(states_config) > 0){
+    include_wq <- TRUE
+  }else{
+    include_wq <- FALSE
+  }
   ndepths_modeled <- length(modeled_depths)
-  num_wq_vars <- length(state_names) - 1
+  num_wq_vars <- length(states_config$state_names) - 1
   
-  glm_output_vars <- state_names
-  
-  npars <- length(par_names)
+  glm_output_vars <- states_config$state_names
   
   n_met_members <- 21
   # SET UP NUMBER OF ENSEMBLE MEMBERS
@@ -267,7 +281,7 @@ run_flare<-function(start_day_local,
     n_ds_members <- 1
   }
   
-  nstates <- ndepths_modeled * length(state_names)
+  nstates <- ndepths_modeled * length(states_config$state_names)
   
   ####################################################
   #### STEP 3: ORGANIZE FILES
@@ -614,7 +628,9 @@ run_flare<-function(start_day_local,
                                                      future_inflow_flow_coeff,
                                                      future_inflow_flow_error,
                                                      future_inflow_temp_coeff,
-                                                     future_inflow_temp_error)
+                                                     future_inflow_temp_error,
+                                                     states_config,
+                                                     include_wq)
   
   inflow_file_names <- cbind(inflow1 = inflow_outflow_files$inflow_file_names,
                              inflow2 = inflow_outflow_files$wetland_file_names)
@@ -631,235 +647,68 @@ run_flare<-function(start_day_local,
   #### STEP 6: PROCESS OBSERVATIONS DATA FOR ENKF
   ####################################################
   
-  print("Extracting temperature observations")
-  obs_temp <- extract_observations(fname = cleaned_observations_file_long,
-                                   full_time_local,
-                                   modeled_depths = modeled_depths,
-                                   local_tzone,
-                                   target_variable = "temperature",
-                                   time_threshold_seconds = time_threshold_seconds_temp,
-                                   distance_threshold_meter = distance_threshold_meter,
-                                   methods = temp_methods)
+  obs_methods_temp <- cbind(obs_config$method_1,obs_config$method_2,obs_config$method_3,obs_config$method_4)
+  obs_methods <- list()
+  for(i in 1:nrow(obs_methods_temp)){
+    
+    values <- obs_methods_temp[i,which(!is.na(obs_methods_temp[i,]))]
+    if(length(values) == 0){
+      values <- NA
+    }
+    obs_methods[[i]] <- values
+  }
+  obs_config$obs_methods <- obs_methods
   
-  if(include_wq){
-    
-    print("Extracting DO observations")
-    obs_do <- extract_observations(fname = cleaned_observations_file_long,
-                                   full_time_local,
-                                   modeled_depths = modeled_depths,
-                                   local_tzone,
-                                   target_variable = "oxygen",
-                                   time_threshold_seconds = time_threshold_seconds_oxygen,
-                                   distance_threshold_meter = distance_threshold_meter,
-                                   methods = do_methods)
-    
-    print("Extracting Chl-a observations")
-    obs_chla <- extract_observations(fname = cleaned_observations_file_long,
-                                     full_time_local,
-                                     modeled_depths = modeled_depths,
-                                     local_tzone,
-                                     target_variable = "chla",
-                                     time_threshold_seconds = time_threshold_seconds_chla,
-                                     distance_threshold_meter = distance_threshold_meter,
-                                     methods = chla_methods)
-    
-    print("Extracting fdom observations")
-    obs_fdom <- extract_observations(fname = cleaned_observations_file_long,
-                                     full_time_local,
-                                     modeled_depths = modeled_depths,
-                                     local_tzone,
-                                     target_variable = "fdom",
-                                     time_threshold_seconds = time_threshold_seconds_fdom,
-                                     distance_threshold_meter = distance_threshold_meter,
-                                     methods = fdom_methods)
-    
-    print("Extracting NH4 observations")
-    obs_NH4 <- extract_observations(fname = cleaned_observations_file_long,
-                                    full_time_local,
-                                    modeled_depths = modeled_depths,
-                                    local_tzone,
-                                    target_variable = "NH4",
-                                    time_threshold_seconds = time_threshold_seconds_nh4,
-                                    distance_threshold_meter = distance_threshold_meter,
-                                    methods = nh4_methods)
-    
-    print("Extracting NO3 observations")
-    obs_NO3 <- extract_observations(fname = cleaned_observations_file_long,
-                                    full_time_local,
-                                    modeled_depths = modeled_depths,
-                                    local_tzone,
-                                    target_variable = "NO3NO2",
-                                    time_threshold_seconds = time_threshold_seconds_no3,
-                                    distance_threshold_meter = distance_threshold_meter,
-                                    methods = no3_methods)
-    
-    print("Extracting SRP observations")
-    obs_SRP <- extract_observations(fname = cleaned_observations_file_long,
-                                    full_time_local,
-                                    modeled_depths = modeled_depths,
-                                    local_tzone,
-                                    target_variable = "SRP",
-                                    time_threshold_seconds = time_threshold_seconds_srp,
-                                    distance_threshold_meter = distance_threshold_meter,
-                                    methods = srp_methods)
-    
-    print("Extracting TP observations")
-    obs_TP <- extract_observations(fname = cleaned_observations_file_long,
-                                   full_time_local,
-                                   modeled_depths = modeled_depths,
-                                   local_tzone,
-                                   target_variable = "TP",
-                                   time_threshold_seconds = time_threshold_seconds_srp,
-                                   distance_threshold_meter = distance_threshold_meter,
-                                   methods = srp_methods)
-    
-    print("Extracting TN observations")
-    obs_TN <- extract_observations(fname = cleaned_observations_file_long,
-                                   full_time_local,
-                                   modeled_depths = modeled_depths,
-                                   local_tzone,
-                                   target_variable = "TN",
-                                   time_threshold_seconds = time_threshold_seconds_no3,
-                                   distance_threshold_meter = distance_threshold_meter,
-                                   methods = no3_methods)
-    
-    print("Extracting DIC observations")
-    obs_DIC <- extract_observations(fname = cleaned_observations_file_long,
-                                    full_time_local,
-                                    modeled_depths = modeled_depths,
-                                    local_tzone,
-                                    target_variable = "DIC",
-                                    time_threshold_seconds = time_threshold_seconds_no3,
-                                    distance_threshold_meter = distance_threshold_meter,
-                                    methods = dic_methods)
-    
+  
+  obs_list <- list()
+  for(i in 1:length(obs_config$state_names_obs)){
+    print(paste0("Extracting ",obs_config$target_variable[i]))
+    obs_list[[i]] <- extract_observations(fname = cleaned_observations_file_long,
+                                          full_time_local,
+                                          modeled_depths = modeled_depths,
+                                          local_tzone,
+                                          target_variable = obs_config$target_variable[i],
+                                          time_threshold_seconds = obs_config$time_threshold[i],
+                                          distance_threshold_meter = obs_config$distance_threshold[i],
+                                          methods = obs_config$obs_methods[[i]])
   }
   
   ####################################################
   #### STEP 7: CREATE THE Z ARRAY (OBSERVATIONS x TIME)
   ####################################################
   
-  #Observations for each observed state at each time step
-  #an observation with at least 1 observation but without an 
-  #observation in a time-step gets assigned an NA
-  
-  obs_dims <- dim(obs_temp)
-  
-  CAR_pH_obs <- array(NA, dim = obs_dims)
-  
-  CAR_ch4_obs <- array(NA, dim = obs_dims)
-  SIL_rsi_obs <- array(NA, dim = obs_dims)
-  OGM_poc_obs <- array(NA, dim = obs_dims)
-  OGM_don_obs <- array(NA, dim = obs_dims)
-  OGM_donr_obs <- array(NA, dim = obs_dims)
-  OGM_pon_obs <- array(NA, dim = obs_dims)
-  OGM_dop_obs <- array(NA, dim = obs_dims)
-  OGM_dopr_obs <- array(NA, dim = obs_dims)
-  OGM_pop_obs <- array(NA, dim = obs_dims)
-  NCS_ss1_obs <- array(NA, dim = obs_dims)
-  PHS_frp_ads_obs <- array(NA, dim = obs_dims)
-  
-  if(include_wq){
-    OXY_oxy_obs <- obs_do
-    CAR_dic_obs <- obs_DIC
-    NIT_amm_obs <- obs_NH4
-    NIT_nit_obs <- obs_NO3
-    PHS_frp_obs <- obs_SRP
-    OGM_doc_obs <- obs_fdom * (1 - docr_to_total_doc)
-    OGM_docr_obs <- obs_fdom * docr_to_total_doc
-    OGM_doc_obs_total <- obs_fdom
-    PHY_TCHLA_obs <- obs_chla
-    NIT_total_obs <- obs_TN
-    PHS_total_obs <- obs_TP
-  }else{
-    OXY_oxy_obs <-array(NA, dim = obs_dims)
-    CAR_dic_obs <-array(NA, dim = obs_dims)
-    NIT_amm_obs <-array(NA, dim = obs_dims)
-    NIT_nit_obs <-array(NA, dim = obs_dims)
-    PHS_frp_obs <-array(NA, dim = obs_dims)
-    OGM_doc_obs <- array(NA, dim = obs_dims)
-    OGM_docr_obs <- array(NA, dim = obs_dims)
-    PHY_TCHLA_obs <- array(NA, dim = obs_dims)
-    NIT_total_obs <- array(NA, dim = obs_dims)
-    PHS_total_obs <- array(NA, dim = obs_dims)
-    OGM_doc_obs_total  <- array(NA, dim = obs_dims)
+  z <- array(NA, dim = c(nsteps, ndepths_modeled, length(obs_config$state_names_obs)))
+  for(i in 1:nrow(obs_config)){
+    z[ , , i] <-  obs_list[[i]]
   }
-  
-  z_potential <- list(temp = obs_temp,
-                      OXY_oxy = OXY_oxy_obs,
-                      CAR_dic = CAR_dic_obs,
-                      CAR_ch4 = CAR_ch4_obs,
-                      SIL_rsi = SIL_rsi_obs,
-                      NIT_amm = NIT_amm_obs,
-                      NIT_nit= NIT_nit_obs,
-                      NIT_total = NIT_total_obs,
-                      PHS_frp= PHS_frp_obs,
-                      PHS_total = PHS_total_obs,
-                      OGM_doc = OGM_doc_obs,
-                      OGM_docr = OGM_docr_obs,
-                      OGM_doc_total = OGM_doc_obs_total,
-                      OGM_poc = OGM_poc_obs,
-                      OGM_don = OGM_don_obs,
-                      OGM_donr = OGM_donr_obs,
-                      OGM_pon = OGM_pon_obs,
-                      OGM_dop = OGM_dop_obs,
-                      OGM_dopr = OGM_dopr_obs,
-                      OGM_pop = OGM_pop_obs,
-                      NCS_ss1 = NCS_ss1_obs,
-                      PHS_frp_ads = PHS_frp_ads_obs,
-                      PHY_TCHLA = PHY_TCHLA_obs)
-  
-  z <- array(unlist(z_potential[which(names(z_potential) %in% state_names_obs)]), dim = c(nsteps, ndepths_modeled, length(state_names_obs)))
   
   z_obs <- z
   if(!use_obs_constraint){
     z[, , ] <- NA
   }
   
-  obs_index <- seq(1,nstates, 1)
-  
   ####################################################
   #### STEP 8: SET UP INITIAL CONDITIONS
   ####################################################
   
-  init_temps_obs <- obs_temp[1, which(!is.na(obs_temp[1, ]))]
-  init_obs_temp_depths <- modeled_depths[which(!is.na(obs_temp[1, ]))]
-  
-  if(include_wq){
-    init_do_obs <- obs_do[1, which(!is.na(obs_do[1, ]))]
-    init_obs_do_depths <- modeled_depths[which(!is.na(obs_do[1, ]))]
-    
-    init_chla_obs <- obs_chla[1, which(!is.na(obs_chla[1, ]))]
-    init_chla_obs_depths <- modeled_depths[which(!is.na(obs_chla[1, ]))]
-    
-    init_doc_obs <- (1 - docr_to_total_doc) * obs_fdom[1, which(!is.na(obs_fdom[1, ]))]
-    init_doc_obs_depths <- modeled_depths[which(!is.na(obs_fdom[1, ]))]
-    
-    init_docr_obs <- docr_to_total_doc * obs_fdom[1, which(!is.na(obs_fdom[1, ]))]
-    init_docr_obs_depths <- modeled_depths[which(!is.na(obs_fdom[1, ]))]
-    
-    init_nit_amm_obs <- obs_NH4[1, which(!is.na(obs_NH4[1, ]))]
-    init_nit_amm_obs_depths <- modeled_depths[which(!is.na(obs_NH4[1, ]))]
-    
-    init_nit_nit_obs <- obs_NO3[1, which(!is.na(obs_NO3[1, ]))]
-    init_nit_nit_obs_depths <- modeled_depths[which(!is.na(obs_NO3[1, ]))]
-    
-    init_phs_frp_obs <- obs_SRP[1, which(!is.na(obs_SRP[1, ]))]
-    init_phs_frp_obs_depths <- modeled_depths[which(!is.na(obs_SRP[1, ]))]
-    
-    init_dic_obs <- obs_DIC[1, which(!is.na(obs_DIC[1, ]))]
-    init_dic_obs_depths <- modeled_depths[which(!is.na(obs_DIC[1, ]))]
-  }
-  
-  #NEED AN ERROR CHECK FOR WHETHER THERE ARE OBSERVED DATA
-  if(is.na(restart_file)){
-    if((length(which(init_temps_obs != 0.0)) == 0) | length(which(is.na(init_temps_obs))) > 0){
-      print("Using default temperature values to initialize")
-      init_temps_obs <- default_temp_init
-      init_obs_temp_depths <- default_temp_init_depths
+  init_depth <- list()
+  for(i in 1:nrow(states_config)){
+    if(!is.na(states_config$init_obs_name[i])){
+      obs_index <- which(obs_config$state_names_obs == states_config$init_obs_name[i])
+      init_obs <- z[1, ,obs_index] * (1/states_config$states_to_obs_mapping[i]) * states_config$init_obs_mapping[i]
+      if(length(which(!is.na(init_obs))) == 0){
+        init_depth[[i]] <- rep(states_config$initial_conditions[i], ndepths_modeled)
+        if(states_config$init_obs_name[i] == "temp"){
+          init_obs <- approx(x = default_temp_init_depths, y = default_temp_init, xout = modeled_depths, rule=2)
+        }
+      }else if(length(which(!is.na(init_obs))) == 1){
+        init_depth[[i]] <- rep(init_obs[!is.na(init_obs)], ndepths_modeled)
+      }else{
+      init_depth[[i]] <- approx(x = modeled_depths[!is.na(init_obs)], y = init_obs[!is.na(init_obs)], xout = modeled_depths, rule=2)$y
+      }
+    }else{
+      init_depth[[i]] <- rep(states_config$initial_conditions[i], ndepths_modeled)
     }
-    temp_inter <- approxfun(init_obs_temp_depths, init_temps_obs, rule=2)
-    the_temps_init <- temp_inter(modeled_depths)
   }
   
   wq_start <- NA
@@ -885,254 +734,57 @@ run_flare<-function(start_day_local,
     wq_end <- temp_end+1
   }
   
-  if(include_wq & is.na(restart_file)){
-    
-    #Initialize Oxygen using data if avialable
-    if(length(!is.na(init_do_obs)) == 0){
-      OXY_oxy_init_depth <- rep(OXY_oxy_init, ndepths_modeled) 
-    }else if(length(!is.na(init_do_obs)) == 1){
-      OXY_oxy_init_depth <- rep(init_do_obs, ndepths_modeled)
-    }else{
-      do_inter <- approxfun(init_obs_do_depths, init_do_obs, rule=2)
-      OXY_oxy_init_depth <- do_inter(modeled_depths)
-    }
-    
-    #Initialize Chla usind data if avialable
-    if(length(!is.na(init_chla_obs)) == 0){
-      PHY_cyano_init_depth <- rep(PHY_cyano_init, ndepths_modeled)
-      PHY_green_init_depth <- rep(PHY_green_init, ndepths_modeled)
-      PHY_diatom_init_depth <- rep(PHY_diatom_init, ndepths_modeled)
-      
-    }else if(length(!is.na(init_chla_obs)) == 1){
-      PHY_TCHLA_init_depth <- rep(init_chla_obs, ndepths_modeled)
-      
-      PHY_cyano_init_depth <- PHY_TCHLA_init_depth *  init_phyto_proportion[1] * biomass_to_chla[1]
-      PHY_green_init_depth <- PHY_TCHLA_init_depth  * init_phyto_proportion[2] * biomass_to_chla[2]
-      PHY_diatom_init_depth <- PHY_TCHLA_init_depth *  init_phyto_proportion[3] * biomass_to_chla[3]
-      
-    }else{
-      chla_inter <- approxfun(init_chla_obs_depths, init_chla_obs, rule=2)
-      PHY_TCHLA_init_depth <- chla_inter(modeled_depths)
-      PHY_cyano_init_depth <- PHY_TCHLA_init_depth *  init_phyto_proportion[1] * biomass_to_chla[1]
-      PHY_green_init_depth <- PHY_TCHLA_init_depth  * init_phyto_proportion[2] * biomass_to_chla[2]
-      PHY_diatom_init_depth <- PHY_TCHLA_init_depth *  init_phyto_proportion[3] * biomass_to_chla[3]
-    }
-    
-    #Initialize DIC usind data if avialable
-    if(length(!is.na(init_dic_obs)) == 0){
-      CAR_dic_init_depth <- rep(CAR_dic_init, ndepths_modeled)
-    }else if(length(!is.na(init_dic_obs)) == 1){
-      CAR_dic_init_depth <- rep(init_dic_obs, ndepths_modeled)
-    }else{
-      dic_inter <- approxfun(init_dic_obs_depths, init_dic_obs, rule=2)
-      CAR_dic_init_depth <- dic_inter(modeled_depths)
-    }
-    
-    #Initialize DOC usind data if avialable
-    if(length(!is.na(init_doc_obs)) == 0){
-      OGM_doc_init_depth <- rep(OGM_doc_init, ndepths_modeled)
-      OGM_docr_init_depth <- rep(OGM_docr_init, ndepths_modeled)
-    }else if(length(!is.na(init_doc_obs)) == 1){
-      OGM_doc_init_depth <- rep(init_doc_obs, ndepths_modeled)
-      OGM_docr_init_depth <- rep(init_docr_obs, ndepths_modeled)
-    }else{
-      doc_inter <- approxfun(init_doc_obs_depths, init_doc_obs, rule=2)
-      OGM_doc_init_depth <- doc_inter(modeled_depths)
-      docr_inter <- approxfun(init_doc_obs_depths, init_docr_obs, rule=2)
-      OGM_docr_init_depth <- docr_inter(modeled_depths)
-    }
-    
-    #Initialize DOC usind data if avialable
-    if(length(!is.na(init_nit_amm_obs)) == 0){
-      NIT_amm_init_depth <- rep(NIT_amm_init, ndepths_modeled) 
-    }else if(length(!is.na(init_nit_amm_obs)) == 1){
-      NIT_amm_init_depth <- rep(init_nit_amm_obs, ndepths_modeled)
-    }else{
-      temp_inter <- approxfun(init_nit_amm_obs_depths, init_nit_amm_obs, rule=2)
-      NIT_amm_init_depth <- temp_inter(modeled_depths)
-    }
-    
-    #Initialize DOC usind data if avialable
-    if(length(!is.na(init_nit_nit_obs)) == 0){
-      NIT_nit_init_depth <- rep(NIT_nit_init, ndepths_modeled) 
-    }else if(length(!is.na(init_nit_nit_obs)) == 1){
-      NIT_nit_init_depth <- rep(init_nit_nit_obs, ndepths_modeled)
-    }else{
-      temp_inter <- approxfun(init_nit_nit_obs_depths, init_nit_nit_obs, rule=2)
-      NIT_nit_init_depth <- temp_inter(modeled_depths)
-    }
-    
-    #Initialize DOC usind data if avialable
-    if(length(!is.na(init_phs_frp_obs)) == 0){
-      PHS_frp_init_depth <- rep(PHS_frp_init, ndepths_modeled) 
-    }else if(length(!is.na(init_phs_frp_obs)) == 1){
-      PHS_frp_init_depth <- rep(init_phs_frp_obs, ndepths_modeled)
-    }else{
-      temp_inter <- approxfun(init_phs_frp_obs_depths, init_phs_frp_obs, rule=2)
-      PHS_frp_init_depth <- temp_inter(modeled_depths)
-    }
-    
-    
-    #Initilize other water quality variables
-    CAR_pH_init_depth  <- rep(CAR_pH_init, ndepths_modeled) 
-    CAR_ch4_init_depth <- rep(CAR_ch4_init, ndepths_modeled)
-    SIL_rsi_init_depth <- rep(SIL_rsi_init, ndepths_modeled)
-    OGM_poc_init_depth <- rep(OGM_poc_init, ndepths_modeled)
-    OGM_don_init_depth <- rep(OGM_don_init, ndepths_modeled)
-    OGM_donr_init_depth <- rep(OGM_donr_init, ndepths_modeled)
-    OGM_pon_init_depth <- rep(OGM_pon_init, ndepths_modeled)
-    OGM_dop_init_depth <- rep(OGM_dop_init, ndepths_modeled)
-    OGM_dopr_init_depth <- rep(OGM_dopr_init, ndepths_modeled)
-    OGM_pop_init_depth <- rep(OGM_pop_init, ndepths_modeled)
-    
-    wq_init_vals_potential <- list(OXY_oxy = OXY_oxy_init_depth,
-                                   CAR_dic = CAR_dic_init_depth,
-                                   CAR_ch4 = CAR_ch4_init_depth,
-                                   SIL_rsi= SIL_rsi_init_depth,
-                                   NIT_amm = NIT_amm_init_depth,
-                                   NIT_nit = NIT_nit_init_depth,
-                                   PHS_frp = PHS_frp_init_depth,
-                                   OGM_doc = OGM_doc_init_depth,
-                                   OGM_docr = OGM_docr_init_depth,
-                                   OGM_poc = OGM_poc_init_depth,
-                                   OGM_don = OGM_don_init_depth,
-                                   OGM_donr = OGM_donr_init_depth,
-                                   OGM_pon = OGM_pon_init_depth,
-                                   OGM_dop = OGM_dop_init_depth,
-                                   OGM_dopr = OGM_dopr_init_depth,
-                                   OGM_pop = OGM_pop_init_depth,
-                                   PHY_cyano = PHY_cyano_init_depth,
-                                   PHY_green = PHY_green_init_depth,
-                                   PHY_diatom = PHY_diatom_init_depth
-    )
-    
-    wq_init_vals <- as.numeric(unlist(bind_cols(wq_init_vals_potential[names(wq_init_vals_potential) %in% c(state_names)]))) 
-    
-    #UPDATE NML WITH INITIAL CONDITIONS
-    
-  }else if(!include_wq & is.na(restart_file)){
-    #UPDATE NML WITH INITIAL CONDITIONS
-    wq_init_vals <- c(" ")
-  }
-  
+
   #######################################################
   #### STEP 9: CREATE THE PSI VECTOR (DATA uncertainty)  
   #######################################################
   
-  psi_slope <- rep(NA, length(state_names_obs) * ndepths_modeled)
-  psi_intercept <- rep(NA, length(state_names_obs) * ndepths_modeled)
+  psi_slope <- rep(NA, length(obs_config$state_names_obs) * ndepths_modeled)
+  psi_intercept <- rep(NA, length(obs_config$state_names_obs) * ndepths_modeled)
   
   index <- 0
-  for(i in 1:length(state_names_obs)){
+  for(i in 1:length(obs_config$state_names_obs)){
     for(j in 1:ndepths_modeled){
       index <- index + 1
-      psi_intercept[index] <- obs_error_intercept[[i]]
-      psi_slope[index] <- obs_error_slope[[i]]
+      psi_intercept[index] <- obs_config$obs_error_intercept[[i]]
+      psi_slope[index] <- obs_config$obs_error_slope[[i]]
     }
   }
   
-  ####################################################
-  #### STEP 10: CREATE THE QT ARRAY (MODEL VARIANCE)
-  ####################################################
+  states_to_obs_temp <- cbind(states_config$states_to_obs_1,states_config$states_to_obs_2)
   
-  restart_present <- FALSE
-  if(!is.na(restart_file)){
-    if(file.exists(restart_file)){
-      restart_present <- TRUE
+  states_to_obs <- list()
+  for(i in 1:nrow(states_to_obs_temp)){
+    
+    names_temp <- states_to_obs_temp[i,which(!is.na(states_to_obs_temp[i,]))]
+    if(length(values) == 0){
+      values <- NA
+    }else{
+      values <- which(obs_config$state_names_obs %in% names_temp)
     }
+    states_to_obs[[i]] <- values
   }
   
-  #if(restart_present){
-  #  nc <- nc_open(restart_file)
-  #  qt <- ncvar_get(nc, "qt_restart")
-  #  running_residuals <- ncvar_get(nc, "running_residuals")
-  #qt_pars <- matrix(data = 0, nrow = npars, ncol = npars)
-  #diag(qt_pars) <- par_init_qt
-  #  nc_close(nc)
-  #  qt_init <- qt
-  #}else{
+  states_config$states_to_obs <- states_to_obs
+  
+  ####################################################
+  #### STEP 10: CREATE THE PROCESS UNCERTAINTY
+  ####################################################
+  
+  combined_error <- states_config$process_error
+  combined_init_error <- states_config$initial_error
+  
+  #OLD STUFF
   qt <- matrix(data = 0, nrow = ndepths_modeled, ncol = ndepths_modeled)
-  
-  diag(qt) <- rep(temp_process_error,ndepths_modeled )
-  qt_init <- matrix(data = 0, nrow = ndepths_modeled, ncol = ndepths_modeled)
-  
-  diag(qt_init) <- rep(temp_init_error,ndepths_modeled)
-  
-  combined_error <- temp_process_error
-  
-  combined_init_error <- temp_init_error
-  
-  
-  if(include_wq){
-    
-    wq_var_error_potential <- list(OXY_oxy = OXY_oxy_process_error,
-                                   CAR_dic = CAR_dic_process_error,
-                                   CAR_ch4 = CAR_ch4_process_error,
-                                   SIL_rsi= SIL_rsi_process_error,
-                                   NIT_amm= NIT_amm_process_error,
-                                   NIT_nit= NIT_nit_process_error,
-                                   PHS_frp = PHS_frp_process_error,
-                                   OGM_doc = OGM_doc_process_error,
-                                   OGM_docr = OGM_docr_process_error,
-                                   OGM_poc = OGM_poc_process_error, 
-                                   OGM_don = OGM_don_process_error,
-                                   OGM_donr = OGM_donr_process_error,
-                                   OGM_pon = OGM_pon_process_error,
-                                   OGM_dop = OGM_dop_process_error,
-                                   OGM_dopr = OGM_dopr_process_error,
-                                   OGM_pop = OGM_pop_process_error,
-                                   PHY_cyano = PHY_cyano_process_error,
-                                   PHY_green = PHY_green_process_error,
-                                   PHY_diatom = PHY_diatom_process_error
-    )
-    
-    wq_var_init_error_potential <- list(OXY_oxy = OXY_oxy_init_error,
-                                        CAR_dic = CAR_dic_init_error,
-                                        CAR_ch4 = CAR_ch4_init_error,
-                                        SIL_rsi = SIL_rsi_init_error,
-                                        NIT_amm = NIT_amm_init_error,
-                                        NIT_nit = NIT_nit_init_error,
-                                        PHS_frp = PHS_frp_init_error,
-                                        OGM_doc = OGM_doc_init_error,
-                                        OGM_docr = OGM_docr_init_error,
-                                        OGM_poc = OGM_poc_init_error, 
-                                        OGM_don = OGM_don_init_error,
-                                        OGM_donr = OGM_don_init_error,
-                                        OGM_pon = OGM_pon_init_error,
-                                        OGM_dop = OGM_dop_init_error,
-                                        OGM_dopr = OGM_dop_init_error,
-                                        OGM_pop = OGM_pop_init_error,
-                                        PHY_cyano = PHY_cyano_init_error,
-                                        PHY_green = PHY_green_init_error,
-                                        PHY_diatom = PHY_diatom_init_error
-    )
-    
-    
-    wq_var_error <- as.numeric(bind_cols(wq_var_error_potential[names(wq_var_error_potential) %in% c(state_names)])) 
-    
-    combined_error <- c(combined_error, wq_var_error)
-    
-    wq_var_init_error <- as.numeric(bind_cols(wq_var_init_error_potential[names(wq_var_init_error_potential) %in% c(state_names)])) 
-    
-    combined_init_error <- c(combined_init_error, wq_var_init_error)
-    
-    for(i in 1:num_wq_vars){
-      for(j in 1:ndepths_modeled){
-        qt <- rbind(qt, rep(0.0, ncol(qt)))
-        qt <- cbind(qt, rep(0.0, nrow(qt)))
-        qt[ncol(qt),nrow(qt)] <- wq_var_error[i]
-        
-        qt_init <- rbind(qt_init, rep(0.0, ncol(qt_init)))
-        qt_init <- cbind(qt_init, rep(0.0, nrow(qt_init)))
-        qt_init[ncol(qt_init),nrow(qt_init)] <- wq_var_init_error[i] ^ 2
-      }
+  for(i in 1:num_wq_vars){
+    for(j in 1:ndepths_modeled){
+      qt <- rbind(qt, rep(0.0, ncol(qt)))
+      qt <- cbind(qt, rep(0.0, nrow(qt)))
+      qt[ncol(qt),nrow(qt)] <- states_config$process_error[i+1]
     }
-    
-    running_residuals <- array(NA, dim =c(30, nrow(qt)))
-    
-    qt_pars <- NA
-    
   }
+  running_residuals <- array(NA, dim =c(30, nrow(qt)))
+  qt_pars <- NA
   
   ################################################################
   #### STEP 11: CREATE THE X ARRAY (STATES X TIME);INCLUDES INITIALATION
@@ -1145,10 +797,15 @@ run_flare<-function(start_day_local,
   surface_height <- array(NA, dim=c(nsteps, nmembers))
   snow_ice_thickness <- array(NA, dim=c(nsteps, nmembers, 3))
   avg_surf_temp <- array(NA, dim=c(nsteps, nmembers))
-  
   mixing_vars <- array(NA, dim=c(nmembers, 17))
-  
   glm_depths <- array(NA, dim = c(nsteps, nmembers, 500))
+  
+  restart_present <- FALSE
+  if(!is.na(restart_file)){
+    if(file.exists(restart_file)){
+      restart_present <- TRUE
+    }
+  }
   
   #Initial conditions
   if(!restart_present){
@@ -1158,8 +815,7 @@ run_flare<-function(start_day_local,
     q_v <- rep(NA,ndepths_modeled)
     w <- rep(NA,ndepths_modeled)
     
-    combined_initial_conditions <- c(the_temps_init, 
-                                     wq_init_vals)
+    combined_initial_conditions <- unlist(init_depth)
     
     for(m in 1:nmembers){
       q_v[] <- NA
@@ -1183,9 +839,9 @@ run_flare<-function(start_day_local,
     }
     
     for(par in 1:npars){
-      x[1, ,(nstates+par)] <- runif(n=nmembers,par_init_lowerbound[par], par_init_upperbound[par])
+      x[1, ,(nstates+par)] <- runif(n=nmembers,pars_config$par_init_lowerbound[par], pars_config$par_init_upperbound[par])
       if(single_run){
-        x[1, ,(nstates+par)] <-  rep(par_init_mean[par], nmembers)
+        x[1, ,(nstates+par)] <-  rep(pars_config$par_init[par], nmembers)
       }
     }
     
@@ -1216,11 +872,9 @@ run_flare<-function(start_day_local,
                                  replace=FALSE)
       restart_x_previous <- ncvar_get(nc, "x_restart")
       x_previous <- restart_x_previous[sampled_nmembers, ]
-      
       snow_ice_thickness[1, , 1] <- snow_ice_thickness_restart[sampled_nmembers, 1]
       snow_ice_thickness[1, , 2] <- snow_ice_thickness_restart[sampled_nmembers, 2]
       snow_ice_thickness[1, , 3] <- snow_ice_thickness_restart[sampled_nmembers, 3]
-      
       surface_height[1, ] <- surface_height_restart[sampled_nmembers]
       avg_surf_temp[1, ] <- avg_surf_temp_restart[sampled_nmembers]
       mixing_vars <- mixing_restart[sampled_nmembers, ]
@@ -1235,11 +889,9 @@ run_flare<-function(start_day_local,
                                  replace = TRUE)
       restart_x_previous <- ncvar_get(nc, "x_restart")
       x_previous <- restart_x_previous[sampled_nmembers, ]
-      
       snow_ice_thickness[1, ,1] <- snow_ice_thickness_restart[sampled_nmembers, 1]
       snow_ice_thickness[1, ,2] <- snow_ice_thickness_restart[sampled_nmembers, 2]
       snow_ice_thickness[1, ,3] <- snow_ice_thickness_restart[sampled_nmembers, 3]
-      
       surface_height[1, ] <- surface_height_restart[sampled_nmembers]
       avg_surf_temp[1, ] <- avg_surf_temp_restart[sampled_nmembers]
       mixing_vars <- mixing_restart[sampled_nmembers, ]
@@ -1249,12 +901,12 @@ run_flare<-function(start_day_local,
       }
       
     }else{
+      
       restart_x_previous <- ncvar_get(nc, "x_restart")
       x_previous <- restart_x_previous
       snow_ice_thickness[1, ,1] <- snow_ice_thickness_restart[, 1]
       snow_ice_thickness[1, ,2] <- snow_ice_thickness_restart[, 2]
       snow_ice_thickness[1, ,3] <- snow_ice_thickness_restart[, 3]
-      
       surface_height[1, ] <- surface_height_restart
       avg_surf_temp[1, ] <- avg_surf_temp_restart
       mixing_vars <- mixing_restart
@@ -1262,22 +914,17 @@ run_flare<-function(start_day_local,
       for(m in 1:nmembers){
         glm_depths[1,m ,1:dim(glm_depths_restart)[2]] <- glm_depths_restart[m, ]
       }
-      
     }
     nc_close(nc)
   }else{
+    
     x_previous <- x[1, , ]
-    
-    
     surface_height[1, ] <- round(lake_depth_init, 3)
-    
     #Matrix to store snow and ice heights
     snow_ice_thickness[1, ,1] <- default_snow_thickness_init
     snow_ice_thickness[1, ,2] <- default_white_ice_thickness_init
     snow_ice_thickness[1, ,3] <- default_blue_ice_thickness_init
-    
     avg_surf_temp[1, ] <- x[1, ,1]
-    
     mixing_vars[,] <- 0.0
     
     for(m in 1:nmembers){
@@ -1329,7 +976,7 @@ run_flare<-function(start_day_local,
                           psi_intercept,
                           full_time_local,
                           working_directory,
-                          npars,
+                          pars_config,
                           modeled_depths,
                           surface_height,
                           wq_start,
@@ -1360,7 +1007,9 @@ run_flare<-function(start_day_local,
                           base_GLM_nml, 
                           base_AED_nml,
                           base_AED_phyto_pars_nml,
-                          base_AED_zoop_pars_nml
+                          base_AED_zoop_pars_nml,
+                          obs_config,
+                          states_config
   )
   
   x <- enkf_output$x
@@ -1440,7 +1089,7 @@ run_flare<-function(start_day_local,
                         wq_end,
                         z,
                         nstates,
-                        npars,
+                        pars_config,
                         GLMversion,
                         FLAREversion,
                         local_tzone,
@@ -1453,7 +1102,7 @@ run_flare<-function(start_day_local,
                         mixing_restart,
                         glm_depths_restart,
                         forecast_location,
-                        state_names,
+                        state_names = states_config$state_names,
                         diagnostics_names,
                         diagnostics
   )

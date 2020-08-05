@@ -6,7 +6,7 @@ run_EnKF <- function(x,
                      psi_intercept,
                      full_time_local,
                      working_directory,
-                     npars,
+                     pars_config,
                      modeled_depths,
                      surface_height,
                      wq_start,
@@ -37,14 +37,18 @@ run_EnKF <- function(x,
                      base_GLM_nml, 
                      base_AED_nml,
                      base_AED_phyto_pars_nml,
-                     base_AED_zoop_pars_nml
+                     base_AED_zoop_pars_nml,
+                     obs_config,
+                     states_config
 ){
   
+  npars <- nrow(pars_config)
   nsteps <- length(full_time_local)
   nmembers <- dim(x)[2]
   n_met_members <- length(met_file_names) - 1
   nstates <- dim(x)[3] - npars
   ndepths_modeled <- length(modeled_depths)
+
   
   q_v <- rep(NA,ndepths_modeled)
   w <- rep(NA,ndepths_modeled)
@@ -56,7 +60,7 @@ run_EnKF <- function(x,
     num_wq_vars <- length(wq_start)
   }
   
-  num_phytos <- length(which(str_detect(state_names,"PHY_") & !str_detect(state_names,"_IP") & !str_detect(state_names,"_IN")))
+  num_phytos <- length(which(str_detect(states_config$state_names,"PHY_") & !str_detect(states_config$state_names,"_IP") & !str_detect(states_config$state_names,"_IN")))
   
   full_time_local_char <- strftime(full_time_local,
                                    format="%Y-%m-%d %H:%M",
@@ -76,7 +80,8 @@ run_EnKF <- function(x,
                ndepths_modeled,
                modeled_depths,
                the_sals_init,
-               machine)
+               machine,
+               include_wq)
   
   ###START EnKF
   for(i in 2:nsteps){
@@ -121,10 +126,10 @@ run_EnKF <- function(x,
                        mixing_vars_start = mixing_vars[m, ],
                        curr_start,
                        curr_stop,
-                       par_names,
+                       par_names = pars_config$par_names,
                        curr_pars,
                        working_directory,
-                       par_nml,
+                       par_nml = pars_config$par_nml,
                        num_phytos,
                        glm_depths_start = glm_depths[i-1, m, ],
                        surface_height_start = surface_height[i-1, m],
@@ -151,7 +156,9 @@ run_EnKF <- function(x,
                        num_wq_vars,
                        snow_ice_thickness_start = snow_ice_thickness[i-1, m, ],
                        avg_surf_temp_start = avg_surf_temp[i-1, m],
-                       nstates)
+                       nstates,
+                       states_config,
+                       include_wq)
       
       x_star[m, ] <- out$x_star_end
       surface_height[i ,m ] <- out$surface_height_end
@@ -276,17 +283,18 @@ run_EnKF <- function(x,
       zt <- zt[which(!is.na(zt))]
       
       #Assign which states have obs in the time step
-      h <- matrix(0, nrow = length(state_names_obs) * ndepths_modeled, ncol = nstates)
+      h <- matrix(0, nrow = length(obs_config$state_names_obs) * ndepths_modeled, ncol = nstates)
       
       index <- 0
       for(k in 1:(nstates/ndepths_modeled)){
         for(j in 1:ndepths_modeled){
           index <- index + 1
-          if(!is.na(first(states_to_obs[[k]]))){
-            for(jj in 1:length(states_to_obs[[k]])){
-              if(!is.na((z[i, j, states_to_obs[[k]][jj]]))){
-                index2 <- (states_to_obs[[k]][jj] - 1) * ndepths_modeled + j
-                h[index2,index] <- states_to_obs_mapping[[k]]
+          if(!is.na(first(states_config$states_to_obs[[k]]))){
+            for(jj in 1:length(states_config$states_to_obs[[k]])){
+              if(!is.na((z[i, j, states_config$states_to_obs[[k]][jj]]))){
+                states_to_obs_index <- states_config$states_to_obs[[k]][jj]
+                index2 <- (states_to_obs_index - 1) * ndepths_modeled + j
+                h[index2,index] <- states_config$states_to_obs_mapping[k]
               }
             }
           }
@@ -316,10 +324,10 @@ run_EnKF <- function(x,
         psi_t <- curr_psi
       }
       
-      n_psi <- t(rmvnorm(n = 1, mean = zt, sigma=as.matrix(psi_t)))
+      d_mat <- t(rmvnorm(n = nmembers, mean = zt, sigma=as.matrix(psi_t)))
       
       #Set any negative observations of water quality variables to zero
-      n_psi[which(z_index > length(modeled_depths) & n_psi < 0.0)] <- 0.0 
+      d_mat[which(z_index > length(modeled_depths) & d_mat < 0.0)] <- 0.0 
       
       #Ensemble mean
       ens_mean <- apply(x_corr[,], 2, mean)
@@ -327,14 +335,11 @@ run_EnKF <- function(x,
       if(npars > 0){
         par_mean <- apply(pars_corr, 2, mean)
         for(m in 1:nmembers){
-          pars_corr[m, ] <- Inflat_pars * (pars_corr[m,] - par_mean) + par_mean
+          pars_corr[m, ] <- pars_config$inflat_pars * (pars_corr[m,] - par_mean) + par_mean
         }
         par_mean <- apply(pars_corr, 2, mean)
       }
       
-      d_mat <- t(matrix(rep(n_psi, each = nmembers), 
-                        nrow = nmembers, 
-                        ncol = length(n_psi)))
       
       #Loop through ensemble members
       for(m in 1:nmembers){  
@@ -442,10 +447,10 @@ run_EnKF <- function(x,
     #Correct any parameter values outside bounds
     if(npars > 0){
       for(par in 1:npars){
-        low_index <- which(x[i, ,nstates + par] < par_lowerbound[par])
-        high_index <- which(x[i, ,nstates + par] > par_upperbound[par]) 
-        x[i,low_index ,nstates + par] <- par_lowerbound[par]
-        x[i,high_index ,nstates + par] <- par_upperbound[par]
+        low_index <- which(x[i, ,nstates + par] < pars_config$par_lowerbound[par])
+        high_index <- which(x[i, ,nstates + par] > pars_config$par_upperbound[par]) 
+        x[i,low_index ,nstates + par] <- pars_config$par_lowerbound[par]
+        x[i,high_index ,nstates + par] <- pars_config$par_upperbound[par]
       }
     }
     
@@ -454,7 +459,7 @@ run_EnKF <- function(x,
     #Print parameters to screen
     if(npars > 0){
       for(par in 1:npars){
-        print(paste0(par_names_save[par],": mean ", 
+        print(paste0(pars_config$par_names_save[par],": mean ", 
                      round(mean(pars_corr[,par]),4)," sd ", 
                      round(sd(pars_corr[,par]),4)))
       }

@@ -14,8 +14,8 @@ extract_CTD <- function(fname,
            "oxygen" = DO_mgL,
            "chla" = Chla_ugL) %>% 
     mutate(oxygen = oxygen*1000/32,
-           chla = ctd_2_exo_chla[1] + ctd_2_exo_chla[2] * chla,
-           oxygen = ctd_2_do_do[1] + ctd_2_do_do[2] * oxygen) %>% 
+           chla = ctd_2_do_sensor_chla[1] + ctd_2_do_sensor_chla[2] * chla,
+           oxygen = ctd_2_do_sensor_do[1] + ctd_2_do_sensor_do[2] * oxygen) %>% 
     pivot_longer(cols = c("temperature","oxygen","chla"), names_to = "variable", values_to = "value") %>% 
     mutate(method = "ctd") %>% 
     select(timestamp , depth, value, variable, method) %>% 

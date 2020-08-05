@@ -13,7 +13,9 @@ create_inflow_outflow_file <- function(full_time_local,
                                        future_inflow_flow_coeff,
                                        future_inflow_flow_error,
                                        future_inflow_temp_coeff,
-                                       future_inflow_temp_error)
+                                       future_inflow_temp_error,
+                                       states_config,
+                                       include_wq)
 {
   
   full_time_day_local <- as_date(full_time_local)
@@ -24,7 +26,7 @@ create_inflow_outflow_file <- function(full_time_local,
   }
   
   if(include_wq){
-    wq_names_tmp <- state_names[which(state_names %in% names(inflow))]
+    wq_names_tmp <- states_config$state_names[which(states_config$state_names %in% names(inflow))]
   }else{
     wq_names_tmp <- NULL
   }

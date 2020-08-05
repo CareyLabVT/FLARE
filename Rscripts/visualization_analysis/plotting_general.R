@@ -40,7 +40,14 @@ plotting_general <- function(pdf_file_name,
   
   ###### EVERY THING ABOVE HERE SHOULD BE DEALT WITH IN THE QAQC CONTAINER###
   
+  
   ### EVERYTHING AFTER IS FOR THE PDF GENERATION ####
+  
+  pars <- read_csv(par_file)
+  
+  obs_config <- read_csv(obs_config_file)
+  
+  states_config <- read_csv(states_config_file)
   
   par_names_potential <- c("zone1temp",
                            "zone2temp"
@@ -112,7 +119,7 @@ plotting_general <- function(pdf_file_name,
                              "PHY_diatom_fT",
                              "rad")
   
-  #biomass_to_chla <- c((80/12),(30/12), (30/12))
+  biomass_to_chla <- 1/states_config$states_to_obs_mapping[which(str_detect(states_config$state_names, "PHY"))]
   combined_states_conversion_potential <- list(NIT_total = c(1,1,1,1,1),
                                      PHS_total = c(1,1,1,1,1),
                                      OGM_doc_total = c(1,1),
@@ -131,8 +138,8 @@ plotting_general <- function(pdf_file_name,
   depths <- round(ncvar_get(nc, 'z'),2)
   
   wq_names <- wq_names_potential[wq_names_potential %in% names(nc$var)]
-  combined_states_conversion <- combined_states_conversion_potential[names(combined_states_conversion_potential) %in% state_names_obs]
-  combined_states <- combined_states_potential[names(combined_states_potential) %in% state_names_obs]
+  combined_states_conversion <- combined_states_conversion_potential[names(combined_states_conversion_potential) %in% obs_config$state_names_obs]
+  combined_states <- combined_states_potential[names(combined_states_potential) %in% obs_config$state_names_obs]
   
   state_names <- c(wq_names, names(combined_states))
   par_names <- par_names_potential[par_names_potential %in% names(nc$var)]
@@ -180,9 +187,7 @@ plotting_general <- function(pdf_file_name,
   }
   
   names(diagnostic_list) <- diagnostics_names
-  
-  
-  
+
   #PROCESS TEMPERATURE OBSERVATIONS
   
   cleaned_observations_file_long <- paste0(save_location, 
@@ -199,176 +204,41 @@ plotting_general <- function(pdf_file_name,
   
   #####
   
-  print("Extracting temperature observations")
-  obs_temp <- extract_observations(fname = cleaned_observations_file_long,
-                                   full_time_local,
-                                   modeled_depths = modeled_depths,
-                                   local_tzone,
-                                   target_variable = "temperature",
-                                   time_threshold_seconds = time_threshold_seconds_temp,
-                                   distance_threshold_meter = distance_threshold_meter,
-                                   methods = temp_methods)
+  obs_methods_temp <- cbind(obs_config$method_1,obs_config$method_2,obs_config$method_3,obs_config$method_4)
+  obs_methods <- list()
+  for(i in 1:nrow(obs_methods_temp)){
+    
+    values <- obs_methods_temp[i,which(!is.na(obs_methods_temp[i,]))]
+    if(length(values) == 0){
+      values <- NA
+    }
+    obs_methods[[i]] <- values
+  }
+  obs_config$obs_methods <- obs_methods
   
-  if(include_wq){
-    
-    print("Extracting DO observations")
-    obs_do <- extract_observations(fname = cleaned_observations_file_long,
-                                   full_time_local,
-                                   modeled_depths = modeled_depths,
-                                   local_tzone,
-                                   target_variable = "oxygen",
-                                   time_threshold_seconds = time_threshold_seconds_oxygen,
-                                   distance_threshold_meter = distance_threshold_meter,
-                                   methods = do_methods)
-    
-    print("Extracting Chl-a observations")
-    obs_chla <- extract_observations(fname = cleaned_observations_file_long,
-                                     full_time_local,
-                                     modeled_depths = modeled_depths,
-                                     local_tzone,
-                                     target_variable = "chla",
-                                     time_threshold_seconds = time_threshold_seconds_chla,
-                                     distance_threshold_meter = distance_threshold_meter,
-                                     methods = chla_methods)
-    
-    print("Extracting fdom observations")
-    obs_fdom <- extract_observations(fname = cleaned_observations_file_long,
-                                     full_time_local,
-                                     modeled_depths = modeled_depths,
-                                     local_tzone,
-                                     target_variable = "fdom",
-                                     time_threshold_seconds = time_threshold_seconds_fdom,
-                                     distance_threshold_meter = distance_threshold_meter,
-                                     methods = fdom_methods)
-    
-    print("Extracting NH4 observations")
-    obs_NH4 <- extract_observations(fname = cleaned_observations_file_long,
-                                    full_time_local,
-                                    modeled_depths = modeled_depths,
-                                    local_tzone,
-                                    target_variable = "NH4",
-                                    time_threshold_seconds = time_threshold_seconds_nh4,
-                                    distance_threshold_meter = distance_threshold_meter,
-                                    methods = nh4_methods)
-    
-    print("Extracting NO3 observations")
-    obs_NO3 <- extract_observations(fname = cleaned_observations_file_long,
-                                    full_time_local,
-                                    modeled_depths = modeled_depths,
-                                    local_tzone,
-                                    target_variable = "NO3NO2",
-                                    time_threshold_seconds = time_threshold_seconds_no3,
-                                    distance_threshold_meter = distance_threshold_meter,
-                                    methods = no3_methods)
-    
-    print("Extracting SRP observations")
-    obs_SRP <- extract_observations(fname = cleaned_observations_file_long,
-                                    full_time_local,
-                                    modeled_depths = modeled_depths,
-                                    local_tzone,
-                                    target_variable = "SRP",
-                                    time_threshold_seconds = time_threshold_seconds_srp,
-                                    distance_threshold_meter = distance_threshold_meter,
-                                    methods = srp_methods)
-    
-    print("Extracting TP observations")
-    obs_TP <- extract_observations(fname = cleaned_observations_file_long,
-                                   full_time_local,
-                                   modeled_depths = modeled_depths,
-                                   local_tzone,
-                                   target_variable = "TP",
-                                   time_threshold_seconds = time_threshold_seconds_srp,
-                                   distance_threshold_meter = distance_threshold_meter,
-                                   methods = srp_methods)
-    
-    print("Extracting TN observations")
-    obs_TN <- extract_observations(fname = cleaned_observations_file_long,
-                                   full_time_local,
-                                   modeled_depths = modeled_depths,
-                                   local_tzone,
-                                   target_variable = "TN",
-                                   time_threshold_seconds = time_threshold_seconds_no3,
-                                   distance_threshold_meter = distance_threshold_meter,
-                                   methods = srp_methods)
-    
-    print("Extracting DIC observations")
-    obs_DIC <- extract_observations(fname = cleaned_observations_file_long,
-                                    full_time_local,
-                                    modeled_depths = modeled_depths,
-                                    local_tzone,
-                                    target_variable = "DIC",
-                                    time_threshold_seconds = time_threshold_seconds_no3,
-                                    distance_threshold_meter = distance_threshold_meter,
-                                    methods = srp_methods)
+  
+  obs_list <- list()
+  for(i in 1:length(obs_config$state_names_obs)){
+    print(paste0("Extracting ",obs_config$target_variable[i]))
+    obs_list[[i]] <- extract_observations(fname = cleaned_observations_file_long,
+                                          full_time_local,
+                                          modeled_depths = modeled_depths,
+                                          local_tzone,
+                                          target_variable = obs_config$target_variable[i],
+                                          time_threshold_seconds = obs_config$time_threshold[i],
+                                          distance_threshold_meter = obs_config$distance_threshold[i],
+                                          methods = obs_config$obs_methods[[i]])
   }
   
-  obs_dims <- dim(obs_temp)
+  ####################################################
+  #### STEP 7: CREATE THE Z ARRAY (OBSERVATIONS x TIME)
+  ####################################################
   
-  CAR_pH_obs <- array(NA, dim = obs_dims)
+  z <- array(NA, dim = c(nsteps, length(depths), length(obs_config$state_names_obs)))
   
-  CAR_ch4_obs <- array(NA, dim = obs_dims)
-  SIL_rsi_obs <- array(NA, dim = obs_dims)
-  OGM_poc_obs <- array(NA, dim = obs_dims)
-  OGM_don_obs <- array(NA, dim = obs_dims)
-  OGM_donr_obs <- array(NA, dim = obs_dims)
-  OGM_pon_obs <- array(NA, dim = obs_dims)
-  OGM_dop_obs <- array(NA, dim = obs_dims)
-  OGM_dopr_obs <- array(NA, dim = obs_dims)
-  OGM_pop_obs <- array(NA, dim = obs_dims)
-  NCS_ss1_obs <- array(NA, dim = obs_dims)
-  PHS_frp_ads_obs <- array(NA, dim = obs_dims)
-  
-  if(include_wq){
-    OXY_oxy_obs <- obs_do
-    CAR_dic_obs <- obs_DIC
-    NIT_amm_obs <- obs_NH4
-    NIT_nit_obs <- obs_NO3
-    PHS_frp_obs <- obs_SRP
-    OGM_doc_obs <- obs_fdom * (1 - docr_to_total_doc)
-    OGM_docr_obs <- obs_fdom * docr_to_total_doc
-    OGM_doc_obs_total <- obs_fdom
-    PHY_TCHLA_obs <- obs_chla
-    NIT_total_obs <- obs_TN
-    PHS_total_obs <- obs_TP
-  }else{
-    OXY_oxy_obs <-array(NA, dim = obs_dims)
-    CAR_dic_obs <-array(NA, dim = obs_dims)
-    NIT_amm_obs <-array(NA, dim = obs_dims)
-    NIT_nit_obs <-array(NA, dim = obs_dims)
-    PHS_frp_obs <-array(NA, dim = obs_dims)
-    OGM_doc_obs <- array(NA, dim = obs_dims)
-    OGM_docr_obs <- array(NA, dim = obs_dims)
-    PHY_TCHLA_obs <- array(NA, dim = obs_dims)
-    NIT_total_obs <- array(NA, dim = obs_dims)
-    PHS_total_obs <- array(NA, dim = obs_dims)
-    OGM_doc_obs_total <- array(NA, dim = obs_dims)
+  for(i in 1:nrow(obs_config)){
+    z[ , , i] <-  obs_list[[i]]
   }
-  
-  z_potential <- list(temp = obs_temp,
-                      OXY_oxy = OXY_oxy_obs,
-                      CAR_dic = CAR_dic_obs,
-                      CAR_ch4 = CAR_ch4_obs,
-                      SIL_rsi = SIL_rsi_obs,
-                      NIT_amm = NIT_amm_obs,
-                      NIT_nit= NIT_nit_obs,
-                      NIT_total = NIT_total_obs,
-                      PHS_frp= PHS_frp_obs,
-                      PHS_total = PHS_total_obs,
-                      OGM_doc = OGM_doc_obs,
-                      OGM_docr = OGM_docr_obs,
-                      OGM_doc_total = OGM_doc_obs_total,
-                      OGM_poc = OGM_poc_obs,
-                      OGM_don = OGM_don_obs,
-                      OGM_donr = OGM_donr_obs,
-                      OGM_pon = OGM_pon_obs,
-                      OGM_dop = OGM_dop_obs,
-                      OGM_dopr = OGM_dopr_obs,
-                      OGM_pop = OGM_pop_obs,
-                      NCS_ss1 = NCS_ss1_obs,
-                      PHS_frp_ads = PHS_frp_ads_obs,
-                      PHY_TCHLA = PHY_TCHLA_obs)
-  
-  z <- array(unlist(z_potential[names(z_potential) %in% state_names_obs]), dim = c(nsteps, length(depths), length(state_names_obs)))
   
   if(length(focal_depths_plotting) < 4){
     plot_height <- 3
@@ -398,8 +268,8 @@ plotting_general <- function(pdf_file_name,
       date <- c(date, rep(full_time_local[j], length(depths)))
     }
     
-    if(state_names[i] %in% state_names_obs){
-      obs_index <- which(state_names_obs == state_names[i])
+    if(state_names[i] %in% obs_config$state_names_obs){
+      obs_index <- which(obs_config$state_names_obs == state_names[i])
       obs <- c(t(z[, ,obs_index]))
     }else{
       obs <- as.numeric(rep(NA, length(date)))

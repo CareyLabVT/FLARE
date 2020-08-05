@@ -289,17 +289,17 @@ temp_oxy_chla_qaqc <- function(realtime_file,
   }
   
 
-  d$fDOM_1 <- exo_fdom_2_doc[1] + exo_fdom_2_doc[2] * d$fDOM_1
+  d$fDOM_1 <- exo_sensor_2_grab_sample_fdom[1] + exo_sensor_2_grab_sample_fdom[2] * d$fDOM_1
   
   #oxygen unit conversion
   d$doobs_1 <- d$doobs_1*1000/32  #mg/L (obs units) -> mmol/m3 (glm units)
   d$doobs_5 <- d$doobs_5*1000/32  #mg/L (obs units) -> mmol/m3 (glm units)
   d$doobs_9 <- d$doobs_9*1000/32  #mg/L (obs units) -> mmol/m3 (glm units)
   
-  d$Chla_1 <-  exo_2_ctd_chla[1] +  d$Chla_1 *  exo_2_ctd_chla[2]
-  d$doobs_1 <- exo_2_ctd_do[1]  +   d$doobs_1 * exo_2_ctd_do[2]
-  d$doobs_5 <- do_2_ctd_do_5[1] +   d$doobs_5 * do_2_ctd_do_5[2]
-  d$doobs_9 <- do_2_ctd_do_9[1] +   d$doobs_9 * do_2_ctd_do_9[2]
+  d$Chla_1 <-  exo_sensor_2_ctd_chla[1] +  d$Chla_1 *  exo_sensor_2_ctd_chla[2]
+  d$doobs_1 <- exo_sensor_2_ctd_do[1]  +   d$doobs_1 * exo_sensor_2_ctd_do[2]
+  d$doobs_5 <- do_sensor_2_ctd_do_5[1] +   d$doobs_5 * do_sensor_2_ctd_do_5[2]
+  d$doobs_9 <- do_sensor_2_ctd_do_9[1] +   d$doobs_9 * do_sensor_2_ctd_do_9[2]
   
   d <- d %>% 
     mutate(day = day(TIMESTAMP),

@@ -34,7 +34,8 @@ run_model <- function(i,
                       snow_ice_thickness,
                       avg_surf_temp,
                       x_star,
-                      diagnostics){
+                      diagnostics,
+                      include_wq){
   
   nstates <- dim(x)[3] - npars 
   
@@ -60,7 +61,8 @@ set_up_model <- function(code_folder,
                          ndepths_modeled,
                          modeled_depths,
                          the_sals_init,
-                         machine){
+                         machine,
+                         include_wq){
   
   
 }
