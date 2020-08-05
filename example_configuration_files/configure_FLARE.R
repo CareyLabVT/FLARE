@@ -2,6 +2,7 @@
 # Lake information
 ###########################
 
+
 lake_name <<- "fcre"
 lake_latitude <<- 37.307   #Degrees North
 lake_longitude <<- 79.837  #Degrees West
