@@ -167,8 +167,8 @@ exo_sensor_2_ctd_chla <- c(0, 1)  #c(-2.0430, 2.5314) #c(1.8795, 0.6662)
 exo_sensor_2_ctd_do <- c(0, 1) #c(8.3670, 0.7152)
 do_sensor_2_ctd_do_5 <- c(0, 1) #c(19.6254, 0.8636)
 do_sensor_2_ctd_do_9 <- c(0, 1) #c(11.0971, 0.9156)
-ctd_2_do_sensor_chla <<- c(0, 1)  #c(-2.0430, 2.5314) #c(-1.582, 1.335)
-ctd_2_do_sensor_do <<- c(0, 1) #c(-10.770, 1.061)
+ctd_2_exo_sensor_chla <<- c(0, 1)  #c(-2.0430, 2.5314) #c(-1.582, 1.335)
+ctd_2_exo_sensor_do <<- c(0, 1) #c(-10.770, 1.061)
 exo_sensor_2_grab_sample_fdom <<- c(-38.95, 22.47)
 
 
@@ -182,9 +182,6 @@ states_config_file <- paste0(forecast_location,"/states_config.csv")
 #12 g/ mole of C vs. X g/ mole of chla
 #Initial concentration of phytoplankton (mmol C/m3)
 # biomass_to_chla <<- c((160/12),(60/12), (60/12))
-
-#Default initial states if lacking observations
-docr_to_total_doc <<- 0.80
 
 ########################################
 # Dignostics
