@@ -757,7 +757,7 @@ run_flare<-function(start_day_local,
   for(i in 1:nrow(states_to_obs_temp)){
     
     names_temp <- states_to_obs_temp[i,which(!is.na(states_to_obs_temp[i,]))]
-    if(length(values) == 0){
+    if(length(names_temp) == 0){
       values <- NA
     }else{
       values <- which(obs_config$state_names_obs %in% names_temp)
