@@ -61,6 +61,11 @@ run_model <- function(i,
   diagnostics <- array(NA, dim = c(ndepths_modeled, length(diagnostics_names)))
   
   x_star_end <- rep(NA, nstates)
+
+  ndiagnostics <- length(which(states_config$model_state_flag == 0))
+  if(ndiagnostics > 0){
+    diag_star_end <- rep(NA, ndiagnostics)
+  }
   
   if(npars > 0){
     
@@ -288,12 +293,14 @@ run_model <- function(i,
       if(length(ncvar_get(nc, "time")) > 1){
         nc_close(nc)
         
-        output_vars <- c(glm_output_vars)
+        output_vars_multi_depth <- states_config$state_names
+        output_vars_no_depth <- NA
         
         GLM_temp_wq_out <- get_glm_nc_var_all_wq(ncFile = "/output.nc",
                                                  working_dir = working_directory,
                                                  z_out = modeled_depths,
-                                                 vars = output_vars,
+                                                 vars_depth = output_vars_multi_depth,
+                                                 vars_no_depth = output_vars_no_depth,
                                                  diagnostic_vars = diagnostics_names)
         
         num_glm_depths <- length(GLM_temp_wq_out$depths_enkf)

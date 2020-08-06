@@ -208,7 +208,7 @@ update_phyto <- function(p_initial,nml_name = 'aed2_phyto_pars.nml'){
 #' @examples
 #' add(1, 1)
 #' add(10, 1)
-get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars,diagnostic_vars){
+get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars_depth, vars_no_depth, diagnostic_vars){
   glm_nc <- nc_open(paste0(working_dir,ncFile))
   tallest_layer <- ncvar_get(glm_nc, "NS")
   final_time_step <- length(tallest_layer)
@@ -226,11 +226,29 @@ get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars,diagnostic_vars
   
   glm_temps <- ncvar_get(glm_nc, "temp")[1:tallest_layer, final_time_step]
   
-  output <- array(NA,dim=c(tallest_layer,length(vars)))
-  for(v in 1:length(vars)){
-    var_modeled <- ncvar_get(glm_nc, vars[v])
+  output <- array(NA,dim=c(tallest_layer,length(vars_depth)))
+  for(v in 1:length(vars_depth)){
+    var_modeled <- ncvar_get(glm_nc, vars_depth[v])
     output[,v] <- var_modeled[1:tallest_layer, final_time_step]
   }
+  
+  
+  #if(length(vars_no_depth) > 0){
+  #  output_no_depth <- rep(NA, length(vars_no_depth))
+  #  for(v in 1:lengthlength(vars_no_depth)){
+  #    if(vars_no_depth[v] == "secchi"){
+  #      var_modeled <- ncvar_get(glm_nc, "extc_coef")
+  #      var_modeled <- var_modeled[1:tallest_layer, final_time_step]
+  #      output_no_depth[v] <- var_modeled[which.min(abs(heights_out - 1.0))]
+  #    }else{
+  #      output_no_depth[v] <- NA
+  #  }
+  #  }
+  #}else{
+  #  output_no_depth <- NA
+  #}
+  
+  output_no_depth <- NA
   
   if(length(diagnostic_vars) > 0){
     diagnostics_output <- array(NA,dim=c(tallest_layer,length(diagnostic_vars)))
@@ -246,6 +264,7 @@ get_glm_nc_var_all_wq <- function(ncFile,working_dir, z_out,vars,diagnostic_vars
   
   nc_close(glm_nc)
   return(list(output = output,
+              output_no_depth = output_no_depth,
               surface_height = heights_surf,
               depths_enkf = rev(heights_surf - heights),
               snow_wice_bice = c(snow, ice_white, ice_blue),

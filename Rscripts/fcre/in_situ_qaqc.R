@@ -10,6 +10,8 @@ in_situ_qaqc <- function(insitu_obs_fname,
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_CTD.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_nutrients.R"))
   source(paste0(code_folder,"/","Rscripts/",lake_name,"/temp_oxy_chla_qaqc.R"))
+  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_ch4.R"))
+  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_secchi.R"))
   
   d <- temp_oxy_chla_qaqc(realtime_file = insitu_obs_fname[1],
                           qaqc_file = insitu_obs_fname[2],
@@ -32,6 +34,22 @@ in_situ_qaqc <- function(insitu_obs_fname,
                                      local_tzone,
                                      focal_depths)
     d <- rbind(d,d_nutrients)
+  }
+  
+  if(!is.na(ch4_fname)){
+    d_ch4 <- extract_ch4(fname = ch4_fname,
+                         input_file_tz = "EST", 
+                         local_tzone,
+                         focal_depths)
+    d <- rbind(d,d_ch4)
+  }
+  
+  if(!is.na(secchi_fname)){
+    d_secchi <- extract_secchi(fname = secchi_fname,
+                         input_file_tz = "EST", 
+                         local_tzone,
+                         focal_depths)
+    d <- rbind(d,d_secchi)
   }
   
   write_csv(d, cleaned_observations_file_long)

@@ -17,7 +17,7 @@ extract_observations <- function(fname,
   d <- read_csv(fname,
                 col_types = col_types)
   
-  d$timestamp <- force_tz(d$timestamp, tzone = local_tzone)
+  d$timestamp <- with_tz(d$timestamp, tzone = local_tzone)
   
   obs <- array(NA,dim=c(length(full_time_local),length(modeled_depths)))
   

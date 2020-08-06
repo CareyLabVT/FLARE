@@ -404,8 +404,8 @@ plotting_general <- function(pdf_file_name,
   
   if("extc_coef" %in% diagnostics_names){
     
-    if(!is.na(secchi_file)){
-      obs <- read_csv(secchi_file) %>% 
+    if(!is.na(secchi_fname)){
+      obs <- read_csv(secchi_fname) %>% 
         filter(Reservoir == "FCR" & Site == 50) %>% 
         select(DateTime, Secchi_m) %>% 
         mutate(DateTime = mdy_hm(DateTime)) %>% 

@@ -263,8 +263,10 @@ run_flare<-function(start_day_local,
   }else{
     include_wq <- FALSE
   }
+  
   ndepths_modeled <- length(modeled_depths)
-  num_wq_vars <- length(states_config$state_names) - 1
+  nstates <- ndepths_modeled * length(states_config$state_names)
+  num_wq_vars <-  length(states_config$state_names) - 1
   
   glm_output_vars <- states_config$state_names
   
@@ -280,8 +282,6 @@ run_flare<-function(start_day_local,
     n_met_members <- 3
     n_ds_members <- 1
   }
-  
-  nstates <- ndepths_modeled * length(states_config$state_names)
   
   ####################################################
   #### STEP 3: ORGANIZE FILES
@@ -847,7 +847,6 @@ run_flare<-function(start_day_local,
             combined_initial_conditions[(((jj-1)*ndepths_modeled)+1):(jj*ndepths_modeled)] + q_v
         }
       }
-      
     }
     
     for(par in 1:npars){
@@ -964,7 +963,7 @@ run_flare<-function(start_day_local,
     if(parameter_uncertainty == FALSE){
       mean_pars <- colMeans(x[1, ,(nstates + 1):(nstates + npars)])
       for(m in 1:nmembers){
-        x[1, m, (nstates + 1):(nstates + npars)] <- mean_pars
+        x[1, m, (nstates + 1):(nstates +  npars)] <- mean_pars
       }
     }
   }

@@ -43,11 +43,12 @@ run_EnKF <- function(x,
 ){
   
   npars <- nrow(pars_config)
+  nstates <- dim(x)[3] -  npars
   nsteps <- length(full_time_local)
   nmembers <- dim(x)[2]
   n_met_members <- length(met_file_names) - 1
-  nstates <- dim(x)[3] - npars
   ndepths_modeled <- length(modeled_depths)
+  
 
   
   q_v <- rep(NA,ndepths_modeled)
@@ -101,11 +102,10 @@ run_EnKF <- function(x,
     #Create array to hold GLM predictions for each ensemble
     x_star <- array(NA, dim = c(nmembers, nstates))
     x_corr <- array(NA, dim = c(nmembers, nstates))
-    
+
     #Matrix to store calculated ensemble specific deviations and innovations
     dit <- array(NA, dim = c(nmembers, nstates))
-    dit_combined <- array(NA, dim = c(nmembers, nstates + npars))
-    
+
     if(npars > 0){
       pars_corr <-  array(NA, dim = c(nmembers, npars))
       dit_pars<- array(NA, dim = c(nmembers, npars))
@@ -118,7 +118,7 @@ run_EnKF <- function(x,
       
       
       if(npars > 0){
-        curr_pars <- x[i - 1, m , (nstates+1):(nstates+npars)] 
+        curr_pars <- x[i - 1, m , (nstates+1):(nstates+ npars)] 
       }
       
       out <- run_model(i,
@@ -167,7 +167,7 @@ run_EnKF <- function(x,
       mixing_vars[m, ] <- out$mixing_vars_end
       diagnostics[i, m, , ] <- out$diagnostics_end
       glm_depths[i, m,] <- out$glm_depths_end
-      
+ 
       ########################################
       #END GLM SPECIFIC PART
       ########################################
@@ -211,19 +211,17 @@ run_EnKF <- function(x,
     }
     
     if(npars > 0){
-      pars_corr <- x[i - 1, , (nstates+1):(nstates+npars)]
+      pars_corr <- x[i - 1, , (nstates + 1):(nstates+ npars)]
       if(npars == 1){
         pars_corr <- matrix(pars_corr,nrow = length(pars_corr),ncol = 1)
       }
       pars_star <- pars_corr
     }
     
-    
-    
     if(npars > 0){
-      x_prior[i, , ] <- cbind(x_corr, pars_corr)
+        x_prior[i, , ] <- cbind(x_corr, pars_corr)
     }else{
-      x_prior[i, , ] <- x_corr
+        x_prior[i, , ] <- x_corr
     }
     
     z_index <- which(!is.na(c(z[i, , ])))
@@ -286,7 +284,7 @@ run_EnKF <- function(x,
       h <- matrix(0, nrow = length(obs_config$state_names_obs) * ndepths_modeled, ncol = nstates)
       
        index <- 0
-       for(k in 1:(nstates/ndepths_modeled)){
+       for(k in 1:((nstates/ndepths_modeled))){
          for(j in 1:ndepths_modeled){
            index <- index + 1
            if(!is.na(first(states_config$states_to_obs[[k]]))){

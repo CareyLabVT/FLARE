@@ -2,7 +2,6 @@
 # Lake information
 ###########################
 
-
 lake_name <<- "fcre"
 lake_latitude <<- 37.307   #Degrees North
 lake_longitude <<- 79.837  #Degrees West
@@ -135,15 +134,19 @@ par_file <- paste0(forecast_location,"/parameter_calibration_config.csv")
 ###  Observation information
 ######################################
 
-obs_config_file <- paste0(forecast_location,"/observations_config.csv")
+obs_config_file <- paste0(forecast_location,"/observations_config_ch4_dic.csv")
 
 realtime_insitu_location <- paste0(data_location,"/mia-data")
 realtime_met_station_location <- paste0(data_location,"/carina-data") 
 manual_data_location <- paste0(data_location, "/manual-data") 
 realtime_inflow_data_location <- paste0(data_location, "/diana-data")
 
+secchi_fname <- paste0(manual_data_location,"/Secchi_depth_2013-2019.csv")
+
 
 ctd_fname <<- paste0(manual_data_location,"/CTD_final_2013_2019.csv")
+
+ch4_fname <<- paste0(manual_data_location,"/DATASET_for_EDI_LOL_MS_10May20.csv")
 
 nutrients_fname <<- paste0(manual_data_location,"/chemistry.csv")
 
@@ -177,7 +180,7 @@ exo_sensor_2_grab_sample_fdom <<- c(-38.95, 22.47)
 ###  Water quality state information
 #########################################
 
-states_config_file <- paste0(forecast_location,"/states_config.csv")
+states_config_file <- paste0(forecast_location,"/states_config_ch4_dic.csv")
 
 #carbon to chlorophyll ratio (mg C/mg chla)
 #12 g/ mole of C vs. X g/ mole of chla
@@ -216,7 +219,7 @@ push_to_git <<- FALSE
 # Plotting related options
 #######################################
 
-secchi_file <- paste0(manual_data_location,"/Secchi_depth_2013-2019.csv")
+
 
 # Options for printing function
 # Depths (meters) that the water quality variables are plotted
