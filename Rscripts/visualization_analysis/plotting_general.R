@@ -98,9 +98,9 @@ plotting_general <- function(pdf_file_name,
                           "PHY_diatom_IN",
                           "PHY_diatom_IP")
   
-  combined_states_potential <- list(NIT_total = c("NIT_amm","NIT_nit","OGM_don","OGM_pon"),
-                          #PHS_total = c("PHS_frp","OGM_dop","OGM_dopr","OGM_pop","PHS_frp_ads"),
-                          PHS_total = c("PHS_frp","OGM_dop","OGM_pop"),
+  combined_states_potential <- list(NIT_total = c("NIT_amm", "NIT_nit", "OGM_don","OGM_donr","OGM_pon"),
+                          PHS_total = c("PHS_frp","OGM_dop","OGM_dopr","OGM_pop"),
+                          #PHS_total = c("PHS_frp","OGM_dop","OGM_pop"),
                           OGM_doc_total = c("OGM_doc","OGM_docr"),
                           PHY_TCHLA = c("PHY_cyano","PHY_green","PHY_diatom"))
   
@@ -119,7 +119,7 @@ plotting_general <- function(pdf_file_name,
                              "PHY_diatom_fT",
                              "rad")
   
-  biomass_to_chla <- 1/states_config$states_to_obs_mapping[which(str_detect(states_config$state_names, "PHY"))]
+  biomass_to_chla <- 1/states_config$states_to_obs_mapping_1[which(str_detect(states_config$state_names, "PHY"))]
   combined_states_conversion_potential <- list(NIT_total = c(1,1,1,1,1),
                                      PHS_total = c(1,1,1,1,1),
                                      OGM_doc_total = c(1,1),

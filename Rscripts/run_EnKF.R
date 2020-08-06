@@ -285,21 +285,22 @@ run_EnKF <- function(x,
       #Assign which states have obs in the time step
       h <- matrix(0, nrow = length(obs_config$state_names_obs) * ndepths_modeled, ncol = nstates)
       
-      index <- 0
-      for(k in 1:(nstates/ndepths_modeled)){
-        for(j in 1:ndepths_modeled){
-          index <- index + 1
-          if(!is.na(first(states_config$states_to_obs[[k]]))){
-            for(jj in 1:length(states_config$states_to_obs[[k]])){
-              if(!is.na((z[i, j, states_config$states_to_obs[[k]][jj]]))){
-                states_to_obs_index <- states_config$states_to_obs[[k]][jj]
-                index2 <- (states_to_obs_index - 1) * ndepths_modeled + j
-                h[index2,index] <- states_config$states_to_obs_mapping[k]
-              }
-            }
-          }
-        }
-      }
+       index <- 0
+       for(k in 1:(nstates/ndepths_modeled)){
+         for(j in 1:ndepths_modeled){
+           index <- index + 1
+           if(!is.na(first(states_config$states_to_obs[[k]]))){
+             for(jj in 1:length(states_config$states_to_obs[[k]])){
+               if(!is.na((z[i, j, states_config$states_to_obs[[k]][jj]]))){
+                 states_to_obs_index <- states_config$states_to_obs[[k]][jj]
+                 index2 <- (states_to_obs_index - 1) * ndepths_modeled + j
+                 h[index2,index] <- states_config$states_to_obs_mapping[[k]][jj]
+               }
+             }
+           }
+         }
+       }
+
       z_index <- c()
       for(j in 1:nrow(h)){
         if(sum(h[j, ]) > 0){

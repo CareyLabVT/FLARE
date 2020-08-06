@@ -695,7 +695,8 @@ run_flare<-function(start_day_local,
   for(i in 1:nrow(states_config)){
     if(!is.na(states_config$init_obs_name[i])){
       obs_index <- which(obs_config$state_names_obs == states_config$init_obs_name[i])
-      init_obs <- z[1, ,obs_index] * (1/states_config$states_to_obs_mapping[i]) * states_config$init_obs_mapping[i]
+      #init_obs <- z[1, ,obs_index] * (1/states_config$states_to_obs_mapping[[i]][1]) * states_config$init_obs_mapping[i]
+      init_obs <- z[1, ,obs_index] * (1/states_config$states_to_obs_mapping_1[i]) * states_config$init_obs_mapping[i]
       if(length(which(!is.na(init_obs))) == 0){
         init_depth[[i]] <- rep(states_config$initial_conditions[i], ndepths_modeled)
         if(states_config$init_obs_name[i] == "temp"){
@@ -751,22 +752,32 @@ run_flare<-function(start_day_local,
     }
   }
   
-  states_to_obs_temp <- cbind(states_config$states_to_obs_1,states_config$states_to_obs_2)
-  
+  states_to_obs_temp <- cbind(states_config$states_to_obs_1,states_config$states_to_obs_2, states_config$states_to_obs_3)
+  states_to_obs_mapping_temp <- cbind(states_config$states_to_obs_mapping_1,states_config$states_to_obs_mapping_2, states_config$states_to_obs_mapping_3)
+
   states_to_obs <- list()
+  states_to_obs_mapping <- list()
   for(i in 1:nrow(states_to_obs_temp)){
-    
+
     names_temp <- states_to_obs_temp[i,which(!is.na(states_to_obs_temp[i,]))]
+    mapping_temp <- states_to_obs_mapping_temp[i,which(!is.na(states_to_obs_mapping_temp[i,]))]
     if(length(names_temp) == 0){
-      values <- NA
+      values1 <- NA
+      values2 <- NA
     }else{
-      values <- which(obs_config$state_names_obs %in% names_temp)
+      values1 <- rep(NA,length(names_temp))
+      for(j in 1:length(names_temp)){
+        values1[j] <- which(obs_config$state_names_obs == names_temp[j])
+      }
+      values2 <- c(mapping_temp)
     }
-    states_to_obs[[i]] <- values
+    states_to_obs[[i]] <- values1
+    states_to_obs_mapping[[i]] <- values2
   }
   
   states_config$states_to_obs <- states_to_obs
-  
+  states_config$states_to_obs_mapping <- states_to_obs_mapping
+
   ####################################################
   #### STEP 10: CREATE THE PROCESS UNCERTAINTY
   ####################################################
@@ -816,6 +827,7 @@ run_flare<-function(start_day_local,
     w <- rep(NA,ndepths_modeled)
     
     combined_initial_conditions <- unlist(init_depth)
+    
     
     for(m in 1:nmembers){
       q_v[] <- NA
@@ -932,6 +944,8 @@ run_flare<-function(start_day_local,
     }
     
   }
+  
+  
   
   #Set initial conditions
   x[1, , ] <- as.matrix(x_previous)
