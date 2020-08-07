@@ -163,7 +163,7 @@ specified_inflow2 <- paste0(manual_data_location, "/FCR_wetland_inflow_2013_2019
 specified_sss_inflow_file <- paste0(manual_data_location, "/FCR_SSS_inflow_2013_2019_20200701_allfractions_2DOCpools.csv")
 specified_sss_outflow_file <- NA
 specified_outflow1 <- paste0(manual_data_location, "/FCR_spillway_outflow_SUMMED_WeirWetland_2013_2019_20200615.csv")
-specified_metfile <- paste0(manual_data_location, "/met_full_postQAQC.csv")
+specified_metfile <- NA #paste0(manual_data_location, "/met_full_postQAQC.csv")
 
 
 met_file <- paste0(manual_data_location,"/met_full_postQAQC.csv")
