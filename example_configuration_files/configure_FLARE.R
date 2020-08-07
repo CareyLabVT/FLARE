@@ -141,32 +141,14 @@ realtime_met_station_location <- paste0(data_location,"/carina-data")
 manual_data_location <- paste0(data_location, "/manual-data") 
 realtime_inflow_data_location <- paste0(data_location, "/diana-data")
 
-secchi_fname <- paste0(manual_data_location,"/Secchi_depth_2013-2019.csv")
-
-
-ctd_fname <<- paste0(manual_data_location,"/CTD_final_2013_2019.csv")
-
-ch4_fname <<- paste0(manual_data_location,"/DATASET_for_EDI_LOL_MS_10May20.csv")
-
-nutrients_fname <<- paste0(manual_data_location,"/chemistry.csv")
-
+combined_obs_file <- paste0(manual_data_location,"/observations_postQAQC_long.csv")
 insitu_obs_fname <<- c(paste0(realtime_insitu_location,"/Catwalk.csv"),
                        paste0(manual_data_location,"/Catwalk_cleanedEDI.csv"))
+secchi_fname <- paste0(manual_data_location,"/Secchi_depth_2013-2019.csv")
+ctd_fname <<- paste0(manual_data_location,"/CTD_final_2013_2019.csv")
+ch4_fname <<- paste0(manual_data_location,"/DATASET_for_EDI_LOL_MS_10May20.csv")
+nutrients_fname <<- paste0(manual_data_location,"/chemistry.csv")
 variable_obsevation_depths <<- FALSE
-
-
-met_obs_fname <<- c(paste0(realtime_met_station_location,"/FCRmet.csv"),
-                    paste0(manual_data_location,"/Met_final_2015_2019.csv"))
-
-inflow_file1 <<- c(paste0(realtime_inflow_data_location,"/FCRweir.csv"),
-                   paste0(manual_data_location,"/inflow_for_EDI_2013_06Mar2020.csv"))
-
-outflow_file1 <<- paste0(manual_data_location,"/FCR_spillway_outflow_newEDI_SUMMED_WeirWetland_2013_2018_20190912.csv")
-
-inflow_file2 <<- NA
-
-focal_depths <<- 1.6
-
 exo_sensor_2_ctd_chla <- c(0, 1)  #c(-2.0430, 2.5314) #c(1.8795, 0.6662)
 exo_sensor_2_ctd_do <- c(0, 1) #c(8.3670, 0.7152)
 do_sensor_2_ctd_do_5 <- c(0, 1) #c(19.6254, 0.8636)
@@ -174,6 +156,27 @@ do_sensor_2_ctd_do_9 <- c(0, 1) #c(11.0971, 0.9156)
 ctd_2_exo_sensor_chla <<- c(0, 1)  #c(-2.0430, 2.5314) #c(-1.582, 1.335)
 ctd_2_exo_sensor_do <<- c(0, 1) #c(-10.770, 1.061)
 exo_sensor_2_grab_sample_fdom <<- c(-38.95, 22.47)
+focal_depths <<- NA
+
+specified_inflow1 <- paste0(manual_data_location, "/FCR_weir_inflow_2013_2019_20200624_allfractions_2poolsDOC.csv")
+specified_inflow2 <- paste0(manual_data_location, "/FCR_wetland_inflow_2013_2019_20200713_allfractions_2DOCpools.csv")
+specified_sss_inflow_file <- paste0(manual_data_location, "/FCR_SSS_inflow_2013_2019_20200701_allfractions_2DOCpools.csv")
+specified_sss_outflow_file <- NA
+specified_outflow1 <- paste0(manual_data_location, "/FCR_spillway_outflow_SUMMED_WeirWetland_2013_2019_20200615.csv")
+specified_metfile <- paste0(manual_data_location, "/met_full_postQAQC.csv")
+
+
+met_file <- paste0(manual_data_location,"/met_full_postQAQC.csv")
+met_raw_obs_fname <<- c(paste0(realtime_met_station_location,"/FCRmet.csv"),
+                        paste0(manual_data_location,"/Met_final_2015_2019.csv"))
+
+inflow1_file <<- paste0(manual_data_location,"/inflow_postQAQC.csv")
+inflow_raw_file1 <<- c(paste0(realtime_inflow_data_location,"/FCRweir.csv"),
+                       paste0(manual_data_location,"/inflow_for_EDI_2013_06Mar2020.csv"))
+
+outflow_file1 <<- paste0(manual_data_location,"/FCR_spillway_outflow_newEDI_SUMMED_WeirWetland_2013_2018_20190912.csv")
+
+inflow_file2 <<- NA
 
 
 #########################################

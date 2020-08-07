@@ -1,41 +1,41 @@
 run_model <- function(i,
-                    m,
-                    mixing_vars_start,
-                    curr_start,
-                    curr_stop,
-                    par_names,
-                    curr_pars,
-                    working_directory,
-                    par_nml,
-                    num_phytos,
-                    glm_depths_start,
-                    surface_height_start,
-                    simulate_SSS,
-                    x_start,
-                    full_time_local, 
-                    wq_start, 
-                    wq_end,
-                    management_input, 
-                    hist_days, 
-                    forecast_sss_on,
-                    sss_depth,
-                    use_specified_sss,
-                    modeled_depths,
-                    ndepths_modeled,
-                    curr_met_file,
-                    inflow_file_names,
-                    inflow_outflow_index,
-                    outflow_file_names,
-                    glm_output_vars,
-                    diagnostics_names,
-                    machine,
-                    npars,
-                    num_wq_vars,
-                    snow_ice_thickness_start,
-                    avg_surf_temp_start,
-                    nstates,
-                    states_config,
-                    include_wq){
+                      m,
+                      mixing_vars_start,
+                      curr_start,
+                      curr_stop,
+                      par_names,
+                      curr_pars,
+                      working_directory,
+                      par_nml,
+                      num_phytos,
+                      glm_depths_start,
+                      surface_height_start,
+                      simulate_SSS,
+                      x_start,
+                      full_time_local, 
+                      wq_start, 
+                      wq_end,
+                      management_input, 
+                      hist_days, 
+                      forecast_sss_on,
+                      sss_depth,
+                      use_specified_sss,
+                      modeled_depths,
+                      ndepths_modeled,
+                      curr_met_file,
+                      inflow_file_names,
+                      inflow_outflow_index,
+                      outflow_file_names,
+                      glm_output_vars,
+                      diagnostics_names,
+                      machine,
+                      npars,
+                      num_wq_vars,
+                      snow_ice_thickness_start,
+                      avg_surf_temp_start,
+                      nstates,
+                      states_config,
+                      include_wq){
   
   
   update_glm_nml_list <- list()
@@ -61,7 +61,7 @@ run_model <- function(i,
   diagnostics <- array(NA, dim = c(ndepths_modeled, length(diagnostics_names)))
   
   x_star_end <- rep(NA, nstates)
-
+  
   ndiagnostics <- length(which(states_config$model_state_flag == 0))
   if(ndiagnostics > 0){
     diag_star_end <- rep(NA, ndiagnostics)
@@ -195,9 +195,16 @@ run_model <- function(i,
     list_index <- list_index + 1
     
     if(simulate_SSS){
-      create_sss_input_output(x_start, i, m, full_time_local, working_directory, 
-                              wq_start, management_input, hist_days, 
-                              forecast_sss_on, sss_depth,use_specified_sss, states_config, include_wq)
+      if(is.na(specified_sss_inflow_file)){
+        create_sss_input_output(x_start, i, m, full_time_local, working_directory, 
+                                wq_start, management_input, hist_days, 
+                                forecast_sss_on, sss_depth,use_specified_sss, states_config, include_wq)
+      }else{
+        file.copy(specified_sss_inflow_file,paste0(working_directory,"/sss_inflow.csv"))
+        if(!is.na(specified_sss_outflow_file)){
+          file.copy(specified_sss_outflow_file,paste0(working_directory,"/sss_outflow.csv"))
+        }
+      }
     }
   }
   
@@ -365,8 +372,8 @@ set_up_model <- function(code_folder,
                          the_sals_init,
                          machine,
                          include_wq){
-                         
-                         
+  
+  
   GLM_folder <- paste0(code_folder, "/", "glm", "/", machine) 
   fl <- c(list.files(GLM_folder, full.names = TRUE))
   tmp <- file.copy(from = fl, to = working_directory, overwrite = TRUE)

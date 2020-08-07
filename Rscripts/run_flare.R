@@ -243,15 +243,15 @@ run_flare<-function(start_day_local,
   ####################################################
   
   if(!is.na(par_file)){
-    pars_config <- read_csv(par_file)
+    pars_config <- read_csv(par_file, col_types = cols())
     npars <- nrow(pars_config)
   }else{
     npars <- 0
   }
   
-  obs_config <- read_csv(obs_config_file)
+  obs_config <- read_csv(obs_config_file, col_types = cols())
   
-  states_config <- read_csv(states_config_file)
+  states_config <- read_csv(states_config_file, col_types = cols())
   
   nsteps <- length(full_time_local)
   if(spin_up_days > nsteps){
@@ -345,25 +345,34 @@ run_flare<-function(start_day_local,
   }
   
   cleaned_met_file <- paste0(working_directory, "/met_full_postQAQC.csv")
-  met_qaqc(realtime_file = met_obs_fname[1],
-           qaqc_file = met_obs_fname[2],
+  if(is.na(met_file)){
+  met_qaqc(realtime_file = met_raw_obs_fname[1],
+           qaqc_file = met_raw_obs_fname[2],
            cleaned_met_file,
            input_file_tz = "EST",
            local_tzone,
            full_time_local)
+  }else{
+      file.copy(met_file, cleaned_met_file)
+    }
   
   cleaned_inflow_file <- paste0(working_directory, "/inflow_postQAQC.csv")
   
-  inflow_qaqc(realtime_file = inflow_file1[1],
-              qaqc_file = inflow_file1[2],
+  if(is.na(inflow1_file)){
+  inflow_qaqc(realtime_file = inflow_raw_file1[1],
+              qaqc_file = inflow_raw_file1[2],
               nutrients_file = nutrients_fname,
               cleaned_inflow_file ,
               local_tzone, 
               input_file_tz = 'EST')
+  }else{
+    file.copy(inflow1_file, cleaned_inflow_file)
+  }
+    
   
   cleaned_observations_file_long <- paste0(working_directory, 
                                            "/observations_postQAQC_long.csv")
-  
+  if(is.na(combined_obs_file)){
   in_situ_qaqc(insitu_obs_fname = insitu_obs_fname, 
                data_location = data_location, 
                maintenance_file = maintenance_file,
@@ -372,6 +381,9 @@ run_flare<-function(start_day_local,
                cleaned_observations_file_long = cleaned_observations_file_long,
                lake_name,
                code_folder)
+  }else{
+    file.copy(combined_obs_file, cleaned_observations_file_long)
+  }
   
   #### END QAQC CONTAINER ####
   
@@ -451,13 +463,19 @@ run_flare<-function(start_day_local,
   
   met_file_names <- rep(NA, (n_met_members*n_ds_members))
   obs_met_outfile <- "met_historical.csv"
+
   
+  if(is.na(specified_metfile)){
   missing_met <- create_obs_met_input(fname = cleaned_met_file,
                                       outfile = obs_met_outfile,
                                       full_time_local, 
                                       local_tzone,
                                       working_directory,
                                       hist_days)
+  }else{
+    missing_met <- FALSE
+    file.copy(specified_metfile, paste0(working_directory,"/",obs_met_outfile))
+  }
   
   if(missing_met  == FALSE){
     met_file_names[] <- obs_met_outfile
@@ -610,9 +628,8 @@ run_flare<-function(start_day_local,
     n_met_members <- 1
   }
   
-  
-  
   ##CREATE INFLOW AND OUTFILE FILES
+  
   inflow_outflow_files <- create_inflow_outflow_file(full_time_local,
                                                      working_directory, 
                                                      input_file_tz = "EST",
@@ -632,9 +649,17 @@ run_flare<-function(start_day_local,
                                                      states_config,
                                                      include_wq)
   
+  
+  if(is.na(specified_inflow1)){
   inflow_file_names <- cbind(inflow1 = inflow_outflow_files$inflow_file_names,
                              inflow2 = inflow_outflow_files$wetland_file_names)
   outflow_file_names <- cbind(inflow_outflow_files$spillway_file_names)
+  }else{
+    inflow_file_names <- cbind(inflow1 = specified_inflow1,
+                               inflow2 = specified_inflow2)
+    outflow_file_names <- cbind(specified_outflow1)
+  }
+  
   
   
   #### END DRIVER CONTAINER ####

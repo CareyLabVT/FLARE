@@ -30,10 +30,10 @@ met_qaqc <- function(realtime_file,
     
     #d3$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = local_tzone)
     
-    d1 <- data.frame(timestamp = d1$TIMESTAMP, ShortWave = d1$SR01Up_Avg, LongWave = d1$IR01UpCo_Avg, AirTemp = d1$AirTC_Avg, RelHum = d1$RH, WindSpeed = d1$WS_ms_Avg, Rain = d1$Rain_mm_Tot)
-    d2 <- data.frame(timestamp = d2$TIMESTAMP, ShortWave = d2$ShortwaveRadiationUp_Average_W_m2, LongWave = d2$InfaredRadiationUp_Average_W_m2, AirTemp = d2$AirTemp_Average_C, RelHum = d2$RH_percent, WindSpeed = d2$WindSpeed_Average_m_s, Rain = d2$Rain_Total_mm)
+    d1 <- data.frame(time = d1$TIMESTAMP, ShortWave = d1$SR01Up_Avg, LongWave = d1$IR01UpCo_Avg, AirTemp = d1$AirTC_Avg, RelHum = d1$RH, WindSpeed = d1$WS_ms_Avg, Rain = d1$Rain_mm_Tot)
+    d2 <- data.frame(time = d2$TIMESTAMP, ShortWave = d2$ShortwaveRadiationUp_Average_W_m2, LongWave = d2$InfaredRadiationUp_Average_W_m2, AirTemp = d2$AirTemp_Average_C, RelHum = d2$RH_percent, WindSpeed = d2$WindSpeed_Average_m_s, Rain = d2$Rain_Total_mm)
     
-    d1 <- d1[which(d1$timestamp > d2$timestamp[nrow(d2)] | d1$timestamp < d2$timestamp[1]), ]
+    d1 <- d1[which(d1$time > d2$time[nrow(d2)] | d1$time < d2$time[1]), ]
     
     #d3 <- d3[which(d3$TIMESTAMP < d2$TIMESTAMP[1])]
     
@@ -53,7 +53,7 @@ met_qaqc <- function(realtime_file,
     
     d1$TIMESTAMP <- with_tz(TIMESTAMP_in,tz = local_tzone)
     
-    d <- data.frame(timestamp = d1$TIMESTAMP, ShortWave = d1$SR01Up_Avg, LongWave = d1$IR01UpCo_Avg, AirTemp = d1$AirTC_Avg, RelHum = d1$RH, WindSpeed = d1$WS_ms_Avg, Rain = d1$Rain_mm_Tot)
+    d <- data.frame(time = d1$TIMESTAMP, ShortWave = d1$SR01Up_Avg, LongWave = d1$IR01UpCo_Avg, AirTemp = d1$AirTC_Avg, RelHum = d1$RH, WindSpeed = d1$WS_ms_Avg, Rain = d1$Rain_mm_Tot)
   }
   
   
@@ -72,16 +72,16 @@ met_qaqc <- function(realtime_file,
                   AirTemp = ifelse(AirTemp < minTempC, NA, AirTemp),
                   LongWave = ifelse(LongWave < 0, NA, LongWave),
                   WindSpeed = ifelse(WindSpeed < 0, 0, WindSpeed)) %>%
-    filter(is.na(timestamp) == FALSE)
+    filter(is.na(time) == FALSE)
   
   first_day <- as_date(first(full_time_local))
   last_day <-  as_date(last(full_time_local))
   
   d <- d %>% 
-    mutate(day = day(timestamp),
-           year = year(timestamp),
-           hour = hour(timestamp),
-           month = month(timestamp)) %>%
+    mutate(day = day(time),
+           year = year(time),
+           hour = hour(time),
+           month = month(time)) %>%
     group_by(day, year, hour, month) %>% 
     summarize(ShortWave = mean(ShortWave, na.rm = TRUE),
               LongWave = mean(LongWave, na.rm = TRUE),
@@ -94,9 +94,17 @@ met_qaqc <- function(realtime_file,
            hour = as.numeric(hour)) %>% 
     mutate(day = ifelse(as.numeric(day) < 10, paste0("0",day),day),
            hour = ifelse(as.numeric(hour) < 10, paste0("0",hour),hour)) %>% 
-    mutate(timestamp = as_datetime(paste0(year,"-",month,"-",day," ",hour,":00:00"),tz = local_tzone)) %>% 
-    dplyr::select(timestamp,ShortWave,LongWave,AirTemp,RelHum,WindSpeed,Rain) %>% 
-    arrange(timestamp)
+    mutate(time = as_datetime(paste0(year,"-",month,"-",day," ",hour,":00:00"),tz = local_tzone)) %>% 
+    dplyr::select(time,ShortWave,LongWave,AirTemp,RelHum,WindSpeed,Rain) %>% 
+    arrange(time)
   
-  write.csv(d, cleaned_met_file, row.names = FALSE)
+  colnames(d) <- noquote(c("time",
+                                        "ShortWave",
+                                        "LongWave",
+                                        "AirTemp",
+                                        "RelHum",
+                                        "WindSpeed",
+                                        "Rain"))
+  
+  write.csv(d, cleaned_met_file, row.names = FALSE, quote = FALSE)
 }

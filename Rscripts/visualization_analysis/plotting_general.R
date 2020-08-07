@@ -193,14 +193,18 @@ plotting_general <- function(pdf_file_name,
   cleaned_observations_file_long <- paste0(save_location, 
                                            "/observations_postQAQC_long.csv")
   
-  in_situ_qaqc(insitu_obs_fname = insitu_obs_fname, 
-               data_location = data_location, 
-               maintenance_file = maintenance_file,
-               ctd_fname = ctd_fname, 
-               nutrients_fname = nutrients_fname,
-               cleaned_observations_file_long = cleaned_observations_file_long,
-               lake_name,
-               code_folder)
+  if(is.na(combined_obs_file)){
+    in_situ_qaqc(insitu_obs_fname = insitu_obs_fname, 
+                 data_location = data_location, 
+                 maintenance_file = maintenance_file,
+                 ctd_fname = ctd_fname, 
+                 nutrients_fname = nutrients_fname,
+                 cleaned_observations_file_long = cleaned_observations_file_long,
+                 lake_name,
+                 code_folder)
+  }else{
+    file.copy(combined_obs_file, cleaned_observations_file_long)
+  }
   
   #####
   
@@ -468,5 +472,9 @@ plotting_general <- function(pdf_file_name,
   }
   
   dev.off()
+  
+  if(file.exists(cleaned_observations_file_long)){
+    unlink(cleaned_observations_file_long)
+  }
 }
 

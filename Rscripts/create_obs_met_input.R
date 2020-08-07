@@ -11,7 +11,7 @@ create_obs_met_input <- function(fname,
   
   d <- read_csv(fname)
   
-  d$timestamp <- force_tz(d$timestamp, tz = local_tzone)
+  d$time <- force_tz(d$time, tz = local_tzone)
   
   ShortWave <- rep(NA, length(full_time_hour_local))
   LongWave <- rep(NA, length(full_time_hour_local))
@@ -21,10 +21,10 @@ create_obs_met_input <- function(fname,
   Rain <- rep(NA, length(full_time_hour_local))
   Snow <- rep(NA, length(full_time_hour_local))
   
-  if(length(which(d$timestamp %in% full_time_hour_local)) > 0){
+  if(length(which(d$time %in% full_time_hour_local)) > 0){
     
     for(i in 1:(length(full_time_hour_local))){
-      index <- which(d$timestamp == full_time_hour_local[i])
+      index <- which(d$time == full_time_hour_local[i])
       if(length(index) > 0){
         ShortWave[i] <- d$ShortWave[index]
         LongWave[i] <- d$LongWave[index]
@@ -36,7 +36,7 @@ create_obs_met_input <- function(fname,
       }
     }
     
-    observed_hours <- which(full_time_hour_local %in% d$timestamp)
+    observed_hours <- which(full_time_hour_local %in% d$time)
     
     ShortWave <- ShortWave[observed_hours]
     LongWave <- LongWave[observed_hours]
@@ -51,7 +51,7 @@ create_obs_met_input <- function(fname,
       last_observed_day <- seq(full_time_local[hist_days], 
                                full_time_local[hist_days + 1], 
                                by = "1 hour")
-      if(length(which(!(last_observed_day %in% d$timestamp))) > 0){
+      if(length(which(!(last_observed_day %in% d$time))) > 0){
         missing_met <- TRUE
       }
     }

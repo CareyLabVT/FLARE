@@ -20,9 +20,9 @@ create_inflow_outflow_file <- function(full_time_local,
   
   full_time_day_local <- as_date(full_time_local)
   
-  inflow <- read_csv(inflow_file1)
+  inflow <- read_csv(inflow_file1, col_types = cols())
   if(!is.na(inflow_file2)){
-    wetland <- read_csv(inflow_file2)
+    wetland <- read_csv(inflow_file2, col_types = cols())
   }
   
   if(include_wq){
@@ -33,19 +33,9 @@ create_inflow_outflow_file <- function(full_time_local,
   
   curr_all_days <- NULL
   
-  col_types <- cols(
-    time = col_datetime(format = ""),
-    ShortWave = col_double(),
-    LongWave = col_double(),
-    AirTemp = col_double(),
-    RelHum = col_double(),
-    WindSpeed = col_double(),
-    Rain = col_double(),
-    Snow = col_double())
-  
   for(m in 1:length(met_file_names)){
     curr_met_daily <- read_csv(paste0(working_directory,"/",met_file_names[m]),
-                               col_types = col_types) %>% 
+                               col_types = cols()) %>% 
       mutate(time = as_date(time)) %>% 
       group_by(time) %>% 
       summarize(Rain = mean(Rain),
@@ -117,7 +107,7 @@ create_inflow_outflow_file <- function(full_time_local,
     tmp2 <- tmp %>% 
       filter(ensemble == i) %>% 
       mutate(SALT = 0.0) %>% 
-      select(time, FLOW, TEMP, SALT, all_of(wq_names_tmp)) %>% 
+      dplyr::select(time, FLOW, TEMP, SALT, all_of(wq_names_tmp)) %>% 
       mutate_at(vars(c("FLOW", "TEMP", "SALT", all_of(wq_names_tmp))), funs(round(., 4)))
     
     if("OGM_docr" %in% wq_names_tmp){
