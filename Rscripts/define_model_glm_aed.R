@@ -40,9 +40,13 @@ run_model <- function(i,
   
   update_glm_nml_list <- list()
   update_aed_nml_list <- list()
+  update_phyto_nml_list <- list()
   update_glm_nml_names <- c()
   update_aed_nml_names <- c()
+  update_phyto_nml_names <- c()
   list_index <- 1
+  list_index_aed <- 1
+  list_index_phyto <- 1
   
   update_glm_nml_list[[list_index]] <- mixing_vars_start
   update_glm_nml_names[list_index] <- "restart_variables"
@@ -62,51 +66,43 @@ run_model <- function(i,
   
   x_star_end <- rep(NA, nstates)
   
-  ndiagnostics <- length(which(states_config$model_state_flag == 0))
-  if(ndiagnostics > 0){
-    diag_star_end <- rep(NA, ndiagnostics)
-  }
-  
   if(npars > 0){
     
     sed_temp_mean_index <- which(par_names == "sed_temp_mean")
     non_sed_temp_mean_index <- which(par_names != "sed_temp_mean" & 
                                        par_names != "Fsed_oxy" &
-                                       par_names != "Fsed_frp")
+                                       par_names != "Fsed_frp" &
+                                       par_names != "Fsed_ch4" &
+                                       par_names != "Fsed_amm" &
+                                       par_names != "Fsed_nit")
     
-    fsed_oxy_index <- which(par_names == "Fsed_oxy")
+    fsed_names <- c("Fsed_oxy","Fsed_frp","Fsed_ch4","Fsed_amm","Fsed_nit")
     
-    if(length(fsed_oxy_index) == 1){
-      update_var(round(curr_pars[fsed_oxy_index], 4), 
-                 par_names[fsed_oxy_index], 
-                 working_directory, 
-                 par_nml[fsed_oxy_index])
-    }else if(length(fsed_oxy_index) == 2){
-      update_var(round(c(curr_pars[fsed_oxy_index[1]],curr_pars[fsed_oxy_index[2]]), 4), 
-                 par_names[fsed_oxy_index[1]], 
-                 working_directory, 
-                 par_nml[fsed_oxy_index[1]])
+    non_sed_temp_mean_index <- which(!(par_names %in% c("sed_temp_mean",fsed_names)))
+    
+    for(fs in 1:length(fsed_names)){
       
-    }else if(length(fsed_oxy_index) > 2){
-      stop(paste0("Too many sediment Fsed oxy zones"))
+      
+      fsed_index <- which(par_names == fsed_names[fs])
+      
+      if(length(fsed_index) > 0){
+        
+        if(length(fsed_index) == 1){
+          update_aed_nml_list[[list_index_aed]] <- round(curr_pars[fsed_index], 4)
+          update_aed_nml_names[list_index_aed] <- par_names[fsed_index[1]]
+          list_index_aed <- list_index_aed + 1 
+        }else if(length(fsed_index) == 2){
+          update_aed_nml_list[[list_index_aed]] <- round(c(curr_pars[fsed_index[1]],curr_pars[fsed_index[2]]), 4)
+          update_aed_nml_names[list_index_aed] <- par_names[fsed_index[1]]
+          list_index_aed <- list_index_aed + 1
+        }else if(length(fsed_index) > 2){
+          stop(paste0("Too many sediment Fsed oxy zones"))
+        }
+      }
     }
     
-    fsed_frp_index <- which(par_names == "Fsed_frp")
     
-    if(length(fsed_frp_index) == 1){
-      update_var(round(curr_pars[fsed_frp_index], 4), 
-                 par_names[fsed_frp_index], 
-                 working_directory, 
-                 par_nml[fsed_frp_index])
-    }else if(length(fsed_frp_index) == 2){
-      update_var(round(c(curr_pars[fsed_frp_index[1]],curr_pars[fsed_frp_index[2]]), 4), 
-                 par_names[fsed_frp_index[1]], 
-                 working_directory, 
-                 par_nml[fsed_frp_index[1]])
-      
-    }else if(length(fsed_frp_index) > 2){
-      stop(paste0("Too many sediment Fsed frp zones"))
-    }
+    
     
     if(length(sed_temp_mean_index) == 1){
       update_glm_nml_list[[list_index]] <- round(c(curr_pars[sed_temp_mean_index],
@@ -159,15 +155,18 @@ run_model <- function(i,
           }
         }else{
           if(par_nml[par] == "aed2_phyto_pars.nml"){
-            update_var(rep(round(curr_pars[par],4), num_phytos), 
-                       par_names[par], 
-                       working_directory, 
-                       par_nml[par])
+            #update_var(rep(round(curr_pars[par],4), num_phytos), 
+            #           par_names[par], 
+            #           working_directory, 
+            #           par_nml[par])
+            update_phyto_nml_list[[list_index_phyto]] <- rep(round(curr_pars[par],4), num_phytos)
+            update_phyto_nml_names[list_index_phyto] <- par_names[par]
+            list_index_phyto <- list_index_phyto + 1
+            
           }else{
-            update_var(curr_pars[par], 
-                       par_names[par], 
-                       working_directory, 
-                       par_nml[par])
+            update_aed_nml_list[[list_index_aed]] <- round(curr_pars[par], 4)
+            update_aed_nml_names[list_index_aed] <- par_names[par]
+            list_index_aed <- list_index_aed + 1
           }
         }
       }
@@ -258,6 +257,21 @@ run_model <- function(i,
              update_glm_nml_names, 
              working_directory, 
              "glm3.nml")
+  
+  if(list_index_aed > 1){
+    update_nml(update_aed_nml_list, 
+               update_aed_nml_names, 
+               working_directory, 
+               "aed2.nml")
+  }
+  
+  if(list_index_phyto > 1){
+    update_nml(update_phyto_nml_list, 
+               update_phyto_nml_names, 
+               working_directory, 
+               "aed2_phyto_pars.nml")
+  }
+  
   
   tmp <- file.copy(from = inflow_file_names[inflow_outflow_index, 1], 
                    to = "inflow_file1.csv", overwrite = TRUE)
