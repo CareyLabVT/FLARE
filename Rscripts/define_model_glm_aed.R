@@ -68,114 +68,29 @@ run_model <- function(i,
   
   if(npars > 0){
     
-    sed_temp_mean_index <- which(par_names == "sed_temp_mean")
-    non_sed_temp_mean_index <- which(par_names != "sed_temp_mean" & 
-                                       par_names != "Fsed_oxy" &
-                                       par_names != "Fsed_frp" &
-                                       par_names != "Fsed_ch4" &
-                                       par_names != "Fsed_amm" &
-                                       par_names != "Fsed_nit")
+    unique_pars <- unique(par_names)
     
-    fsed_names <- c("Fsed_oxy","Fsed_frp","Fsed_ch4","Fsed_amm","Fsed_nit")
-    
-    non_sed_temp_mean_index <- which(!(par_names %in% c("sed_temp_mean",fsed_names)))
-    
-    for(fs in 1:length(fsed_names)){
+    for(par in 1:length(unique_pars)){
       
-      
-      fsed_index <- which(par_names == fsed_names[fs])
-      
-      if(length(fsed_index) > 0){
-        
-        if(length(fsed_index) == 1){
-          update_aed_nml_list[[list_index_aed]] <- round(curr_pars[fsed_index], 4)
-          update_aed_nml_names[list_index_aed] <- par_names[fsed_index[1]]
-          list_index_aed <- list_index_aed + 1 
-        }else if(length(fsed_index) == 2){
-          update_aed_nml_list[[list_index_aed]] <- round(c(curr_pars[fsed_index[1]],curr_pars[fsed_index[2]]), 4)
-          update_aed_nml_names[list_index_aed] <- par_names[fsed_index[1]]
-          list_index_aed <- list_index_aed + 1
-        }else if(length(fsed_index) > 2){
-          stop(paste0("Too many sediment Fsed oxy zones"))
-        }
-      }
-    }
-    
-    
-    
-    
-    if(length(sed_temp_mean_index) == 1){
-      update_glm_nml_list[[list_index]] <- round(c(curr_pars[sed_temp_mean_index],
-                                                   zone2_temp_init_mean),4) 
-      update_glm_nml_names[list_index] <- "sed_temp_mean"
-      list_index <- list_index + 1
-      
-    }else if(length(sed_temp_mean_index) == 2){
-      update_glm_nml_list[[list_index]] <-  round(c(curr_pars[sed_temp_mean_index[1]],
-                                                    curr_pars[sed_temp_mean_index[2]]), 4)
-      update_glm_nml_names[list_index] <- "sed_temp_mean"
-      list_index <- list_index + 1
-      
-    }else if(length(sed_temp_mean_index) > 2){
-      stop(paste0("Too many sediment temperature zones"))
-    }
-    
-    if(length(non_sed_temp_mean_index) > 0){
-      for(par in non_sed_temp_mean_index){
-        if(par_nml[par] == "glm3.nml"){
-          if(par_names[par] == "inflow_factor"){
-            if(include_wq){
-              if(include_wetland_inflow){
-                update_glm_nml_list[[list_index]] <- c( round(curr_pars[par],4), 
-                                                        round(curr_pars[par],4), 
-                                                        sss_inflow_factor)
-              }else{
-                update_glm_nml_list[[list_index]] <- c( round(curr_pars[par],4),
-                                                        sss_inflow_factor)
-              }
-              update_glm_nml_names[list_index] <- par_names[par]
-              list_index <- list_index + 1
-              
-              update_glm_nml_list[[list_index]] <- c( round(curr_pars[par],4), 
-                                                      sss_inflow_factor)
-              update_glm_nml_names[list_index] <- "outflow_factor"
-              list_index <- list_index + 1
-            }else{
-              update_glm_nml_list[[list_index]] <-  round(curr_pars[par],4)
-              update_glm_nml_names[list_index] <- par_names[par]
-              list_index <- list_index + 1
-              update_glm_nml_list[[list_index]] <-  round(curr_pars[par],4)
-              update_glm_nml_names[list_index] <- "outflow_factor"
-              list_index <- list_index + 1
-            }
-          }else{
-            update_glm_nml_list[[list_index]] <- round(curr_pars[par],4)
-            update_glm_nml_names[list_index] <- par_names[par]
-            list_index <- list_index + 1
-          }
-        }else{
-          if(par_nml[par] == "aed2_phyto_pars.nml"){
-            #update_var(rep(round(curr_pars[par],4), num_phytos), 
-            #           par_names[par], 
-            #           working_directory, 
-            #           par_nml[par])
-            update_phyto_nml_list[[list_index_phyto]] <- rep(round(curr_pars[par],4), num_phytos)
-            update_phyto_nml_names[list_index_phyto] <- par_names[par]
-            list_index_phyto <- list_index_phyto + 1
-            
-          }else{
-            update_aed_nml_list[[list_index_aed]] <- round(curr_pars[par], 4)
-            update_aed_nml_names[list_index_aed] <- par_names[par]
-            list_index_aed <- list_index_aed + 1
-          }
-        }
+      curr_par_set <- which(par_names == unique_pars[par])
+      curr_nml <- par_nml[curr_par_set[1]]
+      if(curr_nml == "glm3.nml"){
+        update_glm_nml_list[[list_index]] <- round(curr_pars[curr_par_set], 4)
+        update_glm_nml_names[list_index] <- unique_pars[par]
+        list_index <- list_index + 1
+      }else if(curr_nml == "aed2.nml"){
+        update_aed_nml_list[[list_index_aed]] <- round(curr_pars[curr_par_set], 4)
+        update_aed_nml_names[list_index_aed] <- unique_pars[par]
+        list_index_aed <- list_index_aed + 1 
+      }else if(curr_nml == "aed2_phyto_pars.nml"){
+        update_phyto_nml_list[[list_index_phyto]] <- rep(round(curr_pars[curr_par_set],4), num_phytos)
+        update_phyto_nml_names[list_index_phyto] <- unique_pars[par]
+        list_index_phyto <- list_index_phyto + 1
       }
     }
   }
   
-  
   glm_depths_tmp <- glm_depths_start[!is.na(glm_depths_start)]
-  
   glm_depths_tmp_tmp <- c(glm_depths_tmp, surface_height_start)
   glm_depths_mid <- glm_depths_tmp_tmp[1:(length(glm_depths_tmp_tmp)-1)] + diff(glm_depths_tmp_tmp)/2
   
