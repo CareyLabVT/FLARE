@@ -49,25 +49,7 @@ plotting_general <- function(pdf_file_name,
   
   states_config <- read_csv(states_config_file)
   
-  par_names_potential <- c("zone1temp",
-                           "zone2temp"
-                           ,"sw_factor"
-                           ,"lw_factor"
-                           ,"Fsed_oxy_zone1"
-                           ,"Fsed_oxy_zone2"
-                           ,"Rdom_minerl"
-                           ,"Rdomr_minerl"
-                           ,"Fsed_frp"
-                           ,"Fsed_amm"
-                           ,"Fsed_nit"
-                           ,"R_resp"
-                           ,"K_P"
-                           ,"K_N"
-                           ,"X_ncon"
-                           ,"X_pcon"
-                           ,"Fsed_frp1"
-                           ,"Fsed_frp2",
-                           "I_K")
+  par_names <- pars$par_names_save
   
   wq_names_potential <- c("temp",
                           "OXY_oxy",
@@ -142,8 +124,7 @@ plotting_general <- function(pdf_file_name,
   combined_states <- combined_states_potential[names(combined_states_potential) %in% obs_config$state_names_obs]
   
   state_names <- c(wq_names, names(combined_states))
-  par_names <- par_names_potential[par_names_potential %in% names(nc$var)]
-  
+ 
   diagnostics_names <- diagnostics_potential[diagnostics_potential %in% names(nc$var)]
   
   
