@@ -45,12 +45,12 @@ process_downscale_GEFS <- function(folder,
   obs.file.path = input_met_file
   for.file.path = noaa_location
   
-  obs.data <- read_csv(obs.file.path)
+  obs.data <- read_csv(obs.file.path, col_types = cols())
   
-  obs_met_glm <- read_csv(paste0(working_directory,"/",obs_met_outfile))
+  obs_met_glm <- read_csv(paste0(working_directory,"/",obs_met_outfile),col_types = cols())
   obs_met_glm$time <- force_tz(obs_met_glm$time, tz = local_tzone)
   
-  obs.data$timestamp <- force_tz(obs.data$timestamp, tz = local_tzone)
+  obs.data$time <- force_tz(obs.data$time, tz = local_tzone)
   
   VarNames = as.vector(VarInfo$VarNames)
   

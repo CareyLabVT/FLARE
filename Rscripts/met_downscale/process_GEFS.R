@@ -38,7 +38,7 @@ process_GEFS <- function(file_name,
     stop()
   }
   
-  d <- read_csv(paste0(in_directory,'/',file_name,'.csv')) 
+  d <- read_csv(paste0(in_directory,'/',file_name,'.csv'),col_types = cols()) 
   
   for.input_tz <- "GMT"
 
@@ -97,7 +97,7 @@ process_GEFS <- function(file_name,
   hrly.observations <- hrly.observations %>%
     mutate(AirTemp = AirTemp - 273.15)
   
-  obs.time0 <- hrly.observations %>% filter(timestamp == time0)
+  obs.time0 <- hrly.observations %>% filter(time == time0)
   
   VarNamesStates = VarInfo %>%
     filter(VarType == "State")
@@ -139,6 +139,7 @@ process_GEFS <- function(file_name,
     rename(time = timestamp) %>% 
     select(time, ShortWave, LongWave, AirTemp, RelHum, WindSpeed, Rain, Snow, NOAA.member, dscale.member, forecasted)
   
+  
   obs_met_glm <- obs_met_glm %>% 
     mutate(forecasted = 0,
            NOAA.member = 0,
@@ -146,8 +147,8 @@ process_GEFS <- function(file_name,
     filter(time < first(output$time)) %>% 
     select(time, ShortWave, LongWave, AirTemp, RelHum, WindSpeed, Rain, Snow, NOAA.member, dscale.member, forecasted)
   
-  combined_output <- rbind(obs_met_glm, output)
-  
+  #combined_output <- rbind(obs_met_glm, output)
+  combined_output <- rbind(output)  
   #combined_output %>% 
   #  filter(dscale.member == 1 | dscale.member == 0) %>% 
   #  select(time, NOAA.member, AirTemp) %>% 
@@ -179,21 +180,8 @@ process_GEFS <- function(file_name,
       return(current_filename)
     }
     
-    for (NOAA.ens in 1:21) {
-      for (dscale.ens in 1:n_ds_members) {
-        if (met_downscale_uncertainty == FALSE) { # downscale met with noise addition
-          dscale.ens = 1
-        }
-        GLM_climate <- combined_output %>%
-          filter((NOAA.member == NOAA.ens & dscale.member == dscale.ens) | 
-                   (NOAA.member == 0 & dscale.member == 0)) %>%
-          arrange(time) %>%
-          select(time, ShortWave, LongWave, AirTemp, RelHum, WindSpeed, Rain, Snow)
-        current_filename <- write_file(GLM_climate)
-        met_file_list <- append(met_file_list, current_filename)
-      }
-    }
-    
+    current_filename <- paste0('met_NOAA',NOAA.ens,'_ds',dscale.ens,'.csv')
+    write_csv(combined_output,path = paste0(out_directory, "/",file_name,"processed.csv"), quote_escape = "none")
   }
   
   return(list(met_file_list, output))

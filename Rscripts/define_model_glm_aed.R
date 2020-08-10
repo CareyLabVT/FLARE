@@ -332,3 +332,39 @@ set_up_model <- function(code_folder,
   file.copy(from = paste0(working_directory, "/", "glm3.nml"), #GLM SPECIFIC
             to = paste0(working_directory, "/", "glm3_initial.nml"), overwrite = TRUE) #GLM SPECIFIC
 }
+
+write_model_specific_drivers <- function(){
+  
+  write_file <- function(df){
+    # formats GLM_climate, writes it as a .csv file, and returns the filename
+    GLM_climate[,"time"] <- strftime(GLM_climate$time, format="%Y-%m-%d %H:%M", tz = attributes(GLM_climate$time)$tzone)
+    colnames(GLM_climate) <-  noquote(c("time", 
+                                        "ShortWave",
+                                        "LongWave", 
+                                        "AirTemp", 
+                                        "RelHum", 
+                                        "WindSpeed", 
+                                        "Rain", 
+                                        "Snow"))
+    
+    current_filename <- paste0('met_NOAA',NOAA.ens,'_ds',dscale.ens,'.csv')
+    write_csv(GLM_climate,path = paste0(out_directory, "/", current_filename), quote_escape = "none")
+    return(current_filename)
+  }
+  
+  
+  
+  for (NOAA.ens in length(unique(NOAA.member))) {
+    for (dscale.ens in 1:length(unique(dscale.member))) {
+      if (met_downscale_uncertainty == FALSE) { # downscale met with noise addition
+        dscale.ens = 1
+      }
+      GLM_climate <- combined_output %>%
+        filter(NOAA.member == NOAA.ens & dscale.member == dscale.ens) %>% 
+        arrange(time) %>%
+        select(time, ShortWave, LongWave, AirTemp, RelHum, WindSpeed, Rain, Snow)
+      current_filename <- write_file(GLM_climate)
+      met_file_list <- append(met_file_list, current_filename)
+    }
+  }
+}

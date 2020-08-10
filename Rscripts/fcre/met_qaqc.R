@@ -6,8 +6,8 @@ met_qaqc <- function(realtime_file,
                      full_time_local){
 
   if(!is.na(qaqc_file)){
-    d1 <- read_csv(realtime_file, skip = 3, guess_max = 100000)
-    d_names <- read_csv(realtime_file, skip = 1, n_max = 3)
+    d1 <- read_csv(realtime_file, skip = 3, guess_max = 100000, col_types = cols())
+    d_names <- read_csv(realtime_file, skip = 1, n_max = 3, col_types = cols())
     names(d1) <- names(d_names)
     
     #d1 <- d1[-85572, ]
@@ -98,13 +98,13 @@ met_qaqc <- function(realtime_file,
     dplyr::select(time,ShortWave,LongWave,AirTemp,RelHum,WindSpeed,Rain) %>% 
     arrange(time)
   
-  colnames(d) <- noquote(c("time",
-                                        "ShortWave",
-                                        "LongWave",
-                                        "AirTemp",
-                                        "RelHum",
-                                        "WindSpeed",
-                                        "Rain"))
+  #colnames(d) <- noquote(c("time",
+  #                                      "ShortWave",
+  #                                      "LongWave",
+  #                                      "AirTemp",
+  #                                      "RelHum",
+  #                                      "WindSpeed",
+  #                                      "Rain"))
   
-  write.csv(d, cleaned_met_file, row.names = FALSE, quote = FALSE)
+  write_csv(d, cleaned_met_file)
 }

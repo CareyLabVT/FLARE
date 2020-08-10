@@ -9,9 +9,11 @@ create_obs_met_input <- function(fname,
                               full_time_local[length(full_time_local)],
                               by = "1 hour")
   
-  d <- read_csv(fname)
+  d <- read_csv(fname, col_types = cols())
   
-  d$time <- force_tz(d$time, tz = local_tzone)
+  d$time <- with_tz(d$time,tz = local_tzone)
+  
+  #d$time <- force_tz(d$time, tz = local_tzone)
   
   ShortWave <- rep(NA, length(full_time_hour_local))
   LongWave <- rep(NA, length(full_time_hour_local))
