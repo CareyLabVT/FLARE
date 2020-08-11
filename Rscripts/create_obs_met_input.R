@@ -73,39 +73,45 @@ create_obs_met_input <- function(fname,
     Rain <- na_interpolation(Rain, option = "linear")        
     Snow <- na_interpolation(Snow, option = "linear")
     
-    historical_met <- data.frame(full_time_hour_local,
-                                 ShortWave,
-                                 LongWave,
-                                 AirTemp,
-                                 RelHum,
-                                 WindSpeed,
-                                 Rain,
-                                 Snow)
+    historical_met <- tibble(time = full_time_hour_local,
+                             ShortWave = ShortWave,
+                             LongWave = LongWave,
+                             AirTemp = AirTemp,
+                             RelHum = RelHum,
+                             WindSpeed = WindSpeed,
+                             Rain = Rain,
+                             Snow = Snow) %>% 
+      mutate(NOAA.member = 0,
+             dscale.member = 0,
+             forecasted = 0,
+             time = with_tz(time, tzone = "UTC")) 
     
     
     
     
-    n <- noquote(c("time",
-                   "ShortWave",
-                   "LongWave",
-                   "AirTemp",
-                   "RelHum",
-                   "WindSpeed",
-                   "Rain",
-                   "Snow"))
+    #n <- noquote(c("time",
+    #               "ShortWave",
+    #               "LongWave",
+    #               "AirTemp",
+    #               "RelHum",
+    #               "WindSpeed",
+    #               "Rain",
+    #               "Snow"))
     
-    colnames(historical_met) <- noquote(c("time",
-                                          "ShortWave",
-                                          "LongWave",
-                                          "AirTemp",
-                                          "RelHum",
-                                          "WindSpeed",
-                                          "Rain",
-                                          "Snow"))
+    #colnames(historical_met) <- noquote(c("time",
+    #                                      "ShortWave",
+    #                                      "LongWave",
+    #                                      "AirTemp",
+    #                                      "RelHum",
+    #                                      "WindSpeed",
+    #                                      "Rain",
+    #                                      "Snow"))
     
-    write.csv(historical_met, file = paste0(working_directory, "/", outfile), row.names = FALSE, quote = FALSE)
+    #write.csv(historical_met, file = paste0(working_directory, "/", outfile), row.names = FALSE, quote = FALSE)
   }else{
-    missing_met <- TRUE
+    historical_met <- FALSE
   }
-  return(missing_met)
+  
+  
+  return(historical_met)
 }

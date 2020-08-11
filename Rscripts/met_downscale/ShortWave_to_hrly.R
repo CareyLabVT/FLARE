@@ -61,7 +61,7 @@ ShortWave_to_hrly <- function(debiased, time0, lat, lon, local_tzone){
   
   d <- tibble(timestamp,timestamp_UTC,hr, doy, rpot, fday)
   davg <- d %>% group_by(fday) %>% 
-    summarize(mean_solar = mean(rpot))
+    summarize(mean_solar = mean(rpot), .groups = 'drop')
   
   d2 <- full_join(d, davg, by = "fday") %>% 
     mutate(SolorProp = rpot/mean_solar) %>% 

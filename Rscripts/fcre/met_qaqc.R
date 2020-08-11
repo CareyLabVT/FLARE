@@ -88,7 +88,8 @@ met_qaqc <- function(realtime_file,
               AirTemp = mean(AirTemp, na.rm = TRUE),
               RelHum = mean(RelHum, na.rm = TRUE),
               WindSpeed = mean(WindSpeed, na.rm = TRUE),
-              Rain = sum(Rain)) %>% 
+              Rain = sum(Rain),
+              .groups = 'drop') %>% 
     ungroup() %>% 
     mutate(day = as.numeric(day),
            hour = as.numeric(hour)) %>% 

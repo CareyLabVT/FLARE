@@ -26,8 +26,7 @@ process_GEFS <- function(file_name,
                          WRITE_FILES,
                          downscaling_coeff,
                          full_time_local,
-                         weather_uncertainty,
-                         obs_met_glm){
+                         weather_uncertainty){
   # -----------------------------------
   # 1. read in and reformat forecast data
   # -----------------------------------
@@ -127,8 +126,6 @@ process_GEFS <- function(file_name,
     filter(timestamp < time_end) %>% 
     mutate(timestamp = with_tz(timestamp, local_tzone))
   
-  #output$timestamp <- with_tz(output$timestamp, local_tzone)
-  
   #------------------------------------
   #  Merge with historical observations
   #------------------------------------
@@ -137,18 +134,11 @@ process_GEFS <- function(file_name,
     mutate(forecasted = 1) %>% 
     mutate(Snow = 0) %>% 
     rename(time = timestamp) %>% 
-    select(time, ShortWave, LongWave, AirTemp, RelHum, WindSpeed, Rain, Snow, NOAA.member, dscale.member, forecasted)
+    select(time, ShortWave, LongWave, AirTemp, RelHum, WindSpeed, Rain, Snow, NOAA.member, dscale.member, forecasted) %>% 
+    mutate(time = with_tz(time, tzone = "UTC"))
   
   
-  obs_met_glm <- obs_met_glm %>% 
-    mutate(forecasted = 0,
-           NOAA.member = 0,
-           dscale.member = 0) %>% 
-    filter(time < first(output$time)) %>% 
-    select(time, ShortWave, LongWave, AirTemp, RelHum, WindSpeed, Rain, Snow, NOAA.member, dscale.member, forecasted)
-  
-  #combined_output <- rbind(obs_met_glm, output)
-  combined_output <- rbind(output)  
+  forecasted_met <- output
   #combined_output %>% 
   #  filter(dscale.member == 1 | dscale.member == 0) %>% 
   #  select(time, NOAA.member, AirTemp) %>% 
@@ -184,5 +174,5 @@ process_GEFS <- function(file_name,
     write_csv(combined_output,path = paste0(out_directory, "/",file_name,"processed.csv"), quote_escape = "none")
   }
   
-  return(list(met_file_list, output))
+  return(forecasted_met)
 }

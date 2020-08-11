@@ -13,7 +13,7 @@ aggregate_to_daily <- function(data){
     dplyr::mutate(date = date(timestamp)) %>%
     select(-timestamp) %>%
     group_by_at(grouping) %>%
-    dplyr::summarize_all(funs(mean), na.rm = FALSE) %>%
+    dplyr::summarize_all(funs(mean), na.rm = FALSE, .groups = 'drop') %>%
     ungroup()
   if("fday" %in% colnames(daily.data)){
     daily.data <- daily.data %>% select(-fday)

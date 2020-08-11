@@ -9,7 +9,7 @@ extract_secchi <- function(fname,
     mutate(DateTime = mdy_hm(DateTime),
            DateTime = force_tz(DateTime, local_tzone)) %>% 
     group_by(DateTime) %>% 
-    summarise(secchi = mean(Secchi_m, na.rm = TRUE)) %>% 
+    summarise(secchi = mean(Secchi_m, na.rm = TRUE), .groups = 'drop') %>% 
     rename("timestamp" = DateTime) %>% 
     pivot_longer(cols = -c(timestamp), names_to = "variable", values_to = "value") %>% 
     mutate(method = "secchi_disk",

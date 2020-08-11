@@ -24,8 +24,7 @@ process_downscale_GEFS <- function(folder,
                                    first_obs_date,
                                    last_obs_date,
                                    input_met_file_tz,
-                                   weather_uncertainty,
-                                   obs_met_outfile){
+                                   weather_uncertainty){
   # -----------------------------------
   # 0. Source necessary files
   # -----------------------------------
@@ -47,21 +46,13 @@ process_downscale_GEFS <- function(folder,
   
   obs.data <- read_csv(obs.file.path, col_types = cols())
   
-  obs_met_glm <- read_csv(paste0(working_directory,"/",obs_met_outfile),col_types = cols())
-  obs_met_glm$time <- force_tz(obs_met_glm$time, tz = local_tzone)
-  
-  obs.data$time <- force_tz(obs.data$time, tz = local_tzone)
+  obs.data$time <- with_tz(obs.data$time, tz = local_tzone)
   
   VarNames = as.vector(VarInfo$VarNames)
   
   observations <- obs.data %>% 
     dplyr::mutate(AirTemp = AirTemp + 273.15,# convert from C to Kelvin
                   Rain = Rain* 60 * 24/1000)
-    
-  #observations$RelHum <- na.interpolation(observations$RelHum)
-  #observations$AirTemp <- na.interpolation(observations$AirTemp)
-  #observations$LongWave <- na.interpolation(observations$LongWave)
-  #observations$WindSpeed <- na.interpolation(observations$WindSpeed)
 
   rm(obs.data)
   hrly.obs <- observations #%>% aggregate_obs_to_hrly()
@@ -87,7 +78,7 @@ process_downscale_GEFS <- function(folder,
   # -----------------------------------
   # 2. Process GEFS
   # -----------------------------------
-  met_forecast_output <- process_GEFS(file_name,
+  forecasted_met <- process_GEFS(file_name,
                        n_ds_members,
                        n_met_members,
                        in_directory = noaa_location,
@@ -102,17 +93,13 @@ process_downscale_GEFS <- function(folder,
                        WRITE_FILES = TRUE,
                        downscaling_coeff,
                        full_time_local,
-                       weather_uncertainty,
-                       obs_met_glm)
-  files <- met_forecast_output[[1]]
-  output <- met_forecast_output[[2]]
-  
-  
+                       weather_uncertainty)
+
   #if(compare_output_to_obs == TRUE){
   #  "comparing forecast output to obs"
   #  compare_output_to_obs(output, hrly.obs)
   #}
-  return(files)
+  return(forecasted_met)
 }
 
 

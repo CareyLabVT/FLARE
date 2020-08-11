@@ -51,7 +51,7 @@ inflow_qaqc <- function(realtime_file,
     summarize(WVWA_Flow_cms = mean(WVWA_Flow_cms, na.rm = TRUE),
               WVWA_Temp_C = mean(WVWA_Temp_C, na.rm = TRUE),
               VT_Flow_cms = mean(VT_Flow_cms, na.rm = TRUE),
-              VT_Temp_C = mean(VT_Temp_C, na.rm = TRUE)) %>% 
+              VT_Temp_C = mean(VT_Temp_C, na.rm = TRUE), .groups = 'drop') %>% 
     ungroup() %>% 
     mutate(day = as.numeric(day)) %>% 
     mutate(day = ifelse(as.numeric(day) < 10, paste0("0",day),day)) %>% 

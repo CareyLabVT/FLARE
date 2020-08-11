@@ -8,7 +8,7 @@ check_CI <- function (df, obs.col.name, for.col.name){
                      quant.50 = quantile(get(for.col.name), probs = 0.50, na.rm = TRUE),
                      quant.95 = quantile(get(for.col.name), probs = 0.95, na.rm = TRUE),
                      quant.975 = quantile(get(for.col.name), probs = 0.975, na.rm = TRUE),
-                     quant.100 = quantile(get(for.col.name), probs = 1, na.rm = TRUE)) %>%
+                     quant.100 = quantile(get(for.col.name), probs = 1, na.rm = TRUE), .groups = 'drop') %>%
     ungroup()
   
   pcnt.in.CI <- inner_join(quant.df, df, by = "timestamp") %>%

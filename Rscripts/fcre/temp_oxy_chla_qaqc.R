@@ -308,7 +308,7 @@ temp_oxy_chla_qaqc <- function(realtime_file,
            month = month(TIMESTAMP)) %>%
     group_by(day, year, hour, month) %>% 
     select(-TIMESTAMP) %>% 
-    summarise_all(mean, na.rm = TRUE) %>% 
+    summarise_all(mean, na.rm = TRUE, .groups = 'drop') %>% 
     ungroup() %>% 
     mutate(day = as.numeric(day),
            hour = as.numeric(hour)) %>% 

@@ -11,7 +11,7 @@ extract_ch4 <- function(fname,
     mutate(CH4 = ch4_umolL * 1000 * 0.001) %>% 
     select(DateTime, Depth_m,CH4,Rep) %>% 
     group_by(DateTime,Depth_m) %>% 
-    summarise(CH4 = mean(CH4, na.rm = TRUE)) %>% 
+    summarise(CH4 = mean(CH4, na.rm = TRUE), .groups = 'drop') %>% 
     ungroup() %>% 
     rename("timestamp" = DateTime,
            "depth" = Depth_m) %>% 
