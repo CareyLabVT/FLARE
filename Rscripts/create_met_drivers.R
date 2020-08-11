@@ -5,7 +5,7 @@ create_met_drivers <- function(start_day_local,start_time_local, forecast_start_
                                downscaling_coeff,
                                met_ds_obs_start,
                                met_ds_obs_end,
-                               weather_uncertainty, use_future_met){
+                               weather_uncertainty, use_future_met, forecast_days){
   
   source(paste0(code_folder,"/","Rscripts/met_downscale/process_downscale_GEFS.R")) 
   source(paste0(code_folder,"/","Rscripts/create_obs_met_input.R"))
