@@ -1,4 +1,4 @@
-create_met_drivers <- function(start_day_local,start_time_local, local_tzone, hist_days,lake_name, n_met_members, n_ds_members,
+create_met_drivers <- function(start_day_local,start_time_local, forecast_start_day_local, local_tzone,lake_name, n_met_members, n_ds_members,
                                specified_metfile, working_directory,code_folder,noaa_location,cleaned_met_file,
                                FIT_PARAMETERS,DOWNSCALE_MET,
                                met_downscale_uncertainty,
@@ -9,6 +9,8 @@ create_met_drivers <- function(start_day_local,start_time_local, local_tzone, hi
   
   source(paste0(code_folder,"/","Rscripts/met_downscale/process_downscale_GEFS.R")) 
   source(paste0(code_folder,"/","Rscripts/create_obs_met_input.R"))
+  
+  hist_days <- as.numeric(difftime(as_date(forecast_start_day_local),as_date(start_day_local)))
   
   total_days <- hist_days + forecast_days
   start_forecast_step <- hist_days + 1

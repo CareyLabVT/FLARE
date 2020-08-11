@@ -391,7 +391,7 @@ run_flare<-function(start_day_local,
   #### STEP 5: PROCESS DRIVER DATA INTO MODEL FORMAT
   ####################################################
   
-  create_met_drivers(start_day_local, start_time_local, local_tzone, hist_days,lake_name, n_met_members, n_ds_members,
+  create_met_drivers(start_day_local, start_time_local,forecast_start_day_local, local_tzone,lake_name, n_met_members, n_ds_members,
                                  specified_metfile, working_directory,code_folder,noaa_location,cleaned_met_file,
                                  FIT_PARAMETERS,DOWNSCALE_MET,
                                  met_downscale_uncertainty,
