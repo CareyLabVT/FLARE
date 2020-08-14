@@ -49,6 +49,8 @@ run_EnKF <- function(x,
   n_met_members <- length(met_file_names) - 1
   ndepths_modeled <- length(modeled_depths)
   
+  data_assimilation_flag <- rep(NA, nsteps)
+  
 
   
   q_v <- rep(NA,ndepths_modeled)
@@ -233,6 +235,14 @@ run_EnKF <- function(x,
        i < (spin_up_days+1) | 
        hist_days == 0){
       
+      if(i > (hist_days + 1)){
+      data_assimilation_flag[i] <- 0
+      }else if(i <= (hist_days + 1) & use_obs_constraint){
+        data_assimilation_flag[i] <- 3
+      }else{
+        data_assimilation_flag[i] <- 1
+      }
+      
       if(npars > 0){
         
         if(i > (hist_days + 1)){
@@ -275,6 +285,8 @@ run_EnKF <- function(x,
         }
       }
     }else{
+      
+      data_assimilation_flag[i] <- 7
       
       #if observation then calucate Kalman adjustment
       zt <- c(z[i, ,])
@@ -498,5 +510,6 @@ run_EnKF <- function(x,
               running_residuals = running_residuals,
               mixing_restart = mixing_restart,
               glm_depths_restart = glm_depths_restart,
-              diagnostics = diagnostics))
+              diagnostics = diagnostics,
+              data_assimilation_flag = data_assimilation_flag))
 }

@@ -31,7 +31,7 @@ plotting_general <- function(pdf_file_name,
   #distance_threshold_meter <<- 0.15
   
   source(paste0(code_folder,"/","Rscripts/extract_observations.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/in_situ_qaqc.R"))  
+  source(paste0(code_folder,"/","Rscripts/",lake_name_code,"/in_situ_qaqc.R"))  
   
   setwd(realtime_insitu_location)
   if(pull_from_git){
@@ -110,14 +110,15 @@ plotting_general <- function(pdf_file_name,
   
   nc <- nc_open(output_file)
   t <- ncvar_get(nc,'time')
-  local_tzone <- ncatt_get(nc, 0)$time_zone_of_simulation
-  full_time_local <- as.POSIXct(t, 
+  local_tzone <- ncatt_get(nc, 0)$local_time_zone_of_simulation
+  full_time <- as.POSIXct(t, 
                                 origin = '1970-01-01 00:00.00 UTC', 
-                                tz = local_tzone)
+                                tz = "UTC")
+  full_time_local <- with_tz(full_time, local_tzone)
   full_time_day_local <- as_date(full_time_local)
   nsteps <- length(full_time_day_local)
-  forecasted <- ncvar_get(nc, 'forecasted')
-  depths <- round(ncvar_get(nc, 'z'),2)
+  data_assimilation <- ncvar_get(nc, 'data_assimilation')
+  depths <- round(ncvar_get(nc, 'depth'),2)
   
   wq_names <- wq_names_potential[wq_names_potential %in% names(nc$var)]
   combined_states_conversion <- combined_states_conversion_potential[names(combined_states_conversion_potential) %in% obs_config$state_names_obs]
@@ -128,8 +129,8 @@ plotting_general <- function(pdf_file_name,
   diagnostics_names <- diagnostics_potential[diagnostics_potential %in% names(nc$var)]
   
   
-  if(length(which(forecasted == 1)) > 0){
-    forecast_index <- which(forecasted == 1)[1]
+  if(length(which(data_assimilation == 0)) > 0){
+    forecast_index <- which(data_assimilation == 0)[1]
   }else{
     forecast_index <- 0
   }
@@ -181,7 +182,7 @@ plotting_general <- function(pdf_file_name,
                  ctd_fname = ctd_fname, 
                  nutrients_fname = nutrients_fname,
                  cleaned_observations_file_long = cleaned_observations_file_long,
-                 lake_name,
+                 lake_name_code,
                  code_folder)
   }else{
     file.copy(combined_obs_file, cleaned_observations_file_long)
@@ -242,9 +243,9 @@ plotting_general <- function(pdf_file_name,
     lower_var <- array(NA,dim = c(length(depths), length(full_time_local)))
     for(j in 1:length(full_time_local)){
       for(ii in 1:length(depths)){
-        mean_var[ii, j] <- mean(curr_var[j, , ii], na.rm = TRUE)
-        upper_var[ii, j] <- quantile(curr_var[j, , ii], 0.1, na.rm = TRUE)
-        lower_var[ii, j] <- quantile(curr_var[j, , ii], 0.9, na.rm = TRUE)
+        mean_var[ii, j] <- mean(curr_var[j,ii , ], na.rm = TRUE)
+        upper_var[ii, j] <- quantile(curr_var[j,ii , ], 0.1, na.rm = TRUE)
+        lower_var[ii, j] <- quantile(curr_var[j,ii , ], 0.9, na.rm = TRUE)
       }
     }
     
@@ -347,9 +348,9 @@ plotting_general <- function(pdf_file_name,
       lower_var <- array(NA,dim = c(length(depths), length(full_time_local)))
       for(j in 1:length(full_time_local)){
         for(ii in 1:length(depths)){
-          mean_var[ii, j] <- mean(curr_var[j, , ii], na.rm = TRUE)
-          upper_var[ii, j] <- quantile(curr_var[j, , ii], 0.1, na.rm = TRUE)
-          lower_var[ii, j] <- quantile(curr_var[j, , ii], 0.9, na.rm = TRUE)
+          mean_var[ii, j] <- mean(curr_var[j,ii , ], na.rm = TRUE)
+          upper_var[ii, j] <- quantile(curr_var[j,ii , ], 0.1, na.rm = TRUE)
+          lower_var[ii, j] <- quantile(curr_var[j,ii , ], 0.9, na.rm = TRUE)
         }
       }
       
