@@ -1,29 +1,19 @@
+if (!"tidyverse" %in% installed.packages()) install.packages("tidyverse")
 if (!"mvtnorm" %in% installed.packages()) install.packages("mvtnorm")
 if (!"ncdf4" %in% installed.packages()) install.packages("ncdf4")
 if (!"lubridate" %in% installed.packages()) install.packages("lubridate")
 if (!"testit" %in% installed.packages()) install.packages("testit")
 if (!"imputeTS" %in% installed.packages()) install.packages("imputeTS")
-if (!"tidyverse" %in% installed.packages()) install.packages("tidyverse")
 if (!"rMR" %in% installed.packages()) install.packages("rMR")
-if (!"patchwork" %in% installed.packages()) install.packages("patchwork")
-if (!"EML" %in% installed.packages()) install.packages("EML")
-if (!"uuid" %in% installed.packages()) install.packages("uuid")
-if (!"EFIstandards" %in% installed.packages()){
-  library(devtools)
-  install_github("eco4cast/EFIstandards")
-}
 
+library(tidyverse)
 library(mvtnorm)
 library(ncdf4)
 library(lubridate)
 library(testit)
 library(imputeTS)
-library(tidyverse)
 library(tools)
 library(rMR)
-library(patchwork)
-library(EML)
-library(EFIstandards)
 
 #data_location <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/SCC_data/"
 #code_folder <<- "/Users/quinn/Dropbox/Research/SSC_forecasting/FLARE/"
@@ -39,8 +29,6 @@ source(paste0(forecast_location,"/","configure_FLARE.R"))
 source(paste0(code_folder, "/", "Rscripts/run_flare.R"))
 source(paste0(code_folder, "/", "Rscripts/visualization_analysis/plot_forecast.R"))
 source(paste0(code_folder, "/", "Rscripts/visualization_analysis/combined_oxygen_plot.R"))
-
-forecast_project_id <- uuid::UUIDgenerate()
 
 start_day_local <- "2019-09-20" 
 restart_file <- NA
@@ -72,8 +60,7 @@ if(!file.exists(paste0(forecast_location,"/last_success.Rdata"))){
                    spin_up_days = spin_up_days,
                    restart_file = restart_file,
                    uncert_mode = uncert_mode,
-                   forecast_sss_on = forecast_sss_on,
-                   forecast_project_id = forecast_project_id)
+                   forecast_sss_on = forecast_sss_on)
   
   
   plot_forecast(pdf_file_name = unlist(out)[2],
@@ -176,8 +163,7 @@ if(num_forecast_periods > 0){
                       spin_up_days = spin_up_days,
                       restart_file = restart_file,
                       uncert_mode = uncert_mode,
-                      forecast_sss_on = forecast_sss_on,
-                      forecast_project_id = forecast_project_id)
+                      forecast_sss_on = forecast_sss_on)
     
     plot_forecast(pdf_file_name = unlist(out1)[2],
                   output_file = unlist(out1)[1],

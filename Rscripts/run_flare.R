@@ -25,8 +25,7 @@ run_flare<-function(start_day_local,
                     spin_up_days = 0,
                     restart_file = NA,
                     uncert_mode = 1,
-                    forecast_sss_on,
-                    forecast_project_id){
+                    forecast_sss_on){
   
   #################################################
   ### LOAD R FUNCTIONS AND OTHER INITIAL SET UP
@@ -46,11 +45,10 @@ run_flare<-function(start_day_local,
   source(paste0(code_folder,"/","Rscripts/create_sss_input_output.R"))
   source(paste0(code_folder,"/","Rscripts/create_inflow_outflow_file.R"))
   source(paste0(code_folder,"/","Rscripts/read_sss_files.R"))
-  source(paste0(code_folder,"/","Rscripts/create_flare_eml.R"))
   
-  source(paste0(code_folder,"/","Rscripts/",lake_name_code,"/in_situ_qaqc.R"))  
-  source(paste0(code_folder,"/","Rscripts/",lake_name_code,"/met_qaqc.R")) 
-  source(paste0(code_folder,"/","Rscripts/",lake_name_code,"/inflow_qaqc.R")) 
+  source(paste0(code_folder,"/","Rscripts/",lake_name,"/in_situ_qaqc.R"))  
+  source(paste0(code_folder,"/","Rscripts/",lake_name,"/met_qaqc.R")) 
+  source(paste0(code_folder,"/","Rscripts/",lake_name,"/inflow_qaqc.R")) 
   
   source(paste0(code_folder,"/","Rscripts/define_model_",model_name,".R")) 
   
@@ -381,7 +379,7 @@ run_flare<-function(start_day_local,
                ctd_fname = ctd_fname, 
                nutrients_fname = nutrients_fname,
                cleaned_observations_file_long = cleaned_observations_file_long,
-               lake_name_code,
+               lake_name,
                code_folder)
   }else{
     file.copy(combined_obs_file, cleaned_observations_file_long)
@@ -443,7 +441,7 @@ run_flare<-function(start_day_local,
     forecast_month_GMT_past <- paste0(month(forecast_start_time_GMT_past))
   }
   
-  forecast_base_name <- paste0(lake_name_code,"_",
+  forecast_base_name <- paste0(lake_name,"_",
                                year(forecast_start_time_GMT),
                                forecast_month_GMT,
                                forecast_day_GMT,"_",
@@ -451,7 +449,7 @@ run_flare<-function(start_day_local,
                                noaa_hour,
                                "z")
   
-  forecast_base_name_past <- paste0(lake_name_code,"_",
+  forecast_base_name_past <- paste0(lake_name,"_",
                                     year(forecast_start_time_GMT_past),
                                     forecast_month_GMT_past,
                                     forecast_day_GMT_past,"_",
@@ -1004,8 +1002,6 @@ run_flare<-function(start_day_local,
     diagnostics <- NA
   }
   
-
-
   ####################################################
   #### STEP 12: Run Ensemble Kalman Filter
   ####################################################
@@ -1062,7 +1058,6 @@ run_flare<-function(start_day_local,
   snow_ice_restart <- enkf_output$snow_ice_restart
   snow_ice_thickness <- enkf_output$snow_ice_thickness
   surface_height <- enkf_output$surface_height
-  data_assimilation_flag <- enkf_output$data_assimilation_flag
   
   running_residuals <- enkf_output$running_residuals
   
@@ -1109,26 +1104,11 @@ run_flare<-function(start_day_local,
                            forecast_days) 
   
   time_of_forecast <- Sys.time()
-  curr_day <- day(time_of_forecast)
-  curr_month <- month(time_of_forecast)
-  curr_year <- year(time_of_forecast)
-  curr_hour <- hour(time_of_forecast)
-  curr_minute <- minute(time_of_forecast)
-  curr_second <- round(second(time_of_forecast),0)
-  if(curr_day < 10){curr_day <- paste0("0",curr_day)}
-  if(curr_month < 10){curr_month <- paste0("0",curr_month)}
-  if(curr_hour < 10){curr_hour <- paste0("0",curr_hour)}
-  if(curr_minute < 10){curr_minute <- paste0("0",curr_minute)}
-  if(curr_second < 10){curr_second <- paste0("0",curr_second)}
-
-  forecast_iteration_id <- paste0(curr_year,
-                                  curr_month,
-                                  curr_day,
-                                  "T",
-                                  curr_hour,
-                                  curr_minute,
-                                  curr_second)
-
+  time_of_forecast_string <- paste0(month(Sys.time()),
+                                    day(Sys.time()),
+                                    year(Sys.time()-2000),"_",
+                                    hour(Sys.time()), "_",
+                                    (minute(Sys.time())))
   
   
   ###SAVE FORECAST
@@ -1139,8 +1119,7 @@ run_flare<-function(start_day_local,
                         save_file_name,
                         x_restart,
                         qt_restart,
-                        forecast_iteration_id,
-                        forecast_project_id,
+                        time_of_forecast,
                         hist_days,
                         x_prior,
                         include_wq,
@@ -1163,9 +1142,7 @@ run_flare<-function(start_day_local,
                         forecast_location,
                         state_names = states_config$state_names,
                         diagnostics_names,
-                        diagnostics,
-                        data_assimilation_flag,
-                        time_of_forecast
+                        diagnostics
   )
   
   #### END GLM ENKF CONTAINER ####
@@ -1179,27 +1156,10 @@ run_flare<-function(start_day_local,
                                         forecast_location = forecast_location,
                                         push_to_git = push_to_git,
                                         save_file_name = save_file_name, 
-                                        time_of_forecast_string = forecast_iteration_id)
-
-  if(generate_eml){
-    create_flare_eml(file_name = restart_file_name[[1]],
-                     time_of_forecast,
-                     forecast_iteration_id, 
-                     forecast_project_id,
-                     nstates, 
-                     npars, 
-                     n_met_members, 
-                     n_ds_members,
-                     nmembers,
-                     process_uncertainty,
-                     weather_uncertainty,
-                     initial_condition_uncertainty,
-                     parameter_uncertainty,
-                     met_downscale_uncertainty,
-                     inflow_process_uncertainty)
-  }
+                                        time_of_forecast_string = time_of_forecast_string)
+  
   #### END START ARCHIVE CONTAINER
   
   return(list(restart_file_name <- restart_file_name,
-              sim_name <- paste0(save_file_name, "_", forecast_iteration_id)))
+              sim_name <- paste0(save_file_name, "_", time_of_forecast_string)))
 }

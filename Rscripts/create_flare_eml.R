@@ -65,8 +65,8 @@ create_flare_eml <- function(file_name,
   ## sets metadata about the file itself (name, file type, size, MD5, etc)
   physical <- set_physical(basename(file_name))
   ## set metadata for the file as a whole
-  dataTable <- eml$dataTable(
-    entityName = "output",  ## this is a standard name to allow us to distinguish this entity from 
+  dataTable <- eml$otherEntity(
+    entityName = "forecast",  ## this is a standard name to allow us to distinguish this entity from 
     entityDescription = "Forecast of water physics, chemistry, and biology",
     physical = physical,
     attributeList = attrList)
@@ -139,7 +139,7 @@ create_flare_eml <- function(file_name,
       ),
       assimilation = list(
         type = "EnKF",
-        reference = "NA",
+        reference = "https://www.biorxiv.org/content/10.1101/2020.01.22.915538v2.abstract",
         complexity = npars
       )
     )
@@ -187,7 +187,7 @@ create_flare_eml <- function(file_name,
   forecast_horizon <- length(which(data_assimilation == 0))
   
   if(forecast_horizon == 0){
-    forecast_horizon = 1000000
+    forecast_horizon = 1
   }
   
   additionalMetadata <- eml$additionalMetadata(
