@@ -4,14 +4,14 @@ in_situ_qaqc <- function(insitu_obs_fname,
                          ctd_fname, 
                          nutrients_fname,
                          cleaned_observations_file_long,
-                         lake_name,
+                         lake_name_code,
                          code_folder){
   
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_CTD.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_nutrients.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/temp_oxy_chla_qaqc.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_ch4.R"))
-  source(paste0(code_folder,"/","Rscripts/",lake_name,"/extract_secchi.R"))
+  source(paste0(code_folder,"/","Rscripts/",lake_name_code,"/extract_CTD.R"))
+  source(paste0(code_folder,"/","Rscripts/",lake_name_code,"/extract_nutrients.R"))
+  source(paste0(code_folder,"/","Rscripts/",lake_name_code,"/temp_oxy_chla_qaqc.R"))
+  source(paste0(code_folder,"/","Rscripts/",lake_name_code,"/extract_ch4.R"))
+  source(paste0(code_folder,"/","Rscripts/",lake_name_code,"/extract_secchi.R"))
   
   
   d <- temp_oxy_chla_qaqc(realtime_file = insitu_obs_fname[1],

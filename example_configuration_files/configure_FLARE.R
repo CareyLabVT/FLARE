@@ -2,7 +2,8 @@
 # Lake information
 ###########################
 
-lake_name <<- "fcre"
+lake_name_code <<- "fcre"
+lake_name <<- "Falling Creek Reservoir, Vinton, VA"
 lake_latitude <<- 37.307   #Degrees North
 lake_longitude <<- 79.837  #Degrees West
 
@@ -11,6 +12,24 @@ lake_longitude <<- 79.837  #Degrees West
 #reference_tzone <<- "GMT"
 #Local time zone of the lake
 local_tzone <<- "EST"
+
+##########################
+#  Information required to generate EML metadata file
+##########################
+generate_eml <<- TRUE
+abstract <<- "Forecast using flare"
+forecast_title <<- "FLARE"
+intellectualRights <<- "insert license"
+model_description <<- list(
+  name = "General Lake Model",
+  type = "process-based",
+  repository = "https://github.com/AquaticEcoDynamics/GLM"
+)
+me <<- list(individualName = list(givenName = "INSERT", 
+                                  surName = "INSERT"),
+            electronicMailAddress = "INSERT",
+            id = "INSERT ORCID")
+
 
 ##########################
 # Management Options
@@ -33,15 +52,15 @@ sss_depth <<- 8.0
 #####################
 # Weather forcing options
 ######################
-use_future_met <<- FALSE
+use_future_met <<- TRUE
 #TRUE = use NOAA forecast for "Future"
 #FALSE = use observed weather for "Future"; only works if "forecasting" past dates
 
-DOWNSCALE_MET <<- FALSE
+DOWNSCALE_MET <<- TRUE
 #Downscale the coarse resolutoin NOAA data to the local
 #site using the meterology station at the lake
 
-noaa_location <<- paste0(data_location, "/",lake_name,"/")
+noaa_location <<- paste0(data_location, "/",lake_name_code,"/")
 
 downscaling_coeff <<- paste0(data_location, "/manual-data/debiased.coefficients.2018_07_12_2019_07_11.RData")
 
@@ -117,9 +136,9 @@ default_blue_ice_thickness_init <<- 0.0
 ##############################
 ##  EnKF setup
 ##############################
-ensemble_size <<- 21*10
-n_ds_members <<- 10
-n_inflow_outflow_members <<- 21*10
+ensemble_size <<- 21*10 #1*10
+n_ds_members <<- 10 #10
+n_inflow_outflow_members <<- 21*10 #21*10
 localization_distance <<- NA #distance in meters were covariances in the model error are used
 vert_decorr_length <- 4.0
 no_negative_states <- TRUE
