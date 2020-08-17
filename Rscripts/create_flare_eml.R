@@ -1,12 +1,8 @@
 create_flare_eml <- function(file_name,
-                             time_of_forecast,
-                             forecast_iteration_id,
-                             forecast_project_id,
                              nstates, 
                              npars, 
                              n_met_members, 
                              n_ds_members,
-                             nmembers,
                              process_uncertainty,
                              weather_uncertainty,
                              initial_condition_uncertainty,
@@ -26,6 +22,11 @@ create_flare_eml <- function(file_name,
   data_assimilation <- ncvar_get(nc, "data_assimilation")
   
   forecast_issue_time <-ncatt_get(nc, varid = 0)$forecast_issue_time
+  forecast_iteration_id <- ncatt_get(nc, varid = 0)$forecast_iteration_id
+  forecast_project_id <- ncatt_get(nc, varid = 0)$forecast_project_id
+  
+  nmembers <- length(ncdim_def(nc, "ensemble"))
+  nmembers <- length(ncdim_def(nc, "ensemble"))
   
   var_names <- names(nc$var)
   
@@ -96,7 +97,7 @@ create_flare_eml <- function(file_name,
     title = forecast_title,
     creator = me,
     contact = list(references=me$id),
-    pubDate = as_date(time_of_forecast),
+    pubDate = as_date(as_datetime(forecast_issue_time)),
     intellectualRights = intellectualRights,
     abstract =  abstract,
     dataTable = dataTable,
@@ -116,7 +117,7 @@ create_flare_eml <- function(file_name,
       ),
       assimilation = list(
         type = "EnKF",
-        reference = "NA",
+        reference = "https://www.biorxiv.org/content/10.1101/2020.01.22.915538v2.abstract",
         complexity = nstates
       )
     )
