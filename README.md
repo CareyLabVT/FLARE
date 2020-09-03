@@ -2,9 +2,6 @@
 Forecasting Lake And Reservoir Ecosystems
 
 Directions for using FLARE
-note: that FLARE has not been fully generalized and only works at Falling Creek Reservoir.  We are working to generalize for use in other lakes and look forward to collaborating with others to get FLARE working at your site!
-
-Users guide is pending
 
 # Setting up data repositories for FCR
 
